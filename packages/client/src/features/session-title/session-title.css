@@ -4,6 +4,9 @@
    The tip beside them is the skin's own element: the host clips the crumb row's
    overflow for its ellipsis, so a tip drawn inside the row would be cut. */
 body[data-dsh-claude-style] [data-dsh-claude-part~="header-title"] > [data-dsh-claude-part~="header-crumb"]:last-child > span:last-of-type {
+  /* The header allocates the room for the title. The host's ellipsis still
+     applies when the last crumb has to shrink into that room (D9, D43). */
+  max-width: none;
   cursor: text;
   transition: background-color var(--dsh-claude-timing-feedback);
 }

@@ -14,6 +14,7 @@ import type { MeterRingHandle } from '../features/context-stats/meter-ring'
 import type { ModelHandle } from '../features/model/model-picker'
 import type { PeakRateHandle } from '../features/peakrate/peakrate'
 import type { QuickProvidersHandle } from '../features/settings/quick-providers'
+import type { ViewTabsHandle } from '../features/view-tabs/view-tabs'
 
 /** Public feature handles; a feature sees only its own and its manifest's `reads`. */
 export interface Handles {
@@ -51,7 +52,8 @@ export interface Handles {
   messageActions: FeatureHandle
   chatSend: ChatSendHandle
   caret: FeatureHandle
-  viewTabs: FeatureHandle
+  viewTabs: ViewTabsHandle
+  headerVisibility: FeatureHandle
   headerBand: FeatureHandle
   rightbarFit: FeatureHandle
   sessionPanel: FeatureHandle

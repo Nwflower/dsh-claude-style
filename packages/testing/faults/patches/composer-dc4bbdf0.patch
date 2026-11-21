@@ -1,10 +1,9 @@
 diff --git a/packages/client/src/features/composer/inline.css b/packages/client/src/features/composer/inline.css
-index a9e18cc..d3b3035 100644
 --- a/packages/client/src/features/composer/inline.css
 +++ b/packages/client/src/features/composer/inline.css
-@@ -390,8 +390,9 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"]
+@@ -411,8 +411,9 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"]
  body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card] button[data-dsh-claude-control="stop"]:hover:not(:disabled) {
-   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08)) !important;
+   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
  }
 -/* The ring the host's square sits in: drawn here, since the shipped glyph is the
 -   square alone. */
@@ -14,7 +13,7 @@ index a9e18cc..d3b3035 100644
  body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] button[data-dsh-claude-control="stop"]::before,
  body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card] button[data-dsh-claude-control="stop"]::before {
    content: "";
-@@ -408,14 +409,19 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
+@@ -429,14 +430,19 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
  }
  body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] button[data-dsh-claude-control="stop"] svg,
  body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) [data-composer-card] button[data-dsh-claude-control="stop"] svg {
@@ -37,5 +36,5 @@ index a9e18cc..d3b3035 100644
 +  border-radius: 1.2px;
 +  background: currentColor;
  }
- /* Toolbar row below input card. The part names the host's own `row`: the shipped
-    input growth wrapper is `grow`, a different local name, so the fixed 28px
+ /* One place holds one of the two primary buttons a running continuable subagent
+    carries, the other kept off the page by the pass (composer.ts, HIDDEN_ATTR);

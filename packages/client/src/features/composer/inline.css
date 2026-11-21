@@ -74,8 +74,6 @@ body[data-dsh-claude-style] [data-dsh-claude-transcript] [data-composer-seat]::b
   right: 0;
   bottom: 100%;
   height: var(--dsh-composer-fade-h, 40px);
-  /* The stops are --dsh-claude-fade-stops (theme/chrome.css): the same ramp
-     the transcript's top band runs, in reverse. */
   background: linear-gradient(to top, var(--dsh-claude-fade-stops));
   pointer-events: none;
 }

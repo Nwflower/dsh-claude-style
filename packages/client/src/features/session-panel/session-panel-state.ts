@@ -1,6 +1,6 @@
 /**
  * The details rail's open state, shared by the rail and the header's control
- * (D102). The rail owns the decision (its column's width and the reader's own
+ * (D106). The rail owns the decision (its column's width and the reader's own
  * choice); the header's button reads that decision and asks the rail to flip it.
  */
 type Listener = () => void

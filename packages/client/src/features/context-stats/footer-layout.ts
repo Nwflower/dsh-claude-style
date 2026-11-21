@@ -1,124 +1,94 @@
-import { COMPOSER_ATTR, STATS_POSITION_FOOTER } from '../../constants'
+import { COMPOSER_DOCK_SELECTOR, COMPOSER_TRAILING_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { observeSize } from '@dsh-claude-style/engine/bus'
+import { buildElement, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
+import { closestComposerCard, findComposerRowIn } from '@dsh-claude-style/engine/host'
 import { readPrefs } from '../../core/prefs'
-import { COMPOSER_STACK, findComposerCard, findComposerStats } from '@dsh-claude-style/engine/host'
-import { requestFrame } from '@dsh-claude-style/engine/frame'
-import { setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
-import { inPageBox } from '../../shared/page-zoom'
+import { inPagePixels } from '../../shared/page-zoom'
 
-export const FOOTER_LINE_ATTR = 'data-dsh-claude-footer-line'
+const FOOTER_LINE_ATTR = 'data-dsh-claude-footer-line'
+type FooterMode = '' | 'toolbar' | 'below'
 
-/** The dock holding the host's statistics figures. */
-export function findStatsDock() {
-  return findComposerStats()?.closest<HTMLElement>('[data-dsh-claude-part~="composer-dock"]') ?? null
-}
-
-/**
- * The compact footer's figures over the toolbar row: their line alone leaves the
- * host's dock, so the meter keeps the row the host draws it in and the figures
- * ride the toolbar's free middle. The measured box is the line's own, taken
- * against the stack the dock stands in.
- */
+/** The figures take a flex seat between the host's controls (D43). */
 export function createFooterLayout(refit: () => void) {
+  const slot = buildElement('span', 'dsh-claude-footer-slot')
+  const seat = buildElement('span', 'dsh-claude-footer-seat')
+  slot.append(seat)
   let line: HTMLElement | null = null
-  let cancel: (() => void) | null = null
-  let fittedRoom: number | null = null
-  const properties = ['--dsh-claude-footer-left', '--dsh-claude-footer-bottom', '--dsh-claude-footer-height']
+  let dock: HTMLElement | null = null
+  let trailing: HTMLElement | null = null
+  let mode: FooterMode = ''
+  let stopSize: (() => void) | null = null
 
   function clear() {
-    cancel?.()
-    cancel = null
-    fittedRoom = null
-    if (line !== null) {
-      line.removeAttribute(FOOTER_LINE_ATTR)
-      for (const property of properties) line.style.removeProperty(property)
-    }
+    stopSize?.()
+    stopSize = null
+    slot.remove()
+    line?.removeAttribute(FOOTER_LINE_ATTR)
     line = null
+    dock = null
+    trailing = null
+    mode = ''
   }
 
-  /** Mark `next` as the line the footer is laid out on, taking the mark off the one before. */
-  function mark(next: HTMLElement) {
-    if (line === next) return
-    clear()
-    line = next
-    setAttributeIfChanged(next, FOOTER_LINE_ATTR, '')
+  function draw() {
+    if (line === null || dock === null) return
+    const seated = slot.isConnected && mode !== 'below'
+    const parent = seated ? seat : dock
+    const placement = mode === '' || seated ? mode : 'below'
+    setAttributeIfChanged(line, FOOTER_LINE_ATTR, placement)
+    if (line.parentElement !== parent) parent.prepend(line)
   }
 
-  /** The row edges the figures may use, in page pixels. */
-  function geometry() {
-    const card = findComposerCard()
-    const row = card?.querySelector<HTMLElement>('[data-dsh-claude-part~="trailing"]')?.parentElement
-    const stack = card?.closest<HTMLElement>(COMPOSER_STACK)
-    if (!row || !stack) return null
-    const tools = row.querySelector<HTMLElement>('[data-dsh-claude-part~="tools"]')
-    const trailing = row.querySelector<HTMLElement>('[data-dsh-claude-part~="trailing"]')
-    const rowBox = inPageBox(row.getBoundingClientRect())
-    const stackBox = inPageBox(stack.getBoundingClientRect())
-    const start = tools ? inPageBox(tools.getBoundingClientRect()).right + 12 : rowBox.left
-    const end = trailing ? inPageBox(trailing.getBoundingClientRect()).left - 12 : rowBox.right
-    return { rowBox, stackBox, start, end }
-  }
-
-  /** The pixels between the toolbar's controls, or null while the row is absent. */
-  function room() {
-    const view = geometry()
-    return view === null ? null : Math.max(0, view.end - view.start)
-  }
-
-  function sync(root: HTMLElement) {
-    if (readPrefs().statsPosition !== STATS_POSITION_FOOTER || !document.body.hasAttribute(COMPOSER_ATTR)) {
-      clear()
-      return
+  function place(next: HTMLElement, hostStats: HTMLElement) {
+    const nextDock = hostStats.closest<HTMLElement>(COMPOSER_DOCK_SELECTOR)
+    if (nextDock === null) return false
+    const card = closestComposerCard(nextDock.previousElementSibling)
+    const row = card === null ? null : findComposerRowIn(card)
+    trailing = row?.querySelector<HTMLElement>(COMPOSER_TRAILING_SELECTOR) ?? null
+    const parent = trailing?.parentElement === row ? row : null
+    if (parent !== slot.parentElement || (parent !== null && slot.nextElementSibling !== trailing)) {
+      stopSize?.()
+      stopSize = null
+      if (parent === null) slot.remove()
+      else {
+        parent.insertBefore(slot, trailing)
+        // The meter and the model can change width after the row mounts (D40).
+        stopSize = observeSize([parent, seat], refit)
+      }
+      refit()
     }
-    mark(root)
-    if (cancel !== null) return
-    let measured: { mode: string, left: number, bottom: number, height: number, room: number } | null = null
-    cancel = requestFrame({
-      read() {
-        const view = geometry()
-        if (view === null || !root.isConnected) return
-        const { rowBox, stackBox, start, end } = view
-        const width = inPageBox(root.getBoundingClientRect()).width
-        const align = readPrefs().statsFooterAlign
-        const room = end - start
-        const wanted = align === 'left' ? start : align === 'right' ? end - width : (start + end - width) / 2
-        // The figures stay between the two control groups: a placement that would
-        // cover the trailing controls or run past them takes the nearer edge.
-        const left = room >= width ? Math.min(Math.max(start, wanted), end - width) : Math.max(start, wanted)
-        // An absolute box resolves against its own positioned ancestor, which is
-        // the stack only while the stack is the element that positions it; measure
-        // against the one the line actually hangs from so the offset lands true.
-        const anchor = root.offsetParent instanceof HTMLElement ? inPageBox(root.offsetParent.getBoundingClientRect()) : stackBox
-        measured = {
-          mode: room >= width ? 'overlay' : 'below',
-          left: left - anchor.left,
-          bottom: anchor.bottom - rowBox.bottom,
-          height: rowBox.height,
-          room: Math.max(0, room),
-        }
-      },
-      write() {
-        cancel = null
-        if (measured === null) {
-          clear()
-          return
-        }
-        // The ring joins the toolbar after the statistics pass. A changed
-        // budget must refit the figures before their next box is positioned,
-        // even when the session's numbers and the card's width stayed still.
-        if (measured.room !== fittedRoom) {
-          fittedRoom = measured.room
-          refit()
-          sync(root)
-          return
-        }
-        setAttributeIfChanged(root, FOOTER_LINE_ATTR, measured.mode)
-        const values = [measured.left, measured.bottom, measured.height]
-        for (let i = 0; i < properties.length; i++) {
-          const value = `${Math.round(values[i] * 100) / 100}px`
-          if (root.style.getPropertyValue(properties[i]) !== value) root.style.setProperty(properties[i], value)
-        }
-      },
-    })
+    setAttributeIfChanged(seat, 'data-dsh-claude-footer-align', readPrefs().statsFooterAlign)
+    line = next
+    dock = nextDock
+    draw()
+    return true
   }
-  return { sync, clear, room }
+
+  function fit(room: number, widthFor: (detail: number) => number) {
+    for (const detail of room > 0 ? [2, 1, 0] : [0]) {
+      if (widthFor(detail) <= room) return { detail, placement: 'toolbar' as const }
+    }
+    return { detail: 0, placement: 'below' as const }
+  }
+
+  return {
+    clear,
+    place,
+    fit,
+    // The flex seat gives up all intrinsic width, so the current figures never
+    // take part in deciding whether the next figures fit (D40).
+    room() {
+      if (trailing === null || !slot.isConnected) return 0
+      const slotBox = slot.getBoundingClientRect()
+      const modelBox = trailing.getBoundingClientRect()
+      // When the model wraps onto another row there is no space between the
+      // two groups, even if the seat's side of the toolbar has room.
+      if (slotBox.top > modelBox.bottom || slotBox.bottom < modelBox.top) return 0
+      return inPagePixels(seat.getBoundingClientRect().width)
+    },
+    setPlacement(placement: Exclude<FooterMode, ''>) {
+      mode = placement
+      draw()
+    },
+  }
 }

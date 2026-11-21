@@ -3,10 +3,11 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'headerBand',
   order: 255,
+  reads: ['viewTabs'],
   contracts: [
     'api.window-controls', 'shell.fullscreen', 'shell.platform', 'shell.top-clearance', 'shell.windows-titlebar', 'shell.windows-menu',
-    'shell.rightbar-toggle',
-    'header.row', 'header.title', 'header.actions', 'header.utilities', 'header.corner', 'header.element', 'header.view-tabs',
+    'shell.rightbar-toggle', 'shell.rightbar-panel', 'shell.rightbar-open',
+    'header.row', 'header.title', 'header.actions', 'header.utilities', 'header.corner', 'header.element', 'header.more-trigger',
   ],
   pref: 'headerBand',
   stylesheets: [{ file: 'header-band.css', rank: 75 }],

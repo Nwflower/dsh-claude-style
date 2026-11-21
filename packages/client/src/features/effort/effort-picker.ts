@@ -102,7 +102,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     // One card at a time: the model's text sits in the same box, so leaving its
     // card up would stack two panels over the same corner.
     closeOtherPopovers(popoverKey)
-    if (effortSlider !== null) effortSlider.update()
+    // The passes leave a shut card's slider alone (syncEffortControl): this
+    // brings it to the level in force before the card is seen.
+    if (effortSlider !== null) effortSlider.update(null, true)
     // Open BEFORE placing: the placement reads the card only while it is
     // marked open, so positioning first would skip it and leave the card
     // where it stood.
@@ -116,7 +118,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
   function positionEffortPopover() {
     if (effortPop === null) return
     // A shut card has no anchor to re-read, so a scroll or resize costs it nothing.
-    if (effortPop.getAttribute('data-open') !== 'true') return
+    if (!cardOpen()) return
     const anchor = seatBox() ?? effortBtn
     if (anchor === null) return
     positionAnchoredPopover(anchor, effortPop, { side: 'above', gap: 6 })
@@ -255,7 +257,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     const labelEl = button.querySelector('.dsh-claude-effort-btn-label')
     if (labelEl !== null && labelEl.textContent !== info.label) labelEl.textContent = info.label
     setAttributeIfChanged(button, 'aria-label', `${copy('effortLabel')} ${info.label}`)
-    if (effortSlider !== null) effortSlider.update(sliderBox)
+    // A shut card's slider waits for the opening, which brings it up to date
+    // (openEffortPopover): a session switch changes the level, and placing the
+    // knob, its fill and its name forces a layout in the pass's write phase
+    // over the transcript the switch has just mounted.
+    if (effortSlider !== null && cardOpen()) effortSlider.update(sliderBox)
     positionEffortPopover()
   }
 
@@ -287,7 +293,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
 
   ui.effort = {
     measure() {
-      sliderBox = effortSlider === null ? null : effortSlider.measure()
+      sliderBox = effortSlider === null || !cardOpen() ? null : effortSlider.measure()
     },
     sync: syncEffortControl,
     // The level sits in the composer's seat box, outside the column a streaming

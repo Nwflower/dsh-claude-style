@@ -2,13 +2,6 @@
   "about": "Known defects as patches on the product sources (D92): fixes from history that still reverse on the current tree, and defects written down from a spec's intent. packages/testing/faults.mjs applies each in a scratch copy and reports which specs turn red.",
   "faults": [
     {
-      "id": "host-44607d72",
-      "from": "history 44607d72",
-      "apply": "reverse",
-      "patch": "patches/host-44607d72.patch",
-      "defect": "undoes: 会话检索被取代的一轮不再清掉新一轮的状态"
-    },
-    {
       "id": "chat-send-27603238",
       "from": "history 27603238",
       "apply": "reverse",
@@ -27,14 +20,7 @@
       "from": "history 14ddf739",
       "apply": "reverse",
       "patch": "patches/chat-send-14ddf739.patch",
-      "defect": "undoes: 落地回弹回到原来的阻尼比"
-    },
-    {
-      "id": "effort-509a5efb",
-      "from": "history 509a5efb",
-      "apply": "reverse",
-      "patch": "patches/effort-509a5efb.patch",
-      "defect": "undoes: 未登记强度的档位留在原位，注释按宿主契约写"
+      "defect": "undoes: 上升弹簧末端的残差修正，stand-in 与气泡在落点不再精确相接"
     },
     {
       "id": "client-1b58ef75",
@@ -48,7 +34,7 @@
       "from": "history 2860a318",
       "apply": "reverse",
       "patch": "patches/permissions-2860a318.patch",
-      "defect": "undoes: 选中标记只写存在"
+      "defect": "undoes: 档位行的 aria-checked 只在变化时写入，相同的值不再每轮触发变更"
     },
     {
       "id": "account-39ff153f",

@@ -1,15 +1,21 @@
 diff --git a/packages/client/src/features/settings/settings-tab-general.ts b/packages/client/src/features/settings/settings-tab-general.ts
-index 54dbc6c..f6c59c9 100644
 --- a/packages/client/src/features/settings/settings-tab-general.ts
 +++ b/packages/client/src/features/settings/settings-tab-general.ts
-@@ -35,6 +35,10 @@ export function createSettingsGeneralTab(): SettingsTab {
-           key: option.value,
-           type: 'button',
-           className: 'dsh-claude-brand-card',
-+          // The card names its own brand: the two cards draw their art differently
-+          // (Claude's mark beside its word, DeepSeek's lockup as one piece), so the
-+          // card, not the art inside it, is what a reader and the lane press.
-+          'data-brand': option.value,
-           'data-active': option.value === prefs.brand ? '' : undefined,
-           'aria-pressed': option.value === prefs.brand ? 'true' : 'false',
-           'aria-label': option.label,
+@@ -46,7 +46,7 @@ export function createSettingsGeneralTab(): SettingsTab {
+       {
+         value: BRAND_DEEPSEEK,
+         label: copy('brandDeepseek'),
+-        attributes: {},
++        attributes: { 'data-brand': BRAND_DEEPSEEK },
+         content: React.createElement('span', {
+           className: 'dsh-claude-brand-card-lockup',
+           'aria-hidden': 'true',
+@@ -56,7 +56,7 @@ export function createSettingsGeneralTab(): SettingsTab {
+       {
+         value: BRAND_CLAUDE,
+         label: copy('brandClaude'),
+-        attributes: {},
++        attributes: { 'data-brand': BRAND_CLAUDE },
+         content: [
+           React.createElement('span', { key: 'mark', className: 'dsh-claude-brand-card-logo', 'data-brand': BRAND_CLAUDE, 'aria-hidden': 'true' }),
+           React.createElement('span', { key: 'word', className: 'dsh-claude-brand-card-word dsh-claude-masked-word', 'aria-hidden': 'true' }),

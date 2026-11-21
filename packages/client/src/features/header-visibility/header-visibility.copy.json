@@ -1,0 +1,4 @@
+{
+  "hideToolbarOutsideConversationTitle": { "zh": "焦点不在对话页内隐藏工具栏", "en": "Hide toolbar outside the conversation" },
+  "hideToolbarOutsideConversationDesc": { "zh": "按指针位置控制右侧工具及靠右显示的视图标签和菜单。", "en": "Controls the right-hand tools and any right-aligned view tabs and menu based on pointer location." }
+}

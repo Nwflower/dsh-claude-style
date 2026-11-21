@@ -89,70 +89,12 @@ export default {
       ripple.gone === true && ripple.back === true, JSON.stringify({ gone: ripple.gone, back: ripple.back }))
     commonChecks(r)
   },
-  // The conversation header's tab strip: the pill is drawn under the active tab
-  // without sliding in, slides to the tab a switch selects, and the teardown
-  // takes it back off.
   'view-tabs'(r) {
     basicChecks(r)
-    const pill = r.viewPill || {}
-    const under = (s) => !!s && s.attr && s.content !== 'none' && Math.abs(s.x - s.itemX) < 0.5 &&
-      Math.abs(s.w - s.itemW) < 0.5 && s.itemFill === 'rgba(0, 0, 0, 0)'
-    check('the conversation header\'s tab strip is stamped for the stylesheet', pill.stamped === true, JSON.stringify(pill.stamped))
-    check('the view tabs draw their pill under the active tab without sliding in',
-      under(pill.first) && pill.first.slides.length === 0, JSON.stringify(pill.first))
-    check('a view switch slides the pill to the newly active tab',
-      under(pill.switched) && pill.switched.slides.indexOf('transform') !== -1 && pill.switched.x > pill.first.x,
-      JSON.stringify(pill.switched), 'timing')
-    check('a desktop mark without a visible Windows overlay keeps the tabs in the conversation header',
-      pill.nonOverlay === true, JSON.stringify(pill.nonOverlay))
-    check('a visible overlay places the tabs in the caption band when the plate is reachable',
-      pill.overlay === true, JSON.stringify(pill.overlay))
-    check('a covered caption band gives the tabs back to the conversation header',
-      pill.covered === true, JSON.stringify(pill.covered))
-    check('the pill slides whatever the system motion setting: no reduced-motion rule reaches it',
-      pill.reducedMotionRules === 0, `${pill.reducedMotionRules} rules`)
-    check('teardown takes the pill, its placement and the strip stamp off the view tabs', pill.left === false, JSON.stringify(pill.left))
-    commonChecks(r)
-  },
-  // The strip's row with the overflow button: the host draws the tablist and the
-  // overflow button in a row of its own and counts the tabs it keeps from that
-  // row's width, so the row keeps the header's width while the plate inside it
-  // hugs the tabs and the pill travels inside the plate.
-  'view-tabs-row'(r) {
-    basicChecks(r)
-    const row = r.viewRow || {}
-    const plate = row.plate || {}
-    const chip = row.chip || {}
-    const under = (s) => !!s && s.attr && s.content !== 'none' && Math.abs(s.x - s.itemX) < 0.5 &&
-      Math.abs(s.w - s.itemW) < 0.5 && s.itemFill === 'rgba(0, 0, 0, 0)'
-    check('the row the host counts its tabs from spans the header, and the plate inside it hugs them',
-      row.justifyContent === 'center' && row.pointerEvents === 'none' &&
-        row.width === row.headerWidth && row.counted === row.headerWidth &&
-        plate.width < row.width - chip.width,
-      JSON.stringify({ justifyContent: row.justifyContent, pointerEvents: row.pointerEvents, row: row.width, counted: row.counted, plate: plate.width, chip: chip.width }))
-    check('the lift rides the plate and the button, leaving the row that spans the header untranslated',
-      row.transform !== undefined && row.transform.row === 'none' &&
-        row.transform.list !== undefined && row.transform.list !== 'none',
-      JSON.stringify(row.transform))
-    check('the plate is the skin\'s small switch, carrying its shell and its own radius',
-      plate.radius === '7px' && plate.padding === '2px' && plate.gap === '2px' && plate.background !== 'rgba(0, 0, 0, 0)',
-      JSON.stringify(plate))
-    check('the plate and the overflow button stand as one group in the row\'s middle, the button seated like a tab',
-      Math.abs(row.groupCentre - row.width / 2) <= 1 && Math.abs(chip.centre - plate.centre) <= 1 &&
-        chip.width === 22 && chip.height === 22 && chip.marginTop === '0px',
-      JSON.stringify({ group: row.groupCentre, width: row.width, plate: plate, chip: chip }))
-    check('the tabs are the compact 22px segment, without the shipped underline',
-      row.tabHeight === '22px' && row.underline === 'none', JSON.stringify({ height: row.tabHeight, underline: row.underline }))
-    const tabBoxes = row.tabBoxes || []
-    check('neighbouring view-tab buttons keep separate layout boxes',
-      tabBoxes.length === 4 && tabBoxes.every((box, index) => index === 0 || tabBoxes[index - 1].right <= box.left),
-      JSON.stringify(tabBoxes))
-    check('the view tabs draw their pill under the active tab inside the plate, without sliding in',
-      under(row.pill) && row.pill.slides.length === 0, JSON.stringify(row.pill))
-    check('a view switch slides the pill to the newly active tab',
-      under(row.pillSwitched) && row.pillSwitched.slides.indexOf('transform') !== -1 && row.pillSwitched.x > row.pill.x,
-      JSON.stringify(row.pillSwitched), 'timing')
-    check('teardown hands the row and the plate back as the host drew them', row.left === false, JSON.stringify(row.left))
+    const tabs = r.viewTabs || {}
+    check('the view switch joins the title row before its controls', tabs.besideTools === true, JSON.stringify(tabs))
+    check('the tabs and clickable overflow trigger stand together at the right', tabs.rightAligned === true && tabs.clickable === true, JSON.stringify(tabs))
+    check('teardown returns the strip to its host position', tabs.left === false, JSON.stringify(tabs.left))
     commonChecks(r)
   },
   // The header band: the conversation's title and the header's control clusters
@@ -167,11 +109,14 @@ export default {
     const middle = Math.round((b.band - 28) / 2)
     const top = middle + b.titleDrop
     check('the caption row takes both sides: the title at the row\'s left, the two control clusters against the caption buttons',
-      marks.band === 'title actions' && marks.title === true && marks.utilities === true && marks.corner === true &&
+      marks.band === 'title actions tabs' && marks.title === true && marks.utilities === true && marks.corner === true &&
         laid.title.x === laid.row.x && laid.title.y === top &&
         laid.utilities.y === middle && laid.corner.right === right && laid.corner.y === middle &&
         laid.utilities.right === laid.corner.x - b.air,
       JSON.stringify(laid))
+    check('the underlined tabs sit in the caption immediately before the tools',
+      laid.strip.right === laid.utilities.x - b.air && laid.strip.y < b.band && laid.stripHit === true,
+      JSON.stringify({ strip: laid.strip, utilities: laid.utilities, hit: laid.stripHit }))
     check('the pieces placed there are fixed, stacked over the page and clickable inside the shell\'s drag region',
       laid.titlePosition === 'fixed' && laid.titleZ === '30' &&
         laid.titleRegion === 'no-drag' && laid.utilitiesRegion === 'no-drag' && laid.cornerRegion === 'no-drag',
@@ -182,10 +127,13 @@ export default {
     check('the words the row carries are the window\'s own: a press on the title starts no selection',
       laid.titleSelect === 'none' && laid.headerSelect === 'none',
       JSON.stringify({ title: laid.titleSelect, header: laid.headerSelect }))
-    check('the cluster the row keeps beside the title takes the caption row\'s next place, so the row the title leaves holds nothing it has to keep standing',
-      marks.trail === true && laid.preset.x === laid.title.right + b.air && laid.preset.y === middle + b.titleDrop &&
-        laid.trailLeft === laid.title.right + b.air + 'px' && laid.trailHit === true,
-      JSON.stringify({ marks: marks, title: laid.title, preset: laid.preset, trailLeft: laid.trailLeft, trailHit: laid.trailHit }))
+    // The title and trigger meet, then the next cluster gets the usual gap.
+    const moreAir = (laid.more.right - laid.more.x) + b.air
+    check('the trigger touches the title and the preset cluster keeps the usual gap after it',
+      marks.trail === true && laid.more.x === laid.title.right &&
+        laid.preset.x === laid.more.right + b.air && laid.preset.y === middle + b.titleDrop &&
+        laid.trailLeft === laid.more.right + b.air + 'px' && laid.trailHit === true,
+      JSON.stringify({ marks: marks, title: laid.title, more: laid.more, preset: laid.preset, trailLeft: laid.trailLeft, trailHit: laid.trailHit }))
     check('the title is handed the room up to the cluster beside it rather than the width its own box holds, and the row it left starts at the title box without the host\'s old inset',
       laid.titleLeft === laid.row.x + 'px' &&
         parseFloat(laid.titleMax) > laid.title.right - laid.title.x &&
@@ -202,17 +150,17 @@ export default {
       before.width < long.width && short.width < long.width && again.width === long.width &&
         long.max === again.max && parseFloat(long.max) > long.width,
       JSON.stringify(names))
-    check('the cluster beside the title follows a name that grew back in the same pass, one air gap off the title\'s own end',
-      long.presetX === long.right + b.air && short.presetX === short.right + b.air && again.presetX === again.right + b.air,
+    check('the cluster beside the title follows a name that grew back in the same pass, one air gap off the trigger\'s own end',
+      long.presetX === long.right + moreAir && short.presetX === short.right + moreAir && again.presetX === again.right + moreAir,
       JSON.stringify(names))
     const panelClosed = b.panelClosed || {}
     check('the right panel\'s collapse control is the skin\'s own, drawn in the header\'s row: it shows while the panel is open and hides with the panel, and the panel\'s own copy stays where the host drew it',
-      laid.closeInline === 'inline-flex' && laid.closeShown !== 'none' &&
+      laid.closeShown !== 'none' &&
         laid.hostToggleDisplay !== 'none' && panelClosed.close === 'none',
-      JSON.stringify({ laid: { close: laid.closeInline, shown: laid.closeShown, host: laid.hostToggleDisplay }, closed: panelClosed }))
+      JSON.stringify({ laid: { shown: laid.closeShown, host: laid.hostToggleDisplay }, closed: panelClosed }))
     const solo = b.solo || {}
     check('with the corner seat empty — the right sidebar is open — the cluster that is there still lifts, into the corner\'s own place',
-      solo.marks.band === 'title actions' && solo.marks.corner === false && solo.marks.trail === true && solo.utilities.right === right,
+      solo.marks.band === 'title actions tabs' && solo.marks.corner === false && solo.marks.trail === true && solo.utilities.right === right,
       JSON.stringify(solo))
     const tight = b.tight || {}
     const off = b.off || {}
@@ -224,17 +172,24 @@ export default {
     const crowded = b.crowded || {}
     const relaxed = b.relaxed || {}
     check('a cluster too wide for the place beside the title keeps the header\'s row, and the title is handed that row\'s whole run',
-      crowded.marks.band === 'title actions' && crowded.marks.title === true && crowded.marks.trail === false &&
+      crowded.marks.band === 'title actions tabs' && crowded.marks.title === true && crowded.marks.trail === false &&
         (crowded.preset.right - crowded.preset.x) > 120 && parseFloat(crowded.titleMax) > crowded.preset.right - crowded.preset.x,
       JSON.stringify(crowded))
-    check('a step of room buys the cluster its place beside the title again, one air gap off the title\'s own end',
-      relaxed.marks.trail === true && relaxed.preset.x === relaxed.title.right + b.air,
+    check('a step of room buys the cluster its place beside the title again, one air gap off the trigger\'s own end',
+      relaxed.marks.trail === true && relaxed.preset.x === relaxed.title.right + moreAir,
       JSON.stringify(relaxed))
+    const ride = b.menu || {}
+    check('the more-actions trigger stays flush with the lifted title and the preset cluster follows it',
+      (ride.marks || {}).title === true && (ride.marks || {}).trail === true &&
+        Math.abs(ride.more.x - ride.title.right) <= 1 && ride.more.y < b.band &&
+        ride.moreLeft === Math.round(ride.title.right) + 'px' &&
+        Math.abs(ride.preset.x - (ride.more.right + b.air)) <= 1,
+      JSON.stringify(ride))
     const back = b.back || {}
-    check('switching the feature off hands the row back whole — the strip the other feature placed stays, and the cluster\'s own fade with it — and switching it on places both sides again',
+    check('switching the feature off restores the cluster\'s fade and switching it on places both sides again',
       off.marks.band === null && off.marks.title === false && off.marks.trail === false && off.marks.utilities === false && off.marks.corner === false &&
-        off.stripStamped === true && off.clusterMask !== 'none' &&
-        back.marks.band === 'title actions' && back.marks.title === true && back.marks.trail === true && back.marks.utilities === true &&
+        off.clusterMask !== 'none' &&
+        back.marks.band === 'title actions tabs' && back.marks.title === true && back.marks.trail === true && back.marks.utilities === true &&
         back.titleHit === true && back.clusterMask === 'none',
       JSON.stringify({ off: off, back: back }))
     const left = b.left || {}

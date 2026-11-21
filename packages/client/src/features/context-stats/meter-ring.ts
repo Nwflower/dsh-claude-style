@@ -337,7 +337,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     face.hiddenMeter = meter
     if (meter === null) return
     markContextMeter(meter)
-    meter.setAttribute(METER_HIDDEN_ATTR, '')
+    setAttributeIfChanged(meter, METER_HIDDEN_ATTR, '')
   }
 
   // The host renders its meter anew at moments of its own (a turn ending), and

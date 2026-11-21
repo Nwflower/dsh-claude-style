@@ -7,7 +7,8 @@
  * request for the host half alone needs neither a server nor a browser.
  */
 import { availableParallelism } from 'os'
-import { setTier, tierName, TIMING_CASES, FEATURE_CASES, pagesFor, failures, retractFailures } from './smoke/shared.mjs'
+import { newStandInContext } from './browser.mjs'
+import { setTier, tierName, TIMING_CASES, FEATURE_CASES, pagesFor, check, failures, retractFailures } from './smoke/shared.mjs'
 import { hostHalf } from './smoke/host-half.mjs'
 import { CASES } from './smoke/cases.mjs'
 import { mapAtOnce } from './at-once.mjs'
@@ -76,7 +77,7 @@ function checkFeatureTable() {
  * (chunk-fault) must be answered by the server, not by that cache.
  */
 async function runPage(browser, base, name) {
-  const context = await browser.newContext()
+  const context = await newStandInContext(browser)
   try {
     const tab = await context.newPage()
     await tab.goto(`${base}/${name}`, { waitUntil: 'domcontentloaded' })
@@ -129,7 +130,14 @@ async function drivePages(planned, jobs, browser, base) {
   const spent = new Map()
   const read = async ({ page: pageName }) => {
     const at = Date.now()
-    reports.set(pageName, await runPage(browser, base, pageName))
+    try {
+      reports.set(pageName, await runPage(browser, base, pageName))
+    } catch (error) {
+      // One page's load or probe failure is that page's own result, not the
+      // walk's: the other pages still answer, and this page is judged again on
+      // its own below (D12). The cases it carries read the failure as their own.
+      reports.set(pageName, { pageError: error.message })
+    }
     spent.set(pageName, Date.now() - at)
   }
   console.log(`browser half — ${together.length} pages ${jobs} at a time, then ${alone.length} at ${MOTION_JOBS}`)
@@ -145,23 +153,33 @@ async function drivePages(planned, jobs, browser, base) {
     const before = failures()
     for (const name of pageCases) {
       console.log(`\nbrowser half — ${name}`)
-      CASES[name](report)
+      if (report.pageError !== undefined) check(name, false, report.pageError)
+      else CASES[name](report)
     }
     // A page load can lose to a neighbour or a slow first frame: a page that
     // failed beside the others is judged again on its own, as the behaviour
     // lane does for its timing specs. The page's own share is counted here,
     // while the counter still stands right after this page's judgment.
-    if (failures() > before) retry.push({ pageName, pageCases, lost: failures() - before })
+    if (failures() > before) retry.push({ pageName, pageCases, lost: failures() - before, labelStart: before })
   }
-  for (const { pageName, pageCases, lost } of retry) {
+  let retracted = 0
+  for (const { pageName, pageCases, lost, labelStart } of retry) {
     console.log(`\nbrowser half — page ${pageName} failed beside the others; re-judging it alone`)
     // The counter is shared: an earlier re-judgment has already taken back its
-    // own share, so only this page's recorded share may be retracted here.
-    retractFailures(lost)
-    const fresh = await runPage(browser, base, pageName)
+    // own share, so only this page's recorded share may be retracted here, at
+    // the position it was recorded at, shifted by the shares taken back before it.
+    retractFailures(lost, labelStart - retracted)
+    retracted += lost
+    let fresh
+    try {
+      fresh = await runPage(browser, base, pageName)
+    } catch (error) {
+      fresh = { pageError: error.message }
+    }
     for (const name of pageCases) {
       console.log(`\nbrowser half — ${name}`)
-      CASES[name](fresh)
+      if (fresh.pageError !== undefined) check(name, false, fresh.pageError)
+      else CASES[name](fresh)
     }
   }
   return `${cases.length} of ${total} browser cases in ${pages.length} page loads, tier ${tierName()}`

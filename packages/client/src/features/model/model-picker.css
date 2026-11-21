@@ -393,15 +393,7 @@ body[data-dsh-claude-style] .dsh-claude-model-desc {
   line-height: 14px;
   color: var(--dsw-alias-label-tertiary, #91888a);
 }
-/* The divider that closes the model list carries the shared separator's role, so
-   its line comes from shared/popover.css with every other separator in a card;
-   what stays here is its margin. The provider header's own rule is the one line
-   this sheet states: a full pixel of the standard edge token, so a provider
-   boundary reads at the weight the card's other separators have. */
-body[data-dsh-claude-style] .dsh-claude-model-rule::after {
-  height: 0;
-  border-top: 1px solid var(--dsw-alias-border-l1, #dedede);
-}
+/* The divider that closes the model list uses the separator in shared/popover.css. */
 body[data-dsh-claude-style] .dsh-claude-model-divider {
   margin: 2px 4px;
   flex: none;
@@ -421,6 +413,9 @@ body[data-dsh-claude-style] .dsh-claude-model-rule {
 body[data-dsh-claude-style] .dsh-claude-model-rule::after {
   content: "";
   flex: 1;
+  height: 0;
+  /* Match the other separators inside the menu (D9). */
+  border-top: 0.5px solid var(--dsh-claude-divider);
 }
 body[data-dsh-claude-style] .dsh-claude-model-rule-name {
   flex: none;

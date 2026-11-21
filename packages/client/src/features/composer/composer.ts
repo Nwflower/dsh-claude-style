@@ -13,7 +13,6 @@ import { closestFrom, setAttributeIfChanged } from '@dsh-claude-style/engine/dom
 import { writeScroll } from '@dsh-claude-style/engine/scroll-owner'
 import { captureComposerCaret, composerComposing, focusKeepingComposerCaret } from '../../shared/composer-caret'
 import { createPlaceholderCopy } from './placeholder-copy'
-import { installWindowBlurMirror } from './selection-mirror'
 import { createComposerResponsive } from './responsive'
 import { createComposerViewportFollow } from './visual-viewport'
 
@@ -43,9 +42,8 @@ export interface ComposerHandle extends FeatureHandle {
  * chat tab (the composer's only view) is up. The scheduler triggers its
  * behaviours through hooks: a press on the inline card focuses the editor, a
  * composer input refreshes the hint's synthetic placeholder, and the transcript
- * follows the card when it changes height. The window-blur mirror the selection
- * paints key on and the idle hint's own words live here too — both read the
- * same card state this reading produces.
+ * follows the card when it changes height. The idle hint's own words live
+ * here too — they read the same card state this reading produces.
  */
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** Whether the page shows the hero composer, as of the last reading. */
@@ -67,8 +65,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * whose teardown a hot reload dropped still has its marks swept.
    */
   const markedTiles = new Set<Element>(document.querySelectorAll(`[data-dsh-claude-attachment]`))
-  /** The window-blur mirror the selection paints key on */
-  const stopWindowBlur = installWindowBlurMirror()
 
   /**
    * A composition has landed: the hint's writes were held back while one was in
@@ -525,7 +521,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     stopMutations()
     active = false
     heroCard = null
-    stopWindowBlur()
     document.removeEventListener('compositionend', onCompositionEnd, true)
     placeholderCopy.dispose()
     responsive.dispose()

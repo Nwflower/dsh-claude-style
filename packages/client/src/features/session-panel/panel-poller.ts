@@ -1,6 +1,6 @@
 /**
  * The rail's poll loop, kept apart from React so its ordering can be tested
- * (D102). One ask is in flight at a time; a newer ask supersedes the one in
+ * (D106). One ask is in flight at a time; a newer ask supersedes the one in
  * flight, and only that newer ask may deliver its answer, clear the controller
  * or schedule the next poll. A superseded ask stops at every step, so an older
  * answer cannot overwrite a newer one and a visibility flip that wakes the loop

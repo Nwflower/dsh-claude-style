@@ -257,7 +257,7 @@ function statsPositionScenario({ check }) {
 
 /**
  * The session statistics' scenarios: the line of their own, the meter's dock,
- * and the compact figures over the toolbar, registered under one factory.
+ * and the compact figures in the toolbar, registered under one factory.
  */
 function statsScenarios({ check }) {
   return {

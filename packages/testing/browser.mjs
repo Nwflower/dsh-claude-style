@@ -87,4 +87,21 @@ async function newContextOn(browser, options = {}, extra = {}) {
   return context
 }
 
-export { findChrome, openBrowser, launchBrowser, newContextOn }
+/**
+ * A context for a stand-in page: everything the page reads is served by the
+ * stand-in server on loopback or inlined as data, so a request to any other
+ * host is aborted at the boundary instead of reaching the machine's network.
+ * A fixture's deliberately unreachable URL (the account avatar) then fails at
+ * once and deterministically, rather than waiting out a DNS timeout that a
+ * busy machine stretches past the probe's wait.
+ */
+async function newStandInContext(browser, options = {}, extra = {}) {
+  const context = await newContextOn(browser, options, extra)
+  await context.route((url) => {
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false
+    return url.hostname !== '127.0.0.1' && url.hostname !== 'localhost'
+  }, (route) => route.abort())
+  return context
+}
+
+export { findChrome, openBrowser, launchBrowser, newContextOn, newStandInContext }

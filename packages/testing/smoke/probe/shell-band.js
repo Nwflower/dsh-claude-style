@@ -75,11 +75,20 @@
         '<div class="_headerActions_b_1" style="width:60px;height:' + TITLE_HEIGHT + 'px">Preset</div></div>' +
         // The host's utilities seat, with the skin's own right-panel control in it,
         // the way the host's slot renders it: the pass shows or hides that node.
-        '<div class="_headerUtilities_b_1" style="display:flex;width:114px;height:28px">' +
-        '<button type="button" class="dsh-claude-rightbar-close" style="width:28px;height:28px">close</button></div>' +
+        '<div class="_headerUtilities_b_1" style="display:flex;width:148px;height:28px">' +
+        '<button type="button" class="dsh-claude-rightbar-close" style="width:28px;height:28px">close</button>' +
+        '<button type="button" aria-haspopup="menu" style="width:28px;height:28px">more</button></div>' +
         '<div class="_headerCorner_b_1" style="width:28px;height:28px"></div></div>' +
         '<div class="_tabs_b_1"><div class="_viewTabs_b_1" role="tablist" data-conversation-tabs="" style="width:152px;height:26px"></div></div>'
-      document.body.insertBefore(header, document.body.firstChild)
+      // The host's layout frame: a child of the root slot whose class local
+      // name is frame, which the part walk marks layout-frame. The band's
+      // right-panel stamp lands on it, and the header and the panel both stand
+      // inside it on a live page.
+      var root = document.querySelector('[data-slot="root"]')
+      var frame = document.createElement('div')
+      frame.className = '_frame_f_1'
+      root.insertBefore(frame, root.firstChild)
+      frame.insertBefore(header, frame.firstChild)
       // The right panel's own collapse control, inside the panel it belongs to:
       // the pass leaves it alone while the skin's control shows in the header's row.
       var panel = document.createElement('div')
@@ -87,7 +96,7 @@
       panel.setAttribute('data-sidebar-right-open', '')
       panel.innerHTML = '<div data-dockkit-strip-chrome style="display:flex">' +
         '<button type="button" data-sidebar-right-toggle style="width:28px;height:28px">collapse</button></div>'
-      document.body.insertBefore(panel, document.body.firstChild)
+      frame.insertBefore(panel, frame.firstChild)
       var hostToggle = panel.querySelector('[data-sidebar-right-toggle]')
       var closeButton = header.querySelector('.dsh-claude-rightbar-close')
       // The parts land on the pass after the subtree arrives (D3).
@@ -102,6 +111,7 @@
       // the seat the host writes its truncation fade on.
       var cluster = title.parentElement
       var utilities = header.querySelector('[data-dsh-claude-part~="header-utilities"]')
+      var more = utilities.querySelector('button[aria-haspopup="menu"]')
       var corner = header.querySelector('[data-dsh-claude-part~="header-corner"]')
       var strip = header.querySelector('[data-dsh-claude-part~="view-tabs"]')
       var box = function (el) {
@@ -156,11 +166,13 @@
       r.band.laid = {
         marks: marks(),
         title: box(title),
+        more: box(more),
         utilities: box(utilities),
         corner: box(corner),
         preset: box(actions),
         // The plate the strip's row holds: the row itself spans the window.
         strip: box(strip.querySelector('[data-conversation-tabs]')),
+        stripHit: hitAt(strip.querySelector('[data-conversation-tabs]')),
         row: box(row),
         header: box(header),
         headerDisplay: getComputedStyle(header).display,
@@ -181,7 +193,6 @@
         headerSelect: getComputedStyle(header).userSelect,
         utilitiesRegion: getComputedStyle(utilities).webkitAppRegion,
         cornerRegion: getComputedStyle(corner).webkitAppRegion,
-        closeInline: closeButton.style.display,
         closeShown: getComputedStyle(closeButton).display,
         hostToggleDisplay: getComputedStyle(hostToggle).display,
         titleHit: hitAt(title),
@@ -215,7 +226,7 @@
         row.appendChild(mark)
         mark.remove()
       }
-      actions.style.width = '500px'
+      actions.style.width = r.band.laid.titleMax
       nudge()
       await sleep(250)
       r.band.crowded = { marks: marks(), title: box(title), preset: box(actions), titleMax: title.style.getPropertyValue('--dsh-header-band-max') }
@@ -223,11 +234,14 @@
       nudge()
       await sleep(250)
       r.band.relaxed = { marks: marks(), title: box(title), preset: box(actions), titleMax: title.style.getPropertyValue('--dsh-header-band-max') }
-      // The switch hands the row back on its own, with the strip left in place,
-      // and the placement comes back when it is switched on again.
+      // The session's more-actions trigger starts at the lifted title's end.
+      // The preset cluster keeps the normal gap after the trigger.
+      r.band.menu = { marks: marks(), moreLeft: more.style.getPropertyValue('--dsh-header-band-left'), more: box(more), title: box(title), preset: box(actions),
+        moreAttr: more.getAttribute('data-dsh-header-more'), morePosition: getComputedStyle(more).position }
+      // The switch hands the header row back and restores its cluster mask.
       window.__pushForm({ headerBand: false })
       await sleep(250)
-      r.band.off = { marks: marks(), row: box(row), headerPaddingTop: getComputedStyle(header).paddingTop, stripStamped: strip.hasAttribute('data-dsh-view-tabs'), clusterMask: getComputedStyle(cluster).maskImage }
+      r.band.off = { marks: marks(), row: box(row), headerPaddingTop: getComputedStyle(header).paddingTop, clusterMask: getComputedStyle(cluster).maskImage }
       window.__pushForm({ headerBand: true })
       await sleep(250)
       r.band.back = { marks: marks(), title: box(title), utilities: box(utilities), titleHit: hitAt(title), clusterMask: getComputedStyle(cluster).maskImage }

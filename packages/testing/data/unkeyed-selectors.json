@@ -22,8 +22,10 @@
     {
       "reason": "选区颜色要由对话与输入框里的每个元素自己取得，继承来的颜色会按各自的文字颜色偏移",
       "selectors": [
-        "body[data-dsh-claude-style] :is([data-chat-flow], [data-lexical-editor]) *::selection",
-        "body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow], [data-lexical-editor]) *::selection"
+        "body[data-dsh-claude-style] [data-chat-flow][data-dsh-claude-selection-paint] *::selection",
+        "body[data-dsh-claude-style] [data-lexical-editor] *::selection",
+        "body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow][data-dsh-claude-selection-paint] *::selection",
+        "body[data-dsh-claude-style][data-dsh-window-blur] [data-lexical-editor] *::selection"
       ]
     },
     {
@@ -108,9 +110,7 @@
         "body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role=\"group\"] > [data-dsh-claude-question-custom-active]:not([data-dsh-claude-question-custom=\"free\"]) > :first-child::before",
         "body[data-dsh-claude-style] [data-dsh-claude-question-surface] [data-dsh-claude-question-custom]:not([data-dsh-claude-question-custom=\"free\"]) > :first-child",
         "body[data-dsh-claude-style] [data-dsh-view-tabs] > *",
-        "body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs] > *",
         "body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] > *",
-        "body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] > :not([data-dsh-claude-part~=\"view-tab\"])",
         "body[data-dsh-claude-style] [data-dsh-claude-part~=\"rightbar-column\"] [data-dsh-claude-part~=\"panel-guide\"] > :first-child",
         "body[data-dsh-claude-style] [data-dsh-claude-part~=\"rightbar-column\"] [data-dsh-claude-part~=\"panel-guide\"] > :last-child",
         "body[data-dsh-claude-style] [data-slot=\"conversation.session.header.actions\"] > *",
@@ -121,8 +121,7 @@
         "body[data-dsh-claude-style] svg[data-state=\"ongoing\"] *",
         "body[data-dsh-claude-style] [data-dsh-claude-part~=\"table-scroll\"] tr > :first-child",
         "body[data-dsh-claude-style] [data-dsh-claude-part~=\"table-scroll\"] tr > :last-child",
-        "body[data-dsh-claude-style] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~=\"trailing\"] > :first-child + *",
-        "body[data-dsh-claude-style][data-dsh-claude-stats-position=\"footer\"] [data-dsh-claude-footer-line] > *"
+        "body[data-dsh-claude-style] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~=\"trailing\"] > :first-child + *"
       ]
     }
   ]

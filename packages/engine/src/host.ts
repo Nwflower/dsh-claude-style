@@ -1,10 +1,10 @@
-import { COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, CONVERSATION_VIEW_STORAGE_PREFIX, DIALOG_TRIGGER_SELECTOR, FOOT_AREA_SELECTOR, FOREGROUND_SELECTOR, MENU_ROLE_SELECTOR, MODAL_DIALOG_SELECTOR, MODEL_SLOT_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, RIGHTBAR_TOGGLE_SELECTOR, SIDEBAR_BRAND_SELECTOR, SIDEBAR_CHAT_SELECTOR, SIDEBAR_NEW_SESSION_SELECTOR, SIDEBAR_ROOT_SELECTOR, SIDEBAR_TOGGLE_SELECTOR, WINDOWS_MENU_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, CONVERSATION_VIEW_STORAGE_PREFIX, DIALOG_TRIGGER_SELECTOR, FOOT_AREA_SELECTOR, FOREGROUND_SELECTOR, MENU_ROLE_SELECTOR, MODAL_DIALOG_SELECTOR, MODEL_SLOT_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, RIGHTBAR_TOGGLE_SELECTOR, SIDEBAR_BRAND_SELECTOR, SIDEBAR_CHAT_SELECTOR, SIDEBAR_ROOT_SELECTOR, SIDEBAR_TOGGLE_SELECTOR, WINDOWS_MENU_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import type { HostAccountService } from '@dsh-claude-style/contracts/account'
 import type { HostAgentTeamsRemote, HostSidebarPins, HostAssistantStep, HostBundleListAnswer, HostChatSnapshot, HostChatTarget, HostConfigFormsService, HostConversationService, HostInventoryAnswer, HostJobsService, HostLocaleService, HostModelDirectoriesService, HostPluginBundle, HostServiceLookup, HostSessionStatusService, HostOutlineTurn, HostRunningCall, HostSession, HostSessionsService, HostSessionRenameAnswer, HostShortcutsService, HostSlotOptions, HostSlotsService, HostSnapshotSource, HostSubagentsRemote, HostTurn, HostUiConversationService, HostUiSessionService, HostWorkspacesService, HostWorkspaceViewStore } from '@dsh-claude-style/contracts/services'
 import { fileAddressFor } from '@deepseek-ai/dsh-util-workspace-path'
 import { observeMatches, subscribeMutations } from './bus'
 import { closestFrom, shown } from './dom'
-import { CHAT_TURN_ATTRIBUTE, PROCESS_GROUP_SELECTOR, TURN_PROCESS_ANSWER_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CHAT_TURN_ATTRIBUTE, CONVERSATION_HEADER_SELECTOR, CONVERSATION_MAIN_SLOT_SELECTOR, HEADER_CORNER_SELECTOR, HEADER_MORE_TRIGGER_SELECTOR, HEADER_TITLE_SELECTOR, HEADER_UTILITIES_SELECTOR, PROCESS_GROUP_SELECTOR, TURN_PROCESS_ANSWER_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
 /** A batch-scoped flow index: one group query and one answer query per container (D3, D40).
  * The caller drops this reader when its mutation batch or frame ends.
@@ -158,8 +158,6 @@ export const findSidebarRoot = cacheFirst<HTMLElement>(SIDEBAR_ROOT_SELECTOR)
 
 /** The sidebar's brand row and collapse toggle, and the desktop window's menu button beside them: the seats the surface switch and the header band are placed against. Each is absent on most pages, so the answer is kept rather than queried per pass. */
 export const findSidebarBrand = cacheFirst<HTMLElement>(SIDEBAR_BRAND_SELECTOR)
-/** The New session button, after which the skin seats its standalone search button. */
-export const findSidebarNewSession = cacheFirst<HTMLElement>(SIDEBAR_NEW_SESSION_SELECTOR)
 export const findSidebarToggle = cacheFirst<HTMLElement>(SIDEBAR_TOGGLE_SELECTOR)
 export const findWindowsMenu = cacheFirst<HTMLElement>(WINDOWS_MENU_SELECTOR)
 
@@ -290,6 +288,32 @@ export const findPageComposerSeat = cacheFirst<HTMLElement>(COMPOSER_SELECTOR)
 
 /** The session scroller: the element the host hangs its own follow off (D40). */
 export const findConversationScroller = cacheFirst<HTMLElement>(CONVERSATION_SCROLL_SELECTOR)
+
+/** The main conversation's phase root, whose own header and content are siblings (D3). */
+export const findMainConversationFrame = cacheFirst<HTMLElement>(`${CONVERSATION_MAIN_SLOT_SELECTOR} > [${PHASE_ATTRIBUTE}]`)
+
+/** The host header around one of its controls (D3). */
+export function closestConversationHeader(node: Element | null) {
+  return node?.closest<HTMLElement>(CONVERSATION_HEADER_SELECTOR) ?? null
+}
+
+/** The session's breadcrumb in its header (D3). */
+export function conversationHeaderTitle(header: ParentNode) {
+  return header.querySelector<HTMLElement>(HEADER_TITLE_SELECTOR)
+}
+
+/** The right-hand control clusters that share the conversation's title row (D3). */
+export function conversationHeaderTools(row: ParentNode) {
+  return {
+    utilities: row.querySelector<HTMLElement>(HEADER_UTILITIES_SELECTOR),
+    corner: row.querySelector<HTMLElement>(HEADER_CORNER_SELECTOR),
+  }
+}
+
+/** The session menu trigger inside its host utility cluster (D3). */
+export function conversationHeaderMore(utilities: ParentNode | null) {
+  return utilities?.querySelector<HTMLButtonElement>(HEADER_MORE_TRIGGER_SELECTOR) ?? null
+}
 
 /** The shown conversation: the element carrying its session id, and the id itself. */
 const CONVERSATION_SESSION_ATTR = CONVERSATION_SESSION_ATTRIBUTE
@@ -550,12 +574,12 @@ export function registerSlotEntries(ctx: HostContext, entries: readonly SlotEntr
   })
 }
 
-/** The client's jobs controller, shared with the host's background task list (D102). */
+/** The client's jobs controller, shared with the host's background task list (D106). */
 export function hostJobs(lookup: HostServiceLookup | null | undefined): HostJobsService | null {
   return lookup?.get('jobs') as HostJobsService | undefined ?? null
 }
 
-/** The parent-authorized child controls; the Gateway owns the relationship check (D102). */
+/** The parent-authorized child controls; the Gateway owns the relationship check (D106). */
 export function hostRemoteSubagents(lookup: HostServiceLookup | null | undefined): HostSubagentsRemote | null {
   return lookup?.get('remote.subagents') as HostSubagentsRemote | undefined ?? null
 }
@@ -641,7 +665,7 @@ export function hostUiWorkspace(lookup: HostServiceLookup | null | undefined): H
   return lookup?.get('uiWorkspace')
 }
 
-/** Open a file in the host's preview through its canonical resource address (D3, D102). */
+/** Open a file in the host's preview through its canonical resource address (D3, D106). */
 export function openHostFile(lookup: HostServiceLookup, sessionId: string, directory: string | undefined, path: string): void {
   const sidebar = lookup.get('sidebarRight') as { openResource(address: string): unknown } | undefined
   if (typeof sidebar?.openResource !== 'function') throw new Error('the host has no file preview controller')

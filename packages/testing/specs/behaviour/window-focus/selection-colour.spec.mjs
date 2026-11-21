@@ -19,16 +19,21 @@ const SHAPES = ['paragraph', 'bold', 'italic', 'inline code', 'fenced code', 'sy
  */
 async function addShapes(t) {
   await t.page.evaluate((flow) => {
-    if (document.querySelector(`${flow} [data-test-selection-shapes]`) !== null) return
-    const host = document.createElement('div')
-    host.setAttribute('data-test-selection-shapes', '')
-    host.innerHTML = '<p><span data-test-shape="paragraph">A sentence the reader selected.</span> ' +
-      '<strong data-test-shape="bold">A bold run</strong> <em data-test-shape="italic">an italic run</em> ' +
-      '<code data-test-shape="inline code">inline-code</code></p>' +
-      '<pre><code><span data-test-shape="syntax token">a token</span> <span data-test-shape="fenced code">a fenced line</span></code></pre>' +
-      '<h2 data-test-shape="heading">A heading</h2>' +
-      '<ul><li data-test-shape="list item">A list item</li></ul>'
-    document.querySelector(flow).append(host)
+    let host = document.querySelector(`${flow} [data-test-selection-shapes]`)
+    if (host === null) {
+      host = document.createElement('div')
+      host.setAttribute('data-test-selection-shapes', '')
+      host.innerHTML = '<p><span data-test-shape="paragraph">A sentence the reader selected.</span> ' +
+        '<strong data-test-shape="bold">A bold run</strong> <em data-test-shape="italic">an italic run</em> ' +
+        '<code data-test-shape="inline code">inline-code</code></p>' +
+        '<pre><code><span data-test-shape="syntax token">a token</span> <span data-test-shape="fenced code">a fenced line</span></code></pre>' +
+        '<h2 data-test-shape="heading">A heading</h2>' +
+        '<ul><li data-test-shape="list item">A list item</li></ul>'
+      document.querySelector(flow).append(host)
+    }
+    // The reader's selection: the window marks its unfocused paint only while
+    // a range is selected.
+    document.getSelection().selectAllChildren(host)
   }, t.host('chat.flow'))
   await t.settle()
 }

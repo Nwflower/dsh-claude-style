@@ -1,0 +1,61 @@
+/* The host keeps the action and its accessible name. The SVG masks its ink
+   so the replacement follows the button's colour in every theme (D43). */
+body[data-dsh-claude-style] :where([data-dsh-header-session-menu]) {
+  position: relative;
+}
+
+body[data-dsh-claude-style] [data-dsh-header-session-menu] svg {
+  visibility: hidden;
+}
+
+body[data-dsh-claude-style] [data-dsh-header-session-menu]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 16px;
+  height: 16px;
+  margin: auto;
+  background: currentColor;
+  mask: var(--dsh-claude-chevron-down-mask);
+  pointer-events: none;
+  forced-color-adjust: none;
+}
+
+/* Reserve the button's width in the regular title cluster. The host keeps
+   the button in the utilities subtree, so React and its menu keep ownership
+   while the fixed button follows the breadcrumb's actual edge (D43). */
+@supports (left: anchor(--dsh-session-title right)) {
+  body[data-dsh-claude-style] [data-dsh-header-session-title]:not([data-dsh-header-title]) {
+    anchor-name: --dsh-session-title;
+    margin-inline-end: 28px;
+  }
+
+  body[data-dsh-claude-style] [data-dsh-header-session-menu="beside-title"]:not([data-dsh-header-more]) {
+    position: fixed;
+    left: anchor(--dsh-session-title right);
+    top: anchor(--dsh-session-title center);
+    margin: 0;
+    transform: translateY(-50%);
+    z-index: 9;
+    -webkit-app-region: no-drag;
+  }
+}
+
+@media (hover: hover) {
+  /* Keep the controls in the hit test and tab order. Keyboard focus restores
+     their paint before they can be used (D43). */
+  body[data-dsh-claude-style] [data-phase="active"] [data-dsh-header-visibility="hidden"]:not(:has(:focus-visible)) {
+    --dsh-header-controls-opacity: 0;
+  }
+
+  body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-header-visibility],
+  body[data-dsh-claude-style] [data-dsh-header-visibility]:has(:focus-visible) {
+    --dsh-header-controls-transition: none;
+  }
+
+  /* The tab strip joins the toolbar only while the skin seats it there (D43). */
+  body[data-dsh-claude-style] [data-phase="active"] [data-dsh-header-visibility] :is([data-dsh-view-tabs], [data-dsh-header-utility-fade], [data-dsh-claude-part~="header-corner"]) {
+    opacity: var(--dsh-header-controls-opacity, 1);
+    transition: var(--dsh-header-controls-transition, opacity var(--dsh-claude-timing-surface));
+  }
+}

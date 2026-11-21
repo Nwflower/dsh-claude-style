@@ -17,15 +17,21 @@ const seatSession = (t) => seatStatsSession(t,
 
 /**
  * Land a new reading of 22 turns and record the turns figure — the line's first
- * figure, in whichever language the host speaks — on every frame until the page
- * settles.
+ * figure, in whichever language the host speaks — on every frame until it
+ * reaches the reading, then until the page settles. The count paints its own
+ * frames and asks the scheduler for no pass, so the settle rule alone would
+ * stop reading while it still travels.
  */
 async function turnsWhileLanding(t) {
-  const texts = await t.page.evaluate((line) => {
+  return t.page.evaluate(async (line) => {
+    const turns = () => {
+      const text = document.querySelector(line)?.innerText ?? ''
+      return Number(/\d[\d,]*/.exec(text)?.[0]?.replace(/,/g, '') ?? NaN)
+    }
     window.__pushStats('sessionStats', { turns: 22, steps: 220 })
-    return window.__dshSmokeProbe.watch(() => document.querySelector(line)?.innerText ?? '')
+    const counting = await window.__dshSmokeProbe.until(turns, (readings) => readings.at(-1) === 22, 'the turns figure to reach the new reading')
+    return counting.concat(await window.__dshSmokeProbe.watch(turns))
   }, t.surface('stats.inline-line'))
-  return texts.map((text) => Number(/\d[\d,]*/.exec(text)?.[0]?.replace(/,/g, '') ?? NaN))
 }
 
 export default spec({ page: 'stats-inline' }, ({ test }) => {

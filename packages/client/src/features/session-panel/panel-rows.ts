@@ -1,15 +1,18 @@
 import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
+import { QUIET_ATTR } from '../../constants'
 import { tooltipAnchor } from '../../shared/host-tooltip'
 import { copy } from './copy'
 import { ChevronMark } from './session-panel-marks'
 
 const h = React.createElement
 
-/** Each section owns a native disclosure (D102): its children stay mounted so
+/** Each section owns a native disclosure (D106): its children stay mounted so
  * folding preserves list expansion and an opened job's output. An unchanged
  * `open` prop lets the browser keep the reader's choice across data refreshes.
- * A `folded` section starts closed, with its reading beside the heading.
+ * A `folded` section starts closed, with its reading beside the heading. The
+ * reading is quiet (QUIET_ATTR, D40): the figures' count rewrites it every
+ * frame it travels, and no page-wide pass reads it.
  */
 export function Section({ title, summary, folded, children, kind }: { title: string, summary?: React.ReactNode, folded?: boolean, children?: React.ReactNode, kind?: string | readonly string[] }) {
   const kinds = typeof kind === 'string' ? [kind] : kind ?? []
@@ -19,7 +22,7 @@ export function Section({ title, summary, folded, children, kind }: { title: str
         h('span', { className: 'dsh-claude-panel-section-title' }, title),
         h('span', { className: 'dsh-claude-panel-section-chevron', 'aria-hidden': true },
           h(ChevronMark)),
-        summary === undefined ? null : h('span', { className: 'dsh-claude-panel-section-reading' }, summary))),
+        summary === undefined ? null : h('span', { className: 'dsh-claude-panel-section-reading', [QUIET_ATTR]: '' }, summary))),
     h('div', { className: 'dsh-claude-panel-section-content' }, children))
 }
 
@@ -88,7 +91,7 @@ export function Row(props: { mark?: React.ReactNode, title: string, detail?: str
 
 /**
  * A placeholder bar where a reading will be written once the host's fold
- * answers (D102): one line's height, so the row it stands in keeps the height
+ * answers (D106): one line's height, so the row it stands in keeps the height
  * the written row will have.
  */
 export function Skeleton({ width }: { width: string }) {

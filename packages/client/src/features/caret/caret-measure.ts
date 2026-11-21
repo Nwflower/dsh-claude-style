@@ -91,8 +91,15 @@ interface RememberedSpot {
   spot: CaretSpot | null
 }
 
+/**
+ * What the empty-line probe said for each set of copied styles. The probe is
+ * built from those styles alone, so every input that copies the same ones
+ * shares the reading: a session switch hands the caret a new composer node,
+ * and a probe built for it again would force two style passes over the whole
+ * transcript the switch has just mounted. Emptied when a face loads.
+ */
+const emptyLineSpots = new Map<string, CaretSpot | null>()
 /** What each surface's probe last said, dropped when its key changes. */
-const emptyLineSpots = new WeakMap<Element, RememberedSpot>()
 const plainSpots = new WeakMap<PlainSurface, RememberedSpot>()
 
 /**
@@ -101,9 +108,45 @@ const plainSpots = new WeakMap<PlainSurface, RememberedSpot>()
  */
 let faceGeneration = 0
 
-/** A face finished loading: every remembered probe reading is taken again. */
-export function noteFacesLoaded() {
+/**
+ * The `font-family` lists of every surface the caret has measured. A face no
+ * list names wraps none of them: the transcript's code and formula faces load
+ * one by one as a long session mounts, and each would otherwise drop every
+ * reading and measure the caret again in a frame that is already paying for
+ * the mount.
+ */
+const measuredFamilies = new Set<string>()
+
+/** One `font-family` list's names, unquoted and lower-cased, as a face's `family` is compared to them. */
+function familyNames(list: string) {
+  return list.split(',').map(name => name.trim().replace(/^["']|["']$/g, '').toLowerCase())
+}
+
+/** Remember the family list a surface is drawn in, read in the frame's read phase. */
+export function noteMeasuredFamily(surface: Element) {
+  measuredFamilies.add(getComputedStyle(surface).fontFamily)
+}
+
+/**
+ * Faces finished loading: when any of them is named by a measured surface,
+ * every remembered probe reading is taken again.
+ *
+ * @returns whether the caret has to be measured again.
+ */
+export function noteFacesLoaded(faces: Iterable<FontFace>) {
+  const loaded = new Set<string>()
+  for (const face of faces) loaded.add(familyNames(face.family)[0])
+  let named = false
+  for (const list of measuredFamilies) {
+    if (familyNames(list).some(name => loaded.has(name))) {
+      named = true
+      break
+    }
+  }
+  if (!named) return false
   faceGeneration += 1
+  emptyLineSpots.clear()
+  return true
 }
 
 /**
@@ -114,12 +157,11 @@ export function caretEmptyLineBox(input: Element, probeHome: Element | null): Ca
   if (probeHome === null) return null
   const style = getComputedStyle(input)
   const copied = CARET_PROBE_PROPERTIES.map(name => style.getPropertyValue(name))
-  const key = `${faceGeneration}\u0000${copied.join('\u0000')}`
-  const remembered = emptyLineSpots.get(input)
-  let spot = remembered !== undefined && remembered.key === key ? remembered.spot : null
-  if (remembered === undefined || remembered.key !== key) {
+  const key = copied.join('\u0000')
+  let spot = emptyLineSpots.get(key)
+  if (spot === undefined) {
     spot = takeEmptyLineSpot(copied, probeHome)
-    emptyLineSpots.set(input, { key, spot })
+    emptyLineSpots.set(key, spot)
   }
   if (spot === null) return null
   const inputRect = input.getBoundingClientRect()

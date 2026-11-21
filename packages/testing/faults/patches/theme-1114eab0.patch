@@ -1,8 +1,7 @@
 diff --git a/packages/client/src/shared/popover.css b/packages/client/src/shared/popover.css
-index 92fcee6..3983a4f 100644
 --- a/packages/client/src/shared/popover.css
 +++ b/packages/client/src/shared/popover.css
-@@ -56,10 +56,9 @@ body[data-dsh-claude-style] .dsh-claude-popover-card[data-open="true"] {
+@@ -41,10 +41,9 @@ body[data-dsh-claude-style] .dsh-claude-popover-card[data-open="true"] {
  body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-popover-card {
    background: var(--dsh-claude-card);
    /* The edge is the dark border ladder's highlight (tokens.json), so the card
@@ -13,10 +12,10 @@ index 92fcee6..3983a4f 100644
 -  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.35), 0 8px 28px rgba(0, 0, 0, 0.65), 0 2px 8px rgba(0, 0, 0, 0.45);
 +  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.65), 0 2px 8px rgba(0, 0, 0, 0.45);
  }
- /* The host-mounted menu cards of the account footer and the hero row's pickers
-    (features/account, features/hero-menu) take the same raised dark card; the
-@@ -67,7 +66,7 @@ body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-popover-card {
- body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu], [data-dsh-claude-hero-menu]) {
+ /* ---------- Host menu cards the skin repaints ---------- */
+ /* The host's shared Menu card, wherever a feature stamps it: the account menu
+@@ -118,7 +117,7 @@ body[data-dsh-claude-style] :is([data-dsh-claude-account-menu], [data-dsh-claude
+ body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu], [data-dsh-claude-hero-menu], [data-dsh-claude-more-menu]) {
    background: var(--dsh-claude-card) !important;
    border-color: var(--dsw-alias-border-l1) !important;
 -  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.35), 0 8px 28px rgba(0, 0, 0, 0.65), 0 2px 8px rgba(0, 0, 0, 0.45) !important;

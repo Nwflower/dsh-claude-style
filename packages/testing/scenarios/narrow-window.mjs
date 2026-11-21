@@ -35,8 +35,6 @@ import surfaceTable from '../data/surface.json' with { type: 'json' }
 /** The skin's part mark, read off the surface table rather than spelled here (D92). */
 const PART = surfaceTable.surface.find((entry) => entry.id === 'skin.part').attribute
 const part = (name) => `[${PART}~="${name}"]`
-/** The attribute view-tabs puts on the header while its strip shares the caption row. */
-const TITLEBAR_TABS = surfaceTable.surface.find((entry) => entry.id === 'view-tabs.titlebar').attribute
 
 /** The window both readings are taken in: under the 768px the host lays its own tracks into. */
 const WINDOW = { width: 752, height: 900 }
@@ -51,21 +49,9 @@ const SAMPLES = 60
 const SETTLE_FRAMES = 8
 
 /**
- * The widths the raised state is looked for in, ascending: the three the
- * placement's own arithmetic points at, then 40px steps up to 1100.
- *
- * The issue's symptom needs the title in the caption row and the sidebar open at
- * once. At 752px that combination does not exist. features/header-band's pass
- * gives the title
- * `room = rightStop − GAP − (stripWidth + GAP) − left`, where the row's left
- * edge is the sidebar column's right edge while that column stands; the folded
- * reading below measures the pass's own numbers (title 130.23 wide, strip
- * content 122, GAP 8, both control clusters lifted) and its `--dsh-header-band-max`
- * of 236px against a room of 312px, so the same terms put the open-column room at
- * 68–88px — under `MIN_TITLE` (placement.ts, 120px), which is why the title stays
- * in its row at 752px. The width is therefore read off the page rather than
- * guessed: the first candidate where the pass really lifts the title with the
- * column open is the one sampled.
+ * Sample the first width where the title fits in the caption row while the
+ * sidebar is open. The space begins at the sidebar's right edge and ends at
+ * the lifted controls, so the host's measured boxes decide which width fits.
  */
 const RAISED_WIDTHS = [800, 900, 1000, 1040, 1080, 1100]
 
@@ -73,23 +59,18 @@ const RAISED_WIDTHS = [800, 900, 1000, 1040, 1080, 1100]
  * The widths the title's lift is swept at, ascending, and the 2px fill between
  * the two steps the header's own token flips between.
  *
- * The same arithmetic that explains 752px puts the threshold at `room ≥ 120`,
- * i.e. `W ≥ 684 + 120 = 804px`, and there the pass has two inputs that could
- * decide each other: the strip's share of the title's room counts only while the
- * strip's content box stands inside the caption strip (`strip.inBand`, measured
- * through its top), and the header's own height changes when the title leaves
- * its row. A row that flips once per frame would sit exactly on this edge, so
- * the edge is walked step by step rather than approached at one width.
+ * The header's height changes when the title leaves its row. Walking adjacent
+ * widths exposes a placement that repeatedly crosses its own threshold.
  */
-const SWEEP_WIDTHS = [780, 790, 800, 810, 820, 830, 840, 850, 860, 870, 880]
+const SWEEP_WIDTHS = [800, 810, 820, 830, 840, 850, 860, 870, 880, 890, 900]
 const SWEEP_FRAMES = 30
 const REFILL_STEP_PX = 2
 const REFILL_MAX = 4
 /** How long one step may wait for its token and its column to hold still: a step that never settles says so. */
 const SWEEP_SETTLE_MS = 2000
 
-/** The widths the 860–900 step is looked for in, 2px apart: the header stood at 23px through 870, at 1px from 880. */
-const STEP_WIDTHS = Array.from({ length: 21 }, (_, at) => 860 + at * 2)
+/** Sample header heights around the title's lift edge, 2px apart. */
+const STEP_WIDTHS = Array.from({ length: 21 }, (_, at) => 850 + at * 2)
 /** The declarations a box can hold a height by, read on the header and on every box under it. */
 const BOX_STYLES = ['display', 'height', 'min-height', 'padding-top', 'padding-bottom', 'margin-top', 'margin-bottom', 'grid-template-rows']
 
@@ -110,7 +91,6 @@ const BAND = {
   header: '[data-dsh-header-band]',
   row: '[data-dsh-header-row]',
   title: '[data-dsh-header-title]',
-  strip: `[${TITLEBAR_TABS}] [data-dsh-header-band-tabs]`,
   utilities: part('header-utilities'),
   corner: part('header-corner'),
   trail: '[data-dsh-header-trail]',
@@ -124,7 +104,6 @@ const VARS = {
   left: '--dsh-header-band-left',
   max: '--dsh-header-band-max',
   titleTop: '--dsh-header-band-title-top',
-  tabs: '--dsh-header-band-tabs-left',
   right: '--dsh-header-band-right',
 }
 
@@ -151,9 +130,6 @@ const SAMPLED = [
   ['标题矩形的 top', 'titleTop'],
   ['标题矩形的 width', 'titleWidth'],
   ['标题矩形的 height', 'titleHeight'],
-  ['视图页条的 --dsh-header-band-tabs-left', 'varTabs'],
-  ['视图页条内容的 top', 'stripContentTop'],
-  ['视图页条内容的 width', 'stripContentWidth'],
   ['控件簇的 --dsh-header-band-right', 'varUtilitiesRight'],
   ['角座控件的 --dsh-header-band-right', 'varCornerRight'],
 ]
@@ -231,7 +207,6 @@ async function pressToggle(page, folded) {
   await page.locator(NARROW.toggle).first().click()
   await leaveRail(page)
   const state = await waitForRail(page, folded)
-  // The strip's entrance and the pass that follows the track land after it.
   await page.waitForTimeout(400)
   return state
 }
@@ -357,9 +332,6 @@ async function sweepEdge(page) {
       folded: state.folded,
       settled: state.settled,
       max: last.varMax,
-      tabs: last.varTabs,
-      stripTop: last.stripContentTop,
-      stripWidth: last.stripContentWidth,
       moving,
       last,
       frames,
@@ -384,7 +356,7 @@ async function sweepEdge(page) {
 }
 
 /** One swept width, for the check line: what the pass wrote there and what kept changing. */
-const stepLine = (step) => `${step.width}px[band ${step.token}, 列 ${step.column}, max ${step.max}, tabs ${step.tabs}, 条内容 top ${step.stripTop}, ` +
+const stepLine = (step) => `${step.width}px[band ${step.token}, 列 ${step.column}, max ${step.max}, ` +
   `变化 ${step.moving.length}${step.moving.length === 0 ? '' : `：${step.moving.map((entry) => `${entry.label} ${entry.distinct.join('↔')} 周期 ${entry.period === null ? '不定' : `${entry.period} 帧`}`).join('；')}`}]`
 
 /** The header and every box that can hold its height, with the declarations that hold it. */
@@ -402,12 +374,10 @@ const readStep = (page) => page.evaluate(({ band, vars, properties }) => {
   }
   const header = document.querySelector(band.header)
   const where = (selector) => (header === null ? null : header.querySelector(selector))
-  const strip = document.querySelector(band.strip)
   return {
     width: window.innerWidth,
     token: header === null ? null : header.getAttribute('data-dsh-header-band'),
     max: number(where(band.title), vars.max),
-    tabs: number(strip, vars.tabs),
     header: describe(header),
     children: [...(header === null ? [] : header.children)].map(describe),
     row: describe(where(band.row)),
@@ -416,8 +386,6 @@ const readStep = (page) => page.evaluate(({ band, vars, properties }) => {
     corner: describe(where(band.corner)),
     trail: describe(where(band.trail)),
     rowChildren: [...((where(band.row)?.children) ?? [])].map(describe),
-    strip: describe(strip),
-    stripChildren: [...(strip === null ? [] : strip.children)].map(describe),
   }
 }, { band: BAND, vars: VARS, properties: BOX_STYLES })
 
@@ -444,10 +412,9 @@ function boxChanges(before, after) {
     for (const field of ['node', 'width', 'height', 'top']) if (one[field] !== other[field]) rows.push(`${name} ${field}: ${JSON.stringify(one[field])} → ${JSON.stringify(other[field])}`)
     for (const property of Object.keys(one.styles)) if (one.styles[property] !== other.styles[property]) rows.push(`${name} ${property}: ${one.styles[property]} → ${other.styles[property]}`)
   }
-  for (const name of ['header', 'row', 'title', 'utilities', 'corner', 'trail', 'strip']) compare(name, before[name], after[name])
+  for (const name of ['header', 'row', 'title', 'utilities', 'corner', 'trail']) compare(name, before[name], after[name])
   before.rowChildren.forEach((child, at) => compare(`标题行子元素 ${at}`, before.rowChildren[at], after.rowChildren[at]))
   before.children.forEach((child, at) => compare(`头部子元素 ${at}`, before.children[at], after.children[at]))
-  before.stripChildren.forEach((child, at) => compare(`页条子元素 ${at}`, before.stripChildren[at], after.stripChildren[at]))
   return rows
 }
 
@@ -466,10 +433,6 @@ const waitForTitleLift = (page) => page.waitForFunction(({ band, vars }) => {
  * One reading per animation frame of everything the pass writes, with the boxes
  * the numbers are painted on: a value that repeats while its box moves, or a box
  * that moves while its value repeats, is one frame of a placement still deciding.
- *
- * The strip's room is the union of the boxes it holds, which is the box the
- * pass measures (shared/content-box.ts): the row the host draws that strip in
- * spans the header, so the row's own box would say the strip takes the window.
  */
 const sampleBand = (page, count) => page.evaluate(({ band, vars, count }) => new Promise((resolve) => {
   const number = (element, name) => {
@@ -479,16 +442,6 @@ const sampleBand = (page, count) => page.evaluate(({ band, vars, count }) => new
   }
   const round = (value) => Math.round(value * 100) / 100
   const rect = (element) => (element === null ? null : element.getBoundingClientRect())
-  const union = (container) => {
-    if (container === null) return null
-    const boxes = [...container.children].map((child) => child.getBoundingClientRect())
-      .filter((box) => box.width > 0 || box.height > 0)
-    if (boxes.length === 0) return null
-    const left = Math.min(...boxes.map((box) => box.left))
-    const top = Math.min(...boxes.map((box) => box.top))
-    const right = Math.max(...boxes.map((box) => box.right))
-    return { left, top, width: right - left }
-  }
   const read = (at) => {
     const header = document.querySelector(band.header)
     const where = (selector) => (header === null ? null : header.querySelector(selector))
@@ -496,11 +449,9 @@ const sampleBand = (page, count) => page.evaluate(({ band, vars, count }) => new
     const title = where(band.title)
     const utilities = where(band.utilities)
     const corner = where(band.corner)
-    const strip = document.querySelector(band.strip)
     const headerBox = rect(header)
     const rowBox = rect(row)
     const titleBox = rect(title)
-    const stripContent = union(strip)
     return {
       t: Math.round(at),
       band: header === null ? null : header.getAttribute('data-dsh-header-band'),
@@ -521,9 +472,6 @@ const sampleBand = (page, count) => page.evaluate(({ band, vars, count }) => new
       titleTop: titleBox === null ? null : round(titleBox.top),
       titleWidth: titleBox === null ? null : round(titleBox.width),
       titleHeight: titleBox === null ? null : round(titleBox.height),
-      varTabs: number(strip, vars.tabs),
-      stripContentTop: stripContent === null ? null : round(stripContent.top),
-      stripContentWidth: stripContent === null ? null : round(stripContent.width),
       varUtilitiesRight: number(utilities, vars.right),
       varCornerRight: number(corner, vars.right),
     }
@@ -572,7 +520,7 @@ function sequence(entry) {
 /** The pieces one reading of the row carries, short enough for one check line. */
 function drawn(frame) {
   return ['varTop', 'varHeight', 'paddingTop', 'headerTop', 'headerHeight', 'varLift', 'rowLeft', 'rowTop', 'rowHeight',
-    'varLeft', 'varMax', 'titleTop', 'titleWidth', 'varTabs', 'varUtilitiesRight', 'varCornerRight']
+    'varLeft', 'varMax', 'titleTop', 'titleWidth', 'varUtilitiesRight', 'varCornerRight']
     .map((key) => `${key}=${frame[key]}`).join(' ')
 }
 
@@ -662,7 +610,7 @@ function narrowWindowScenario({ check, observe }) {
         reRead: { width: edge.again.width, stable: edge.stable, last: edge.again.last },
         steps: edge.steps.map((step) => ({
           width: step.width, token: step.token, column: step.column, folded: step.folded, settled: step.settled,
-          max: step.max, tabs: step.tabs, stripTop: step.stripTop, stripWidth: step.stripWidth,
+          max: step.max,
           utilitiesRight: step.last.varUtilitiesRight, cornerRight: step.last.varCornerRight,
           rowLeft: step.last.rowLeft, titleWidth: step.last.titleWidth, headerHeight: step.last.headerHeight,
           paddingTop: step.last.paddingTop,
@@ -678,16 +626,16 @@ function narrowWindowScenario({ check, observe }) {
       const changed = low === null ? [] : boxChanges(low, high)
       notes.step = {
         edge: low === null ? null : [low.width, high.width], changed,
-        table: step.steps.map((entry) => ({ width: entry.width, token: entry.token, max: entry.max, tabs: entry.tabs,
+        table: step.steps.map((entry) => ({ width: entry.width, token: entry.token, max: entry.max,
           headerHeight: entry.header.height, children: entry.children.map((child) => (child.absent === true ? null : `${child.node} ${child.width}×${child.height}`)) })),
-        boxes: low === null ? null : { before: { ...low, children: low.children, stripChildren: low.stripChildren }, after: high },
+        boxes: low === null ? null : { before: low, after: high },
       }
       await page.setViewportSize({ ...WINDOW })
       await page.waitForTimeout(300)
       const moving = [...driftOf(open), ...driftOf(shut)]
       const movingRaised = driftOf(above)
       const hostTrack = firstTrack(expanded.inline)
-      const placed = open[0].band !== null && open[0].band !== '' && open[0].varTabs !== null &&
+      const placed = open[0].band !== null && open[0].band !== '' &&
         open[0].varUtilitiesRight !== null && open[0].varCornerRight !== null
       const lifted = notes.titleLifted === true && shut[0].varLeft !== null && shut[0].varMax !== null &&
         shut[0].varLift !== null && shut[0].varTop !== null
@@ -706,8 +654,8 @@ function narrowWindowScenario({ check, observe }) {
           JSON.stringify({ collapsed: notes.expand, folded: notes.fold, frame: expanded, hostTrack })),
         check('窄窗口里侧栏展开时，顶栏放置仍然落在头部与两个控件簇上',
           placed,
-          `band=${open[0].band} 头部 top=${open[0].headerTop} height=${open[0].headerHeight} 条 left=${open[0].varTabs} ` +
-            `条内容 ${open[0].stripContentWidth}×${open[0].stripContentTop} 控件簇 right=${open[0].varUtilitiesRight} 角座 right=${open[0].varCornerRight}`),
+          `band=${open[0].band} 头部 top=${open[0].headerTop} height=${open[0].headerHeight} ` +
+            `控件簇 right=${open[0].varUtilitiesRight} 角座 right=${open[0].varCornerRight}`),
         check('顶栏放置在一段采样里落定后不再改变',
           open.length >= 40 && shut.length >= 40 && moving.length === 0,
           `侧栏展开 ${open.length} 帧、侧栏收起 ${shut.length} 帧，第 ${SETTLE_FRAMES} 帧之后判落定，仍在变化的量 ${moving.length} 个；` +
@@ -730,14 +678,14 @@ function narrowWindowScenario({ check, observe }) {
         observe('标题抬升的边界每一档的读数',
           edge.stable.length === 0 && edge.steps.every((step) => step.settled && step.column >= OPEN_MIN_PX),
           `${edge.steps.map(stepLine).join('\n      ')}`),
-        observe('侧栏展开时 860–900 之间那处头部高度的台阶落到了具体节点与属性', low !== null && changed.length > 0,
-          low === null ? '这 21 档里头部高度没有台阶' : `${low.width}px 头部 ${low.header.height}px、${high.width}px 头部 ${high.header.height}px；max ${low.max} → ${high.max}，页条 left ${low.tabs} → ${high.tabs}；变化的字段：${changed.join('；')}`),
+        observe('侧栏展开时标题抬升附近的头部高度变化落到了具体节点与属性', low !== null && changed.length > 0,
+          low === null ? '这 21 档里头部高度没有台阶' : `${low.width}px 头部 ${low.header.height}px、${high.width}px 头部 ${high.header.height}px；max ${low.max} → ${high.max}；变化的字段：${changed.join('；')}`),
         observe('侧栏收起后标题也抬进顶栏，头部按量到的内缩关闭、标题行按量到的抬升抬起',
           lifted,
           `band=${shut[0].band} left=${shut[0].varLeft} max=${shut[0].varMax} titleTop=${shut[0].varTitleTop} ` +
             `rowLift=${shut[0].varLift} headerTop=${shut[0].headerTop} paddingTop=${shut[0].paddingTop} ` +
             `rowLeft=${shut[0].rowLeft} rowTop=${shut[0].rowTop} rowHeight=${shut[0].rowHeight} ` +
-            `titleBox=${shut[0].titleWidth}x${shut[0].titleHeight} 条内容=${shut[0].stripContentWidth}@${shut[0].stripContentTop}`),
+            `titleBox=${shut[0].titleWidth}x${shut[0].titleHeight}`),
       ]
     },
   }

@@ -1,4 +1,4 @@
-/** The command invocation facts the details rail reads from host events (D102). */
+/** The command invocation facts the details rail reads from host events (D106). */
 const COMMAND_TOOLS = new Set(['bash', 'pwsh', 'terminal_send'])
 const PROCESS_KINDS = new Set(['bash', 'pwsh', 'pty-send'])
 

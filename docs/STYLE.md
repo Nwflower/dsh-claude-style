@@ -299,13 +299,24 @@ page itself: no block of their own behind them, and they dim with a modal's mask
 like everything else. Their hover plate is the system's, a tint of the button
 glyph's colour.
 
+**The session's menu at the name.** The more-actions trigger — the launcher
+whose panel carries the session's own actions — starts at the end of the
+session title in either header row, with the preset cluster after it.
+The button uses a downward SVG chevron and stays visible as the surrounding
+tools fade. Its panel opens at the button, and the utilities cluster closes the
+gap the trigger leaves. The title anchors the button in the conversation header
+whenever that is where the title stands. The shell's application menu seat keeps
+the caption row's left end, and the row's content starts after it.
+
 **The header's controls.** The conversation header's controls read as one row of
 plates, in the caption row and in the header's own row alike: a 28px square at an
 8px radius with a 16px glyph in the secondary ink, and the skin's hover plate
 under the pointer. The row divides into the session's actions and the panel
 switches: three actions — open-with, changes, more — stand 6px apart, a 16px
 hairline drawn on the first switch opens a 18px break, and the bottom-panel
-switch, the details switch and the right-panel switch follow at 6px. The
+switch and the details switch follow at 6px. In the caption row the right-panel
+switch has 8px of leading space in both states, so it keeps the same place
+when its action changes from opening to closing. The
 open-with split carries no outline of its own; its app icon keeps the app's
 colour throughout, and the whole control takes one plate rather than one per
 half.
@@ -438,9 +449,33 @@ separate right-aligned duration beside their execution mode and stop control.
 An output row names the file and the folder it lies in, and only a
 file the model presented carries a state word. Its mark is a single-stroke sheet
 in the row's own ink, with a picture frame for an image, so a coloured file-type
-badge never competes with the legend. With the rail standing the
-conversation's view switch shares the title's line at the row's right end,
-before the utilities, and the title truncates to the span left over.
+badge never competes with the legend.
+
+The conversation view switch keeps the host's text tabs and selection. The
+label's text colour brightens on hover or keyboard focus. The shared underline
+rests under the selected label. Hovering a tab previews its position with a
+transform animation. The leading edge stretches across the gap and moves just
+past the hovered label as the trailing edge catches up. Leaving the tabs
+returns the line to the selected label. Selection updates the resting position
+without starting an animation. Reduced motion moves the line immediately.
+The tabs and their overflow menu sit before the right-hand tools in the
+conversation header, including the Windows caption when it has room. A narrow
+header keeps them right-aligned on the next line. The details rail leaves the
+header's width intact. The host's bottom border separates the header from the
+conversation and takes the same colour as the column dividers.
+
+The title area and the session's more-actions trigger stay visible. The view
+tabs, their overflow menu and the right-hand tools fade in while the pointer is
+over the header, the main content, the sidebar or the details rail, including the
+composer and the Windows caption space above the conversation. The caption carries
+the sidebar's collapse control, so those columns keep the header buttons up. The
+tools fade out over the host right panel and keep their place in the header.
+Keyboard focus reveals them immediately. Reduced motion applies the opacity
+changes immediately, and touch-only devices keep the controls visible.
+The Conversation setting Hide toolbar outside the conversation starts on.
+Turning it off keeps those controls visible throughout the active conversation.
+When Right-align Chat / Trajectory tabs is off, the host's view tabs and their
+menu stay visible in their original row.
 
 The two figures sections put a label on the left and a value on the right, one
 figure a row, so a long duration or token count keeps the row's width. Session
@@ -477,13 +512,11 @@ runs, and its tokens stay in the session's own figures.
   code block or a keycap reads as a chamfer catching the top light over whatever
   fill it sits on rather than as a contour whose colour has to be re-picked per
   surface. The light rungs stay the warm opaque ladder.
-- Separator: `--dsh-claude-divider`, a rung below the lightest border, drawn at
-  0.5px on every line that only separates — the sidebar's foot area, the search
-  panel's foot, the context stats, the settings rows, a menu's separators, the
-  file block's IN/OUT line and the transcript's `hr`. The line belongs to the
-  layout rather than to a surface's opening animation, so one thickness covers
-  every separator a card holds. A card, a field and a popover keep their 1px
-  border in l1, so an outline always reads heavier than a separator inside it.
+- Layout dividers: 0.5px in `--dsw-alias-border-l1` below the conversation header
+  and where the sidebar and details rail meet the conversation.
+- Content dividers: 0.5px in `--dsh-claude-divider`, a rung below the lightest
+  border, for details sections, menu groups, settings rows, foot areas and the
+  transcript's `hr`. Cards, fields and popovers use a 1px outline in l1.
 - Spacing: 4 px rhythm.
 - Bottom edge: the transcript never fades behind the composer by shadow. The
   composer seat paints an opaque `var(--dsw-alias-bg-base)` bar across its own
@@ -559,6 +592,7 @@ edit the JSON, not the table.
 | `--dsh-claude-duration-fade` | `300ms` | a slow cross-fade: the theme flip, the reasoning knob's glow, a placeholder handing its place to what it stood for |
 | `--dsh-claude-duration-column` | `300ms` | a column taking or giving up width beside the chat: the conversation's details rail opening or closing, and the chat's own inset following it |
 | `--dsh-claude-duration-bounce` | `350ms` | a switch's knob travelling across with its double bounce |
+| `--dsh-claude-duration-tab-underline` | `280ms` | the conversation tab underline stretching and settling under the next label |
 | `--dsh-claude-duration-flight` | `400ms` | the sent message flying from the composer to its row |
 | `--dsh-claude-duration-step` | `500ms` | one step of the reasoning window's text rising two lines |
 | `--dsh-claude-duration-pop` | `500ms` | something popping into place: the overtime badge's own pill |
@@ -594,6 +628,8 @@ edit the JSON, not the table.
 | `--dsh-claude-ease-status-title` | `cubic-bezier(0.45, 0, 0.55, 1)` | the middle travel segment of the strong running-title shimmer |
 | `--dsh-claude-ease-in-out` | `ease-in-out` | something that leaves and returns, or swaps in place: wording swaps, pulses, flashes |
 | `--dsh-claude-ease-glide` | `cubic-bezier(0.22, 0.61, 0.36, 1)` | travel along a track: the sliding highlight, the reasoning slider, the search dialog's entrance, the reasoning window's step, the wording box's width, the stream's slide |
+| `--dsh-claude-ease-tab-leading-edge` | `cubic-bezier(0.2, 0, 0.32, 1.28)` | the leading edge of the tab underline stretching just past the new label before settling |
+| `--dsh-claude-ease-tab-trailing-edge` | `cubic-bezier(0.52, 0, 0.72, 1)` | the trailing edge of the tab underline accelerating later and easing to a stop as it catches the leading edge |
 | `--dsh-claude-ease-roll` | `cubic-bezier(0.4, 0, 0.2, 1)` | digits rolling over: the file rows' tail and the process group header's counts |
 | `--dsh-claude-ease-column` | `cubic-bezier(0.4, 0, 0.2, 1)` | a column taking or giving up width beside the chat, and the chat's inset following it |
 | `--dsh-claude-ease-spring` | `cubic-bezier(0.34, 1.45, 0.64, 1)` | a small overshoot as something lands: the overtime badge popping in, a switch's knob bouncing past its end |
@@ -638,7 +674,7 @@ edit the JSON, not the table.
 | `--dsh-claude-layer-control` | `10` | a control kept over the composer card's own stacked rows: the send and stop buttons, the reasoning picker's trigger |
 | `--dsh-claude-layer-picker` | `20` | a picker that hangs its card from inside the composer: the permission picker, whose card has to stand over the controls beside it |
 | `--dsh-claude-layer-rail` | `24` | the conversation's details column: over the chat and the composer, under the host's own floating panels and under the header row, which hangs its menus in a layer of its own |
-| `--dsh-claude-layer-chrome` | `30` | the window's title row the skin draws into: the header band's title and actions, the titlebar's view tabs, over the host's own header |
+| `--dsh-claude-layer-chrome` | `30` | the window's title row the skin draws into: the title, view tabs and actions over the host's own header |
 | `--dsh-claude-layer-peek` | `40` | the sidebar opened over the page while the pointer rests on its toggle: over the main window's title row and its own controls, under the floating cards and menus its rows open |
 | `--dsh-claude-layer-float` | `99999` | a floating card or menu over everything the host draws: the popover cards, the hero menu |
 | `--dsh-claude-layer-tooltip` | `100000` | the host's own tooltip bubble while it explains a control inside a card the skin floats: over those cards, under a takeover |
@@ -655,9 +691,14 @@ Both are solid (never translucent) and `!important`, so they override whatever
 colour the text underneath carries — links, inline code, syntax tokens. CSS
 cannot read window focus: Chromium reaches the inactive paint through its own
 internal `-internal-inactive-selection-*` properties, which a stylesheet cannot
-address. `packages/client/src/features/composer/selection-mirror.ts` therefore
-mirrors `document.hasFocus()` onto `data-dsh-window-blur` and the stylesheet
-switches on that attribute; the selection itself survives the blur.
+address. `packages/client/src/core/selection-paint.ts` therefore mirrors
+`document.hasFocus()` onto `data-dsh-window-blur` while a range is selected, and
+the stylesheet switches on that attribute; the selection itself survives the
+blur. The same module marks a transcript's root with
+`data-dsh-claude-selection-paint` once a selection starts in it, and the
+transcript's paints key on that mark: a `::selection` rule that matches an
+element costs that element a selection style on every recalculation, and a
+session switch mounts the new transcript without the mark.
 
 The window's chrome is not text. The sidebar column and the conversation header
 take `user-select: none`: a press on a row or on the session title is a gesture
@@ -667,7 +708,8 @@ it passes. The transcript, the composer's draft and a text field inside the
 chrome keep their own selection, which Chromium grants an editing host under a
 locked ancestor.
 
-The session title is the session's name, and a press on it renames the session.
+The session title uses the space available in its header row and ends with an
+ellipsis when the name exceeds that space. A press on it renames the session.
 The pointer over the title's last crumb raises a plate under the words — the
 host's own crumb already carries the padding and the radius — with a tip under
 the segment naming the press, in the label ink on the canvas tone the usage
@@ -808,7 +850,13 @@ the written-back tokens and the cache share, and it is among the figures the
 ladder gives up when the line needs the room for the total; in the block it is
 the usage section's first row.
 
-In the toolbar's placement the segment keeps its width across a session switch:
+Compact footer figures join the tool row between the left controls and the
+model and context controls. Their seat takes the space available in that row.
+When even the shortest statistics line cannot fit, it takes its own row below
+the tools. The invisible measuring copy stays inside its positioning box so
+it cannot extend the transcript's scroll range beyond the composer.
+
+In the toolbar the cost segment keeps its width across a session switch:
 the session's figure is replaced while the next one is being priced, so the
 amount sits in a box of an amount's measure, right-aligned so a growing figure
 extends left, and the box stands as the currency symbol and a dash in

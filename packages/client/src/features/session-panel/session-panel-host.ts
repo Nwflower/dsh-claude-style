@@ -1,5 +1,5 @@
 /**
- * The panel's way back into the host (D102): it opens a produced file in the
+ * The panel's way back into the host (D106): it opens a produced file in the
  * host's own preview and a subagent or Team member's session in the
  * conversation view.
  *
@@ -28,7 +28,7 @@ export function panelHost(): HostContext | null {
   return host
 }
 
-/** Request human cancellation through the same owner-fenced service as the host's job list (D102). */
+/** Request human cancellation through the same owner-fenced service as the host's job list (D106). */
 export async function stopPanelJob(sessionId: string, jobId: string) {
   const jobs = hostJobs(host)
   if (typeof jobs?.kill !== 'function') throw new Error('the host jobs controller is unavailable')
@@ -36,7 +36,7 @@ export async function stopPanelJob(sessionId: string, jobId: string) {
   if (answer.ok !== true) throw new Error('the host refused to stop the job')
 }
 
-/** Interrupt a continuable child's active turn under the current parent's authority (D102). */
+/** Interrupt a continuable child's active turn under the current parent's authority (D106). */
 export async function stopPanelSubagent(parentSessionId: string, childSessionId: string) {
   const subagents = hostRemoteSubagents(host)
   if (typeof subagents?.interruptByParent !== 'function') throw new Error('the host subagent controller is unavailable')

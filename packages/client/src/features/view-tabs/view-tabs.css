@@ -1,151 +1,123 @@
-/* ---------- conversation view tabs: the skin's own segment control ---------- */
-/* The host counts tab room from the row's width, so the row keeps the header's
-   full width while the plate inside it hugs the tabs; the plate wears the shared
-   small segment look (shared/segment-control.css) in place of the shipped
-   underline. Every rule here keys on the stamp view-tabs.ts writes in the batch
-   that mounts the strip (#189) — it stands in for `header:has(tabs)`, which
-   re-matched the document on every change — and turning the preference off
-   removes it, leaving the host's strip untouched. */
-body[data-dsh-claude-style] [data-dsh-view-tabs],
-body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] {
-  /* Hug the tabs: the host's tablist is a full-width flex row, so the pill shell
-     would stretch across the header and clicks right of the last tab would land
-     on nothing. The row overrides this with the width its own count needs. */
-  width: fit-content;
-  max-width: 100%;
-  align-self: flex-start;
-  /* Horizontally centred (the strip spans grid-column 1/-1); the vertical shift
-     is measured in view-tabs.ts, and this fallback (the strip's own row) holds
-     when the room above is missing. */
-  justify-self: center;
-  transform: translate(var(--dsh-view-tabs-shift-x, 0px), var(--dsh-view-tabs-shift, -10px));
-  /* The sliding pill (shared/sliding-pill.css) is absolutely placed against the control. */
-  position: relative;
-}
-/* The row spans the header so the host counts room for every tab, centres what
-   it draws and takes no press of its own. What rises is the content, not the
-   row: translating it would cover the header actions and, on macOS, sit on the
-   native drag region, where a press moves the window (#174). */
+/* The host keeps the tab nodes and counts overflow from the width of the row (D43). */
 body[data-dsh-claude-style] [data-dsh-view-tabs] {
+  --dsh-view-tab-inline-padding: 6px;
   display: flex;
-  width: 100%;
-  /* The host pads the left end for its title's line; a centred group takes the
-     row's own middle instead. */
-  padding-left: 0;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
   flex-wrap: nowrap;
-  gap: 6px;
+  gap: 8px;
+  min-height: 30px;
+  margin-top: 4px;
+  padding-inline: 0;
   pointer-events: none;
-  transform: none;
 }
+
+/* The inline seat follows the title row and leaves its width available to the
+   host's overflow calculation. The title cluster gives the tabs their room.
+   The header's width stays the same as the details rail opens (D106). */
+body[data-dsh-claude-style] [data-dsh-view-tabs-taken="inline"]:not([data-dsh-header-band])[data-dsh-claude-holds~="view-tabs"],
+body[data-dsh-claude-style] [data-dsh-header-band~="tabs"][data-dsh-claude-holds~="view-tabs"] {
+  min-height: 0;
+  padding-bottom: 10px;
+}
+
+body[data-dsh-claude-style] [data-dsh-view-tabs-taken="inline"]:not([data-dsh-header-band]) [data-dsh-claude-part~="title-cluster"] {
+  margin-inline-end: calc(var(--dsh-view-tabs-inline-space) - var(--title-cluster-fade, 20px));
+}
+
+body[data-dsh-claude-style] :is([data-dsh-view-tabs-taken="inline"]:not([data-dsh-header-band]), [data-dsh-header-band~="tabs"]) [data-dsh-view-tabs] {
+  grid-column: auto;
+  left: 0;
+  width: auto;
+  margin: 0;
+  transform: translateY(-50%);
+}
+
+body[data-dsh-claude-style] [data-dsh-view-tabs-taken="inline"]:not([data-dsh-header-band]) [data-dsh-view-tabs] {
+  position: absolute;
+  right: var(--dsh-view-tabs-inline-right);
+  top: var(--dsh-view-tabs-inline-top);
+  z-index: 9;
+}
+
+body[data-dsh-claude-style] [data-dsh-header-band~="tabs"] [data-dsh-view-tabs] {
+  position: fixed;
+  right: var(--dsh-view-tabs-caption-right);
+  top: calc(var(--dsh-header-band-height) / 2);
+  z-index: var(--dsh-claude-layer-chrome);
+}
+
+/* Only the tabs and the overflow trigger take clicks in the drag region. */
 body[data-dsh-claude-style] [data-dsh-view-tabs] > * {
-  transform: translate(var(--dsh-view-tabs-shift-x, 0px), var(--dsh-view-tabs-shift, -10px));
-}
-/* The Windows titlebar mode places the strip itself and writes no shift; the
-   content keeps out of the translate there. */
-body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs] > * {
-  transform: none;
-}
-/* The inline strip fades with the conversation pane. In the Windows caption
-   the strip stays visible: native windows such as the IME candidate list can
-   clear Chromium’s hover chain while the pointer remains still (#397). */
-body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-header"]:not([data-dsh-titlebar-tabs]) [data-dsh-view-tabs],
-body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-header"]:not([data-dsh-titlebar-tabs]) [data-dsh-view-tabs] [data-conversation-tabs] {
-  opacity: 0;
-  transition: opacity var(--dsh-claude-duration-surface) var(--dsh-claude-ease-standard);
-}
-body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-dsh-claude-part~="conversation-header"]:not([data-dsh-titlebar-tabs]) [data-dsh-view-tabs],
-body[data-dsh-claude-style] [data-dsh-claude-part~="center-column"]:hover [data-dsh-claude-part~="conversation-header"]:not([data-dsh-titlebar-tabs]) [data-dsh-view-tabs] [data-conversation-tabs] {
-  opacity: 1;
-}
-/* What stands in the strip takes a press despite the row's own stand-down, and is
-   the only no-drag box in the titlebar band. */
-body[data-dsh-claude-style] [data-dsh-view-tabs] > *,
-body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] > * {
   pointer-events: auto;
   -webkit-app-region: no-drag;
 }
-/* The tablist is the plate: the shared sheet draws its shell and the pill
-   travels inside it; the host wraps its own tabs, so they stay on one line. */
+
 body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tabs-list"] {
-  position: relative;
+  display: flex;
   flex-wrap: nowrap;
-  /* The host keeps a 25px line for its own tab boxes; the plate is the shell
-     drawn around them. */
-  min-height: 0;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
 }
-body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tab"] {
-  /* The host's negative text-tab margins would overlap adjacent segments. */
-  margin: 0;
-  height: 22px;
-  /* The host's own tab asks for a 25px box; the pill above it is one segment. */
-  min-height: 0;
-  padding: 0 10px;
+
+body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] {
+  position: relative;
 }
-/* A tab another plugin renders into this strip (issue #275): it carries only its
-   own class, so the plate states one segment box on whatever stands in it and
-   leaves the look to the plugin. The box reaches the tablist's direct child
-   alone; a wrapped button's own bottom padding is the plugin's to drop (#285). */
-body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] > :not([data-dsh-claude-part~="view-tab"]) {
+
+body[data-dsh-claude-style] [data-dsh-view-tabs] [data-conversation-tabs] > * {
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-sizing: border-box;
-  height: 22px;
   min-height: 0;
+  height: 26px;
   margin: 0;
-  padding: 0 10px;
-  line-height: 18px;
+  padding: 3px var(--dsh-view-tab-inline-padding) 4px;
 }
-/* The shipped active-tab underline has no place in a pill. */
-body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tab"]::after {
-  display: none;
+
+body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tab"] {
+  --dsh-tab-hit-inline: var(--dsh-view-tab-inline-padding);
+  transition: color var(--dsh-claude-timing-feedback);
 }
-/* The row's "more views" chip, sized like a tab so the two line up. Its colour
-   stays the host's own: the accent marks the view sitting in the menu. */
+
+body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tab"][aria-selected="false"]:is(:hover, :focus-visible) {
+  color: var(--dsw-alias-label-primary);
+}
+
+body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tab"][aria-selected="true"]:is(:hover, :focus-visible) {
+  color: color-mix(in srgb, var(--dsw-alias-state-business-primary) 78%, var(--dsw-alias-label-primary));
+}
+
+/* The host underline yields once both edges of the shared line are known (D43). */
+body[data-dsh-claude-style] [data-dsh-view-tabs-underline] > [data-dsh-claude-part~="view-tab"]::after {
+  visibility: hidden;
+}
+
+body[data-dsh-claude-style] [data-dsh-view-tabs-underline]::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 100%;
+  height: 2px;
+  background-color: var(--dsw-alias-state-business-primary);
+  pointer-events: none;
+  transform-origin: left;
+  transform: var(--dsh-view-tabs-underline-transform);
+}
+
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tab"] {
+  transition: none;
+}
+
+@media (forced-colors: active) {
+  body[data-dsh-claude-style] [data-dsh-view-tabs-underline]::after {
+    background-color: Highlight;
+    forced-color-adjust: none;
+  }
+}
+
 body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tabs-more"] {
-  width: 22px;
-  height: 22px;
   margin-top: 0;
-  border-radius: 5px;
-}
-body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tabs-more"]:hover {
-  background: var(--dsh-claude-hover-bg);
-}
-
-/* ---------- Windows titlebar mode: the strip moves into the titlebar ---------- */
-/* The desktop shell marks <html> with data-windows-titlebar, and view-tabs.ts
-   mirrors the marker onto the header holding the strip. The strip leaves its own
-   row and sits fixed, centred in the titlebar — the row the host gives the
-   collapsed sidebar's new-session button. No shift is written in this mode, so
-   the base transform gives way. macOS has none of this: its frame top is
-   unpadded, so the measured shift seats the tabs inside it (view-tabs.ts). */
-body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs] {
-  position: fixed;
-  top: calc(var(--dsh-windows-titlebar-height, 40px) / 2);
-  left: 50%;
-  /* The host's own strip carries a top margin for its row; fixed placement
-     must not inherit it, or the translate would be off centre. */
-  margin: 0;
-  transform: translate(-50%, -50%);
-  z-index: var(--dsh-claude-layer-chrome);
-  /* The row spans the window, so the band stays the shell's drag region and the
-     controls inside it stay the only boxes that take a press. */
-}
-/* The strip's row has left the flow, so the header takes the shape it has when
-   it owns no tab strip: no min-height, and the header band closes its bottom
-   padding further (--dsh-header-band-bottom). */
-body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-header"][data-dsh-titlebar-tabs][data-dsh-claude-holds~="view-tabs"] {
-  min-height: 0;
-  padding-bottom: var(--dsh-header-band-bottom, 10px) !important;
-}
-
-/* With the session overview installed the strip shares the title's line: the
-   title's own words keep the width the measurer leaves them and truncate under
-   the host's ellipsis, so the strip's slot stays clear of the title and its
-   actions (view-tabs.ts writes the cap; the variable is absent when the strip
-   keeps its own row). */
-body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-view-tabs-taken] [data-dsh-claude-part~="header-title"] {
-  max-width: var(--dsh-view-tabs-title-cap);
 }

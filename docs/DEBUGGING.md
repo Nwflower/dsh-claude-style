@@ -18,6 +18,8 @@
 - 替身页：`node packages/testing/behaviour.mjs --open <page>` 起一个页面并打印地址，`--eval --at <地址> "<表达式>"` 在同一个页面里跑脚本，`--shot --at <地址> [--dark]` 落一张清场后的图，`--pass --at <地址>` 让页面立即排一趟（不必去改宽度或等下一次自然排趟）。
 - 端到端：`node packages/testing/e2e.mjs --scenario <名字>` 自带宿主与脚本化模型，`--headed` 观察过程。同一场景在同一台机器上重跑两次，差值超过容差就有东西变了。
 - 时间读 `performance.now()` 与 `PerformanceObserver` 的长任务；内存读 `performance.memory`（Chrome）或宿主进程的堆。两者都只在同条件的两轮之间比较。
+- 强制排版的读取点只说明谁先付了这一帧的样式计算：去掉一处读取，帧自己的渲染照样要算。判定皮肤多花了多少，要按回调的登记位置把主线程时间分给皮肤与宿主（桥的 `--boot` 在插件包之前包住 `MutationObserver`、`ResizeObserver`、`requestAnimationFrame`、定时器与事件回调，汇总时按栈里的包地址归属），再在皮肤那份里按帧任务与调度趟的功能名细分。
+- 切换或流式结束后，逐帧记录 `document.body` 的变动记录：皮肤节点每帧都在写，就是一个自持循环。每帧改写的皮肤节点打上安静标记（QUIET_ATTR），重复的同值写入改为比较后再写（`setAttributeIfChanged`；`classList.add` 与 `el.hidden = …` 也会写回属性）。
 
 ## 功能二分
 

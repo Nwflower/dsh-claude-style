@@ -50,3 +50,30 @@ export function requestFrame(task: FrameTask) {
     }
   }
 }
+
+/**
+ * One read in the next frame however many times it is asked for before then.
+ * A callback that measures the page answers page changes through this: each
+ * batch a mount brings would otherwise force its own style pass (D40).
+ *
+ * @returns `request` queues the read once; `cancel` drops a queued one.
+ */
+export function coalesceRead(read: (now: number) => void) {
+  let cancelQueued: (() => void) | null = null
+  return {
+    request() {
+      if (cancelQueued !== null) return
+      cancelQueued = requestFrame({
+        read: (now) => {
+          cancelQueued = null
+          read(now)
+        },
+      })
+    },
+    cancel() {
+      if (cancelQueued === null) return
+      cancelQueued()
+      cancelQueued = null
+    },
+  }
+}

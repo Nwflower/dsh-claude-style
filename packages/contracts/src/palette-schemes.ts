@@ -26,6 +26,9 @@ export const PALETTE_SCHEME_FOLLOW = 'brand'
 /** The id the earlier single custom card migrates to. */
 export const PALETTE_SCHEME_CUSTOM = 'custom'
 
+/** The lightness step a link the scheme does not name takes from its accent, per appearance: the token sheet's relative colour, the build's static resolution and the editor's read-out resolve this one step (D97). */
+export const PALETTE_LINK_SHIFT: { light: number, dark: number } = { light: -0.06, dark: 0.15 }
+
 /** The least contrast inline code and links owe the background they are drawn on: they are read as text. */
 export const PALETTE_TEXT_CONTRAST = 4.5
 /** The least contrast the accent owes the background: it fills controls and marks, which need less than text. */

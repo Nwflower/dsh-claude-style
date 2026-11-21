@@ -9,9 +9,7 @@
 /* The skin's own control for the right panel, drawn in the header's own row: the
    host's copy cannot leave the panel, whose chrome strip hangs from a
    transformed, clipped subtree, so this button stands in the header instead and
-   presses that one (header-band.ts). Its `display` is the whole of its
-   visibility and is written on the node by the pass — hidden here, shown while
-   the panel is open. */
+   presses that one (D43). */
 body[data-dsh-claude-style] .dsh-claude-rightbar-close {
   display: none;
   align-items: center;
@@ -28,32 +26,41 @@ body[data-dsh-claude-style] .dsh-claude-rightbar-close {
   cursor: pointer;
   -webkit-app-region: no-drag;
 }
+
+/* The host's open state is published before the caption pass reads the controls (D40). */
+body[data-dsh-claude-style] [data-dsh-header-rightbar-open] .dsh-claude-rightbar-close {
+  display: inline-flex;
+}
+
+/* The proxy joins the utilities' 6px gap. Bring its reserve up to the 8px gap
+   the caption pass allots between the utilities and the corner (D9). */
+body[data-dsh-claude-style] [data-dsh-header-band~="actions"] .dsh-claude-rightbar-close {
+  margin-inline-start: 2px;
+}
+
 body[data-dsh-claude-style] .dsh-claude-rightbar-close:hover,
 body[data-dsh-claude-style] .dsh-claude-rightbar-close:focus-visible {
   color: var(--dsw-alias-label-primary, #161616);
   background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
 }
 
-/* The two pieces the caption row holds — the session title, and the cluster the
-   host keeps beside it (the preset picker and the chips the session mounts
-   there) — take one place each. The pass stamps a piece it lifted and writes its
-   numbers on it; a piece left in the row carries no stamp, so these rules miss
-   it and the row keeps the height it takes there. */
-body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-title][data-dsh-header-title],
-body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-trail][data-dsh-header-trail] {
+/* The pieces the caption row holds — the session title, the more-actions
+   trigger beside it, and the cluster the host keeps beside the title (the
+   preset picker and the chips the session mounts there) — take one place each.
+   The pass stamps a piece it lifted and writes its numbers on it; a piece left
+   in the row carries no stamp, so these rules miss it and the row keeps the
+   height it takes there. The trigger's menu anchors from its own box, so the
+   panel opens at the name; the utilities cluster closes the gap it leaves. */
+body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-title],
+body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-more],
+body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-trail] {
   position: fixed;
   /* The pass centres each box on the measured caption row's middle. */
   top: var(--dsh-header-band-title-top, calc(var(--dsh-windows-titlebar-height, 40px) / 2));
   left: var(--dsh-header-band-left);
-  /* The room the pass measured for this piece: past it the title would run into
-     the tab strip or the controls, and the cluster into what stands after it.
-     The title's own crumb ellipsizes inside whatever width this leaves (the
-     host's own rule, unchanged). The pass hands the cluster no limit of its own:
-     a capped cluster measures at the cap, so the width it needs is only known
-     while it stands uncapped (header-band.ts). The attribute is written twice
-     for weight alone: the session overview caps this same node's width from four
-     attribute selectors in view-tabs.css, and two readings of one attribute
-     outrank them without a `!important`. */
+  /* The host's crumb ellipsizes inside the width left by the controls.
+     The cluster keeps its intrinsic width so the pass can measure its need
+     before deciding whether it fits beside the title (D40). */
   max-width: var(--dsh-header-band-max, none);
   margin: 0;
   transform: translateY(-50%);
@@ -70,14 +77,6 @@ body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-tra
 body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-claude-part~="title-cluster"] {
   -webkit-mask-image: none;
   mask-image: none;
-}
-
-/* The view-tab strip: view-tabs places it at the window's centre, and with the
-   title and the controls standing on either side of it that no longer reads as
-   the middle of the row. The pass hands it the middle of what is left between
-   them, and the strip's own translate keeps it centred on that value. */
-body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-header-band-tabs] {
-  left: var(--dsh-header-band-tabs-left, 50%);
 }
 
 /* The row the title left: what it still holds — the background-task chips,
@@ -98,12 +97,10 @@ body[data-dsh-claude-style] [data-dsh-header-band~="title"] [data-dsh-header-row
 }
 /* The header closes around that row: the height it kept was the title's, and
    the title now stands in the caption row. The measured top inset overrides the
-   host's inline value, the bottom one is dropped, and view-tabs reads that second
-   number where it restates the host's padding for a header without a tab strip.
+   host's inline value and the bottom one is dropped.
    The air the host keeps under its row is dropped with it: with nothing left in
    the row the divider belongs at the caption row's own edge. */
 body[data-dsh-claude-style] [data-dsh-header-band~="title"] {
-  --dsh-header-band-bottom: 0px;
   padding-top: var(--dsh-header-band-top, 10px) !important;
   padding-bottom: 0 !important;
   grid-template-rows: auto;
@@ -199,14 +196,17 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="header-corner"] button svg {
 body[data-dsh-claude-style] [data-dsh-header-band~="actions"] [data-dsh-header-actions],
 body[data-dsh-claude-style] [data-dsh-header-band~="actions"] [data-dsh-header-corner] {
   position: fixed;
-  top: calc(var(--dsh-header-band-height, var(--dsh-windows-titlebar-height, 40px)) / 2);
+  /* Centred on the row's middle by half the 28px plate, without a transform:
+     a transformed cluster would become the containing block of the fixed
+     more-actions trigger it still holds in the DOM, and the trigger rides
+     beside the title in the viewport's own space. */
+  top: calc(var(--dsh-header-band-height, var(--dsh-windows-titlebar-height, 40px)) / 2 - 14px);
   /* Both clusters keep their order and their air through this offset alone:
      the corner sits off the caption buttons, the utilities off the corner. */
   right: var(--dsh-header-band-right);
   /* The utilities carry the host's own left margin for the row's flow; a
      fixed box has no row to keep clear of. */
   margin: 0;
-  transform: translateY(-50%);
   z-index: var(--dsh-claude-layer-chrome);
   -webkit-app-region: no-drag;
 }

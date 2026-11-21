@@ -1,6 +1,6 @@
 /**
  * The sidebar's own layout choice: "Relaxed" is the stylesheet as written and
- * "Compact" takes the same declarations down (D72's settings row for a look no * feature owns). Read off computed styles through the same preference write the
+ * "Compact" takes the same declarations down (D76's settings row for a look no * feature owns). Read off computed styles through the same preference write the
  * settings page makes, so the wiring preference → document attribute → rule is
  * what the case holds.
  */

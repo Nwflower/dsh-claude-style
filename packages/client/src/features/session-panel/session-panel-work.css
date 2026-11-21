@@ -1,4 +1,4 @@
-/* Work is one section per kind (D102). Names yield to a right-aligned clock;
+/* Work is one section per kind (D106). Names yield to a right-aligned clock;
    settled rows share one disclosure, so no category eyebrow or inline dot
    competes with the command's name. */
 body[data-dsh-claude-style] .dsh-claude-panel-work-section .dsh-claude-panel-heading,

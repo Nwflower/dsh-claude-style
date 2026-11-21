@@ -3,7 +3,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'viewTabs',
   order: 250,
-  contracts: ['api.window-controls', 'shell.fullscreen', 'shell.platform', 'shell.top-clearance', 'shell.windows-titlebar', 'header.conversation-tabs', 'header.view-tabs-list'],
+  contracts: ['header.conversation-tabs', 'header.conversation-active-tab', 'header.conversation-tab', 'header.corner', 'header.element', 'header.row', 'header.utilities', 'header.view-tabs-list', 'shell.header-slot'],
   pref: 'viewTabs',
   stylesheets: [{ file: 'view-tabs.css', rank: 60 }],
   settingsRows: [{
@@ -12,5 +12,6 @@ export default {
     pref: 'viewTabs',
     title: 'viewTabsTitle',
   }],
-  cases: ['view-tabs', 'view-tabs-row', 'switches']
+  cases: ['view-tabs', 'switches'],
+  scenarios: ['sessionPanel'],
 } satisfies FeatureManifest

@@ -1,10 +1,30 @@
 /* @composer-gate */
-/* Only the figures' line leaves the host dock; every host node keeps its React
-   parent, and the meter keeps the row the host draws it in, so the ring stands
-   where the popover position draws it too. */
-body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-part~="composer-stack"] {
-  position: relative;
+/* The slot fills the space between tools and model. The inner seat gives the
+   figures a gutter on each side without adding a minimum width to the row. */
+body[data-dsh-claude-style] .dsh-claude-footer-slot {
+  display: flex;
+  align-items: center;
+  flex: 1 1 0;
+  min-inline-size: 0;
 }
+
+body[data-dsh-claude-style] .dsh-claude-footer-seat {
+  display: flex;
+  align-items: center;
+  flex: 1 1 0;
+  min-inline-size: 0;
+  margin-inline: min(12px, 10%);
+  overflow: clip;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-footer-align="center"] {
+  justify-content: center;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-footer-align="right"] {
+  justify-content: flex-end;
+}
+
 body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-footer-line] {
   flex: none;
   white-space: nowrap;
@@ -12,38 +32,17 @@ body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-c
   max-width: 100%;
   overflow: hidden;
 }
-/* The figures read as one group; a narrow dock shortens the line, never
-   splits the ring from its numbers onto separate rows. */
-body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-footer-line] > * {
-  flex-shrink: 0;
-}
-/* The host's row holds figures that keep a line under the toolbar. While they
-   ride the toolbar as an overlay — and while a session holds no figures yet —
-   the row would stand blank, and releasing it then also keeps the composer's
-   height from changing when the first numbers arrive. */
+
+/* The dock reserves a row only when the toolbar cannot fit even the short line. */
 body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-part~="composer-dock"]:not([data-dsh-claude-holds~="footer-below"]) {
   min-height: 0;
   padding-top: 0;
 }
-/* The first frame carries the mark before its measured mode. Keep that frame
-   off the screen, and out of the dock's flow, so the line never paints and
-   never holds a row open — or spills past the dock's foot — for the frame
-   before its mode is measured. Its natural width is what the mode is read from,
-   so the box stays white-space: nowrap's own size. */
+
 body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-footer-line=""] {
-  visibility: hidden;
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: max-content;
+  display: none;
 }
-body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-footer-line="overlay"] {
-  position: absolute;
-  left: var(--dsh-claude-footer-left);
-  bottom: var(--dsh-claude-footer-bottom);
-  height: var(--dsh-claude-footer-height);
-  width: max-content;
-  margin: 0;
-  padding: 0;
-  z-index: 3;
+
+body[data-dsh-claude-style] [data-dsh-claude-footer-line="toolbar"] {
+  min-block-size: var(--dsh-claude-footer-control-height);
 }

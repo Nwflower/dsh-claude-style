@@ -1,5 +1,5 @@
 /**
- * Following the statistics feature's live reading from the rail (D102).
+ * Following the statistics feature's live reading from the rail (D106).
  *
  * The figures the rail's two tables print are the ones the composer's line
  * prints, so the rail subscribes to the same entry instead of asking the host

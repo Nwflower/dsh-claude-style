@@ -302,12 +302,8 @@
     {
       "reason": "视图页签与页头：走查没有切到另一个视图",
       "selectors": [
-        "body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-view-tabs]",
-        "body[data-dsh-claude-style] [data-dsh-claude-part~=center-column] [data-dsh-titlebar-tabs] [data-dsh-view-tabs]",
-        "body[data-dsh-claude-style] [data-dsh-claude-part~=conversation-header][data-dsh-titlebar-tabs][data-dsh-claude-holds~=view-tabs]",
         "body[data-dsh-claude-style] [data-dsh-header-band~=title] [data-dsh-header-title]",
         "body[data-dsh-claude-style] [data-dsh-header-band~=title] [data-dsh-header-trail]",
-        "body[data-dsh-claude-style] [data-dsh-titlebar-tabs] [data-dsh-header-band-tabs]",
         "body[data-dsh-claude-style] [data-dsh-header-band~=title] [data-dsh-header-row]",
         "body[data-dsh-claude-style] [data-dsh-header-band~=title] [data-dsh-header-row] [data-dsh-claude-part~=header-label]",
         "body[data-dsh-claude-style] [data-dsh-header-band~=actions] [data-dsh-header-actions]",
@@ -533,6 +529,14 @@
       "either": true,
       "selectors": [
         "body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-search-key"
+      ]
+    },
+    {
+      "reason": "配色编辑器的推出形态：走查打开的是未编辑的预设，链接色取预设手调值；推出附注与样张的推出画色只在存储方案未带链接种子时出现",
+      "selectors": [
+        "body[data-dsh-claude-style] .dsh-claude-scheme-derived",
+        "body[data-dsh-claude-style] .dsh-claude-scheme-specimen[data-link=\"derived\"][data-appearance=\"light\"]",
+        "body[data-dsh-claude-style] .dsh-claude-scheme-specimen[data-link=\"derived\"][data-appearance=\"dark\"]"
       ]
     }
   ]

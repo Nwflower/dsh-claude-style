@@ -548,13 +548,6 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="project-row"] [data-dsh-clau
   display: none;
 }
 body[data-dsh-claude-style] [data-dsh-claude-part~="project-row"] [data-dsh-claude-part~="row-chevron"]::after {
-  content: "";
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  background: currentColor;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27 fill=%27none%27 stroke=%27black%27 stroke-width=%271.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M4 6l4 4 4-4%27/%3E%3C/svg%3E") center / contain no-repeat;
-  mask: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 16 16%27 fill=%27none%27 stroke=%27black%27 stroke-width=%271.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M4 6l4 4 4-4%27/%3E%3C/svg%3E") center / contain no-repeat;
   transition: transform var(--dsh-claude-duration-surface) var(--dsh-claude-ease-in-out);
 }
 body[data-dsh-claude-style] [data-dsh-claude-part~="project-row"][aria-expanded="false"] [data-dsh-claude-part~="row-chevron"]::after {

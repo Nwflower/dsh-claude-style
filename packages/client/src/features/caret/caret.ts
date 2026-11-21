@@ -2,7 +2,7 @@ import { CARET_ATTR, CARET_FIELD_ATTR, CARET_HOST_ATTR, CARET_LAYER_ATTR, CARET_
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
-import { caretClipToField, caretMeasurePlain, caretMeasureRich, noteFacesLoaded } from './caret-measure'
+import { caretClipToField, caretMeasurePlain, caretMeasureRich, noteFacesLoaded, noteMeasuredFamily } from './caret-measure'
 import type { CaretBox, CaretReading } from './caret-measure'
 import { inPagePixels } from '../../shared/page-zoom'
 import { COMPOSER_INPUT_SELECTOR, COMPOSER_TEXTAREA_SELECTOR } from '@dsh-claude-style/contracts/dom'
@@ -249,8 +249,12 @@ export function createCaretMotion(read: () => string) {
     if (layer.markedHost) layer.host.removeAttribute(CARET_HOST_ATTR)
   }
 
-  /** This surface's drawn caret; one is built when there is none. */
-  const layerFor = (input: HTMLElement) => {
+  /**
+   * This surface's drawn caret; one is built when there is none.
+   * @param hostShape - the parent's display and position, read in the pass's
+   * read phase; null when the read phase found a layer standing on that parent.
+   */
+  const layerFor = (input: HTMLElement, hostShape: CaretHostShape | null) => {
     const host = input.parentElement
     if (host === null) return null
     const known = layers.get(input)
@@ -272,8 +276,9 @@ export function createCaretMotion(read: () => string) {
     // written and the stylesheet turns it relative — a question card's field
     // and a queued row are both like that. A display: contents container has
     // no box of its own, and marking it would do nothing: better to leave the
-    // native caret alone.
-    const hostStyle = getComputedStyle(host)
+    // native caret alone. A layer the read phase found standing and the write
+    // phase finds gone has its parent read here, outside the pass.
+    const hostStyle = hostShape ?? readHostShape(host)
     if (hostStyle.display === 'contents') return null
     const markedHost = hostStyle.position === 'static'
     if (markedHost) host.setAttribute(CARET_HOST_ATTR, '')
@@ -307,6 +312,12 @@ export function createCaretMotion(read: () => string) {
   /** Write the colour the read phase took into the drawn caret. */
   const adoptCaretColour = (colour: string, layer: CaretLayer) => {
     layer.caret.style.setProperty(CARET_COLOR_PROPERTY, colour)
+  }
+
+  /** The host's display and position, which decide whether a layer can stand on it: a style read, so a read phase takes it. */
+  const readHostShape = (host: HTMLElement): CaretHostShape => {
+    const style = getComputedStyle(host)
+    return { display: style.display, position: style.position }
   }
 
   /** The host's padding-box border and its own scroll: a layout read, so a read phase takes it. */
@@ -380,7 +391,15 @@ export function createCaretMotion(read: () => string) {
     colour: string | null
     /** The host's padding-box border and scroll, read with the box (D40). */
     hostEdge: CaretHostEdge | null
+    /** The host's display and position, read when no layer stands on it yet (D40). */
+    hostShape: CaretHostShape | null
   } | null = null
+
+/** A host's display and position, read in the pass's read phase. */
+interface CaretHostShape {
+  display: string
+  position: string
+}
 
 /** A host's box edges and its own scroll, read in the pass's read phase. */
 interface CaretHostEdge {
@@ -396,7 +415,7 @@ interface CaretHostEdge {
     // off is absolute: the drawn caret and the mark go away together and the
     // native caret comes back. Keeping them only leaves the reader with none.
     if (read() === CARET_MOTION_OFF) {
-      plan = { off: true, target: null, host: null, hostRect: null, reading: null, colour: null, hostEdge: null }
+      plan = { off: true, target: null, host: null, hostRect: null, reading: null, colour: null, hostEdge: null, hostShape: null }
       return
     }
     // An input-method composition keeps the same drawn caret width as ordinary
@@ -427,12 +446,14 @@ interface CaretHostEdge {
       target = active
     }
     if (target === null) {
-      plan = { off: false, target: null, host: null, hostRect: null, reading: null, colour: null, hostEdge: null }
+      plan = { off: false, target: null, host: null, hostRect: null, reading: null, colour: null, hostEdge: null, hostShape: null }
       return
     }
     const reading = target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement
       ? caretMeasurePlain(target, endKeyed, probeHome)
       : range === null ? null : caretMeasureRich(target, range, probeHome)
+    // The faces this surface is drawn in are the ones whose arrival moves it.
+    noteMeasuredFamily(target)
     // The layer's host is the surface's parent, and the drawn caret is placed
     // against its box: read here for the same reason the caret is.
     const host = target.parentElement instanceof HTMLElement ? target.parentElement : null
@@ -447,6 +468,10 @@ interface CaretHostEdge {
       reading,
       colour,
       hostEdge: host === null ? null : readHostEdge(host),
+      // A session switch brings a new input area, whose parent has no layer
+      // yet: its style is read here, beside the box, where the write phase
+      // would compute the styles of the transcript the switch just mounted.
+      hostShape: host === null || layers.get(target)?.host === host ? null : readHostShape(host),
     }
   }
 
@@ -485,7 +510,7 @@ interface CaretHostEdge {
       input.removeAttribute(CARET_ATTR)
     }
     if (target === null) return
-    const layer = layerFor(target)
+    const layer = layerFor(target, pending.hostShape)
     if (layer === null) return
     // The mark is written only after a caret was really drawn. A measurement
     // that fails gives the native caret back: a transparent native caret
@@ -559,10 +584,10 @@ interface CaretHostEdge {
   window.addEventListener('resize', queue)
   // The shipped faces arrive after the first frame and wrap differently, so the
   // caret is measured again — and every probe reading taken before them is
-  // dropped, since the same words now measure differently.
-  const onFacesLoaded = () => {
-    noteFacesLoaded()
-    queue()
+  // dropped, since the same words now measure differently. A face no measured
+  // surface is drawn in moves nothing (caret-measure.ts).
+  const onFacesLoaded = (event: FontFaceSetLoadEvent) => {
+    if (noteFacesLoaded(event.fontfaces)) queue()
   }
   document.fonts.addEventListener('loadingdone', onFacesLoaded)
 

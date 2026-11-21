@@ -1,5 +1,5 @@
 /**
- * The reading the details rail shows, scoped to the session it belongs to (D102).
+ * The reading the details rail shows, scoped to the session it belongs to (D106).
  *
  * A session switch replaces the rail's body and restarts its polling; the
  * reading is kept with the session id that answered it, so a frame between the

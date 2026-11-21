@@ -3,6 +3,9 @@ import fs from 'node:fs'
 import path from 'node:path'
 import Ajv2020 from 'ajv/dist/2020.js'
 import { parse, converter, formatHex, formatRgb } from 'culori'
+import { loadModule } from '../shared/ts-module.mjs'
+
+const { PALETTE_LINK_SHIFT } = loadModule('packages/contracts/src/palette-schemes.ts')
 
 /** The token document's place in the source tree: also the sheet list's marker for the generated sheet. */
 export const TOKEN_SHEET = 'theme/tokens.json'
@@ -24,9 +27,9 @@ function shift(colour, dl, m) {
   return formatHex({ mode: 'oklch', l: clamp(base.l + dl, 0, 1), c: base.c * m, h: base.h ?? 0 })
 }
 
-/** A card's link colour for one scheme: the one it names, or its accent moved along its lightness. */
+/** A card's link colour for one scheme: the one it names, or its accent moved along its lightness (the client's oklch.ts resolves the same step). */
 export function cardLink(card, scheme) {
-  return card.link?.[scheme] ?? shift(card.accent, scheme === 'light' ? -0.06 : 0.15, 1)
+  return card.link?.[scheme] ?? shift(card.accent, PALETTE_LINK_SHIFT[scheme], 1)
 }
 
 /** The colour a seed names for one card and scheme: a card's own seed, or a tone already resolved above. */
@@ -189,9 +192,7 @@ function customPaletteBlocks(doc, gates) {
   for (const edges of gates.customEdges.values) {
     for (const scheme of SCHEMES) {
       const custom = `[data-dsh-claude-custom-palette]${gateOf(gates.customEdges, edges)}`
-      const accentLink = scheme === 'light'
-        ? 'oklch(from var(--dsh-claude-custom-accent) calc(l - 0.06) c h)'
-        : 'oklch(from var(--dsh-claude-custom-accent) calc(l + 0.15) c h)'
+      const accentLink = relativeColour('var(--dsh-claude-custom-accent)', { dl: PALETTE_LINK_SHIFT[scheme] })
       const seeds = {
         canvas: `var(--dsh-claude-custom-canvas-${scheme})`,
         text: `var(--dsh-claude-custom-text-${scheme})`,

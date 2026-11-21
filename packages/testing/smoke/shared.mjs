@@ -82,6 +82,8 @@ function pagesFor(selected) {
 
 let failed = 0
 let skipped = 0
+/** The labels of the checks that failed, in the order they failed: the faults lane credits them by name. */
+const failedLabels = []
 
 /** Count quick-tier timing checks as skips, not results. */
 function check(label, ok, detail, kind) {
@@ -90,19 +92,21 @@ function check(label, ok, detail, kind) {
         console.log(`  skip ${label}`)
         return
     }
-    if (!ok) failed += 1
+    if (!ok) { failed += 1; failedLabels.push(label) }
     console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}${ok || detail === undefined ? '' : `  — ${detail}`}`)
 }
 
 const failures = () => failed
+const failedChecks = () => [...failedLabels]
 const skips = () => skipped
 
-/** Take back the failures a re-judged page's first run recorded. */
-function retractFailures(count) {
+/** Take back the failures a re-judged page's first run recorded, from the position they were recorded at. */
+function retractFailures(count, start = failedLabels.length - count) {
     failed = Math.max(0, failed - count)
+    failedLabels.splice(start, count)
 }
 
 export {
     ROOT, CLIENT, HOST, MARKUP, PNG_1PX, SKIN_FIXTURE, SKIN_FACE, SKIN_HAT, SKIN_CASES,
-    sleep, same, check, failures, retractFailures, skips, setTier, tierName, TIMING_CASES, FEATURE_CASES, DEFERRED_FEATURES, SHIPPED_PREFS, deferredWanted, PAGES, pagesFor,
+    sleep, same, check, failures, failedChecks, retractFailures, skips, setTier, tierName, TIMING_CASES, FEATURE_CASES, DEFERRED_FEATURES, SHIPPED_PREFS, deferredWanted, PAGES, pagesFor,
 }

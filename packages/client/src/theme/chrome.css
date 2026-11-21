@@ -1,17 +1,27 @@
 /* ---------- canvas + hairline structure ---------- */
-/* The one fade the skin paints at a transcript edge: four stops from the
-   canvas colour to transparent — a straight 100% -> 0% ramp reads as a haze
-   band, and color-mix keeps the paint theme-aware (docs/STYLE.md "Bottom
-   edge"). The composer's seat band reads it `to top`
-   (features/composer/inline.css), the header band below `to bottom`. Not a
-   tokens.json entry: the palette table states one colour per brand and theme,
-   while this ramp resolves per palette through --dsw-alias-bg-base itself. */
+/* The composer seat's fade uses four stops from the canvas colour to
+   transparent. The ramp resolves per palette through --dsw-alias-bg-base
+   (D9, docs/STYLE.md "Bottom edge"). */
 body[data-dsh-claude-style] {
   --dsh-claude-fade-stops:
     var(--dsw-alias-bg-base, #ffffff) 0%,
     color-mix(in srgb, var(--dsw-alias-bg-base, #ffffff) 82%, transparent) 32%,
     color-mix(in srgb, var(--dsw-alias-bg-base, #ffffff) 40%, transparent) 68%,
     transparent 100%;
+  /* The same SVG lets each control supply its own ink (D9). */
+  --dsh-claude-chevron-down-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+body[data-dsh-claude-style] .dsh-claude-account-chevron::after,
+body[data-dsh-claude-style] [data-dsh-claude-account-host-row]::after,
+body[data-dsh-claude-style] [data-dsh-claude-part~="project-row"] [data-dsh-claude-part~="row-chevron"]::after {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background: currentColor;
+  -webkit-mask: var(--dsh-claude-chevron-down-mask);
+  mask: var(--dsh-claude-chevron-down-mask);
 }
 
 /* Under the Claude palette the skin paints the columns; under "follow the
@@ -29,6 +39,12 @@ body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-we-wallp
    This is the dark half; theme/tokens.css states the light one. */
 body[data-dsh-claude-style] :is([data-pane="sidebar"], [data-dsh-claude-part~="sidebar-column"], .dshDesktopSidebarSurface) {
   border-right: 0.5px solid var(--dsw-alias-border-l1);
+}
+
+/* The host supplies the header border. Paint it with the column edge colour
+   so the layout dividers share a tone in both themes (D9, D43). */
+body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-header"] {
+  border-bottom-color: var(--dsw-alias-border-l1);
 }
 
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-we-wallpaper]) :is([data-pane="conversation"], [data-dsh-claude-part~="center-column"]) {
@@ -271,41 +287,46 @@ body[data-dsh-claude-style] ::-webkit-scrollbar-thumb:hover {
 /* Text selection: white on blue, gray on black while the window is blurred.
    !important and solid colours because the paint has to cover the ink the host
    and this skin put under it (links, code, syntax tokens). The unfocused rule
-   comes after the focused one at the same weight, so the attribute decides.
-   The scope is the conversation's text and the draft editor: a document-wide
-   `::selection` makes Blink compute selection style for every element on each
-   recalculation, which stalls session switches. Every element in that scope
-   takes the paint itself rather than inheriting it from the block above:
-   browsers resolve the inherited paint of a nested run (`strong`, an inline
-   `code`, a syntax token) against the run's own colour, so a selected bold run
-   or code token drifts from the paragraph it stands in. The descendant wildcard
-   keeps the rule inside the two scopes the transcript and the editor own; the
-   host's wash still stands everywhere else. */
-body[data-dsh-claude-style] :is([data-chat-flow], [data-lexical-editor]) *::selection {
+   weighs more than the focused one, so the attribute decides.
+   The scope is the conversation's text and the draft editor: a `::selection`
+   rule that matches an element makes Blink compute that element's selection
+   style on each recalculation, selected or not, which stalls session switches.
+   A transcript is covered only once a selection has started in it
+   (core/selection-paint.ts marks its root); a session switch mounts a new root
+   without the mark, and the editor's few nodes are covered from the start.
+   Every element in that scope takes the paint itself rather than inheriting
+   it from the block above: browsers resolve the inherited paint of a nested
+   run (`strong`, an inline `code`, a syntax token) against the run's own
+   colour, so a selected bold run or code token drifts from the paragraph it
+   stands in. The descendant wildcard keeps the rule inside the two scopes the
+   transcript and the editor own; the host's wash still stands everywhere else. */
+body[data-dsh-claude-style] [data-chat-flow][data-dsh-claude-selection-paint] *::selection,
+body[data-dsh-claude-style] [data-lexical-editor] *::selection {
   background-color: #3366d0 !important;
   color: #ffffff !important;
 }
 
-body[data-dsh-claude-style][data-dsh-window-blur] :is([data-chat-flow], [data-lexical-editor]) *::selection {
+body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow][data-dsh-claude-selection-paint] *::selection,
+body[data-dsh-claude-style][data-dsh-window-blur] [data-lexical-editor] *::selection {
   background-color: #c7c7c6 !important;
   color: #000000 !important;
 }
 
 /* Inline-code chips: the chip's own background paints above the selection
    highlight, so these paints are the channel-wise inverse of that wash. */
-body[data-dsh-claude-style] [data-chat-flow] code:not(pre code)::selection {
+body[data-dsh-claude-style] [data-chat-flow][data-dsh-claude-selection-paint] code:not(pre code)::selection {
   background-color: rgb(40, 94, 206) !important;
 }
 
-body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow] code:not(pre code)::selection {
+body[data-dsh-claude-style][data-dsh-window-blur] [data-chat-flow][data-dsh-claude-selection-paint] code:not(pre code)::selection {
   background-color: rgb(196, 196, 195) !important;
 }
 
-body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-chat-flow] code:not(pre code)::selection {
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) [data-chat-flow][data-dsh-claude-selection-paint] code:not(pre code)::selection {
   background-color: rgb(54, 107, 219) !important;
 }
 
-body[data-dsh-claude-style]:not([data-ds-dark-theme])[data-dsh-window-blur] [data-chat-flow] code:not(pre code)::selection {
+body[data-dsh-claude-style]:not([data-ds-dark-theme])[data-dsh-window-blur] [data-chat-flow][data-dsh-claude-selection-paint] code:not(pre code)::selection {
   background-color: rgb(209, 209, 208) !important;
 }
 
@@ -350,32 +371,11 @@ body[data-dsh-claude-style] [data-slot="conversation.session.header.actions"] > 
    gap and tucks 3px under the input card. No rule here on purpose — re-add one
    only if the host changes its geometry. */
 
-/* The conversation header carries the host's own bottom border — the line under
-   the tabs; the transcript's top fade below takes over that job. Scoped to the
-   header view-tabs has marked as its own, so no other header loses its edge and
-   a switched-off preference hands this one back its line (D9). */
+/* Anchor the positioned view tabs to the host header. The header's parent
+   owns stickiness, and the header's border separates it from the transcript (D43). */
 body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-header"][data-dsh-view-tabs-taken] {
-  border-bottom-color: transparent;
-  /* The host's header rule sets no position, so it is static and an absolutely
-     positioned band would anchor to a far ancestor. The stickiness lives on the
-     header's parent, so relative is safe here. */
   position: relative;
   overflow: visible;
-}
-
-/* The transcript's top fade: the header already covers the transcript, so the
-   band hangs off the header's own bottom edge and follows it. One knob,
-   --dsh-transcript-fade-h, matching the composer's own fade. */
-body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-header"][data-dsh-view-tabs-taken]::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  height: var(--dsh-transcript-fade-h, 28px);
-  background: linear-gradient(to bottom, var(--dsh-claude-fade-stops));
-  pointer-events: none;
-  z-index: 1;
 }
 
 /* ---------- the animation choice: reduced motion ---------- */

@@ -337,34 +337,6 @@ async function hostUsage({ mod, fakeHost, request, browser, scratchHome, scratch
     fs.rmSync(home, { recursive: true, force: true })
   }
 
-  // The fallback a host keeps when it publishes only the per-id read: the fold
-  // still answers, reading each session through a corpus listing — the shape
-  // this half had before the observation existed (D12).
-  console.log('\nhost half — the log reader a host without the observation still answers')
-  {
-    const home = runsPath(ROOT, 'smoke', 'home-readsession')
-    fs.rmSync(home, { recursive: true, force: true })
-    const cwd = path.join(home, 'sessions', '--D-smoke--')
-    fs.mkdirSync(path.join(cwd, 'f1'), { recursive: true })
-    fs.writeFileSync(path.join(cwd, 'f1', 'session.v4.jsonl.zstd'), 'x')
-    const readIds = []
-    const listings = []
-    const host = fakeHost(mod, {
-      fenced: true,
-      home,
-      events: { f1: [settlement(at(0, 15), 1)] },
-      reads: readIds,
-      listCalls: listings,
-      queryShapes: ['readSession'],
-    })
-    const answer = await settledUsage(host)
-    check('a host offering only the per-id read still folds its sessions, through its own listing',
-      same(readIds, ['f1']) && same(listings, ['f1']) && answer.value?.read === 1 &&
-        answer.value?.failed === 0 && answer.value?.unavailable !== true,
-      JSON.stringify({ readIds, listings, value: answer.value && { read: answer.value.read, failed: answer.value.failed } }))
-    fs.rmSync(home, { recursive: true, force: true })
-  }
-
   // One session the reader throws on must not void the whole pass: the record
   // written for every other log is what makes the next pass cheap, and without
   // it every request folds the whole corpus again (#126).

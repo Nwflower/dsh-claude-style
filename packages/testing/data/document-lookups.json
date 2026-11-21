@@ -25,6 +25,10 @@
       "count": 1,
       "reason": "The self-built trigger and popover, swept when the drawer is dropped."
     },
+    "packages/client/src/core/selection-paint.ts": {
+      "count": 1,
+      "reason": "The transcript roots the selection paints were opened on, swept once at teardown: a root keeps its mark until the host replaces it, so no list of them outlives the page that holds them."
+    },
     "packages/client/src/features/composer/composer.ts": {
       "count": 2,
       "reason": "The marks the composer wrote, swept once at install and once at teardown."
