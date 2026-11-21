@@ -56,35 +56,6 @@
       ]
     },
     {
-      "reason": "流式文字的逐词淡入：高亮伪元素要落在流式块里任何承载文字的元素上",
-      "selectors": [
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-0)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-1)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-2)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-3)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-4)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-5)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-6)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-7)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-8)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-9)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-10)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-11)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-12)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-13)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-14)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-15)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-16)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-17)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-18)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-19)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-20)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-21)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-22)",
-        "body[data-dsh-claude-style][data-dsh-claude-chat-reveal] [data-streaming] ::highlight(dsh-claude-tok-23)"
-      ]
-    },
-    {
       "reason": "宿主的盒子：子元素没有可读的名字，规则落在全部子元素或按位置取的子元素上",
       "selectors": [
         "body[data-dsh-claude-style][data-dsh-claude-chat-fold] [data-chat-flow] :is([data-disclosure-row], [data-disclosure-header]) ~ :where(:is([data-disclosure-row], [data-disclosure-header]) ~ *):not([data-turn-process-member] *, [data-turn-trigger] *):is([data-disclosure-row] ~ *, [data-disclosure-header] ~ * *)",

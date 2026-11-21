@@ -8,6 +8,7 @@ export const FEATURE_SHEET_CONSTANTS = [
   'CHAT_REVEAL_ALPHA_CURVE',
   'CHAT_REVEAL_HIGHLIGHT_PREFIX',
   'CHAT_REVEAL_COLOR_VAR',
+  'CHAT_REVEAL_RUN_ATTR',
   'HOME_HEAT_RAMP',
 ]
 
@@ -19,13 +20,17 @@ function revealSteps(constants) {
   const steps = constants.CHAT_REVEAL_STEPS
   const floor = constants.CHAT_REVEAL_MIN_OPACITY
   const curve = constants.CHAT_REVEAL_ALPHA_CURVE
-  const scope = `${SCOPE}[${constants.CHAT_REVEAL_ATTR}] [data-streaming]`
+  // The subject is the element the reveal paints text in, never "anything
+  // under the streaming block": a descendant-combinator subject re-matches
+  // every element below it on each batch, which measured as the whole page's
+  // style recalc while a stream runs (D107).
+  const scope = `${SCOPE}[${constants.CHAT_REVEAL_ATTR}] [data-streaming] [${constants.CHAT_REVEAL_RUN_ATTR}]`
   const rules = []
   for (let step = 0; step < steps; step += 1) {
     const name = `${constants.CHAT_REVEAL_HIGHLIGHT_PREFIX}${step}`
     const reached = step / (steps - 1)
     const alpha = ((floor + (1 - floor) * (1 - (1 - reached) ** curve)) * 100).toFixed(2)
-    rules.push(`${scope}::highlight(${name}),\n${scope} ::highlight(${name}) {\n  color: color-mix(in srgb, var(${constants.CHAT_REVEAL_COLOR_VAR}, currentColor) ${alpha}%, transparent);\n}\n`)
+    rules.push(`${scope}::highlight(${name}) {\n  color: color-mix(in srgb, var(${constants.CHAT_REVEAL_COLOR_VAR}, currentColor) ${alpha}%, transparent);\n}\n`)
   }
   return rules.join('\n')
 }

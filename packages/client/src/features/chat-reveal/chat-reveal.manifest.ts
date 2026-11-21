@@ -8,7 +8,7 @@ export default {
   pref: 'chatReveal',
   prefValues: [CHAT_REVEAL_ON],
   yieldsTo: 'dsh-chat-ux',
-  stylesheets: [{ generated: 'reveal-steps', rank: 180 }],
+  stylesheets: [{ generated: 'reveal-steps', rank: 180, scope: 'feature' }],
   settingsRows: [{
     tab: 'motion',
     rank: 20,
