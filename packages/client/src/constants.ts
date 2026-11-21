@@ -10,6 +10,8 @@ export const STYLE_ID = 'dsh-claude-style-style'
 export const SURFACE_STYLE_ID = 'dsh-claude-style-surface'
 /** Optional Anthropic faces are declared only here, so absent files cause no requests. */
 export const WEBFONTS_STYLE_ID = 'dsh-claude-style-webfonts'
+/** The reveal's step rules, mounted by that feature alone so an off reveal costs no style recalculation (D108). */
+export const REVEAL_STYLE_ID = 'dsh-claude-style-reveal'
 
 /** Fallback profile entry id used when the running loader id is unavailable. */
 export const SETTINGS_ENTRY_FALLBACK = 'ui-skin-claude-style'
@@ -17,6 +19,7 @@ export const SETTINGS_ENTRY_FALLBACK = 'ui-skin-claude-style'
 export const STYLE_PLUGIN_CSS = `${PACKAGE_NAME}/client.css`
 export const SURFACE_PLUGIN_CSS = `${PACKAGE_NAME}/surface.css`
 export const WEBFONTS_PLUGIN_CSS = `${PACKAGE_NAME}/webfonts.css`
+export const REVEAL_PLUGIN_CSS = `${PACKAGE_NAME}/reveal.css`
 /** A slash prevents the foreign-sheet tag from matching any package name (D9). */
 export const FOREIGN_SHEET_TAG = `${PACKAGE_NAME}/foreign-sheet`
 export const BUNDLE_CONFIG_SLOT = 'plugins.bundle.config'
@@ -148,7 +151,7 @@ export const READER_HOLD_ATTR = 'data-dsh-claude-reader-hold'
 export const CHAT_REVEAL_ATTR = 'data-dsh-claude-chat-reveal'
 /** The reveal's fade: how many alpha steps a character walks through, the faintest of them, how the step table spends its alphas, the prefix of each step's highlight name and the custom property an element publishes its own colour to.
  * The engine registers one highlight per step; the build writes one `::highlight()` rule per step from the same five values (scripts/build/feature-sheets.mjs). */
-export const CHAT_REVEAL_STEPS = 24
+export const CHAT_REVEAL_STEPS = 8
 /** The faintest step: a character arrives unseen, so the fade is the arrival rather than a dim start a reader has to read through. */
 export const CHAT_REVEAL_MIN_OPACITY = 0
 /** How the step table spends its alphas over the fade's time: a step that has reached `t` of the fade holds `1 - (1 - t) ** CHAT_REVEAL_ALPHA_CURVE` of the character's colour.
@@ -156,6 +159,9 @@ export const CHAT_REVEAL_MIN_OPACITY = 0
 export const CHAT_REVEAL_ALPHA_CURVE = 2
 export const CHAT_REVEAL_HIGHLIGHT_PREFIX = 'dsh-claude-tok-'
 export const CHAT_REVEAL_COLOR_VAR = '--dsh-claude-run-color'
+/** On an element the reveal draws text in (features/chat-reveal/reveal-engine.ts): the subject of every step rule.
+ * A `::highlight()` rule whose subject is a descendant combinator re-matches everything under the streaming block on each batch, and that re-match measured as the whole page's style recalc during a stream (D107); the mark narrows the subject to the elements the reveal actually paints. */
+export const CHAT_REVEAL_RUN_ATTR = 'data-dsh-claude-reveal-run'
 /** On the real message row while the send bubble's stand-in is flying (features/chat-send/): the stylesheet hides that row, keeping its layout box so the stand-in can measure the destination from it every frame. */
 export const CHAT_FLYING_ATTR = 'data-dsh-claude-send-flight'
 /** On the row of a message just sent while it grows in place (features/chat-send/): the stylesheet hangs the entrance animation off it, so that row animates once — a row rendered by a restored session never carries the mark. */

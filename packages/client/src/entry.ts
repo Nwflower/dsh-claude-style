@@ -324,7 +324,9 @@ export function apply(ctx: HostContext) {
    */
   function applySwitch(feature: Feature) {
     const handle = handleName(feature)
-    const wanted = isWanted(feature)
+    // A bisecting run's list outranks the switch: a live feature is the one
+    // applySwitch installs, so the list has to be read here too (docs/DEBUGGING.md).
+    const wanted = isWanted(feature) && !switchedOffHere(feature.id)
     const index = installed.findIndex(entry => entry.id === feature.id)
     if (wanted && index === -1 && !failed.has(feature.id)) {
       installFeature(feature)

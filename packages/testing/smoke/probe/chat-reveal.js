@@ -18,14 +18,16 @@
         var total = 0
         var steps = 0
         if (registry) {
-          for (var step = 0; step < 24; step += 1) {
-            var found = registry.get('dsh-claude-tok-' + step)
-            var size = found ? found.size : 0
-            total += size
-            if (size > 0) steps += 1
-          }
+          // 步数由 constants.ts 的 CHAT_REVEAL_STEPS 决定，这里按名字前缀数，不写死档数
+          registry.forEach(function (highlight, name) {
+            if (name.indexOf('dsh-claude-tok-') !== 0) return
+            total += highlight.size
+            if (highlight.size > 0) steps += 1
+          })
         }
-        return { total: total, steps: steps, mark: document.body.hasAttribute('data-dsh-claude-chat-reveal') }
+        // 步进规则随引擎挂载（D108）：开关关掉时这张表应当整张离开页面，成本才归零
+        var sheet = document.querySelector('style[data-plugin-css$="/reveal.css"]') !== null
+        return { total: total, steps: steps, mark: document.body.hasAttribute('data-dsh-claude-chat-reveal'), sheet: sheet }
       }
       // The fade ships on: a streaming container carries the engine's mark and
       // its characters are registered as step highlights without the choice
