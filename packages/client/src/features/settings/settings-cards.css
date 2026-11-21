@@ -263,6 +263,20 @@ body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-caret-
   transform: none;
 }
 
+/* The row's switch and its two cards are one control: the switch stands on the
+   row's right like every other switch, and the cards take the line under it,
+   across the row. */
+body[data-dsh-claude-style] .dsh-claude-reveal-picker {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-reveal-picker-switch {
+  align-self: flex-end;
+}
+
 /* A reveal card holds one sample line whose characters arrive one after
    another, centred and never wrapped. The fade card fades each character in as
    it is handed its turn; the other hands it over with nothing between, which is

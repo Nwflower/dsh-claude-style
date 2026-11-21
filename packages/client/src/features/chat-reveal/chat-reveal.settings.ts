@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { CHAT_REVEAL_OFF, CHAT_REVEAL_ON } from '../../constants'
 import { motionMs } from '../../shared/motion'
+import { ClaudeStyleSwitch } from '../../shared/settings-switch'
 import { PreviewCards } from '../../shared/preview-cards'
 import { copy } from './copy'
 import type { PreviewOption } from '../../shared/preview-cards'
@@ -9,9 +10,11 @@ import type { SettingsControlsOf, SettingsRowView } from '../../core/feature'
 import type manifest from './chat-reveal.manifest'
 
 /**
- * The one row this feature draws itself (D76): the fade's two answers as
- * preview cards, each showing the arriving characters the way the answer it
- * picks does (features/settings/settings-cards.css).
+ * The one row this feature draws itself (D76): the fade's switch with its two
+ * answers under it as preview cards, each showing the arriving characters the
+ * way the answer it picks does (features/settings/settings-cards.css). The
+ * switch is the control every other on/off row on the page wears, so the row's
+ * state reads at a glance; the cards show what the two states look like.
  */
 export const controls: SettingsControlsOf<typeof manifest> = {
   'reveal-preview': RevealPicker,
@@ -59,11 +62,29 @@ function RevealPicker(props: SettingsRowView) {
     { value: CHAT_REVEAL_ON, label: copy('chatRevealOn'), content: card, attributes: { 'data-fade': '' } },
     { value: CHAT_REVEAL_OFF, label: copy('chatRevealOff'), content: card },
   ]
-  return React.createElement(PreviewCards<Prefs['chatReveal']>, {
-    cardClass: 'dsh-claude-reveal-card',
-    options,
-    value: props.prefs.chatReveal,
-    write: (value: Prefs['chatReveal']) => props.write({ chatReveal: value }),
-    disabled: props.disabled,
-  })
+  const write = (value: Prefs['chatReveal']) => props.write({ chatReveal: value })
+  // The switch carries the row's own name: a switch with no text of its own is
+  // announced as an unlabelled switch, and this control is not the settings
+  // page's own ClaudeStyleSwitch for it to name (settings-controls.ts row()).
+  return React.createElement(
+    'div',
+    { className: 'dsh-claude-reveal-picker' },
+    React.createElement(
+      'div',
+      { className: 'dsh-claude-reveal-picker-switch' },
+      React.createElement(ClaudeStyleSwitch, {
+        label: copy('chatRevealTitle'),
+        on: props.prefs.chatReveal === CHAT_REVEAL_ON,
+        onPick: (on: boolean) => write(on ? CHAT_REVEAL_ON : CHAT_REVEAL_OFF),
+        disabled: props.disabled,
+      }),
+    ),
+    React.createElement(PreviewCards<Prefs['chatReveal']>, {
+      cardClass: 'dsh-claude-reveal-card',
+      options,
+      value: props.prefs.chatReveal,
+      write,
+      disabled: props.disabled,
+    }),
+  )
 }
