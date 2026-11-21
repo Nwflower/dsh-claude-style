@@ -1,5 +1,5 @@
 {
-  "retract": { "zh": "撤回这条消息", "en": "Retract this message" },
+  "retract": { "zh": "从此消息前分叉", "en": "Fork before this message" },
   "edit": { "zh": "编辑这条消息", "en": "Edit this message" },
   "rerun": { "zh": "重跑这一轮", "en": "Run this turn again" },
   "delete": { "zh": "删除此轮", "en": "Delete this turn" },
@@ -12,7 +12,9 @@
   "sent": { "zh": "已从原消息位置重新发出", "en": "Sent again from the original message position" },
   "failed": { "zh": "这条消息没能处理完", "en": "The message could not be handled" },
   "actionsTitle": { "zh": "消息操作行", "en": "Message actions" },
-  "retractConfirm": { "zh": "撤回这条消息？", "en": "Retract this message?" },
+  "retractConfirm": { "zh": "从此消息前分叉？", "en": "Fork before this message?" },
+  "confirmFork": { "zh": "确认分叉", "en": "Confirm fork" },
+  "forkDescription": { "zh": "将从此消息之前创建新版本，并把原文放入输入框。原会话保留在版本历史中。", "en": "This creates a new revision from before this message and copies its text into the composer. The source remains in revision history." },
   "editConfirm": { "zh": "从这条消息继续？", "en": "Continue from this message?" },
   "rerunConfirm": { "zh": "重跑这一轮？", "en": "Run this turn again?" },
   "deleteConfirm": { "zh": "删除此轮并回退？", "en": "Delete this turn and rewind?" },

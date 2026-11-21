@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-19",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "用分叉图标和文案标明从用户消息前创建新版本的操作，避免与就地回退混淆。",
+  "en": "Use a branch icon and explicit fork wording for the action that creates a revision before a user message, distinguishing it from in-place rewind."
+}

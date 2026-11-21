@@ -36,12 +36,12 @@ function messageRewindFilesScenario({ check }) {
       const source = await page.locator(CONVERSATION_SESSION_SELECTOR).getAttribute(CONVERSATION_SESSION_ATTRIBUTE)
       const row = page.locator('[data-chat-flow-kind="user"]').first()
       await row.hover()
-      await page.getByRole('button', { name: /^(撤回这条消息|Retract this message)$/ }).click()
-      const dialog = page.getByRole('dialog', { name: /^(撤回这条消息？|Retract this message\?)$/ })
+      await page.getByRole('button', { name: /^(从此消息前分叉|Fork before this message)$/ }).click()
+      const dialog = page.getByRole('dialog', { name: /^(从此消息前分叉？|Fork before this message\?)$/ })
       await dialog.waitFor({ timeout: 20000 })
       const dialogText = (await dialog.textContent()) ?? ''
       const showsFiles = /2 个文件|2 files/.test(dialogText) && dialogText.includes('app.js') && dialogText.includes('notes.md')
-      await page.getByRole('button', { name: /^(确认回退|Confirm rewind)$/ }).click()
+      await page.getByRole('button', { name: /^(确认分叉|Confirm fork)$/ }).click()
       await page.waitForFunction(({ selector, attribute, previous }) => {
         const current = document.querySelector(selector)?.getAttribute(attribute)
         return current !== null && current !== undefined && current !== previous

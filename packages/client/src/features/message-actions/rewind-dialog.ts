@@ -59,13 +59,15 @@ function RewindConfirmation(props: { plan: RewindPlan, action: RewindAction, clo
     React.createElement('button', {
       type: 'button', className: 'dsh-claude-rewind-button dsh-claude-rewind-primary',
       onClick: () => props.close({ restore }),
-    }, copy('confirmRewind')),
+    }, copy(props.action === 'retract' ? 'confirmFork' : 'confirmRewind')),
   )
   return React.createElement(Modal, {
     open: true,
     title: confirmationTitle(props.action),
     closeLabel: copy('close'),
-    description: copy('rewindDescription', { count: props.plan.laterTurns + 1 }),
+    description: props.action === 'retract'
+      ? copy('forkDescription')
+      : copy('rewindDescription', { count: props.plan.laterTurns + 1 }),
     onClose: () => props.close(null),
     className: 'dsh-claude-rewind-modal',
     contentClassName: 'dsh-claude-rewind-content',

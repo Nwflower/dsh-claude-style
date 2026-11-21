@@ -103,7 +103,8 @@ function messageActionsScenario({ check }) {
       const cancelled = await read()
       await page.hover(ROW)
       await retractButton.click()
-      await page.getByRole('button', { name: /^(确认回退|Confirm rewind)$/ }).waitFor({ timeout: 20000 })
+      const confirmFork = page.getByRole('button', { name: /^(确认分叉|Confirm fork)$/ })
+      await confirmFork.waitFor({ timeout: 20000 })
       for (const theme of ['light', 'dark']) {
         await page.evaluate(value => document.body.toggleAttribute('data-ds-dark-theme', value === 'dark'), theme)
         await page.evaluate(async () => {
@@ -122,7 +123,7 @@ function messageActionsScenario({ check }) {
         await sanitizePage((expression) => page.evaluate(expression))
         await page.screenshot({ path: path.join(out, `rewind-confirm-${theme}.png`) })
       }
-      await page.getByRole('button', { name: /^(确认回退|Confirm rewind)$/ }).click()
+      await confirmFork.click()
       await page.waitForFunction((before) => document.querySelector('[data-conversation-session]')?.getAttribute('data-conversation-session') !== before, resting.sessionId, { timeout: 30000 }).catch(() => {})
       await page.waitForFunction(() => (document.querySelector('[data-composer-input]')?.innerText ?? '').trim() === 'hello there', { timeout: 30000 }).catch(() => {})
       const rewound = await read()

@@ -15,8 +15,10 @@ export const ACTION_BUTTON_CLASS = 'dsh-claude-message-action'
 /** 承载动作按钮的盒子：contents 盒子，宿主那一行的排布因此不变。 */
 export const BUTTONS_SEAT_ATTRIBUTE = 'data-dsh-claude-message-actions'
 export const BUTTONS_SEAT_CLASS = 'dsh-claude-message-actions'
-/** 撤回：一段往回折的箭头。 */
-const RETRACT_PATH = 'M4.5 6.5H10a4 4 0 0 1 0 8H7M4.5 6.5 7 4M4.5 6.5 7 9'
+/** DSH primitives branch-outline artwork (DeepSeek, MIT), also used in the workspace fork menu. */
+const FORK_PATH = 'M1.01503 8.0001L5.6964 8.0001C6.41913 8.0001 6.78049 8.0001 7.12115 7.91951C7.4232 7.84804 7.71233 7.73014 7.97821 7.57C8.27809 7.38939 8.5364 7.13669 9.05303 6.63129L11.3281 4.40564' +
+  'M1.01221 7.9999L5.6964 7.9999C6.41913 7.9999 6.78049 7.9999 7.12115 8.08049C7.4232 8.15196 7.71233 8.26986 7.97821 8.43C8.27809 8.61061 8.5364 8.86331 9.05303 9.36871L11.3281 11.5944' +
+  'M14.01982 3.3079a1.56962 1.56962 0 1 0-3.13924 0 1.56962 1.56962 0 1 0 3.13924 0ZM14.01982 12.6921a1.56962 1.56962 0 1 0-3.13924 0 1.56962 1.56962 0 1 0 3.13924 0Z'
 /** 编辑：一支笔。 */
 const EDIT_PATH = 'M10.8 2.7 13.3 5.2 5.8 12.7 2.9 13.4 3.6 10.5ZM9.6 3.9 12.1 6.4'
 /** 重跑：沿原方向再走一次的环形箭头。 */
@@ -87,7 +89,7 @@ function action(kind: 'retract' | 'edit' | 'rerun' | 'delete' | 'history', label
 export function MessageActionButtons({ labels, handlers }: { labels: MessageActionLabels, handlers: MessageActionHandlers }) {
   return React.createElement(React.Fragment, null,
     handlers.rerun === undefined ? null : action('rerun', labels.rerun, RERUN_PATH, handlers.rerun),
-    handlers.retract === undefined ? null : action('retract', labels.retract, RETRACT_PATH, handlers.retract),
+    handlers.retract === undefined ? null : action('retract', labels.retract, FORK_PATH, handlers.retract),
     handlers.edit === undefined ? null : action('edit', labels.edit, EDIT_PATH, handlers.edit),
     handlers.delete === undefined ? null : action('delete', labels.delete, DELETE_PATH, handlers.delete),
     handlers.history === undefined ? null : action('history', labels.history, HISTORY_PATH, handlers.history))
