@@ -147,7 +147,9 @@ function page(name, tier, cases, probe = PROBE) {
   var footer = name === 'desktop'
     ? '<div class="_footArea_x_1">' + footerActions + footCard + footDialog +
         '<div class="_settingsArea_x_1"><div data-slot="sidebar.settings"><div class="_triggerRow_s_1">' +
-          '<div data-slot="settings.launcher"><div class="_root_a_1"><span>' +
+          // The host's Menu wraps its trigger in a span naming the anchor its
+          // portaled card reads back (ui-primitives Menu.tsx).
+          '<div data-slot="settings.launcher"><div class="_root_a_1"><span style="anchor-name:--dsh-menu-trigger-account">' +
             // data-signed-out is the host's own mark on the account trigger (ui-shell's
             // AccountMenu), read off a live desktop instance.
             '<button id="host-account" data-signed-out="false" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false">Ada</button>' +

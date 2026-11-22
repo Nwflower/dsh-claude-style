@@ -30,6 +30,15 @@ export function closestFrom<E extends Element = HTMLElement>(node: EventTarget |
   return (node as Element).closest<E>(selector)
 }
 
+/** The inline style `property` on `element` or on the nearest element above it that declares one, or '' when none below <body> does. */
+export function inlineStyleAbove(element: Element, property: string): string {
+  for (let node: Element | null = element; node !== null && node !== document.body; node = node.parentElement) {
+    const value = node instanceof HTMLElement ? node.style.getPropertyValue(property) : ''
+    if (value !== '') return value
+  }
+  return ''
+}
+
 /** A local name: a camelCase identifier, which is what the host's CSS modules name their parts. */
 const LOCAL_NAME = /^[a-z][A-Za-z0-9]*$/
 

@@ -1,5 +1,5 @@
 import { SETTINGS_BUTTON_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { findFootArea, findHostMenu } from '@dsh-claude-style/engine/host'
+import { findFootArea, findHostMenuOf } from '@dsh-claude-style/engine/host'
 import { hasSkinClass } from '@dsh-claude-style/engine/dom'
 
 /** Rhythm and give-up point of the poll for the host's account menu after the trigger's own click. */
@@ -78,15 +78,16 @@ export function createHostAccountMenu(options: { close(): void }) {
    * The host's open account menu, or null while it is closed.
    *
    * Identified through the trigger, never through the menu's text: the
-   * account trigger reports `aria-expanded` while its menu is up, so the
-   * open host menu (the skin's own cards carry `dsh-claude-` classes) is
-   * the account menu. Opening a menu folds the shell's other menus, so at
-   * most one host menu is ever open.
+   * account trigger reports `aria-expanded` while its menu is up, and the
+   * card is the one the host anchored to that trigger (findHostMenuOf). Other
+   * host menus can stand in the document at the same time, so the first menu
+   * in the document is not the account menu; the hover keep-alive, the row
+   * injection and the Escape that closes the menu all act on this card.
    */
   function findAccountMenu() {
     const trigger = hostAccountTrigger()
     if (trigger === null || trigger.getAttribute('aria-expanded') !== 'true') return null
-    return findHostMenu()
+    return findHostMenuOf(trigger)
   }
 
   /**

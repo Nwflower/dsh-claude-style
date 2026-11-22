@@ -1,5 +1,5 @@
 import { AUTO_POPOVER_ALL, HERO_MENU_ATTR } from '../../constants'
-import { cacheFirstMatch, findHostMenu } from '@dsh-claude-style/engine/host'
+import { cacheFirstMatch, findHostMenuOf } from '@dsh-claude-style/engine/host'
 import { readPrefs } from '../../core/prefs'
 import { closestFrom, createStamp } from '@dsh-claude-style/engine/dom'
 import { POPOVER_CLOSE_DELAY, POPOVER_MARGIN, POPOVER_OPEN_DELAY, anchorSpace, clampToViewport, closeOtherPopovers, createHoverIntent, createPointerWatch, isProgrammaticPress, pressKeepsPopoverOpen, programmaticPress, registerPopover, resolveAnchoredPosition, unregisterPopover } from '../../shared/popover'
@@ -249,9 +249,10 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
       clearStamp()
       return
     }
-    // The host's card, read through the one accessor that keeps the answer
-    // (D40): the skin's popovers carry a `dsh-claude-` class token.
-    const card = findHostMenu()
+    // The card the host anchored to this trigger (D40): another host menu can
+    // stand before it in the document, and stamping that one would place,
+    // keep alive and close the wrong card.
+    const card = findHostMenuOf(trigger)
     if (card === null) {
       clearStamp()
       return

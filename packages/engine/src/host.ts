@@ -1,9 +1,9 @@
-import { COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, CONVERSATION_VIEW_STORAGE_PREFIX, DIALOG_TRIGGER_SELECTOR, FOOT_AREA_SELECTOR, FOREGROUND_SELECTOR, MENU_ROLE_SELECTOR, MODAL_DIALOG_SELECTOR, MODEL_SLOT_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, RIGHTBAR_TOGGLE_SELECTOR, SIDEBAR_BRAND_SELECTOR, SIDEBAR_CHAT_SELECTOR, SIDEBAR_ROOT_SELECTOR, SIDEBAR_TOGGLE_SELECTOR, WINDOWS_MENU_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_PLACEHOLDER_SELECTOR, COMPOSER_SELECTOR, COMPOSER_STACK_SELECTOR, COMPOSER_STAT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, CONVERSATION_VIEW_STORAGE_PREFIX, DIALOG_TRIGGER_SELECTOR, FOOT_AREA_SELECTOR, FOREGROUND_SELECTOR, MENU_ANCHOR_NAME_PROPERTY, MENU_POSITION_ANCHOR_PROPERTY, MENU_ROLE_SELECTOR, MODAL_DIALOG_SELECTOR, MODEL_SLOT_SELECTOR, PERMISSION_TRIGGER_SELECTOR, PHASE_ATTRIBUTE, RIGHTBAR_TOGGLE_SELECTOR, SIDEBAR_BRAND_SELECTOR, SIDEBAR_CHAT_SELECTOR, SIDEBAR_ROOT_SELECTOR, SIDEBAR_TOGGLE_SELECTOR, WINDOWS_MENU_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import type { HostAccountService } from '@dsh-claude-style/contracts/account'
 import type { HostAgentTeamsRemote, HostSidebarPins, HostAssistantStep, HostBundleListAnswer, HostChatSnapshot, HostChatTarget, HostConfigFormsService, HostConversationService, HostInventoryAnswer, HostJobsService, HostLocaleService, HostModelDirectoriesService, HostPluginBundle, HostServiceLookup, HostSessionStatusService, HostOutlineTurn, HostRunningCall, HostSession, HostSessionsService, HostSessionRenameAnswer, HostShortcutsService, HostSlotOptions, HostSlotsService, HostSnapshotSource, HostSubagentsRemote, HostTurn, HostUiConversationService, HostUiSessionService, HostWorkspacesService, HostWorkspaceViewStore } from '@dsh-claude-style/contracts/services'
 import { fileAddressFor } from '@deepseek-ai/dsh-util-workspace-path'
 import { observeMatches, subscribeMutations } from './bus'
-import { closestFrom, shown } from './dom'
+import { closestFrom, inlineStyleAbove, shown } from './dom'
 import { CHAT_TURN_ATTRIBUTE, CONVERSATION_HEADER_SELECTOR, CONVERSATION_MAIN_SLOT_SELECTOR, HEADER_CORNER_SELECTOR, HEADER_MORE_TRIGGER_SELECTOR, HEADER_TITLE_SELECTOR, HEADER_UTILITIES_SELECTOR, PROCESS_GROUP_SELECTOR, TURN_PROCESS_ANSWER_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
 /** A batch-scoped flow index: one group query and one answer query per container (D3, D40).
@@ -179,8 +179,20 @@ export function findRightbarToggle(): HTMLElement | null {
   return null
 }
 
-/** The open host menu card: the host portals menus to `<body>`, and every card the skin builds itself carries a `dsh-claude-` class (D3). Read once and kept until a menu opens or closes (D40). */
-export const findHostMenu = cacheFirst<HTMLElement>(`${MENU_ROLE_SELECTOR}:not([class*="dsh-claude-"])`)
+/** Host menu cards: the host portals menus to `<body>`, and every card the skin builds itself carries a `dsh-claude-` class (D3). The first one is kept until a menu opens or closes (D40). */
+const HOST_MENU_SELECTOR = `${MENU_ROLE_SELECTOR}:not([class*="dsh-claude-"])`
+const findFirstHostMenu = cacheFirst<HTMLElement>(HOST_MENU_SELECTOR)
+
+/** The portaled card the host's menu `trigger` opened, or null. Several host menus can stand at once (a card the host keeps while it fades out, a panel's menu, another plugin's), so the first one in the document can be anyone's: the card is matched to its trigger through the anchor pair the host's Menu writes (MENU_ANCHOR_NAME_PROPERTY), and the kept first card is checked before the document is walked. */
+export function findHostMenuOf(trigger: Element | null): HTMLElement | null {
+  const name = trigger === null ? '' : inlineStyleAbove(trigger, MENU_ANCHOR_NAME_PROPERTY)
+  const first = name === '' ? null : findFirstHostMenu()
+  if (first === null || first.style.getPropertyValue(MENU_POSITION_ANCHOR_PROPERTY) === name) return first
+  for (const card of document.querySelectorAll<HTMLElement>(HOST_MENU_SELECTOR)) {
+    if (card.style.getPropertyValue(MENU_POSITION_ANCHOR_PROPERTY) === name) return card
+  }
+  return null
+}
 
 /** The page's first menu or modal dialog, shown or not, kept per batch (D40). */
 const findForegroundNode = cacheFirst<HTMLElement>(FOREGROUND_SELECTOR)

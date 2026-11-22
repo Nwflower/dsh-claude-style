@@ -14,7 +14,9 @@
       var menu = heroMenus[id]
       if (menu && menu.parentElement) menu.parentElement.removeChild(menu)
       heroMenus[id] = null
-      document.getElementById(id).setAttribute('aria-expanded', 'false')
+      var trigger = document.getElementById(id)
+      trigger.setAttribute('aria-expanded', 'false')
+      trigger.style.removeProperty('anchor-name')
     }
     // Each card is the host Menu's markup: a row with its glyph and label, and
     // for the workspace picker the pinned add row in the footer. The row carries
@@ -27,8 +29,14 @@
     function bindHeroTrigger(id, label, footer) {
       document.getElementById(id).addEventListener('click', function () {
         if (heroMenus[id]) { closeHeroMenu(id); return }
+        // The host's workspace picker anchors its Menu on the trigger it was
+        // handed (anchorRef) and names that anchor only while the card is open;
+        // the portaled card reads the same name back (ui-primitives Menu.tsx).
+        var anchor = '--dsh-menu-trigger-' + id
+        document.getElementById(id).style.setProperty('anchor-name', anchor)
         var menu = document.createElement('div')
         menu.setAttribute('role', 'menu')
+        menu.style.setProperty('position-anchor', anchor)
         menu.innerHTML = '<div class="_viewport_x_1" role="presentation">' + heroMenuRow(label) + '</div>' +
           (footer ? '<div class="_footer_x_1" role="presentation">' + heroMenuRow(footer) + '</div>' : '')
         document.body.appendChild(menu)

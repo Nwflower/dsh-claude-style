@@ -89,8 +89,10 @@
     // The host's shared menu card carries this material marker (ui-primitives'
     // Menu), which is what the skin's card rules are keyed on.
     menu.setAttribute('data-menu-material', '')
-    // The host's portal: fixed to the window, placed from the trigger's box.
+    // The host's portal: fixed to the window, placed from the trigger's box,
+    // and tied to its trigger through the anchor name on the trigger's wrapper.
     menu.style.position = 'fixed'
+    menu.style.setProperty('position-anchor', accountTrigger.parentElement.style.getPropertyValue('anchor-name'))
     menuViewport = document.createElement('div')
     menuViewport.className = '_viewport_smoke_1'
     menuViewport.setAttribute('role', 'presentation')

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-22",
+  "group": "fixes",
+  "order": 451,
+  "external": true,
+  "zh": "修复页面上另有菜单时，悬停展开的账号菜单与工作区、预设选择卡片在指针移入后仍然收起的问题",
+  "en": "Fix hover-opened account menus and workspace/preset picker cards still folding as the pointer moves into them while another menu stands on the page"
+}
