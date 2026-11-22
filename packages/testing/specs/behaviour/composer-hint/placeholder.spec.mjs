@@ -21,9 +21,13 @@ const STAND_IN = surface.attribute('composer.hint-standin')
 function readHint(t) {
   return t.page.evaluate(([card, field, hint, label, standIn]) => {
     const element = document.querySelector(card)
+    const hostHint = element.querySelector(`${hint}:not([${standIn}])`)
     return {
       label: element.querySelector(field)?.getAttribute(label) ?? null,
-      hint: element.querySelector(`${hint}:not([${standIn}])`)?.textContent ?? null,
+      hint: hostHint?.textContent ?? null,
+      // The host wraps its words in an element of its own; the skin writes the
+      // words and must leave that element standing.
+      children: hostHint?.childElementCount ?? 0,
       standIns: [...element.querySelectorAll(`[${standIn}]`)].map((node) => node.textContent),
     }
   }, [CARD, FIELD, HINT, LABEL, STAND_IN])
@@ -50,7 +54,9 @@ async function openAttachmentForm(t) {
 
 export default spec({ page: 'composer' }, ({ test }) => {
   test('the host\'s own hint carries the skin\'s words in the shell\'s language', async (t) => {
-    t.expectThat.equal((await readHint(t)).hint, 'Type / for commands', 'the hint of the empty composer in English')
+    const english = await readHint(t)
+    t.expectThat.equal(english.hint, 'Type / for commands', 'the hint of the empty composer in English')
+    t.expectThat.equal(english.children, 1, 'the host\'s own element inside the hint, still standing after the words were written')
     await t.page.evaluate(() => window.__dshSmokeHost.setSmokeLocale('zh'))
     await t.settle()
     t.expectThat.equal((await readHint(t)).hint, '输入 / 以使用命令', 'the hint of the empty composer in Chinese')

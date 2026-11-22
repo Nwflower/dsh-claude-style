@@ -493,9 +493,11 @@ function page(name, tier, cases, probe = PROBE) {
   // The hint the host's editor draws on an empty draft, inside the grow wrapper
   // beside the field, which is where the host renders it; and the rail
   // ui-attachment draws the draft's files and images into before it. The
-  // composer page is the one the behaviour lane reads its hint on.
+  // composer page is the one the behaviour lane reads its hint on. The words
+  // stand in the host's placeholder slot, as the host that wraps them in a
+  // `conversation.input.placeholder` chain draws them.
   var hintFixture = name === 'permissions-locale' || name === 'composer'
-    ? `<div data-composer-placeholder id="${HOST_HINT_ID}">How can I help you today?</div>`
+    ? `<div data-composer-placeholder id="${HOST_HINT_ID}"><span data-slot="conversation.input.placeholder" style="display: contents;">How can I help you today?</span></div>`
     : ''
   // The draft's attachments, as ui-attachment's `conversation.input.attachments`
   // slot draws them in the card before the field: one image tile in the rail's
