@@ -1308,6 +1308,10 @@
       "the new-text fade row previews its two answers: the fade card's character lands unseen and settles over the reveal's own duration, the other stands solid as it arrives, and a character waiting for its turn is unseen": [
         0.24
       ],
+      "picking a level sounds its own cue at the gain it just chose, the repeat of the level in force sounds again, and the off pick stays silent": [
+        0.2,
+        0.55
+      ],
       "the ongoing-effect row names three independent cards, each carrying a decorative title before its marker, with only the default breathing choice pressed": [
         0,
         3
