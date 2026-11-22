@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-22",
-  "group": "fixes",
-  "order": 0,
-  "external": true,
-  "zh": "鼠标从浮起的侧栏移开时，主区保持原位，不再先让出侧栏的宽度再滑回来",
-  "en": "Leaving the peeked sidebar keeps the main area where it stands; it no longer makes room for the sidebar and slides back."
-}

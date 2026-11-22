@@ -2,6 +2,32 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.22.0] - 2026-11-22
+
+[中文](#cn-0.22.0) | [English](#en-0.22.0)
+
+<h3 id="cn-0.22.0">体验优化</h3>
+
+- 动效页里两档只差动效的设置，两张预览卡本身就是那两档，各自在样例上方写出是哪一档，不再另加一个开关；挂在开关下面的预览卡行，在开关关掉时整行置灰、卡片也停下不动
+- 设置页的提示音效改由特性自己绘制三档，按下哪一档就先按那一档的音量响一次，方便当场听出轻柔与清晰的区别；关闭一档没有音量可听，保持安静，重复按当前档位也会再响一次
+
+### 问题修复
+
+- 修复发送消息后整块输入区消失的问题。宿主改用插槽链渲染输入提示，皮肤覆写提示文字时连同宿主的节点一起抹掉，宿主随后移除该节点时抛出异常，整个输入区随之崩溃；现在只改提示里的文字，不动宿主自己的节点
+- 鼠标从浮起的侧栏移开时，主区保持原位，不再先让出侧栏的宽度再滑回来
+- 修复页面上另有菜单时，悬停展开的账号菜单与工作区、预设选择卡片在指针移入后仍然收起的问题
+
+<h3 id="en-0.22.0">Improvements</h3>
+
+- Where a Motion row's two answers differ only in motion, the two preview cards are those answers, each naming itself over its sample with no switch beside them, and a row of preview cards under a switch greys out and holds its samples still while that switch is off.
+- The sound cue row in the settings page draws its three levels itself and sounds the completion cue at the level just pressed, so Soft and Clear can be told apart on the spot; the Off level has no gain to hear and stays silent, and pressing the level already in force sounds it again.
+
+### Bug Fixes
+
+- Fix the whole composer disappearing after a message is sent. The host now renders the composer hint through a slot chain, and the skin's hint rewrite took the host's own node with the text it replaced; React then threw while unmounting that node, crashing the composer bar. Only the hint's text is written now
+- Leaving the peeked sidebar keeps the main area where it stands; it no longer makes room for the sidebar and slides back.
+- Fix hover-opened account menus and workspace/preset picker cards still folding as the pointer moves into them while another menu stands on the page
+
 ## [0.21.9] - 2026-11-22
 
 [中文](#cn-0.21.9) | [English](#en-0.21.9)
