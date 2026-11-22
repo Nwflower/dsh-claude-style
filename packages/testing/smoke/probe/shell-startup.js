@@ -103,20 +103,21 @@
       r.permFoldedByPreset = permUp()
       // The stamp names the picker, and only the workspace card is drawn as
       // Claude's folder menu: the preset card keeps its row glyph.
+      var heroStamp = '[data-dsh-claude-hero-menu]'
       function heroCardShape() {
-        var card = document.querySelector('[data-dsh-claude-hero-menu]')
+        var card = document.querySelector(heroStamp)
         if (card === null) return null
         var icons = card.querySelectorAll('[data-dsh-claude-part~="menu-item-icon"]')
         var row = card.querySelector('[role="menuitem"]')
         return {
-          kind: card.getAttribute('data-dsh-claude-hero-menu'),
+          kind: card.getAttribute(heroStamp.slice(1, -1)),
           iconsShown: Array.prototype.filter.call(icons, function (icon) { return getComputedStyle(icon).display !== 'none' }).length,
           rowHeight: row === null ? null : Math.round(row.getBoundingClientRect().height),
         }
       }
       /** Where the stamped card sits against its trigger, in the skin's own terms. */
       function heroCardPlacement() {
-        var card = document.querySelector('[data-dsh-claude-hero-menu]')
+        var card = document.querySelector(heroStamp)
         var row = document.getElementById('hero-workspace')
         if (card === null) return null
         var c = card.getBoundingClientRect()
@@ -158,7 +159,7 @@
             return {
               skin: /dsh-claude-/.test(card.className),
               positionAnchor: card.style.getPropertyValue('position-anchor'),
-              stamped: card.getAttribute('data-dsh-claude-hero-menu')
+              stamped: card.getAttribute(heroStamp.slice(1, -1))
             }
           })
         }
