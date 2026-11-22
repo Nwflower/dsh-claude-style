@@ -319,6 +319,17 @@
         }
         return reading.word === 'Thinking…' && reading.copies === 1 && reading.phase === null
       }, 'the swap to the silent wording')
+      // The entering copy keeps climbing after the swap's structure has landed;
+      // record it until its own motion reaches rest, so the reading holds the
+      // whole climb rather than the prefix the structural state cut off (D92).
+      await probe.until(function () {
+        var label = row.querySelector('.dsh-claude-chat-wait-label')
+        var copy = label === null ? null : label.querySelector('.dsh-claude-swap-copy[data-text="Thinking…"]')
+        if (copy === null) return null
+        var style = getComputedStyle(copy)
+        enterFrames.push({ opacity: Number(style.opacity), filter: style.filter, transform: style.transform })
+        return Number(style.opacity)
+      }, function (readings) { return readings[readings.length - 1] >= 0.99 }, 'the arriving wording to reach rest')
       // The box takes the arriving width after the words have landed, and the
       // clock slides with it: the frames run on until the page settles.
       r.wait.silent = r.wait.silent.concat(await probe.watch(lineOf))
