@@ -83,6 +83,24 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let cancelTailPass: (() => void) | null = null
   /** A single frame's tail readings, consumed once by its first write. */
   let tailReadings: Map<HTMLElement, boolean> | null = null
+  /**
+   * What the last reading saw of one row's surroundings, and the structure it
+   * saw it on.
+   *
+   * Both surroundings questions resolve styles: `followedByContent` asks each
+   * sibling whether it is visible, and the foreign-line test lays the words'
+   * subtree out through `innerText`. The clock asks four times a second, and a
+   * row whose chain to the column kept its child counts cannot have gained a
+   * line or content below it, so a reading stands until that shape moves or a
+   * second passes. A sibling that only flips its visibility is caught by that
+   * second, and a row arriving or leaving moves the column's own count, which
+   * is part of the shape.
+   */
+  // Per row: both leave with the row (release, and the teardown's sweep).
+  const tailVerdicts = new Map<HTMLElement, { shape: number, tail: boolean, at: number }>()
+  const foreignVerdicts = new Map<HTMLElement, { shape: number, foreign: boolean, at: number }>()
+  /** How long a reading stands when the structure around its row did not move. */
+  const REREAD_MS = 1000
   let stopped = false
   /** The badge exits still playing; the teardown cancels every one of them. */
   const badgeTimers = new Set<number>()
@@ -221,12 +239,51 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     return false
   }
 
+  /**
+   * The child counts from a row up to the transcript's column: rows added or
+   * taken away, and parts added inside them, move it. Read off the DOM without
+   * resolving styles, which is what makes it cheaper than the questions it
+   * guards.
+   */
+  function shapeOf(row: HTMLElement) {
+    const column = row.closest(CHAT_FLOW_SELECTOR)
+    if (column === null) return 0
+    let shape = column.childElementCount
+    let ancestor: HTMLElement = row
+    while (ancestor !== column) {
+      shape = (shape * 31 + ancestor.childElementCount) | 0
+      const parent = ancestor.parentElement
+      if (parent === null) return 0
+      ancestor = parent
+    }
+    return shape
+  }
+
+  /** Whether the row is the transcript's tail, read again only when its shape moved. */
+  function tailOf(row: HTMLElement, shape: number, now: number) {
+    const standing = tailVerdicts.get(row)
+    if (standing !== undefined && standing.shape === shape && now - standing.at < REREAD_MS) return standing.tail
+    const tail = !followedByContent(row)
+    tailVerdicts.set(row, { shape, tail, at: now })
+    return tail
+  }
+
+  /** Whether another line replaced the host's words, read again only when the shape moved. */
+  function foreignLineOwns(row: HTMLElement, words: HTMLElement, shape: number, now: number) {
+    const standing = foreignVerdicts.get(row)
+    if (standing !== undefined && standing.shape === shape && now - standing.at < REREAD_MS) return standing.foreign
+    const foreign = foreignRunningLineOwns(words, lines.get(row)?.line, WORDS_ATTR)
+    foreignVerdicts.set(row, { shape, foreign, at: now })
+    return foreign
+  }
+
   /** Read the pin's classification before any frame task writes its words. */
   function readTails() {
     if (stopped || tailReadings !== null) return
     const readings = new Map<HTMLElement, boolean>()
     if (hostChatSeat(ctx) !== null) {
-      for (const row of runningRows.all()) readings.set(row, !followedByContent(row))
+      const now = Date.now()
+      for (const row of runningRows.all()) readings.set(row, tailOf(row, shapeOf(row), now))
     }
     tailReadings = readings
   }
@@ -277,7 +334,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       return
     }
     const words = row.querySelector<HTMLElement>(CHAT_RUNNING_TEXT_SELECTOR)
-    if (words === null || foreignRunningLineOwns(words, lines.get(row)?.line, WORDS_ATTR)) {
+    const shape = words === null ? 0 : shapeOf(row)
+    if (words === null || foreignLineOwns(row, words, shape, now)) {
       release(row)
       return
     }
@@ -373,6 +431,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       if (typeof parts.key !== 'string') wording.delete(parts.key)
     }
     lines.delete(row)
+    tailVerdicts.delete(row)
+    foreignVerdicts.delete(row)
     hostWords.get(row)?.removeAttribute(WORDS_ATTR)
     hostWords.delete(row)
     follows.get(row)?.stop()
@@ -393,6 +453,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const running = new Set(rows)
     for (const row of [...lines.keys()]) {
       if (!running.has(row)) release(row)
+    }
+    // A row the host took away holds no reading: the entry is a strong key, and
+    // the row would outlive the page it stood on.
+    for (const row of [...tailVerdicts.keys()]) {
+      if (!running.has(row)) tailVerdicts.delete(row)
+    }
+    for (const row of [...foreignVerdicts.keys()]) {
+      if (!running.has(row)) foreignVerdicts.delete(row)
     }
     // A wait the model ended, or a turn that closed, starts over next time; a
     // turn no row speaks for any more forgets the wording it stood on.
@@ -457,6 +525,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
     waits.clear()
     wording.clear()
+    tailVerdicts.clear()
+    foreignVerdicts.clear()
     // A follow whose row left the page without a pass: release() stops the ones
     // still standing.
     for (const followed of [...follows.values()]) followed.stop()
