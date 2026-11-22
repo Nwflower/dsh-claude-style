@@ -11,6 +11,11 @@
   var menuViewport = null
   var menuSizer = null
   var hostRowsHtml = ''
+  // The reveal mark the skin writes, read from the surface table; the hold's
+  // observer takes it back down while the placement is held.
+  var readyMark = null
+  var revealHold = null
+  var holdWasSet = false
   /**
    * The host's own placement: the card sits above its trigger, by its height.
    * The host's rows are its own sizing, so the height it adds up for them is
@@ -33,13 +38,18 @@
   // its bound. The behaviour spec crosses the pointer inside that window,
   // while the card is mounted but still unpainted. The step advances once per
   // frame, so a resize callback placing twice in one frame cannot land the
-  // watchdog on the same value two reads running.
+  // watchdog on the same value two reads running. While the hold stands, the
+  // reveal mark is taken back down as soon as it is written, so the unpainted
+  // window lasts the hold's whole duration on every runner's clock, and the
+  // release hands the mark back once the placement stands still.
   var heldFrame = 0
   function heldPlacement() {
     if (!menu || !window.__holdHostMenuPlacement) {
       if (accountTrigger) accountTrigger.style.transform = ''
+      if (menu && menu.isConnected && holdWasSet && readyMark !== null) menu.setAttribute(readyMark, '')
       return
     }
+    holdWasSet = true
     heldFrame += 1
     accountTrigger.style.transform = 'translateY(' + (heldFrame % 2 ? 2 : 0) + 'px)'
     placeHostMenu()
@@ -55,6 +65,7 @@
   }
   function closeHostMenu() {
     if (menuSizer) { menuSizer.disconnect(); menuSizer = null }
+    if (revealHold) { revealHold.disconnect(); revealHold = null }
     if (menu && menu.parentElement) menu.parentElement.removeChild(menu)
     menu = null
     menuViewport = null
@@ -135,8 +146,17 @@
     // frames apart.
     window.__hostMenuTops = []
     heldFrame = 0
+    holdWasSet = false
     placeHostMenu()
     requestAnimationFrame(heldPlacement)
+    // The hold keeps the card unpainted: the reveal mark the skin writes at
+    // its bound is taken back down while the flag stands, so the window is
+    // the hold's duration rather than ten frames of the runner's clock.
+    readyMark = window.SMOKE_SURFACE.find(function (entry) { return entry.id === 'account.ready' }).attribute
+    revealHold = new MutationObserver(function () {
+      if (menu && window.__holdHostMenuPlacement && menu.hasAttribute(readyMark)) menu.removeAttribute(readyMark)
+    })
+    revealHold.observe(menu, { attributes: true, attributeFilter: [readyMark] })
     if (typeof ResizeObserver === 'function') {
       menuSizer = new ResizeObserver(function () { requestAnimationFrame(placeHostMenu) })
       menuSizer.observe(menu)

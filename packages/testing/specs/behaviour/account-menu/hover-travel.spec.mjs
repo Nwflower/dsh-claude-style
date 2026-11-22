@@ -85,8 +85,8 @@ export default spec({ page: 'desktop' }, ({ test }) => {
 
     await mountOtherMenu(t, positionAnchor)
 
-    // Hold the card's placement so the reveal wait runs to its bound: the
-    // crossing below happens while the card is mounted but still unpainted.
+    // Hold the card's placement and its reveal: the card stays mounted but
+    // unpainted for the hold's whole duration, on every runner's clock.
     await t.page.evaluate(() => { window.__holdHostMenuPlacement = true })
     await hoverOpen(t, triggerSel, menuSel)
     // Read the settle state at the first moment after the mount, before any
