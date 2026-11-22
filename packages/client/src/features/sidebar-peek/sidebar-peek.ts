@@ -71,6 +71,8 @@ export function install(ctx: HostContext) {
   let openTimer: number | undefined
   let leaveTimer: number | undefined
   let closeTimer: number | undefined
+  /** The frame on which the peek leaves the frame after the host's track has landed. */
+  let settleFrame: number | undefined
 
   const collapsed = (box: HTMLElement) => box.hasAttribute(SIDEBAR_COLLAPSED_ATTRIBUTE)
   const column = () => frame?.querySelector<HTMLElement>(COLUMN_SELECTOR) ?? null
@@ -143,6 +145,10 @@ export function install(ctx: HostContext) {
     openTimer = undefined
     leaveTimer = undefined
     closeTimer = undefined
+    if (settleFrame !== undefined) {
+      window.cancelAnimationFrame(settleFrame)
+      settleFrame = undefined
+    }
   }
 
   function cancelWaiting() {
@@ -167,6 +173,28 @@ export function install(ctx: HostContext) {
     phase = 'idle'
   }
 
+  /**
+   * Give the frame back one style pass after the host's collapse was read, not
+   * on the mutation itself.
+   *
+   * The host eases its first track on a discrete open or close (`data-animating`
+   * on the frame), and a commit that collapses it writes the new track and drops
+   * the marker in the same pass. Taking the peek's `transition: none` off inside
+   * the mutation callback would let that pass's style read start the ease from
+   * the open track, and the centre would make room and slide back for a quarter
+   * of a second under the finished peek. The peek stays for one painted frame so
+   * the track lands at once, then the frame goes back with nothing left to ease.
+   */
+  function settleClose() {
+    if (settleFrame !== undefined) return
+    settleFrame = window.requestAnimationFrame(() => {
+      settleFrame = window.requestAnimationFrame(() => {
+        settleFrame = undefined
+        if (frame !== null && collapsed(frame)) finish()
+      })
+    })
+  }
+
   function onFrameChange() {
     if (frame === null) return
     if (!collapsed(frame)) {
@@ -177,7 +205,7 @@ export function install(ctx: HostContext) {
     // The marker is back: the peek's own close, or the host closing the
     // sidebar itself (its shortcut, a width crossing its breakpoint). The first
     // records can still predate the host's own render of the open sidebar.
-    if (opened) finish()
+    if (opened) settleClose()
   }
 
   function open() {
