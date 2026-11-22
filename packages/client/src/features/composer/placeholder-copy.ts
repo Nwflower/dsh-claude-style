@@ -18,6 +18,68 @@ const ATTACHED_ATTR = 'data-has-attachments'
 const DRAWN_ATTR = 'data-dsh-claude-drawn'
 
 /**
+ * Replace a host hint's words without taking the host's own nodes with them.
+ *
+ * The host stopped drawing its hint as a bare text run: it now renders the
+ * sentence through a slot chain, so the element that carries
+ * `data-composer-placeholder` holds a React-owned element — a slot anchor —
+ * somewhere in its subtree, and the words themselves sit inside that anchor.
+ * Writing `textContent` on the hint drops every child, the anchor included,
+ * and React then throws `NotFoundError: Failed to execute 'removeChild'` when
+ * it unmounts the hint. That exception is raised inside the composer's own
+ * render, so the whole `conversation.composer.bar` entry crashes and the
+ * input area leaves the page until a reload — the reader loses the composer
+ * right after sending, which is the report this fixes (#458).
+ *
+ * So the words are written into the deepest first text node the hint holds,
+ * and every element is left where React put it. A hint with no text node of
+ * its own — a bare anchor whose text is still being committed — is not
+ * rewritten, because writing there would be the same destruction one level
+ * down: the pass after it writes again once the text has arrived.
+ *
+ * @param node - the hint element, the host's own or the skin's stand-in.
+ * @param text - the words to show.
+ * @returns whether the words were written.
+ */
+function writeHintText(node: HTMLElement, text: string) {
+  const target = findHintText(node)
+  if (target === null) return false
+  if (target.textContent !== text) target.textContent = text
+  // The rest of the hint's text is the host's own copy of the same sentence
+  // (a repeated chain slot); cleared so the reader sees one line, not two.
+  for (const other of hintTextNodes(node)) {
+    if (other !== target && other.textContent !== '') other.textContent = ''
+  }
+  return true
+}
+
+/** The first text node under a hint, depth first, or null while it holds none. */
+function findHintText(node: Node): Text | null {
+  const children = node.childNodes
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i]
+    if (child === null) continue
+    if (child.nodeType === 3) return child as Text
+    if (child.nodeType !== 1) continue
+    const found = findHintText(child)
+    if (found !== null) return found
+  }
+  return null
+}
+
+/** Every text node under a hint, in document order. */
+function hintTextNodes(node: Node, out: Text[] = []): Text[] {
+  const children = node.childNodes
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i]
+    if (child === null) continue
+    if (child.nodeType === 3) out.push(child as Text)
+    else if (child.nodeType === 1) hintTextNodes(child, out)
+  }
+  return out
+}
+
+/**
  * Shipped idle composer hints (zh / en, hero / default) this skin replaces:
  * the host's own two sentences, and the skin's two in each language.
  */
@@ -138,7 +200,9 @@ export function createPlaceholderCopy(cards: MatchList<HTMLElement>, placeholder
         replaced.delete(node)
         continue
       }
-      node.textContent = entry.original
+      // Same rule as the write: the host's words go back into the hint's own
+      // text, and React's anchor stays where it is.
+      writeHintText(node, entry.original)
       replaced.delete(node)
     }
   }
@@ -159,8 +223,9 @@ export function createPlaceholderCopy(cards: MatchList<HTMLElement>, placeholder
       // The host's own words are kept per node, so turning the restyle off (or
       // reloading the plugin) leaves the host's hint rather than the skin's.
       const entry = replaced.get(node)
+      // The words go into the hint's own text, never over React's anchor (writeHintText).
+      if (!writeHintText(node, target)) continue
       replaced.set(node, { original: entry?.original ?? text, written: target })
-      node.textContent = target
     }
   }
 
@@ -218,7 +283,9 @@ export function createPlaceholderCopy(cards: MatchList<HTMLElement>, placeholder
       if (!wantsStandIn(card)) continue
       const held = card.querySelector<HTMLElement>(`[${SYNTHETIC_ATTR}]`)
       if (held !== null && !draw) {
-        if (held.textContent !== target) held.textContent = target
+        // The stand-in is the skin's own node, but a later host version may hand
+        // it React children the same way; the words are written the same way too.
+        writeHintText(held, target)
         held.setAttribute(DRAWN_ATTR, String(pass))
         continue
       }
