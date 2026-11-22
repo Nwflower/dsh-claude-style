@@ -200,13 +200,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
 
   /**
    * Level 1's pinned footer (features/model/model-footer.ts): the divider, the
-   * More-models row and the Agent Teams switch. Rebuilt only when its row set
-   * changes.
+   * More-models row, the Agent Teams switch and the rows other plugins hand to
+   * the host's model menu. Rebuilt only when its row set changes.
    */
   const modelFooter = createModelFooter({
     ctx,
     footer: () => cards.footer(),
     moreCell: () => modelRows.buildModelCell(copy('moreLabel')),
+    slots: () => slots,
     schedule() { if (ui.schedule) ui.schedule() },
     dismiss() { cards.closeAll() },
     restoreFocus() { modelBtn?.focus() },

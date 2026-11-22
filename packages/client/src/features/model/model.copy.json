@@ -27,5 +27,6 @@
   "teamDisableWarning": { "zh": "停用后可能影响缓存复用、增加后续 token 用量与开销，并影响当前任务的协作效果。", "en": "Disabling it may affect cache reuse, increase subsequent token usage and costs, and affect collaboration on the current task." },
   "teamDisableCancel": { "zh": "取消", "en": "Cancel" },
   "teamDisableConfirm": { "zh": "确认停用", "en": "Disable" },
-  "teamDisableClose": { "zh": "关闭", "en": "Close" }
+  "teamDisableClose": { "zh": "关闭", "en": "Close" },
+  "pluginPaneUnsupported": { "zh": "这一项要打开宿主模型菜单里的设置面板，当前的模型选择器无法显示它。", "en": "This option opens a settings pane of the host's model menu, which this picker cannot show." }
 }

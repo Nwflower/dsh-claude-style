@@ -577,6 +577,24 @@ body[data-dsh-claude-style] .dsh-claude-model-team-knob {
 body[data-dsh-claude-style] .dsh-claude-model-team-switch[aria-checked="true"] .dsh-claude-model-team-knob {
   translate: 12px 0;
 }
+/* Rows other plugins hand to the host's model menu stand under the Agent Teams
+   switch (plugin-options.ts). */
+body[data-dsh-claude-style] .dsh-claude-model-plugin-option {
+  flex: none;
+  min-width: 0;
+}
+/* They are drawn with the host's tokens, so under the Claude palette the
+   container points those tokens at the picker's own: the hover plate, the row
+   corner and a switch's on colour read as the Agent Teams row beside them. */
+body[data-dsh-claude-style][data-dsh-claude-palette="claude"] .dsh-claude-model-plugin-option {
+  --dsw-alias-interactive-bg-hover: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
+  --dsw-radius-md: 6px;
+  --dsw-alias-button-info-fill: var(--dsw-alias-brand-primary, #d97757);
+}
+/* A row whose component draws nothing (its data is still loading) takes no room. */
+body[data-dsh-claude-style] .dsh-claude-model-plugin-option:empty {
+  display: none;
+}
 
 /* External seats use the same two-part control outside the composer's trailing region. */
 body[data-dsh-claude-style] [data-dsh-claude-external-control="model-picker"] {

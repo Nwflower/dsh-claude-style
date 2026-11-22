@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-22",
+  "group": "new",
+  "order": 0,
+  "external": true,
+  "zh": "模型选择器显示其它插件加入宿主模型菜单的选项行，例如订阅插件的「本轮结束后压缩」",
+  "en": "Show the rows other plugins add to the host's model menu in the model picker, such as the subscription plugin's Compact after this turn switch"
+}

@@ -153,13 +153,17 @@ export interface HostSidebarPins {
   setPinned(id: string, pinned: boolean): void
 }
 
-/** One registered slot entry: how it was declared, and the store it hands out. */
-interface HostSlotRegistration {
+/** One registered slot entry: how it was declared, the component the owner renders, and the store it hands out. */
+export interface HostSlotRegistration {
   /** A label is a string or a thunk the owner re-reads on every projection, so it follows the locale. */
   options: { id?: string, label?: string | (() => string), priority?: number }
+  /** The React component the slot's owner renders for this entry. */
+  component?: unknown
+  /** The dictionary namespace the owner binds into the entry's `t` prop. */
+  locale?: string
   store?: { create(): HostSlotStore }
-  /** The registrant's business face; the sidebar's carries its pin list. */
-  inject?(): { setPinned?: unknown, hooks?: { entryPins?: unknown } }
+  /** The registrant's business face; a session-scoped slot hands it the session id, and the sidebar's carries its pin list. */
+  inject?(sessionId?: string): Record<string, unknown> & { setPinned?: unknown, hooks?: { entryPins?: unknown } }
 }
 
 /** One customizable panel, as the sidebar's More menu hands it to its rows; Plugins is never one. */
