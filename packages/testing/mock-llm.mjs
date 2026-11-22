@@ -271,7 +271,7 @@ const SCRIPTS = {
               "await tools.read({ file_path: '{{workspaceCode}}/plain.md' })",
               "await delay(200)",
               "await tools.read({ file_path: '{{workspaceCode}}/plain.md' })",
-              "return 'four changes to app.js, a write and a read of notes.md, one write to only.md, two reads of plain.md'",
+              "'four changes to app.js, a write and a read of notes.md, one write to only.md, two reads of plain.md'",
             ].join('\n'),
           },
         },
