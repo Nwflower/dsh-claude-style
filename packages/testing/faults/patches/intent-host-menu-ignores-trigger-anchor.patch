@@ -1,0 +1,10 @@
+diff --git a/packages/engine/src/host.ts b/packages/engine/src/host.ts
+--- a/packages/engine/src/host.ts
++++ b/packages/engine/src/host.ts
+@@ -188,5 +188,5 @@
+   const name = trigger === null ? '' : inlineStyleAbove(trigger, MENU_ANCHOR_NAME_PROPERTY)
+   const first = name === '' ? null : findFirstHostMenu()
+-  if (first === null || first.style.getPropertyValue(MENU_POSITION_ANCHOR_PROPERTY) === name) return first
++  if (first !== null) return first
+   for (const card of document.querySelectorAll<HTMLElement>(HOST_MENU_SELECTOR)) {
+     if (card.style.getPropertyValue(MENU_POSITION_ANCHOR_PROPERTY) === name) return card

@@ -217,6 +217,13 @@
       "apply": "forward",
       "patch": "patches/intent-overtime-ignores-first-token-pace.patch",
       "defect": "The waiting line's overtime badge comes out at ten seconds of silence on every session, whatever the session's own average time to first token."
+    },
+    {
+      "id": "intent-host-menu-ignores-trigger-anchor",
+      "from": "intent",
+      "apply": "forward",
+      "patch": "patches/intent-host-menu-ignores-trigger-anchor.patch",
+      "defect": "The first host menu in the document is returned without checking the anchor pair, so a card mounted earlier for another trigger is taken for the account card or the picker card: the keep-alive measures that one's box, and the hover-opened menu folds as the pointer moves toward its own card."
     }
   ]
 }

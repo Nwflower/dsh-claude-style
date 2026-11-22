@@ -27,6 +27,24 @@
     menu.style.top = Math.round(row.top - height * hostScale() - 6) + 'px'
     window.__hostMenuTops.push({ at: Math.round(performance.now()), top: menu.style.top })
   }
+  // A held placement keeps the anchor moving the way a sidebar reflow does:
+  // every placement the host writes and the skin corrects follows it, so the
+  // card's top never reads the same twice and the skin's reveal wait runs to
+  // its bound. The behaviour spec crosses the pointer inside that window,
+  // while the card is mounted but still unpainted. The step advances once per
+  // frame, so a resize callback placing twice in one frame cannot land the
+  // watchdog on the same value two reads running.
+  var heldFrame = 0
+  function heldPlacement() {
+    if (!menu || !window.__holdHostMenuPlacement) {
+      if (accountTrigger) accountTrigger.style.transform = ''
+      return
+    }
+    heldFrame += 1
+    accountTrigger.style.transform = 'translateY(' + (heldFrame % 2 ? 2 : 0) + 'px)'
+    placeHostMenu()
+    requestAnimationFrame(heldPlacement)
+  }
   /** How much larger than its own pixels the page draws a box: the reader's page zoom. */
   function hostScale() {
     return accountTrigger.getBoundingClientRect().height / accountTrigger.offsetHeight
@@ -41,7 +59,10 @@
     menu = null
     menuViewport = null
     // The host reports the menu state on its trigger (ui-primitives' Menu).
-    if (accountTrigger) accountTrigger.setAttribute('aria-expanded', 'false')
+    if (accountTrigger) {
+      accountTrigger.setAttribute('aria-expanded', 'false')
+      accountTrigger.style.transform = ''
+    }
   }
   function openHostSettingsDialog() {
     var area = document.querySelector('[data-dsh-claude-part~="settings-area"]')
@@ -98,17 +119,6 @@
     menuViewport.setAttribute('role', 'presentation')
     menu.appendChild(menuViewport)
     fillHostRows()
-    // The host places the card from its own geometry when it mounts it, and
-    // re-places it on the frame after its list changes (measured on the real
-    // menu: the skin's container lands a frame after the mount, the card grows,
-    // and the host follows one frame later). __hostMenuTops records every
-    // placement so the probe can tell the frames apart.
-    window.__hostMenuTops = []
-    placeHostMenu()
-    if (typeof ResizeObserver === 'function') {
-      menuSizer = new ResizeObserver(function () { requestAnimationFrame(placeHostMenu) })
-      menuSizer.observe(menu)
-    }
     menu.addEventListener('click', function (e) {
       var item = e.target && e.target.closest ? e.target.closest('button[role="menuitem"]') : null
       if (!item) return
@@ -116,6 +126,21 @@
       closeHostMenu()
     })
     document.body.appendChild(menu)
+    // The host places the card from its own geometry when it mounts it, and
+    // re-places it on the frame after its list changes (measured on the real
+    // menu: the skin's container lands a frame after the mount, the card grows,
+    // and the host follows one frame later). The first placement lands with
+    // the portal in the document, so the card carries its top from the mount
+    // frame. __hostMenuTops records every placement so the probe can tell the
+    // frames apart.
+    window.__hostMenuTops = []
+    heldFrame = 0
+    placeHostMenu()
+    requestAnimationFrame(heldPlacement)
+    if (typeof ResizeObserver === 'function') {
+      menuSizer = new ResizeObserver(function () { requestAnimationFrame(placeHostMenu) })
+      menuSizer.observe(menu)
+    }
   })
   // The host's Menu keyboard walk: every button in the list is reachable with
   // the direction keys, our injected rows included.

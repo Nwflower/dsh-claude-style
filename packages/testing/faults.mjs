@@ -88,7 +88,9 @@ function run(dir, script, args) {
   return { code: result.status ?? 1, output: `${result.stdout}${result.stderr}` }
 }
 
-/** The feature directories a patch touches, and whether it reaches past them. */
+/** The feature directories a patch touches, and whether it reaches past them.
+ *  The engine and the contracts compile into the browser bundle, so a fault
+ *  there is read by the behaviour lane as much as one in a feature. */
 function reach(patch) {
   const files = [...patch.matchAll(/^\+\+\+ b\/(\S+)|^--- a\/(\S+)/gm)].map((match) => match[1] ?? match[2])
   const features = new Set()
@@ -98,7 +100,8 @@ function reach(patch) {
     if (feature !== null) features.add(feature[1])
     else if (/^packages\/client\/src\//.test(file)) wide = true
   }
-  return { features: [...features], wide, browserHalf: files.some((file) => file.startsWith('packages/client/src/')) }
+  const browserHalf = files.some((file) => file.startsWith('packages/client/src/') || file.startsWith('packages/engine/src/') || file.startsWith('packages/contracts/src/'))
+  return { features: [...features], wide, browserHalf }
 }
 
 /** The spec ids or test files that went red in one Vitest JSON report. */
