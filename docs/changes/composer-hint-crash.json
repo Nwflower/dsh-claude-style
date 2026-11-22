@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-22",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "修复发送消息后整块输入区消失的问题。宿主改用插槽链渲染输入提示，皮肤覆写提示文字时连同宿主的节点一起抹掉，宿主随后移除该节点时抛出异常，整个输入区随之崩溃；现在只改提示里的文字，不动宿主自己的节点",
+  "en": "Fix the whole composer disappearing after a message is sent. The host now renders the composer hint through a slot chain, and the skin's hint rewrite took the host's own node with the text it replaced; React then threw while unmounting that node, crashing the composer bar. Only the hint's text is written now"
+}
