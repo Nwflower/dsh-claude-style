@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-22",
+  "group": "improvements",
+  "order": 0,
+  "external": true,
+  "zh": "设置页的提示音效改由特性自己绘制三档，按下哪一档就先按那一档的音量响一次，方便当场听出轻柔与清晰的区别；关闭一档没有音量可听，保持安静，重复按当前档位也会再响一次",
+  "en": "The sound cue row in the settings page draws its three levels itself and sounds the completion cue at the level just pressed, so Soft and Clear can be told apart on the spot; the Off level has no gain to hear and stays silent, and pressing the level already in force sounds it again."
+}

@@ -356,6 +356,47 @@
         }
         r.settings.revealPreview = { fade: readPiece(fadePiece), waiting: readPiece(waitingPiece), plain: readPiece(plainPiece) }
         revealHost.remove()
+        // The sound level row draws its own three picks and sounds each one as it
+        // is pressed (features/sound-cues/sound-cues.settings.ts), so the row is
+        // read off the plain tree, pressed through the handlers the tree carries,
+        // and the asks that reach the route are read back. Off is a level with no
+        // gain, so it is the one press that stays silent; the second press of a
+        // level already in force is the reader asking to hear it again, so it
+        // sounds too.
+        var readLevels = function () {
+          var out = { label: null, buttons: [], press: [] }
+          walk(renderSettingsTab('general'), function (node) {
+            var props = node.props || {}
+            if (props.key !== 'soundCues') return
+            walk(props.children, function (child) {
+              var childProps = child.props || {}
+              if (childProps.role === 'group' && typeof childProps['aria-label'] === 'string') out.label = childProps['aria-label']
+              if (childProps['aria-pressed'] === undefined) return
+              out.buttons.push({
+                label: [].concat(childProps.children || []).join(''),
+                pressed: childProps['aria-pressed'],
+                disabled: childProps.disabled === true,
+              })
+              out.press.push(childProps.onClick)
+            })
+          })
+          return out
+        }
+        window.__soundAsks = []
+        var levels = readLevels()
+        r.settings.soundRow = { label: levels.label, buttons: levels.buttons }
+        // Off first, then the two levels, then the level just chosen again: the
+        // three asks that come back are the two levels and the repeat.
+        var presses = [0, 1, 2, 1]
+        for (var li = 0; li < presses.length; li++) levels.press[presses[li]]()
+        await probe.until(function () { return (window.__soundAsks || []).length },
+          function (counts) { return counts[counts.length - 1] >= 3 },
+          'the level row to sound the three picks that carry a gain')
+        await probe.settle()
+        r.settings.soundAsks = window.__soundAsks.slice()
+        r.settings.soundRowAfter = readLevels().buttons
+        window.__pushForm({ soundCues: 'off' })
+        await sleep(120)
         // The colour cards: all three are buttons, the card the page paints is
         // pressed, and a picked card hands the colours back through its reset.
         // The brand mark is read beside the card, because a picked card paints
