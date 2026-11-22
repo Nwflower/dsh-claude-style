@@ -1423,6 +1423,7 @@
       ],
       "the workspace card is drawn as a folder menu: plain text rows, the add row included, set closer together": [
         0,
+        1,
         26
       ],
       "the hero card opens above its trigger, right-aligned with it, by the skin's 6px air": [

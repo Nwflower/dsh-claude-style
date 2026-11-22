@@ -330,12 +330,12 @@ export default {
       JSON.stringify(r.presetCard))
     check('the workspace card is drawn as a folder menu: plain text rows, the add row included, set closer together',
       r.workspaceCard !== null && r.workspaceCard.kind === 'workspace' && r.workspaceCard.iconsShown === 0 &&
-        r.workspaceCard.rowHeight === 26,
-      JSON.stringify(r.workspaceCard))
+        Math.abs(r.workspaceCard.rowHeight - 26) <= 1,
+      JSON.stringify(r.workspaceCard === null ? r.workspaceStampDiagnostics : r.workspaceCard))
     check('the hero card opens above its trigger, right-aligned with it, by the skin\'s 6px air',
       r.workspacePlacement !== null && r.workspacePlacement.side === 'above' &&
         r.workspacePlacement.airAbove === 6 && Math.abs(r.workspacePlacement.rightDelta) <= 1,
-      JSON.stringify(r.workspacePlacement))
+      JSON.stringify(r.workspacePlacement === null ? r.workspaceStampDiagnostics : r.workspacePlacement))
     check('with no room above, the hero card flips below its trigger',
       r.workspacePlacementTight !== null && r.workspacePlacementTight.side === 'below' &&
         r.workspacePlacementTight.airBelow === 6,

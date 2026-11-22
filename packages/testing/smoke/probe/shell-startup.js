@@ -8,6 +8,8 @@
 (function () {
   var probe = window.__dshSmokeProbe
   var sleep = probe.sleep
+  var until = probe.until
+  var nextPass = probe.nextPass
   var r = probe.report
 
   probe.step(async function () {
@@ -132,13 +134,35 @@
       await document.fonts.ready
       r.presetCard = heroCardShape()
       heroTrigger.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
-      await sleep(250)
+      // The dwell opens the workspace picker, and the pass over that change
+      // stamps its card: wait on the page's own state and pass count, not on
+      // a duration a busy display pushes later (D92).
+      await until(function () { return window.__heroMenuOpen('hero-workspace') },
+        function (readings) { return readings[readings.length - 1] === true },
+        'the workspace picker to open over the preset')
+      await nextPass('the pass that stamps the workspace card')
       await document.fonts.ready
       r.workspaceUpAfterCrossing = window.__heroMenuOpen('hero-workspace')
       r.presetFoldedBySibling = window.__heroMenuOpen('hero-preset')
       r.heroCardsUp = hostCards()
       r.workspaceCard = heroCardShape()
       r.workspacePlacement = heroCardPlacement()
+      // A null shape while the menu stands open says the stamp never landed:
+      // the trigger's anchor name and every card's position anchor are the
+      // evidence for which half of the tie is missing.
+      if (r.workspaceCard === null) {
+        r.workspaceStampDiagnostics = {
+          expanded: heroTrigger.getAttribute('aria-expanded'),
+          triggerAnchor: heroTrigger.style.getPropertyValue('anchor-name'),
+          cards: Array.prototype.map.call(document.querySelectorAll('[role="menu"]'), function (card) {
+            return {
+              skin: /dsh-claude-/.test(card.className),
+              positionAnchor: card.style.getPropertyValue('position-anchor'),
+              stamped: card.getAttribute('data-dsh-claude-hero-menu')
+            }
+          })
+        }
+      }
       // Leaving the row folds the menu the hover opened, and only that one.
       heroTrigger.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: document.body }))
       await sleep(300)
