@@ -2,7 +2,8 @@ import * as React from 'react'
 import { Tag } from '@deepseek-ai/dsh-client-ui-primitives'
 import { PREFS } from '@dsh-claude-style/contracts/prefs'
 import { ROW_CONTROLS } from 'virtual:dsh-claude-style/settings-controls'
-import { SEGMENTS_CLASS, SEGMENT_CLASS } from '../../shared/segment-control'
+import { SEGMENT_CLASS } from '../../shared/segment-control'
+import { ClaudeStyleSegmentGroup } from '../../shared/segment-group'
 import { ClaudeStyleSwitch } from '../../shared/settings-switch'
 export { ClaudeStyleSwitch } from '../../shared/settings-switch'
 import { windowsDesktop } from '@dsh-claude-style/engine/desktop-band'
@@ -10,7 +11,6 @@ import { headerRowsOf, prefYielded, settingsRowsOf } from '../../core/feature'
 import { featureCopy } from '../../core/i18n'
 import { motionReduced } from '../../core/prefs'
 import { copy, sharedLine } from './copy'
-import { createSlidingPill } from '../../shared/sliding-pill'
 import type { Feature, FeatureSettingsRow } from '../../core/feature'
 import type { Prefs } from '../../constants'
 import type { SettingsGroupId, SettingsRowSlot, SettingsTabId } from '../../core/feature'
@@ -288,39 +288,6 @@ export function noteDesc(text: string, note: string | null): React.ReactNode {
   if (note === null) return text
   return [text, React.createElement('span', { key: 'note', className: 'dsh-claude-settings-row-note' }, note)]
 }
-/**
- * One segmented control on the page, carrying the shared sliding highlight
- * (packages/client/src/shared/sliding-pill.ts). The group is React's, so the pill is
- * placed from a layout effect after every render — before the frame is
- * painted — and taken off when the group unmounts. `role` defaults to a
- * plain group; the tab strip passes `tablist`.
- */
-export function ClaudeStyleSegmentGroup(props: { role?: string, className?: string, children?: React.ReactNode }) {
-  const group = React.useRef<HTMLDivElement>(null)
-  useSlidingPill(group)
-  const className = props.className ? `${SEGMENTS_CLASS} ${props.className}` : SEGMENTS_CLASS
-  return React.createElement('div', { ref: group, className, role: props.role || 'group' }, props.children)
-}
-
-/**
- * The shared sliding highlight on a group React renders: the pill follows the
- * child carrying `data-active`, placed after every render and taken off when
- * the group unmounts.
- */
-export function useSlidingPill(group: React.RefObject<HTMLElement | null>) {
-  const pill = React.useRef<ReturnType<typeof createSlidingPill> | null>(null)
-  React.useLayoutEffect(() => {
-    pill.current = createSlidingPill('[data-active]')
-    return () => {
-      pill.current!.release()
-      pill.current = null
-    }
-  }, [])
-  React.useLayoutEffect(() => {
-    pill.current!.sync(group.current)
-  })
-}
-
 /**
  * The control builders. They hold no state of their own: every value and
  * every write arrives through the arguments, so one set serves every tab.
