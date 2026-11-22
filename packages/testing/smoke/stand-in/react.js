@@ -42,6 +42,9 @@
     // probe never fills: one read of the snapshot is what a page that does not
     // re-render would do, so the row draws its own call alone.
     useSyncExternalStore: function (subscribe, getSnapshot) { return getSnapshot() },
+    // The model picker's plugin rows stand inside an error boundary, which only
+    // a class component can be; the page renders none, so the class is inert.
+    Component: function Component(props) { this.props = props },
   }
   window.__react = react
   // The host's ui-primitives, as far as the skin uses them: the components its
