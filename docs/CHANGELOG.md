@@ -2,6 +2,18 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.21.9] - 2026-11-22
+
+[中文](#cn-0.21.9) | [English](#en-0.21.9)
+
+<h3 id="cn-0.21.9">新增功能</h3>
+
+- 模型选择器显示其它插件加入宿主模型菜单的选项行，例如订阅插件的「本轮结束后压缩」
+
+<h3 id="en-0.21.9">New Features</h3>
+
+- Show the rows other plugins add to the host's model menu in the model picker, such as the subscription plugin's Compact after this turn switch
+
 ## [0.21.8] - 2026-11-21
 
 [中文](#cn-0.21.8) | [English](#en-0.21.8)
