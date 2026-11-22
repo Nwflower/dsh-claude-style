@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-20",
+  "updatedAt": "2026-11-21",
   "defaultProfile": "deepseek-v4",
   "profiles": [
     {
@@ -2436,6 +2436,53 @@
       },
       "source": "https://live-turing-docs.cn.llm.tcljd.com/api-guides/billing/usage/",
       "verifiedAt": "2026-11-20"
+    },
+    {
+      "id": "tencent-adp-deepseek",
+      "slug": "tencent-adp",
+      "provider": "Tencent Cloud ADP",
+      "model": "DeepSeek V4.1 Flash / V4 Pro 0813 / V4 Flash 0731",
+      "product": "ADP · new subscription plans · PU billing",
+      "shortName": "ADP",
+      "title": "Tencent ADP DeepSeek PU pricing clock",
+      "subtitle": "Subscription metering in your local time",
+      "kicker": "Half-price off-peak PU rates for listed models",
+      "policyNote": "Applies to Tencent Cloud Agent Development Platform model usage billed in PU on the new subscription plans launched Oct 12, 2026 (Experience, Advanced and Enterprise Standard). Not TokenHub API pricing, legacy plan entitlements, dedicated compute or dedicated TPM. Published input/cache/output PU per million tokens: V4.1 Flash, 1017 (including vendor-direct), vendor-direct Flash 0731 and Vision Exp: 2000/40/8000 peak vs 1000/20/4000 off-peak; non-vendor Flash 0731: 3000/100/9000 vs 1500/50/4500; Pro 0813 (including vendor-direct): 9000/300/27000 vs 4500/150/13500. No separate holiday exception, billing timestamp rule or end date stated for these rows.",
+      "schedule": {
+        "timeZone": "Asia/Shanghai",
+        "peakDays": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "peakWindows": [
+          {
+            "start": "09:00",
+            "end": "12:00"
+          },
+          {
+            "start": "14:00",
+            "end": "18:00"
+          }
+        ],
+        "windowName": "peak"
+      },
+      "periods": {
+        "peak": {
+          "name": "Peak PU rate",
+          "status": "Peak PU rate is active now",
+          "badge": "1× peak"
+        },
+        "offPeak": {
+          "name": "Off-peak PU rate",
+          "status": "Off-peak PU rate is active now",
+          "badge": "0.5× peak"
+        }
+      },
+      "source": "https://cloud.tencent.cn/document/product/1759/127343",
+      "verifiedAt": "2026-11-21"
     }
   ]
 }
