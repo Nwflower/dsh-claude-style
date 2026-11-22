@@ -3,7 +3,7 @@ import { useModalLayer } from '@deepseek-ai/dsh-client-ui-primitives'
 import * as reactDom from 'react-dom/client'
 import { registerPopover, unregisterPopover } from '../../shared/popover'
 import { Glyph } from './palette-parts'
-import { useSlidingPill } from './settings-controls'
+import { useSlidingPill } from '../../shared/segment-group'
 import { copy } from './copy'
 
 /**

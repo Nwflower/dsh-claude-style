@@ -1311,6 +1311,10 @@
       "a row of cards under a switch greys out and takes no input while that switch is off, and comes back with it": [
         2
       ],
+      "picking a level sounds its own cue at the gain it just chose, the repeat of the level in force sounds again, and the off pick stays silent": [
+        0.2,
+        0.55
+      ],
       "the ongoing-effect row names three independent cards, each carrying a decorative title before its marker, with only the default breathing choice pressed": [
         0,
         3

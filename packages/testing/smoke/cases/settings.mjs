@@ -207,6 +207,23 @@ export default {
         statusRowOff.disabled === true && statusRowOff.cards.length === 2 && statusRowOff.cards.every((off) => off === true) &&
         JSON.stringify(statusRowOff.labels) === JSON.stringify(['Highlight sweep', 'Colour wash']),
       JSON.stringify({ statusRow, enterRowOff, statusRowOff }))
+    // The sound row: three named levels drawn by the feature itself, and the
+    // cue each press asks for. Off carries no gain and stays silent; a second
+    // press of the level already in force sounds again, because that press is
+    // the reader asking to hear it.
+    const soundRow = settings.soundRow || {}
+    const soundAsks = settings.soundAsks || []
+    const soundRowAfter = settings.soundRowAfter || []
+    check('the sound row is one named group of three levels, each a pick of its own with the level in force pressed',
+      soundRow.label === 'Sound cue' &&
+        JSON.stringify((soundRow.buttons || []).map(button => [button.label, button.disabled])) ===
+          JSON.stringify([['Off', false], ['Soft', false], ['Clear', false]]) &&
+        (soundRow.buttons || []).map(button => button.pressed).join() === 'true,false,false',
+      JSON.stringify(soundRow))
+    check('picking a level sounds its own cue at the gain it just chose, the repeat of the level in force sounds again, and the off pick stays silent',
+      JSON.stringify(soundAsks) === JSON.stringify([{ name: 'tink', volume: 0.2 }, { name: 'tink', volume: 0.55 }, { name: 'tink', volume: 0.2 }]) &&
+        soundRowAfter.map(button => button.pressed).join() === 'false,true,false',
+      JSON.stringify({ soundAsks, soundRowAfter }))
     const ongoingSide = settings.ongoingSide || {}
     check('the marker side stands in the ongoing-effect row\'s title line as a named group of two choices, the default left one pressed, and no row of its own',
       ongoingSide.label === 'Marker side' && JSON.stringify(ongoingSide.buttons) === JSON.stringify([{ label: 'Left', pressed: 'true' }, { label: 'Right', pressed: 'false' }]),

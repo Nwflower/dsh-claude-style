@@ -6,7 +6,9 @@
  * launcher's HDSLPlayer — are what make the fallback order observable. The two
  * price routes answer only for a spec that holds `window.__costFixture`: every
  * other case leaves them to the real fetch, which is what makes the cost
- * segment stand as a dash there.
+ * segment stand as a dash there. The sound route answers the settings page's
+ * level row, which sounds each pick as it is pressed: the asks are recorded so
+ * a case can read what a press asked for.
  */
 (function () {
   var host = window.__dshSmokeHost
@@ -137,6 +139,19 @@
       // from reaching the real network.
       if (SKIN_CASES.indexOf(CASE) === -1) return Promise.resolve(new Response(null, { status: 404 }))
       return Promise.resolve(new Response(PNG_1PX, { headers: { 'content-type': 'image/png' } }))
+    }
+    if (url === '/dsh-claude-style/sound' && CASE === 'settings') {
+      // The page is a loopback page, so the player asks here before it falls back
+      // to its own synth (features/sound-cues/player.ts): the answer keeps it in
+      // system mode and every ask lands in `window.__soundAsks` for the case. A
+      // page this stub answers for never reaches the runner's route, so every
+      // other case leaves the route alone for the spec that intercepts it.
+      if ((init && init.method) === 'POST') {
+        var ask = JSON.parse((init && init.body) || '{}')
+        ;(window.__soundAsks = window.__soundAsks || []).push(ask)
+        return Promise.resolve(jsonResponse({ ok: true }))
+      }
+      return Promise.resolve(jsonResponse({ ok: true, playback: 'system', sounds: ['pop', 'tink'] }))
     }
     return realFetch.apply(window, arguments)
   }
