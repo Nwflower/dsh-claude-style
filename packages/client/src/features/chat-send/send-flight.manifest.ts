@@ -16,9 +16,12 @@ export default {
     pref: 'chatSend',
     title: 'messageEnterTitle',
   }, {
+    // The option under that switch: it greys out and holds its samples still
+    // while the entrance is off.
     tab: 'motion',
     rank: 26,
     pref: 'messageEnter',
+    parent: 'chatSend',
     control: 'send-preview',
     stillWhenReduced: true,
   }],

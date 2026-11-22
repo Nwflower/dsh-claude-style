@@ -11,7 +11,9 @@ import type manifest from './chat-reveal.manifest'
 /**
  * The one row this feature draws itself (D76): the fade's two answers as
  * preview cards, each showing the arriving characters the way the answer it
- * picks does (features/settings/settings-cards.css).
+ * picks does (features/settings/settings-cards.css). The cards are the answers
+ * themselves — picking one writes it — and each names its answer over its
+ * sample, because the two samples differ only in how their characters arrive.
  */
 export const controls: SettingsControlsOf<typeof manifest> = {
   'reveal-preview': RevealPicker,
@@ -28,6 +30,9 @@ function RevealPicker(props: SettingsRowView) {
   const sample = copy('chatRevealSample')
   const [tick, setTick] = React.useState(0)
   React.useEffect(() => {
+    // A card that takes no input holds its sample still (settings-controls.ts
+    // greys the row while the parent it belongs to is off).
+    if (props.disabled) return
     const count = Array.from(sample).length
     const period = motionMs('--dsh-claude-period-preview-reveal')
     const arrival = Math.round(period * REVEAL_PREVIEW_ARRIVAL_SHARE)
@@ -42,7 +47,7 @@ function RevealPicker(props: SettingsRowView) {
       setTick(next)
     }, gap)
     return () => window.clearInterval(timer)
-  }, [sample])
+  }, [sample, props.disabled])
   const shown = Math.min(tick, Array.from(sample).length)
   const card = React.createElement(
     'span',
@@ -65,5 +70,6 @@ function RevealPicker(props: SettingsRowView) {
     value: props.prefs.chatReveal,
     write: (value: Prefs['chatReveal']) => props.write({ chatReveal: value }),
     disabled: props.disabled,
+    showLabels: true,
   })
 }

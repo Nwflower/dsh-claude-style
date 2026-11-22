@@ -1288,7 +1288,7 @@
       "the heading carries the plugin's repository link, opening in a new tab with an accessible name": [
         0
       ],
-      "the Motion tab's row is two preview cards carrying no text of their own: each names itself for the reader, the stored choice alone is drawn as picked, and a card holds nothing but its words": [
+      "the Motion tab's row is two preview cards, each naming its paint over a sample of the words taking turns: the stored choice alone is drawn as picked, and a card holds its name and nothing else but that sample": [
         0,
         1,
         2
@@ -1307,6 +1307,9 @@
       ],
       "the new-text fade row previews its two answers: the fade card's character lands unseen and settles over the reveal's own duration, the other stands solid as it arrives, and a character waiting for its turn is unseen": [
         0.24
+      ],
+      "a row of cards under a switch greys out and takes no input while that switch is off, and comes back with it": [
+        2
       ],
       "the ongoing-effect row names three independent cards, each carrying a decorative title before its marker, with only the default breathing choice pressed": [
         0,

@@ -30,6 +30,8 @@ export interface PreviewCardsProps<V extends string> {
   disabled?: boolean
   /** Whether a card stands picked, for rows whose press is a rule of their own; the row's `value` by default. */
   pickedBy?(option: PreviewOption<V>): boolean
+  /** Whether each card writes its answer above the sample, for a row whose two cards would otherwise differ only in motion. */
+  showLabels?: boolean
   /** The group's accessible name. */
   label?: string
   /** The group element, for a row that writes its samples' own measure on it. */
@@ -45,12 +47,17 @@ export interface PreviewCardsProps<V extends string> {
  * @returns the group element holding one card per option.
  */
 export function PreviewCards<V extends string>(props: PreviewCardsProps<V>) {
-  const { cardClass, options, value, write, disabled, pickedBy, label, element, press } = props
+  const { cardClass, options, value, write, disabled, pickedBy, showLabels, label, element, press } = props
   return React.createElement(
     'div',
     { className: PREVIEW_PICKER_CLASS, role: 'group', 'aria-label': label, ref: element },
     options.map(option => {
       const selected = pickedBy === undefined ? option.value === value : pickedBy(option)
+      // A card that names nothing holds its sample alone, so a reader's walk of
+      // the tree finds one child where the sample is.
+      const children = showLabels === true
+        ? [React.createElement('span', { key: 'label', className: 'dsh-claude-settings-card-label' }, option.label), option.content]
+        : [option.content]
       return React.createElement(
         'button',
         {
@@ -69,7 +76,7 @@ export function PreviewCards<V extends string>(props: PreviewCardsProps<V>) {
             else press(option)
           },
         },
-        option.content,
+        ...children,
       )
     }),
   )

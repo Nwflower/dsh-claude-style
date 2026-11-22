@@ -35,6 +35,9 @@ function MessageEnterPicker(props: SettingsRowView) {
   const [shown, setShown] = React.useState([0, 1])
   const nextId = React.useRef(shown.length)
   React.useEffect(() => {
+    // A card that takes no input holds its messages still (settings-controls.ts
+    // greys the row while the entrance's own switch is off).
+    if (props.disabled) return
     const timer = window.setInterval(() => {
       // The reader's animation choice is read each turn (D40): on a still page
       // the card stands on the messages already there, the way the line writes
@@ -46,7 +49,7 @@ function MessageEnterPicker(props: SettingsRowView) {
       setShown(previous => previous.length >= 3 ? [...previous.slice(1), id] : [...previous, id])
     }, motionMs('--dsh-claude-period-preview-enter'))
     return () => window.clearInterval(timer)
-  }, [])
+  }, [props.disabled])
   // The lift: appending a message has already moved the column up a row, so
   // the column is pushed back down first and then slides to where it belongs
   // — the same flip the conversation's own entrance needs, without which the
@@ -96,6 +99,10 @@ function MessageEnterPicker(props: SettingsRowView) {
     value: props.prefs.messageEnter,
     write: (value: Prefs['messageEnter']) => props.write({ messageEnter: value }),
     disabled: props.disabled,
+    // The two cards differ in nothing but the arrival, which is over in a few
+    // hundred milliseconds: each card names its entrance over the sample, the
+    // way the reveal's and the caret's do.
+    showLabels: true,
     element: pickerRef,
   })
 }

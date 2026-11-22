@@ -93,6 +93,16 @@
     return entry.selector || entry.attribute
   }
   function attrs(el) { return el ? Array.prototype.map.call(el.attributes, function (a) { return a.name }) : null }
+  /**
+   * The aside a settings row carries in its title line, read off the row's plain
+   * tree: the row's first child is that line — the text and the aside — and the
+   * drawn control follows it. A row with no aside answers null.
+   */
+  function settingsAside(row) {
+    var head = [].concat(row.props.children)[0]
+    var aside = head === null || head === undefined || head.props === undefined ? undefined : [].concat(head.props.children)[1]
+    return aside === undefined || aside === null || aside.props === undefined || aside.props.role !== 'group' ? null : aside
+  }
   // A segmented control's sliding pill (packages/client/src/shared/sliding-pill.ts) against
   // the item it should sit under: its mark, its written placement, the item's
   // own fill (which gives way to the pill) and the transitions running on it.
@@ -153,6 +163,7 @@
     nextPass: nextPass,
     surface: surface,
     attrs: attrs,
+    settingsAside: settingsAside,
     pillState: pillState,
     pillSlide: pillSlide,
     report: { applyError: window.__applyError, teardownRegistered: typeof window.__dispose === 'function' },

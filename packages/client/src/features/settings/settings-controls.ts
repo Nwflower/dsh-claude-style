@@ -239,7 +239,8 @@ function featureRows(slot: SettingsRowSlot, view: SettingsView): SettingsRow[] {
   return settingsRowsOf(slot).filter(({ row }) => row.placement !== 'header').map(({ feature, row }) => {
     const { title, description, control, off, drawn } = featureRowParts(feature, row, view, rowsByPref)
     // A feature's own control (preview cards, a table) takes the line under the
-    // row's text, or the whole row when it has none, under a parent row too.
+    // row's text, or the whole row when it has none, under a parent row too: a
+    // row of cards stays a block so its title keeps the line above them.
     const node = row.parent === undefined || drawn
       ? controls.row(row.pref, title, description, control, {
         disabled: off,

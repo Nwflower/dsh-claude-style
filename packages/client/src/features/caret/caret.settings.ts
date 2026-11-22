@@ -11,7 +11,9 @@ import type manifest from './caret.manifest'
 
 /**
  * The one row this feature draws itself (D76): the caret's two answers as
- * preview cards. The same line is typed out in both, character by character,
+ * preview cards, each naming its answer over the sample because the two lines
+ * differ only in how the caret moves. The same line is typed out in both,
+ * character by character,
  * with the caret following it — the on card's caret glides to each new place
  * the way the drawn one does, the off card's arrives there at once the way the
  * host's own caret does (features/caret/caret.css). The caret is lit for the
@@ -42,6 +44,9 @@ function CaretPicker(props: SettingsRowView) {
   const pickerRef = React.useRef<HTMLDivElement | null>(null)
   const lineRef = React.useRef<HTMLSpanElement | null>(null)
   React.useEffect(() => {
+    // A card that takes no input holds its sample still (settings-controls.ts
+    // greys the row while the parent it belongs to is off).
+    if (props.disabled) return
     const period = motionMs('--dsh-claude-period-preview-caret')
     const typing = Math.round(period * CARET_PREVIEW_TYPING_SHARE)
     const gap = Math.max(1, Math.round(typing / pieces.length))
@@ -56,7 +61,7 @@ function CaretPicker(props: SettingsRowView) {
       setAt(Math.min(next, pieces.length))
     }, gap)
     return () => window.clearInterval(timer)
-  }, [sample])
+  }, [sample, props.disabled])
   React.useLayoutEffect(() => {
     const picker = pickerRef.current
     const line = lineRef.current
@@ -105,5 +110,6 @@ function CaretPicker(props: SettingsRowView) {
     write: (value: Prefs['caretMotion']) => props.write({ caretMotion: value }),
     disabled: props.disabled,
     element: pickerRef,
+    showLabels: true,
   })
 }

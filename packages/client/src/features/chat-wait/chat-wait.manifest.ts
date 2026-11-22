@@ -25,9 +25,12 @@ export default {
     title: 'statusDetailTitle',
   }, {
     // The option under the line's own switch: the two paints as preview cards.
+    // It belongs to that switch, so it greys out and holds its samples still
+    // while the line is off.
     tab: 'motion',
     rank: 17,
     pref: 'statusMotion',
+    parent: 'chatWait',
     control: 'status-paint',
     stillWhenReduced: true,
   }],

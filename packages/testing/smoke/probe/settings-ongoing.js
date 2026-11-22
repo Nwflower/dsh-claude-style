@@ -81,13 +81,9 @@
       var readSide = function () {
         var side = null
         probe.walkSettingsTree(probe.settingsTree('motion'), function (node) {
-          var props = node.props || {}
-          if (props.key !== 'ongoingIndicator') return
-          // The row's first child is the title line — the text and the aside —
-          // and its second is the preview cards.
-          var head = [].concat(props.children)[0]
-          var aside = head === null || head === undefined || head.props === undefined ? undefined : [].concat(head.props.children)[1]
-          if (aside === undefined || aside === null || aside.props === undefined || aside.props.role !== 'group') return
+          if ((node.props || {}).key !== 'ongoingIndicator') return
+          var aside = probe.settingsAside(node)
+          if (aside === null) return
           side = { label: aside.props['aria-label'], buttons: [] }
           probe.walkSettingsTree(aside.props.children, function (child) {
             var childProps = child.props || {}
