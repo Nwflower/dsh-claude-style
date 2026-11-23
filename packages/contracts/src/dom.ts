@@ -301,6 +301,13 @@ export const FOREGROUND_SELECTOR = `${MODAL_DIALOG_SELECTOR}, [role="menu"]`
 /** The host's menu card and its list, which the skin injects a row into. */
 export const MENU_ROLE_SELECTOR = '[role="menu"]'
 /**
+ * A host menu card with a search field (ui-primitives Menu.tsx, since
+ * 0.2.3-alpha.1): the card answers `data-menu-popup` instead of `role="menu"`,
+ * which moves to the inner row container. The card itself is still the element
+ * carrying the inline `position-anchor`, so the anchor pair tells the two apart.
+ */
+export const MENU_POPUP_SELECTOR = '[data-menu-popup]'
+/**
  * The tie between a host menu trigger and its portaled card (ui-primitives
  * Menu.tsx): the Menu names an anchor through an inline `anchor-name` on the
  * wrapper around its trigger, or on the element its `anchorRef` holds, and the

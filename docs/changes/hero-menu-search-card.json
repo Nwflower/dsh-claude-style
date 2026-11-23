@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-23",
+  "group": "fixes",
+  "order": 10,
+  "external": true,
+  "zh": "修复宿主 0.2.3 起带搜索框的工作区菜单无法被识别的问题，悬停展开后指针穿越触发按钮与卡片之间的间隙时弹层保持展开，卡片恢复皮肤落位与文件夹菜单样式",
+  "en": "Fix the workspace menu with a search field going unrecognized since host 0.2.3, keeping the hover-opened popup up while the pointer crosses the air between trigger and card and restoring the skin's placement and folder-menu look"
+}

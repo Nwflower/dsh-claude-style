@@ -336,6 +336,9 @@ export default {
       r.workspacePlacement !== null && r.workspacePlacement.side === 'above' &&
         r.workspacePlacement.airAbove === 6 && Math.abs(r.workspacePlacement.rightDelta) <= 1,
       JSON.stringify(r.workspacePlacement === null ? r.workspaceStampDiagnostics : r.workspacePlacement))
+    check('the pointer crossing the air between trigger and card keeps the hover-opened card up',
+      r.workspaceUpInGap === true && r.workspaceUpAfterTravel === true,
+      JSON.stringify({ inGap: r.workspaceUpInGap, arrived: r.workspaceUpAfterTravel, stamp: r.workspaceCard === null ? r.workspaceStampDiagnostics : 'landed' }))
     check('with no room above, the hero card flips below its trigger',
       r.workspacePlacementTight !== null && r.workspacePlacementTight.side === 'below' &&
         r.workspacePlacementTight.airBelow === 6,
