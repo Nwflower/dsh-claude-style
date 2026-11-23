@@ -44,7 +44,7 @@
     "packages/testing/smoke/probe/shell-pages.js": 14,
     "packages/testing/smoke/probe/shell-palette.js": 25,
     "packages/testing/smoke/probe/shell-startup.js": 5,
-    "packages/testing/smoke/probe/shell-studio.js": 8,
+    "packages/testing/smoke/probe/shell-studio.js": 7,
     "packages/testing/smoke/probe/shell-switches.js": 2,
     "packages/testing/smoke/probe/sidebar-layout.js": 3,
     "packages/testing/smoke/probe/teardown.js": 15,

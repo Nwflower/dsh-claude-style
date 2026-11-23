@@ -178,7 +178,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** Mount the cold-start copy, and remount it when the host replaces the stack. */
   function syncColdSeat() {
     const stack = markedRoot !== null && markedRoot.hasAttribute(HOME_HERO_ATTR) ? heroStack() : null
-    if (stack === null || stack.querySelector(`:scope > [data-slot="${DOCK_SLOT}"]`) !== null) {
+    if (stack === null || stack.querySelector(`[data-slot="${DOCK_SLOT}"]`) !== null) {
       unmountColdSeat()
       return
     }

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-23",
+  "group": "fixes",
+  "order": 30,
+  "external": true,
+  "zh": "修复工作台首页在缺少上下文行或输入框与槽位外层存在额外包裹容器时输入卡片悬停在窗口顶部、导致向上展开的插件弹层被窗口上沿裁切的问题",
+  "en": "Fix the studio home composer card sticking near the top edge and clipping upward-opening popovers when the context row is absent or extra wrappers surround the composer bar or dock slots"
+}

@@ -324,8 +324,12 @@ export function holdRelations(vocabulary: PartsTableVocabulary): HoldRelation[] 
   // features/home/home-panel.css: the boxes the host's `display: contents` slot
   // anchors expose are the ones that sort the studio's greeting.
   { name: 'hero-headline', holder: '*', held: part('hero-headline'), scope: part('composer-hero'), attributes: [] },
-  // features/composer/card.css: the classic tray sorts the boxes above the card.
+  // features/composer/card.css, features/home/home-panel.css: sort the boxes above the card.
   { name: 'composer-card', holder: '*', held: '[data-composer-card]', scope: part('composer-stack'), attributes: ['data-composer-card'] },
+  // features/home/home-panel.css: keep the studio dock, context row and bottom anchor working across wrapper depths.
+  { name: 'home-dock', holder: '*', held: '[data-slot="conversation.input.dock"], .dsh-claude-home-seat', scope: part('composer-hero'), attributes: ['data-slot'] },
+  { name: 'hero-workspace-row', holder: '*', held: part('hero-workspace-row'), scope: part('composer-hero'), attributes: [] },
+  { name: 'has-hero-workspace-row', holder: part('composer-hero'), held: part('hero-workspace-row'), attributes: [] },
   // theme/wallpaper.css: the phase box holding the transcript paints the canvas.
   { name: 'conversation-scroll', holder: '[data-phase]', held: '[data-conversation-scroll]', attributes: ['data-phase', 'data-conversation-scroll'] },
   // features/composer/inline-bar.css: the host's own statistics dialogs stand down.
