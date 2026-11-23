@@ -5,13 +5,15 @@ import { foldControlAt, foldControlAtBottom, foldExpandedBody } from './fold-gli
 import { inPagePixels } from '../../shared/page-zoom'
 import { EXPANDED_ATTRIBUTE, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
+/** The toggle control inside a thinking row across both host DisclosureRow and button shapes. */
+export function thinkRowControl(row: Element) {
+  const control = row.querySelector('[role="button"], button')
+  return control instanceof HTMLElement ? control : null
+}
+
 /* Host ReasoningRow starts collapsed; phase and expanded state are its contract (D3).
    onRows precedes automatic presses so the reasoning window sees the same batch. */
 export function createReasoningFold(onRows?: (rows: readonly Element[]) => void) {
-  const controlOf = (row: Element) => {
-    const control = row.querySelector('[role="button"], button')
-    return control instanceof HTMLElement ? control : null
-  }
   const scheduler = createFoldScheduler({
     selector: THINK_ROW_SELECTOR,
     phase: row => row.getAttribute(ROW_PHASE_ATTRIBUTE) ?? '',
@@ -21,7 +23,7 @@ export function createReasoningFold(onRows?: (rows: readonly Element[]) => void)
       const phase = row.getAttribute(ROW_PHASE_ATTRIBUTE) ?? ''
       const desiredExpanded = phase === RUNNING_STATE
       if (row.hasAttribute(EXPANDED_ATTRIBUTE) === desiredExpanded) return null
-      const control = controlOf(row)
+      const control = thinkRowControl(row)
       return control === null ? null : {
         control,
         state: phase,
@@ -33,7 +35,7 @@ export function createReasoningFold(onRows?: (rows: readonly Element[]) => void)
       const heights = new Map<Element, number>()
       let atBottom: boolean | null = null
       for (const row of rows) {
-        const pressed = controlOf(row)
+        const pressed = thinkRowControl(row)
         const control = pressed === null ? null : foldControlAt(pressed)
         if (control === null) continue
         if (atBottom === null) atBottom = foldControlAtBottom(control)

@@ -1,13 +1,13 @@
 diff --git a/packages/client/src/features/chat-fold/reasoning-stream.ts b/packages/client/src/features/chat-fold/reasoning-stream.ts
 --- a/packages/client/src/features/chat-fold/reasoning-stream.ts
 +++ b/packages/client/src/features/chat-fold/reasoning-stream.ts
-@@ -246,7 +246,10 @@ export function createReasoningStream() {
+@@ -270,7 +270,10 @@ export function createReasoningStream() {
        // The fold queues a row on every change the host streams into it: that
        // queue is the window's watch, so a text grown since the last step stands
        // in a window as tall as itself within the frame.
 -      if (held !== undefined && held.text === text && held.window === viewport) continue
 +      if (held !== undefined && held.text === text && held.window === viewport) {
-+        plans.push({ row, state: held, step: null, grow: measureOf(held) })
++        plans.push({ row, state: held, step: null, grow: measureOf(row, held) })
 +        continue
 +      }
        const state: WindowState = { window: viewport, text, timer: 0, offset: 0, running: active }

@@ -28,13 +28,14 @@ body[data-dsh-claude-style] [data-dsh-claude-rolling] > * {
   flex: none !important;
 }
 
-/* reasoning-stream.ts writes the measured height; the cap mirrors the host process body.
+/* reasoning-stream.ts writes the measured height; the cap leaves room inside a capped process
+   body (`min(400px, 50vh)`) for the thinking row's own header and the group's 24px top fade.
    The cap's own fade covers both edges; below the cap only the bottom edge is faded, so the newest line arrives through it. */
 
 body[data-dsh-claude-style] [data-dsh-claude-reason-window] {
   --dsh-claude-reason-lines: 2;
   --dsh-claude-reason-window-lines: 4;
-  --dsh-claude-reason-window-cap: 400px;
+  --dsh-claude-reason-window-cap: 280px;
   --dsh-claude-reason-fade: 28px;
   --dsh-claude-reason-fade-near: 12px;
   --dsh-claude-reason-ease: var(--dsh-claude-ease-glide);

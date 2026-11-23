@@ -15,6 +15,7 @@ export default spec({ page: 'chat-fold' }, ({ test }) => {
     const capped = t.surface.attribute('chat.reason-capped')
     const rolling = t.surface.attribute('chat.rolling')
     const heightProperty = t.surface.property('chat.reason-window-height')
+    const capProperty = t.surface.property('chat.reason-window-cap')
     await t.prefs({ chatAnimations: true, motion: 'full', reasoningDisplay: 'stepped' })
     await t.page.evaluate(([expanded, phase, running, aria]) => {
       const row = document.getElementById('debugGrow')
@@ -31,6 +32,10 @@ export default spec({ page: 'chat-fold' }, ({ test }) => {
       document.getElementById('debugFlow').append(row)
     }, [EXPANDED_ATTRIBUTE, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, WORKSPACE_ROW_EXPANDED_ATTRIBUTE])
     await t.page.waitForSelector('#debugGrow ' + window + '[' + capped + ']', { timeout: 5000 })
+    const expectedCap = await t.page.evaluate(([selector, prop]) => {
+      const frame = document.querySelector(selector)
+      return frame === null ? null : getComputedStyle(frame).getPropertyValue(prop).trim()
+    }, ['#debugGrow ' + window, capProperty])
     // The fold owns the body's height for one roll, so the cap it starts from is a
     // value of that roll alone. A round trip that lands after the roll's own mark
     // can outlast the roll on a loaded runner, so the read is taken in the page, in
@@ -52,7 +57,7 @@ export default spec({ page: 'chat-fold' }, ({ test }) => {
       document.getElementById('debugGrow')?.setAttribute(phase, 'ok')
     }, [ROW_PHASE_ATTRIBUTE, '#debugGrow ' + window, rolling, capped, heightProperty])
     const during = await t.page.waitForFunction(() => window.__foldStart ?? null, undefined, { timeout: 5000 })
-    t.expectThat.equal(await during.jsonValue(), { height: '400px', capped: true }, 'the fold starts from one stable capped height')
+    t.expectThat.equal(await during.jsonValue(), { height: expectedCap, capped: true }, 'the fold starts from one stable capped height')
     await t.page.waitForSelector('#debugGrow ' + window, { state: 'detached', timeout: 5000 })
     t.expectThat.equal(await t.page.locator('#debugGrow ' + window).count(), 0, 'the window leaves once the fold no longer owns the height')
   })

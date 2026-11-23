@@ -3,8 +3,9 @@ import { observeMatches } from '@dsh-claude-style/engine/bus'
 import { motionReduced, readPrefs, subscribePrefs } from '../../core/prefs'
 import { REASONING_DISPLAY_STEPPED } from '../../constants'
 import { motionMs } from '../../shared/motion'
-import { EXPANDED_ATTRIBUTE, REASONING_TEXT_SELECTOR, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { EXPANDED_ATTRIBUTE, PROCESS_BODY_SELECTOR, REASONING_TEXT_SELECTOR, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { isChatFoldBusy } from './fold-glide-parts'
+import { thinkRowControl } from './reasoning-fold'
 
 /* Adapted from transitions.dev's "Reasoning stream" (MIT) for live text. The nearest boxed ancestor
    clips because host slots may use display:contents. Reuse the fold observer and frame read/write
@@ -19,8 +20,11 @@ export const REASON_CAPPED_ATTR = 'data-dsh-claude-reason-capped'
 /** The window's height in pixels: the text's own height, held under the cap. */
 export const REASON_WINDOW_HEIGHT_PROPERTY = '--dsh-claude-reason-window-height'
 
-/** cap mirrors the host process body's max-height through the CSS token. */
-const FALLBACKS = { lines: 2, cap: 400 }
+/** Default step lines and window cap when custom properties cannot be parsed. */
+const FALLBACKS = { lines: 2, cap: 280 }
+
+/** Host `.fadeTop` masks the top 24px of a scrolled process body; leave 8px clear above the thinking row's header. */
+const PROCESS_TOP_CLEARANCE_PX = 32
 
 /** motionMs handles the seconds unit emitted by the minified stylesheet (D9). */
 const HOLD_MS = motionMs('--dsh-claude-period-hold')
@@ -132,10 +136,31 @@ export function createReasoningStream() {
     writeStep(row, state, readStep(row, state))
   }
 
+  /** One step's pixel travel for `state`. */
+  function stepPxOf(state: WindowState, style: CSSStyleDeclaration) {
+    return Math.round(lineHeightOf(state.text) * tokenNumber(style.getPropertyValue('--dsh-claude-reason-lines'), FALLBACKS.lines))
+  }
+
+  /** Resolved cap in pixels, clamped inside a capped process body so the thinking row's header clears `.fadeTop`. */
+  function capOf(row: Element, state: WindowState, style: CSSStyleDeclaration, stepPx: number) {
+    const baseCap = tokenNumber(style.getPropertyValue('--dsh-claude-reason-window-cap'), FALLBACKS.cap)
+    const groupBody = row.closest<HTMLElement>(PROCESS_BODY_SELECTOR)
+    if (groupBody === null) return Math.round(baseCap)
+    const groupStyle = getComputedStyle(groupBody)
+    const groupCap = Number.parseFloat(groupStyle.maxHeight)
+    if (!Number.isFinite(groupCap)) return Math.round(baseCap)
+    const groupBorder = tokenNumber(groupStyle.borderTopWidth, 0) + tokenNumber(groupStyle.borderBottomWidth, 0)
+    const headerHeight = thinkRowControl(row)?.offsetHeight ?? 24
+    const windowPadding = tokenNumber(style.paddingTop, 0) + tokenNumber(style.paddingBottom, 0)
+    const item = row.parentElement
+    const itemPadding = item !== null && item !== groupBody ? tokenNumber(getComputedStyle(item).paddingBottom, 0) : 0
+    const roomInGroup = groupCap - groupBorder - PROCESS_TOP_CLEARANCE_PX - headerHeight - windowPadding - itemPadding
+    return Math.round(Math.max(stepPx, Math.min(baseCap, roomInGroup)))
+  }
+
   /** What a text measures now: its own height under the cap, and how far it can still rise there. */
-  function measureOf(state: WindowState): Measure {
-    const style = getComputedStyle(state.window)
-    const capPx = Math.round(tokenNumber(style.getPropertyValue('--dsh-claude-reason-window-cap'), FALLBACKS.cap))
+  function measureOf(row: Element, state: WindowState, style = getComputedStyle(state.window), stepPx = stepPxOf(state, style)): Measure {
+    const capPx = capOf(row, state, style, stepPx)
     const textHeight = state.text.offsetHeight
     const height = Math.min(textHeight, capPx)
     return {
@@ -157,9 +182,8 @@ export function createReasoningStream() {
     const current = live ? textOf(row) : null
     if (current === null || current !== state.text) return null
     const style = getComputedStyle(state.window)
-    const lineHeight = lineHeightOf(state.text)
-    const stepPx = Math.round(lineHeight * tokenNumber(style.getPropertyValue('--dsh-claude-reason-lines'), FALLBACKS.lines))
-    const measure = measureOf(state)
+    const stepPx = stepPxOf(state, style)
+    const measure = measureOf(row, state, style, stepPx)
     if (!measure.capped) return { heightPx: measure.heightPx, capped: false, offset: 0, stepPx }
     const steps = Math.max(1, Math.floor((measure.reachable - state.offset) / Math.max(1, stepPx)))
     return { heightPx: measure.heightPx, capped: true, offset: Math.min(state.offset + steps * stepPx, measure.reachable), stepPx }
@@ -247,7 +271,7 @@ export function createReasoningStream() {
       // queue is the window's watch, so a text grown since the last step stands
       // in a window as tall as itself within the frame.
       if (held !== undefined && held.text === text && held.window === viewport) {
-        plans.push({ row, state: held, step: null, grow: measureOf(held) })
+        plans.push({ row, state: held, step: null, grow: measureOf(row, held) })
         continue
       }
       const state: WindowState = { window: viewport, text, timer: 0, offset: 0, running: active }

@@ -16,6 +16,7 @@ export default spec({ page: 'chat-fold' }, ({ test }) => {
     const window = t.surface('chat.reason-window')
     const capped = t.surface.attribute('chat.reason-capped')
     const heightProperty = t.surface.property('chat.reason-window-height')
+    const capProperty = t.surface.property('chat.reason-window-cap')
     await t.prefs({ chatAnimations: true, motion: 'full', reasoningDisplay: 'continuous' })
     await t.page.evaluate(([rowSelector, phase, running, expanded]) => {
       const row = document.querySelector(rowSelector)
@@ -53,15 +54,16 @@ export default spec({ page: 'chat-fold' }, ({ test }) => {
       return window !== null && window.hasAttribute(attribute)
     }, [window, capped], { timeout: 5000 })
     t.expectThat.equal(await t.page.locator(window).count() > 0, true, 'the stepped choice installs its window')
-    const cappedStyle = await t.page.evaluate(([windowSelector, textSelector, heightProperty]) => {
+    const cappedStyle = await t.page.evaluate(([windowSelector, textSelector, heightProperty, capProperty]) => {
       const frame = document.querySelector(windowSelector)
       const content = frame?.querySelector(textSelector)
       return {
         heightProperty: frame instanceof HTMLElement ? frame.style.getPropertyValue(heightProperty) : null,
+        expectedCap: frame instanceof Element ? getComputedStyle(frame).getPropertyValue(capProperty).trim() : null,
         willChange: content instanceof Element ? getComputedStyle(content).willChange : null,
       }
-    }, [window, text, heightProperty])
-    t.expectThat.equal(cappedStyle.heightProperty, '400px', 'the cap is the only fixed height the window writes')
+    }, [window, text, heightProperty, capProperty])
+    t.expectThat.equal(cappedStyle.heightProperty, cappedStyle.expectedCap, 'the cap is the only fixed height the window writes')
     t.expectThat.equal(cappedStyle.willChange, 'transform', 'the compositor layer arrives with the capped steps')
 
     await t.prefs({ reasoningDisplay: 'continuous' })

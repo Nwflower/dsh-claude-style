@@ -315,11 +315,11 @@ function page(name, tier, cases, probe = PROBE) {
   // the row wrapped in a header beside its accessory, the expanded content inside
   // that same wrapper.
   var foldReasoning = ''
-  for (var line = 1; line <= 12; line += 1) foldReasoning += '思考第 ' + line + ' 行。' + (line < 12 ? '<br>' : '')
-  // The reasoning's window takes the text's height up to the cap reasoning may
-  // reach (reasoning-stream.ts). Both rows mirror the host's own capped body in
-  // the Standard tier — the same 400px the window stops at — and the probe grows
-  // the first past that cap so the window is read on both sides of it.
+  for (var line = 1; line <= 8; line += 1) foldReasoning += '思考第 ' + line + ' 行。' + (line < 8 ? '<br>' : '')
+  // The reasoning's window takes the text's height up to its own cap inside the
+  // process body (reasoning-stream.ts). Both rows keep the host's 400px cap on the
+  // stand-in wrapper, and the probe grows the first across the reasoning cap and
+  // past 400px so both thresholds are read.
   var longReasoning = ''
   for (var long = 1; long <= 36; long += 1) longReasoning += '想得久一点第 ' + long + ' 行。' + (long < 36 ? '<br>' : '')
   var foldArea = name === 'chat-fold'

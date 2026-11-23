@@ -437,7 +437,8 @@
         20
       ],
       "窗口跟着推理文本长高，长到推理能到的最大高度就停住": [
-        0
+        0,
+        24
       ],
       "窗口还没长满时，文本铺满窗口、底边留一道渐隐、没有位移": [
         0
@@ -469,7 +470,7 @@
       "思考溢出后的每次增长都有连续位移，正文不整段跳变": [
         0
       ],
-      "控制台没有异常 (line 360)": [
+      "控制台没有异常 (line 368)": [
         0
       ]
     },
@@ -1084,11 +1085,11 @@
         2,
         3,
         4,
-        400
+        280
       ],
       "a reasoning over the cap holds the window at the height it may reach, masked at both edges": [
         0,
-        400
+        280
       ],
       "the text steps up towards the newest line and stops there, never past it": [
         0.5
@@ -1097,13 +1098,17 @@
         0,
         400
       ],
-      "the window comes off the row without the row changing height": [
+      "the window comes off the row and gives the host wrapper its own height back": [
         0,
-        1
+        1,
+        280,
+        400
       ],
-      "the window a reasoning outgrew comes off with the row unchanged as well": [
+      "the window a reasoning outgrew comes off and gives the host wrapper its own height back as well": [
         0,
-        1
+        1,
+        280,
+        400
       ],
       "a press on a folding row is intercepted and handed to the real element when the door lands": [
         0,

@@ -29,6 +29,11 @@ const attribute = (id) => {
   if (entry?.attribute === undefined) throw new Error(`reasoning-stream: ${id} names no attribute`)
   return entry.attribute
 }
+const property = (id) => {
+  const entry = SURFACE.find((candidate) => candidate.id === id)
+  if (entry?.property === undefined) throw new Error(`reasoning-stream: ${id} names no property`)
+  return entry.property
+}
 
 /** The least wait between two steps of the window; the value and its reason are in packages/testing/data/bounds.json. */
 const STEP_MIN_GAP_MS = bound('reasonStepMinGapMs')
@@ -40,6 +45,7 @@ const HOST = {
   window: selector('chat.reason-window'),
   windowed: `[data-variant="think"] ${selector('chat.reason-window')}`,
   capped: attribute('chat.reason-capped'),
+  windowHeight: property('chat.reason-window-height'),
   text: '[data-markdown-variant]',
 }
 
@@ -101,6 +107,10 @@ function readInPage(host) {
   const mask = style.maskImage === 'none' ? style.webkitMaskImage : style.maskImage
   const matrix = /matrix\(1, 0, 0, 1, 0, (-?[\d.]+)\)/.exec(getComputedStyle(text).transform)
   const flow = row.closest(host.flow)
+  const capValue = window instanceof HTMLElement ? window.style.getPropertyValue(host.windowHeight) : ''
+  const capPx = capValue === '' ? Number.NaN : Number.parseFloat(capValue)
+  const group = row.closest('[data-step-process-body]')
+  const control = row.querySelector('[data-disclosure-row], [role="button"], button')
   return {
     row: true,
     phase: row.getAttribute('data-state'),
@@ -108,7 +118,11 @@ function readInPage(host) {
     expanded: row.hasAttribute('data-expanded'),
     windowed: window !== null,
     capped: window !== null && window.hasAttribute(host.capped),
+    cap: Number.isFinite(capPx) ? Math.round(capPx) : null,
     slotHeight: Math.round(scope.getBoundingClientRect().height),
+    headerTopInGroup: group === null || control === null || group.scrollTop <= 1
+      ? null
+      : Math.round(control.getBoundingClientRect().top - group.getBoundingClientRect().top),
     masked: mask.startsWith('linear-gradient'),
     textHeight: Math.round(text.getBoundingClientRect().height),
     offset: matrix === null ? 0 : -Number(matrix[1]),
@@ -122,13 +136,8 @@ function readInPage(host) {
 
 const read = (page) => page.evaluate(readInPage, HOST)
 
-/**
- * The height the open row may reach: the host's own cap on the process group's
- * body, which the window stops at and which the row keeps once the window comes
- * off. The reading needs no window on the page, so it is taken on both sides of
- * the reasoning.
- */
-const readCap = (page) => page.evaluate((host) => {
+/** The host's own cap on the enclosing process group body, which the stepped window stays inside. */
+const readGroupCap = (page) => page.evaluate((host) => {
   const row = document.querySelector(host.row)
   const group = row === null ? null : row.closest('[data-step-process-body]')
   const cap = group === null ? Number.NaN : Number.parseFloat(getComputedStyle(group).maxHeight)
@@ -187,10 +196,7 @@ function reasoningStreamScenario({ check }) {
         return row === null || row.getAttribute('data-state') !== 'running'
       }, HOST, { timeout: 30000 })
       await settlePage(page)
-      // The row's own allowance, read as soon as the reasoning is over: the
-      // window's last reading stands against it, so a lane whose host still holds
-      // its cap open while the model reasons is read by the same number.
-      context.notes.cap = await readCap(page)
+      context.notes.groupCap = await readGroupCap(page)
       // The finished turn keeps its work under two of the host's own controls in
       // the tiers that cap it: the turn's process, then the group holding the row.
       const turnControl = page.locator('button[data-turn-process]').first()
@@ -213,11 +219,12 @@ function reasoningStreamScenario({ check }) {
       const standing = notes.standing ?? {}
       const offsets = samples.map((sample) => sample.offset)
       const step = (samples[0]?.lineHeight ?? 0) * 2
-      const cap = notes.cap ?? null
+      const capped = samples.filter((sample) => sample.capped === true)
+      const cap = capped.find((sample) => Number.isFinite(sample.cap))?.cap ?? null
+      const groupCap = notes.groupCap ?? null
       // The text keeps growing while the window steps, so what the window can
       // reach is measured against the tallest the text stood while it was read.
       const tallest = samples.reduce((most, sample) => Math.max(most, sample.textHeight ?? 0), 0)
-      const capped = samples.filter((sample) => sample.capped === true)
       // The fold's last samples carry the door's shrinking height. The cap the
       // window reached is the tallest capped sample before or during that door.
       const reachedCap = capped.reduce((most, sample) => Math.max(most, sample.slotHeight ?? 0), 0)
@@ -260,9 +267,10 @@ function reasoningStreamScenario({ check }) {
           samples.length > 0 && Number.isFinite(cap) && capped.length > 0 &&
             samples.every((sample) => sample.windowed === true) &&
             samples[0].slotHeight < reachedCap &&
-            capped.every((sample) => sample.masked === true) &&
+            capped.every((sample) => sample.masked === true && (sample.headerTopInGroup === null || sample.headerTopInGroup >= 24)) &&
+            (groupCap === null || reachedCap < groupCap) &&
             Math.abs(reachedCap - cap) <= step,
-          JSON.stringify({ samples: samples.length, capped: capped.length, cap, reachedCap, first: samples[0], last })),
+          JSON.stringify({ samples: samples.length, capped: capped.length, cap, groupCap, reachedCap, first: samples[0], last })),
         check('窗口还没长满时，文本铺满窗口、底边留一道渐隐、没有位移',
           uncapped.length > 0 && uncapped.some((sample) => sample.textHeight > 0) &&
             uncapped.every((sample) => sample.masked === true && sample.offset === 0 &&

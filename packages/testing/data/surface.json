@@ -152,6 +152,7 @@
     { "id": "chat.reason-window", "selector": "[data-dsh-claude-reason-window]", "feature": "chat-fold", "sees": "the optional two-line reasoning window while the stepped display is active" },
     { "id": "chat.reason-capped", "attribute": "data-dsh-claude-reason-capped", "feature": "chat-fold", "sees": "the stepped reasoning window once its text reaches the cap and its edge masks appear" },
     { "id": "chat.reason-window-height", "selector": "[data-dsh-claude-reason-window]", "property": "--dsh-claude-reason-window-height", "feature": "chat-fold", "sees": "the fixed cap written on a stepped reasoning window, absent below the cap" },
+    { "id": "chat.reason-window-cap", "selector": "[data-dsh-claude-reason-window]", "property": "--dsh-claude-reason-window-cap", "feature": "chat-fold", "sees": "the default height cap token on a stepped reasoning window before process-body clamping" },
     { "id": "chat.reason-step", "selector": "[data-dsh-claude-reason-window]", "property": "--dsh-claude-reason-step", "feature": "chat-fold", "sees": "one step's own glide time on the stepped reasoning window" },
     { "id": "chat.reason-hold", "selector": "[data-dsh-claude-reason-window]", "property": "--dsh-claude-period-hold", "feature": "chat-fold", "sees": "the wait between two steps of the reasoning window, the longest a catch-up glide may take" },
     { "id": "chat.rolling", "attribute": "data-dsh-claude-rolling", "feature": "chat-fold", "sees": "the container whose height a fold animation currently owns" },

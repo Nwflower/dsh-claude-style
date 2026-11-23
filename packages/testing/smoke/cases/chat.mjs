@@ -224,14 +224,14 @@ export default {
     const reachable = run.length > 0 ? (run[0].textHeight - run[0].slotHeight) : 0
     check('a reasoning shorter than the cap stands in a window exactly as tall as the text, its newest line rising through the bottom fade',
       grow.length === 4 &&
-        grow.slice(0, 2).every((frame) => frame.on === true && frame.capped === false && frame.offset === 0 && frame.mask.startsWith('linear-gradient') && frame.slotHeight === frame.textHeight && frame.textHeight < 400) &&
-        grow.slice(2).every((frame) => frame.capped === true && frame.slotHeight === 400 && frame.mask.startsWith('linear-gradient') && frame.textHeight > 400) &&
+        grow.slice(0, 2).every((frame) => frame.on === true && frame.capped === false && frame.offset === 0 && frame.mask.startsWith('linear-gradient') && frame.slotHeight === frame.textHeight && frame.textHeight < 280) &&
+        grow.slice(2).every((frame) => frame.capped === true && frame.slotHeight === 280 && frame.mask.startsWith('linear-gradient') && frame.textHeight > 280) &&
         grow[3].textHeight > grow[0].textHeight,
       JSON.stringify(grow))
     check('a reasoning over the cap holds the window at the height it may reach, masked at both edges',
       run.length > 0 &&
         run.every((frame) => frame.on === true && frame.capped === true &&
-          frame.slotHeight === 400 && frame.mask.startsWith('linear-gradient') && frame.textHeight > 400),
+          frame.slotHeight === 280 && frame.mask.startsWith('linear-gradient') && frame.textHeight > 280),
       JSON.stringify(run))
     check('the window holds a transition for its step, on the snippet\'s own clock',
       run.every((frame) => frame.transition === 'transform 0.5s') && grow.every((frame) => frame.transition === 'transform 0.5s'),
@@ -245,14 +245,14 @@ export default {
         reopened.slotHeight === 400 && reopened.textHeight > 400,
       JSON.stringify(reopened))
     const closed = fold.reasonClosed || {}
-    check('the window comes off the row without the row changing height',
+    check('the window comes off the row and gives the host wrapper its own height back',
       closed.on === false && closed.capped === false && offsetsOf(closed) === 0 && closed.mask === 'none' &&
-        closed.slotHeight === run[run.length - 1].slotHeight && closed.bodyHeight === run[run.length - 1].bodyHeight,
+        closed.slotHeight === 400 && run[run.length - 1].slotHeight === 280,
       JSON.stringify({ closed, during: run[run.length - 1] }))
     const grewClosed = fold.reasonGrewClosed || {}
-    check('the window a reasoning outgrew comes off with the row unchanged as well',
+    check('the window a reasoning outgrew comes off and gives the host wrapper its own height back as well',
       grewClosed.on === false && grewClosed.capped === false && offsetsOf(grewClosed) === 0 && grewClosed.mask === 'none' &&
-        grewClosed.slotHeight === grow[grow.length - 1].slotHeight && grewClosed.bodyHeight === grow[grow.length - 1].bodyHeight,
+        grewClosed.slotHeight === 400 && grow[grow.length - 1].slotHeight === 280,
       JSON.stringify({ grewClosed, during: grow[grow.length - 1] }))
     const glide = fold.glide || {}
     const glideAfter = glide.after || {}
