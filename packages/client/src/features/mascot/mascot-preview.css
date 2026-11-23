@@ -1,0 +1,64 @@
+/* ---------- mascot: the settings preview cards ---------- */
+/* Shared preview-card classes (settings-cards.css) own the grid shell, border,
+   label and action row; this sheet owns only each character's sprite stage. */
+
+body[data-dsh-claude-style] .dsh-claude-mascot-cards {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-mascot-card {
+  padding: 16px 12px 14px;
+  background: var(--dsh-claude-card);
+}
+
+body[data-dsh-claude-style] .dsh-claude-mascot-card-stage {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  width: 100%;
+  height: 62px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--dsw-alias-border-l1);
+}
+
+body[data-dsh-claude-style] .dsh-claude-mascot-card-window {
+  position: relative;
+  flex: none;
+  overflow: hidden;
+}
+
+/* Deepy's shadow overhang (3px) and Whalegirl's bottom margin (6px at 1px/cell)
+   sit below their feet; tucking them lands all three characters on the stage line. */
+body[data-dsh-claude-style] .dsh-claude-mascot-card-stage[data-mascot="deepy"] > .dsh-claude-mascot-card-window {
+  margin-bottom: -3px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-mascot-card-stage[data-mascot="whalegirl"] > .dsh-claude-mascot-card-window {
+  margin-bottom: -6px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-mascot-card-strip {
+  display: block;
+  background-image: var(--dsh-claude-mascot-preview-sheet, none);
+  background-repeat: no-repeat;
+}
+
+body[data-dsh-claude-style] .dsh-claude-mascot-card-strip[data-mascot="crab"],
+body[data-dsh-claude-style] .dsh-claude-mascot-card-strip[data-mascot="whalegirl"] {
+  image-rendering: pixelated;
+}
+
+body[data-dsh-claude-style] .dsh-claude-mascot-card-strip[data-mascot="crab"] {
+  position: relative;
+}
+
+body[data-dsh-claude-style] .dsh-claude-mascot-card-strip[data-mascot="crab"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--dsw-alias-label-tertiary, #91888a);
+  -webkit-mask: var(--dsh-claude-mascot-preview-ink, none) no-repeat 0 0 / 100% 100%;
+  mask: var(--dsh-claude-mascot-preview-ink, none) no-repeat 0 0 / 100% 100%;
+  image-rendering: pixelated;
+}

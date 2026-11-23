@@ -124,16 +124,4 @@ body[data-dsh-claude-style] .dsh-claude-palette-card-name {
 
 body[data-dsh-claude-style] .dsh-claude-palette-reset {
   margin-top: 2px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--dsw-alias-label-tertiary);
-  font: inherit;
-  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 16px;
-  cursor: pointer;
-}
-
-body[data-dsh-claude-style] .dsh-claude-palette-reset:hover {
-  color: var(--dsw-alias-label-secondary);
 }

@@ -1,5 +1,5 @@
 /**
- * The session panel sections' host assembly (D110).
+ * The session panel sections' host assembly (D112).
  *
  * The page cannot reach what the skin's sections in the host's session panel
  * show: the context window's composition, the files the session presented or

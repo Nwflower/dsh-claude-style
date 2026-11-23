@@ -39,14 +39,14 @@
         "brand": "kimi",
         "note": "The id can carry the serving provider's namespace (`cn:k3`, `moonshot/k3`, `morph-kimik3`), so the segment start accepts any character outside a letter or a digit while leaving unrelated words such as `kimiko` and `mk3` unclaimed. A version number belongs to the name (`k3.1`, `k3p1`), and `k3-256k` still ends on its hyphen."
       },
-      { "match": "qwen", "brand": "qwen" },
+      { "match": "qwen|(^|[^a-z0-9])qwq($|[^a-z0-9])", "brand": "qwen" },
       { "match": "step", "brand": "stepfun" },
       {
         "match": "minimax|(^|[:/])m[23]($|[._-])",
         "brand": "minimax",
         "note": "Short aliases (`m2`, `m3`, `cn:m3`, `openrouter/m3`, `m2-her`) only start at the id or after a provider namespace separator (`:` or `/`), leaving hyphenated third-party ids such as `bge-m3`, `humain-m3-preview` and `baichuan-m2-32b` unclaimed."
       },
-      { "match": "muse-spark|llama", "brand": "meta" },
+      { "match": "muse-(spark|ember|glimmer)|llama", "brand": "meta" },
       { "match": "celeris", "brand": "celestoai" },
       { "match": "mercury|inception", "brand": "inception" },
       {
@@ -61,9 +61,9 @@
         "brand": "tencent",
         "note": "The id can carry the serving provider's namespace (`cn:hy3`, `openrouter/hy3`), so the segment start accepts any character outside a letter or a digit. Requiring `hy` to start a segment is what leaves `shy-mt2` unclaimed."
       },
-      { "match": "mistral|magistral|codestral", "brand": "mistral" },
+      { "match": "mistral|magistral|codestral|devstral|ministral|pixtral|voxtral|mixtral", "brand": "mistral" },
       { "match": "north|command-?[ar]|cohere", "brand": "cohere" },
-      { "match": "phi-?\\d", "brand": "microsoft" },
+      { "match": "phi-?\\d|(^|[^a-z0-9])mai-?code", "brand": "microsoft" },
       {
         "match": "(^|[^a-z0-9])nova(-|$)",
         "brand": "nova",
@@ -76,7 +76,28 @@
         "match": "(^|[^a-z0-9])beam($|[^a-z0-9])",
         "brand": "reflection",
         "note": "Beam is Reflection's own line, so its rows draw the vendor's lockup — whose word is the vendor's, and the catalog's own name never spells it (`Beam Free · OpenCode Go`), so the label leads with the lockup instead of replacing a word in it. Word boundaries keep unrelated words containing `beam` unclaimed."
-      }
+      },
+      { "match": "nemotron", "brand": "nvidia" },
+      {
+        "match": "(^|[^a-z0-9])(ling[._-]?\\d|bailing|ant-?ling)",
+        "brand": "ling",
+        "note": "Anchored to a version digit or explicit prefix so English words containing `ling` (such as `inkling`) stay unclaimed."
+      },
+      { "match": "(^|[^a-z0-9])solar($|[^a-z0-9])", "brand": "upstage" },
+      { "match": "(^|[^a-z0-9])lfm\\d?($|[^a-z0-9])", "brand": "liquid" },
+      { "match": "jamba|(^|[^a-z0-9])ai21($|[^a-z0-9])", "brand": "ai21" },
+      {
+        "match": "^(?!.*(muse|codex)).*(^|[^a-z0-9])spark([._-]?x|\\d|-(lite|pro|max|ultra|4|v\\d)|$)",
+        "brand": "spark",
+        "note": "Sits after Meta (`muse-spark`) and OpenAI (`codex-spark`) and explicitly excludes them so iFlytek Spark never claims either."
+      },
+      { "match": "granite", "brand": "ibm" },
+      { "match": "openpangu|(^|[^a-z0-9])pangu($|[^a-z0-9])", "brand": "huawei" },
+      { "match": "(^|[^a-z0-9])fugu($|[^a-z0-9])|sakana", "brand": "sakana" },
+      { "match": "kat-?coder|kwaikat", "brand": "kwaikat" },
+      { "match": "(^|[^a-z0-9])inkling($|[^a-z0-9])", "brand": "thinkingmachines" },
+      { "match": "apodex", "brand": "apodex" },
+      { "match": "motif", "brand": "motif" }
     ],
     "lockups": {
       "note": "Per-brand overrides for the vendored lockup, applied by scripts/data/fetch-lobe-combines.py. `word` is the word the lockup stands in for inside a model name (it must match how the catalog spells it, which is not always Lobe's TITLE), `mark` and `text` name the Lobe icons the two halves are taken from (so a model line can wear its own mark with its parent's wordmark), `keep` crops a wordmark to a fraction of its ink width (GLM-V's \"-V\" is not part of the name), and `tint` is the brand colour a hand-provided mark wears on the ivory canvas, where a fetched mark carries Lobe's own.",
@@ -86,7 +107,7 @@
       "stepfun": { "word": "Step", "mark": "stepfun", "text": "stepfun" },
       "xiaomimimo": { "word": "MiMo", "mark": "xiaomimimo", "text": "xiaomimimo" },
       "nanobanana": { "word": "Nano Banana" },
-      "zai": { "word": "GLM", "mark": "zai", "text": "glmv", "keep": 0.62 },
+      "zai": { "word": "GLM", "local": "zai.svg" },
       "reflection": { "word": "Reflection", "tint": "#1e3207" }
     }
   },
@@ -467,6 +488,13 @@
       }
     },
     {
+      "match": "(^|[^a-z0-9])qwq($|[^a-z0-9])",
+      "text": {
+        "zh": "专注深度思考与多步逻辑推理的开放权重模型。",
+        "en": "Open-weight model dedicated to deep thinking and multi-step reasoning."
+      }
+    },
+    {
       "match": "qwen",
       "text": { "zh": "覆盖文本、图像、音频与视频的多模态通用系列。", "en": "General-purpose models spanning text, image, audio and video." }
     },
@@ -548,6 +576,13 @@
       "text": {
         "zh": "响应迅速的原生多模态推理模型。",
         "en": "Fast, natively multimodal reasoning model."
+      }
+    },
+    {
+      "match": "muse-(ember|glimmer)",
+      "text": {
+        "zh": "轻量高效推理模型，适合工具调用、文档解析与高频智能体子任务。",
+        "en": "Lightweight, cost-efficient reasoning models for tool calling, parsing and high-frequency agent steps."
       }
     },
     {
@@ -657,8 +692,43 @@
       "note": "The brand rule for this line reads the same segment start: `cn:hy3` is the same line as `hy3`."
     },
     {
+      "match": "devstral",
+      "text": {
+        "zh": "面向软件工程、代码库探索与多文件修改的代码智能体模型。",
+        "en": "Agentic coding model built for software engineering, codebase exploration and multi-file edits."
+      }
+    },
+    {
       "match": "codestral",
       "text": { "zh": "面向代码补全、FIM 与代码生成。", "en": "Built for code completion, FIM and generation." }
+    },
+    {
+      "match": "ministral",
+      "text": {
+        "zh": "面向端侧与低延迟部署的轻量高效率模型。",
+        "en": "Compact, high-efficiency models built for edge and low-latency deployment."
+      }
+    },
+    {
+      "match": "pixtral",
+      "text": {
+        "zh": "原生多模态视觉模型，擅长图像理解、图表与文档解析。",
+        "en": "Native multimodal vision model for image understanding, charts and document parsing."
+      }
+    },
+    {
+      "match": "voxtral",
+      "text": {
+        "zh": "面向语音理解、音频对话与多语言转录的音频模型。",
+        "en": "Audio model built for speech understanding, voice interaction and multilingual transcription."
+      }
+    },
+    {
+      "match": "mixtral",
+      "text": {
+        "zh": "稀疏 MoE 开放权重系列，兼顾长上下文吞吐与推理成本。",
+        "en": "Sparse MoE open-weight models balancing long-context throughput and serving cost."
+      }
     },
     {
       "match": "mistral.*large[._-]?3(?!\\d)",
@@ -697,6 +767,13 @@
       }
     },
     {
+      "match": "(^|[^a-z0-9])mai-?code",
+      "text": {
+        "zh": "面向日常开发编辑与仓库级推理的软件工程代码模型。",
+        "en": "Software engineering coding models built for everyday edits and repository-level reasoning."
+      }
+    },
+    {
       "match": "phi-?\\d",
       "text": {
         "zh": "面向边缘与本地部署的小模型，擅长推理、数学与代码。",
@@ -716,6 +793,83 @@
       "text": {
         "zh": "结合实时网络搜索作答并附引用，覆盖快速问答到深度研究。",
         "en": "Grounded in live web search with citations, from quick answers to deep research."
+      }
+    },
+    {
+      "match": "nemotron",
+      "text": {
+        "zh": "混合 Mamba-Transformer MoE 开放权重系列，面向长上下文推理与智能体任务。",
+        "en": "Hybrid Mamba-Transformer MoE open-weight models for long-context reasoning and agents."
+      }
+    },
+    {
+      "match": "(^|[^a-z0-9])inkling($|[^a-z0-9])",
+      "text": {
+        "zh": "开放权重原生多模态 MoE 系列，支持文本、图像与音频长上下文理解。",
+        "en": "Open-weight native multimodal MoE supporting text, image and audio over long contexts."
+      }
+    },
+    {
+      "match": "(^|[^a-z0-9])(ling[._-]?\\d|bailing|ant-?ling)",
+      "text": {
+        "zh": "高智效比 MoE 通用与多模态系列，擅长复杂推理与高频智能体工作流。",
+        "en": "High-efficiency MoE general and multimodal models for complex reasoning and frequent agent workflows."
+      }
+    },
+    {
+      "match": "(^|[^a-z0-9])fugu($|[^a-z0-9])|sakana",
+      "text": {
+        "zh": "多智能体协同编排模型，动态调度思考、执行与验证角色求解复杂任务。",
+        "en": "Multi-agent orchestration model coordinating thinker, worker and verifier roles on hard tasks."
+      }
+    },
+    {
+      "match": "(^|[^a-z0-9])solar($|[^a-z0-9])",
+      "text": {
+        "zh": "深度扩展架构高性价比模型，面向多语言通用对话与企业任务。",
+        "en": "Depth-upscaled, cost-efficient models for multilingual chat and enterprise tasks."
+      }
+    },
+    {
+      "match": "(^|[^a-z0-9])lfm\\d?($|[^a-z0-9])",
+      "text": {
+        "zh": "液态基础架构轻量模型，主打端侧部署、低延迟推理与多模态理解。",
+        "en": "Compact liquid foundation models built for edge deployment, low latency and multimodality."
+      }
+    },
+    {
+      "match": "jamba|(^|[^a-z0-9])ai21($|[^a-z0-9])",
+      "text": {
+        "zh": "Mamba-Transformer 混合架构企业模型，擅长长上下文文档分析与吞吐优化。",
+        "en": "Hybrid Mamba-Transformer enterprise models built for long-context analysis and high throughput."
+      }
+    },
+    {
+      "match": "^(?!.*(muse|codex)).*(^|[^a-z0-9])spark([._-]?x|\\d|-(lite|pro|max|ultra|4|v\\d)|$)",
+      "text": {
+        "zh": "面向中文理解、多模态交互、编程与工具调用的通用与智能体系列。",
+        "en": "General and agentic models for Chinese understanding, multimodality, coding and tool calling."
+      }
+    },
+    {
+      "match": "granite",
+      "text": {
+        "zh": "企业合规导向的开放权重系列，面向代码生成、结构化任务与私有化部署。",
+        "en": "Enterprise-focused open-weight models for code generation, structured tasks and self-hosting."
+      }
+    },
+    {
+      "match": "openpangu|(^|[^a-z0-9])pangu($|[^a-z0-9])",
+      "text": {
+        "zh": "大规模稀疏 MoE 开放权重模型，支持超长上下文推理与行业应用。",
+        "en": "Large sparse MoE open-weight models supporting long-context reasoning and enterprise tasks."
+      }
+    },
+    {
+      "match": "kat-?coder|kwaikat",
+      "text": {
+        "zh": "经沙盒强化学习训练的代码智能体系列，擅长仓库级软件工程任务。",
+        "en": "Sandbox RL-trained coding agent models built for repository-level software engineering."
       }
     }
   ],

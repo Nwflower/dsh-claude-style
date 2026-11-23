@@ -1,5 +1,5 @@
 /**
- * The session log events the panel's context and outputs folds read (D110), in
+ * The session log events the panel's context and outputs folds read (D112), in
  * the members they read, and the tool-call arguments as the log records them.
  */
 

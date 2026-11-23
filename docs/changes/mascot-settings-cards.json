@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-23",
+  "group": "improvements",
+  "order": 20,
+  "external": true,
+  "zh": "外观设置页的吉祥物项改为标题行开关与三张角色预览卡片（Clawd、Deepy、鲸娘），关闭时收起卡片，跟随主题时在对应卡片下标出「跟随主题显示」，手动固定角色后显示「恢复跟随主题」按钮",
+  "en": "Replace the Mascot segmented control in Appearance settings with a header switch and three character preview cards (Crab, Deepy, Whale Girl); turning it off collapses the cards, following the theme marks the active brand's character as Following theme, and pinning a character offers a Follow theme again button"
+}

@@ -31,7 +31,7 @@ function useBillingCurrency() {
 }
 
 /**
- * One session's figures, as both tables print them (D110).
+ * One session's figures, as both tables print them (D112).
  *
  * The tables print the statistics feature's live reading — the one the
  * composer's line prints — so the numbers beside the chat move with the numbers
@@ -39,7 +39,7 @@ function useBillingCurrency() {
  * until that reading speaks. Null while neither has answered, and `failed` once
  * the route failed with nothing to show.
  */
-function useFigures(sessionId: string): { figures: PanelFigures | null, failed: boolean } {
+export function useFigures(sessionId: string): { figures: PanelFigures | null, failed: boolean } {
   const { value, failed } = usePanelReading(sessionId)
   const live = useLiveFigures(sessionId)
   const currency = useBillingCurrency()
@@ -50,7 +50,7 @@ function useFigures(sessionId: string): { figures: PanelFigures | null, failed: 
 }
 
 /** The session's tokens in the host's own words and the reader's chosen format. */
-function useTokenText() {
+export function useTokenText() {
   const units = useTokenUnits()
   const chat = hostChatSeat()
   return (count: number) => (chat === null
@@ -78,13 +78,13 @@ function Figures({ rows }: { rows: readonly Figure[] }) {
       h('dd', null, row.value))))
 }
 
-/** A table before any reading answers (D110): the rows every session has, their values under placeholders. */
+/** A table before any reading answers (D112): the rows every session has, their values under placeholders. */
 function PendingFigures({ labels }: { labels: readonly CopyKey[] }) {
   return h(Figures, { rows: labels.map(label => ({ key: label, label: copy(label), value: h(Skeleton, { width: '40px' }) })) })
 }
 
 /** The output speed in the host's own words, or null while the session decoded nothing. */
-function speedText(stats: PanelStats) {
+export function speedText(stats: PanelStats) {
   if (stats.decodeMs <= 0) return null
   const speed = sessionStatsSpeed(stats.decodeTokens / (stats.decodeMs / 1000))
   const chat = hostChatSeat()
@@ -92,7 +92,7 @@ function speedText(stats: PanelStats) {
 }
 
 /**
- * How the session ran (D110): its turns and steps, its speed and its time.
+ * How the session ran (D112): its turns and steps, its speed and its time.
  *
  * The figures are written in the host's own words, through the same formatters
  * the composer's readout uses (shared/stats-format.ts): the panel is a second
@@ -117,7 +117,7 @@ export const StatsSection = panelEntry(function StatsBody({ sessionId }) {
 })
 
 /**
- * What the session spent (D110): its cost, its cache share and its token buckets.
+ * What the session spent (D112): its cost, its cache share and its token buckets.
  *
  * With billing off or a model no table prices, the cost row is left out.
  */

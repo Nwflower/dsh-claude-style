@@ -77,7 +77,7 @@
         labels: navRows.map(function (row) { return row.getAttribute('aria-label') }),
         current: navCurrent === null ? null : navCurrent.dataset.index,
         rowGap: navCurrent === null || markTop === null ? null : Math.round(navCurrent.getBoundingClientRect().top - markTop),
-        dashGap: navCurrent === null ? null : Math.round(navCurrent.querySelector('.dsh-claude-turn-nav-dash').getBoundingClientRect().right - skinRect.right),
+        dashGap: navCurrent === null ? null : Math.round(navCurrent.querySelector('.dsh-claude-turn-nav-dash').getBoundingClientRect().left - skinRect.left),
       }
       navRows[3].click()
       await sleep(100)
@@ -197,7 +197,7 @@
       var longList = longCard.querySelector('.dsh-claude-turn-nav-list')
       var longRows = longList.querySelectorAll('.dsh-claude-turn-nav-row').length
       var longRailBox = longRail.getBoundingClientRect()
-      var longX = longRailBox.right - 4
+      var longX = longRailBox.left + 4
       // The steering starts the strip's 8px rest in: a share is measured over
       // the span between the rests, so the quarter sits a quarter into the span.
       var longSpan = longRailBox.height - 16
@@ -219,7 +219,7 @@
         mid: await longMove(longRailBox.top + 8 + longSpan * 0.5, longX),
         midAgain: await longMove(longRailBox.top + 8 + longSpan * 0.5, longX),
         quarter: await longMove(longRailBox.top + 8 + longSpan * 0.25, longX),
-        frozen: await longMove(longRailBox.bottom, longRailBox.left - 120),
+        frozen: await longMove(longRailBox.bottom, longRailBox.right + 120),
       }
       // Two moves dispatched in one task: the frame they share reads the place
       // the pointer ended at, so leaving the lines holds the list and the
@@ -232,7 +232,7 @@
       }
       longOut.sameFrameFrozen = await longSameFrame(
         { x: longX, y: longRailBox.bottom - 2 },
-        { x: longRailBox.left - 120, y: longRailBox.bottom - 2 })
+        { x: longRailBox.right + 120, y: longRailBox.bottom - 2 })
       await longMove(longRailBox.top + 8 + longSpan * 0.25, longX)
       longOut.sameFrameLatest = await longSameFrame(
         { x: longX, y: longRailBox.top + 2 },

@@ -20,6 +20,8 @@ declare module 'virtual:dsh-claude-style/generated' {
   export const WHALE_GIRL_SHEET_URLS: Record<string, string>
   /** The crab's sheets as data URIs by animation name: its body and its ink mask. */
   export const CRAB_SHEET_URLS: Record<string, { body: string, ink: string }>
+  /** The crab's idle sheet alone, for the settings preview card. */
+  export const CRAB_IDLE_SHEET_URL: { body: string, ink: string }
   /** The motion tokens, by token name (packages/client/src/theme/tokens.json, D9); read through shared/motion.ts. */
   export const MOTION: Record<string, string>
   /** The colour cards the token sheet resolves (packages/client/src/theme/tokens.json, D97); the settings page's swatches read them. */

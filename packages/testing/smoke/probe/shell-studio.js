@@ -222,6 +222,8 @@
       // class (the first message sent) it is gone, before any pass runs. The
       // stack's parts land on the pass after the subtree arrives, so each state
       // is read once they are there (D3).
+      var PANEL_CLASS = 'dsh-claude-home-panel'
+      var PART_ATTR = probe.surface('skin.part')
       async function panelDisplay(stackClass, coldStart) {
         var holder = document.createElement('div')
         holder.setAttribute('data-conversation-scroll', '')
@@ -231,12 +233,12 @@
         if (coldStart) dock.className = 'dsh-claude-home-seat'
         else dock.setAttribute('data-slot', 'conversation.input.dock')
         var panel = document.createElement('section')
-        panel.className = 'dsh-claude-home-panel'
+        panel.className = PANEL_CLASS
         dock.appendChild(panel)
         stack.appendChild(dock)
         holder.appendChild(stack)
         document.body.appendChild(holder)
-        for (var wait = 0; wait < 40 && !stack.hasAttribute('data-dsh-claude-part'); wait++) await sleep(50)
+        for (var wait = 0; wait < 40 && !stack.hasAttribute(PART_ATTR); wait++) await sleep(50)
         var display = getComputedStyle(panel).display
         holder.remove()
         return display
@@ -290,7 +292,98 @@
         holder.remove()
         return results
       }
+      // A full-height studio stack pins the composer card to the bottom edge
+      // whether the context row is present, absent, or wrapped alongside the
+      // composer bar and dock (#464).
+      async function bottomAnchor(options) {
+        var holder = document.createElement('div')
+        holder.setAttribute('data-conversation-scroll', '')
+        holder.style.width = '720px'
+        var stack = document.createElement('div')
+        stack.className = '_composerStack_x_1 _composerHero_x_1'
+        stack.style.display = 'flex'
+        stack.style.flexDirection = 'column'
+        stack.style.height = '800px'
+        stack.style.boxSizing = 'border-box'
+        stack.style.paddingBottom = '16px'
+        var headline = document.createElement('div')
+        headline.className = '_headline_x_1'
+        headline.style.height = '24px'
+        var dock = document.createElement('div')
+        dock.setAttribute('data-slot', 'conversation.input.dock')
+        dock.style.display = 'contents'
+        var panel = document.createElement('section')
+        panel.className = PANEL_CLASS
+        panel.style.height = '120px'
+        if (options.wrapped) {
+          var dockInner = document.createElement('div')
+          dockInner.style.display = 'contents'
+          dockInner.appendChild(panel)
+          dock.appendChild(dockInner)
+        } else {
+          dock.appendChild(panel)
+        }
+        var dockEntry = dock
+        if (options.wrapped) {
+          dockEntry = document.createElement('div')
+          dockEntry.style.display = 'contents'
+          dockEntry.appendChild(dock)
+        }
+        var inlineBar = document.createElement('div')
+        inlineBar.setAttribute('data-slot', 'conversation.composer.bar')
+        inlineBar.style.display = 'contents'
+        var card = document.createElement('div')
+        card.setAttribute('data-composer-card', '')
+        card.style.height = '74px'
+        if (options.wrapped) {
+          var barInner = document.createElement('div')
+          barInner.style.display = 'contents'
+          var cardBox = document.createElement('div')
+          cardBox.appendChild(card)
+          barInner.appendChild(cardBox)
+          inlineBar.appendChild(barInner)
+        } else {
+          inlineBar.appendChild(card)
+        }
+        var row = null
+        var rowEntry = null
+        if (options.withRow) {
+          row = document.createElement('div')
+          row.className = '_heroWorkspaceRow_x_1'
+          row.style.height = '28px'
+          rowEntry = row
+          if (options.wrapped) {
+            rowEntry = document.createElement('div')
+            rowEntry.style.display = 'contents'
+            rowEntry.appendChild(row)
+          }
+        }
+        stack.append(headline, inlineBar, dockEntry)
+        if (rowEntry !== null) stack.appendChild(rowEntry)
+        holder.appendChild(stack)
+        document.body.appendChild(holder)
+        for (var wait = 0; wait < 40 && !stack.hasAttribute(PART_ATTR); wait++) await sleep(50)
+        await sleep(50)
+        var box = stack.getBoundingClientRect()
+        var cardRect = card.getBoundingClientRect()
+        var panelRect = panel.getBoundingClientRect()
+        var rowRect = row === null ? null : row.getBoundingClientRect()
+        var results = {
+          panelDisplay: getComputedStyle(panel).display,
+          panelTop: Math.round(panelRect.top - box.top),
+          rowTop: rowRect === null ? null : Math.round(rowRect.top - box.top),
+          cardTop: Math.round(cardRect.top - box.top),
+          cardBottomGap: Math.round(box.bottom - 16 - cardRect.bottom),
+        }
+        holder.remove()
+        return results
+      }
       r.stackOrder = { narrow: await stackOrder(360), wide: await stackOrder(720) }
+      r.bottomAnchor = {
+        standard: await bottomAnchor({ withRow: true, wrapped: false }),
+        noRow: await bottomAnchor({ withRow: false, wrapped: false }),
+        wrapped: await bottomAnchor({ withRow: true, wrapped: true }),
+      }
       r.panelDisplay = {
         hero: await panelDisplay('_composerStack_x_1 _composerHero_x_1'),
         coldStart: await panelDisplay('_composerStack_x_1 _composerHero_x_1', true),

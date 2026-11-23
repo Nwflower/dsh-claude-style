@@ -6,6 +6,7 @@ import { CONTEXT_STOPS, rampPosition } from './stats-ramp'
 import { PreviewCards } from '../../shared/preview-cards'
 import { copy } from './copy'
 import { openBillingEditor, unpricedModels } from './billing-editor'
+import { StatsBarPicker, StatsBarToggle } from './stats-bar-settings'
 import { parseBillingTable } from '@dsh-claude-style/contracts/billing-table'
 import type { PreviewOption } from '../../shared/preview-cards'
 import type { Prefs } from '../../constants'
@@ -45,6 +46,8 @@ const FACES = [
 /** The row controls this feature draws itself (D76). */
 export const controls: SettingsControlsOf<typeof manifest> = {
   'context-display': ContextDisplayPicker,
+  'stats-bar-toggle': StatsBarToggle,
+  'stats-bar-picker': StatsBarPicker,
   'billing-table': BillingTableRow,
 }
 

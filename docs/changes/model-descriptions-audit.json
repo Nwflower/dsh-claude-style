@@ -3,6 +3,6 @@
   "group": "improvements",
   "order": 20,
   "external": true,
-  "zh": "补齐 Gemini 4、GPT-6 Terra、Qwen 4 Max、HY-MT2、Xiaomi MiMo、LongCat 与 Reflection Beam 等模型描述，收紧短别名与蒸馏模型匹配边界，并统一各模型的双语文案表述",
-  "en": "Add model descriptions for Gemini 4 elemental lines, GPT-6 Terra, Qwen 4 Max, HY-MT2, Xiaomi MiMo, LongCat and Reflection Beam, tighten short-alias and distilled-model matching boundaries, and unify bilingual model copy"
+  "zh": "补齐 Gemini 4、GPT-6 Terra、Qwen 4 Max、HY-MT2、Xiaomi MiMo、LongCat、Reflection Beam、Mistral 全系子线以及 NVIDIA Nemotron、Inkling、蚂蚁百灵、Sakana Fugu、Solar、Liquid LFM、AI21 Jamba、讯飞星火、IBM Granite、华为盘古、快手 KAT-Coder、Apodex 与 Motif 的品牌组合标与双语描述，重绘 GLM 与 SCNet 组合标，修复 Amazon Nova 浅色主题星芒遮罩，并收紧短别名与蒸馏模型匹配边界",
+  "en": "Add brand lockups and bilingual descriptions for Gemini 4 elemental lines, GPT-6 Terra, Qwen 4 Max, HY-MT2, Xiaomi MiMo, LongCat, Reflection Beam, Mistral sub-lines, NVIDIA Nemotron, Inkling, Ant Ling, Sakana Fugu, Upstage Solar, Liquid LFM, AI21 Jamba, iFlytek Spark, IBM Granite, Huawei OpenPangu, KwaiKAT, Apodex and Motif, redraw the GLM and SCNet lockups, fix Amazon Nova's light-theme mark mask, and tighten short-alias and distilled-model matching boundaries"
 }

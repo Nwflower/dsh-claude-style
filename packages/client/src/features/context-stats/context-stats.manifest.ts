@@ -1,12 +1,5 @@
-import { CONVERSATION_COMPOSER_REQUIRES, FOOTER_TOKEN_DIGITS, FOOTER_TOKEN_UNITS, STATS_POSITION_CONTEXT, STATS_POSITION_FOOTER, STATS_POSITION_INLINE, STATS_POSITION_RAIL } from '../../constants'
+import { CONVERSATION_COMPOSER_REQUIRES, FOOTER_TOKEN_DIGITS, FOOTER_TOKEN_UNITS } from '../../constants'
 import type { FeatureManifest } from '../../core/feature'
-
-const FOOTER_REQUIRES = {
-  pref: 'statsPosition',
-  values: [STATS_POSITION_FOOTER],
-  note: 'statsFooterAlignRequired',
-} as const
-const FOOTER_METRIC_REQUIRES = { ...FOOTER_REQUIRES, note: 'statsFooterMetricRequired' } as const
 
 export default {
   id: 'contextStats',
@@ -16,14 +9,14 @@ export default {
   // The ring of the same directory draws the row's reading, and the panel this
   // feature owns hangs from it (features/context-stats/meter-ring.ts).
   reads: ['meterRing', 'model'],
-  pref: 'statsPosition',
-  // The panel carries the full reading in every position.
-  prefValues: [STATS_POSITION_INLINE, STATS_POSITION_CONTEXT, STATS_POSITION_FOOTER, STATS_POSITION_RAIL],
-  stylesheets: [{ file: 'footer-layout.css', rank: 106, gate: true }, { file: 'billing-table.css', rank: 108, gate: true }],
+  ungated: '上下文弹层统计、会话面板实时读数与费用聚合在对话期间常驻运行',
+  stylesheets: [
+    { file: 'footer-layout.css', rank: 106, gate: true },
+    { file: 'billing-table.css', rank: 108, gate: true },
+    { file: 'stats-bar-settings.css', rank: 318 },
+  ],
   settingsRows: [{
     tab: 'statistics',
-    // The meter's face and its number open the group: the face is what the
-    // reader looks at, the figures what they read.
     rank: 46,
     pref: 'contextDisplay',
     title: 'contextDisplayTitle',
@@ -39,46 +32,21 @@ export default {
     requires: CONVERSATION_COMPOSER_REQUIRES,
   }, {
     tab: 'statistics',
-    // The figures' rows follow the meter's own, the footer alignment refining
-    // the place this row sets.
     rank: 48,
     pref: 'statsPosition',
     title: 'statsPositionTitle',
-    choiceLabels: {
-      [STATS_POSITION_INLINE]: 'statsPositionInline',
-      [STATS_POSITION_CONTEXT]: 'statsPositionContext',
-      [STATS_POSITION_FOOTER]: 'statsPositionFooter',
-      [STATS_POSITION_RAIL]: 'statsPositionRail',
-    },
-    // The figures hang off the meter the composer restyle stamps, and a
-    // session's figures only exist in the conversation.
+    desc: 'statsPositionDesc',
+    asideControl: 'stats-bar-toggle',
+    control: 'stats-bar-picker',
     requires: CONVERSATION_COMPOSER_REQUIRES,
   }, {
-    tab: 'statistics',
-    rank: 49,
-    pref: 'statsFooterAlign',
-    parent: 'statsPosition',
-    title: 'statsFooterAlignTitle',
-    choiceLabels: { left: 'statsFooterAlignLeft', center: 'statsFooterAlignCenter', right: 'statsFooterAlignRight' },
-    requires: FOOTER_REQUIRES,
-  }, {
-    tab: 'statistics', rank: 50, pref: 'statsFooterSpeed', parent: 'statsPosition', title: 'statsFooterSpeedTitle', requires: FOOTER_METRIC_REQUIRES,
-  }, {
-    tab: 'statistics', rank: 51, pref: 'statsFooterTtft', parent: 'statsPosition', title: 'statsFooterTtftTitle', requires: FOOTER_METRIC_REQUIRES,
-  }, {
-    tab: 'statistics', rank: 52, pref: 'statsFooterCache', parent: 'statsPosition', title: 'statsFooterCacheTitle', requires: FOOTER_METRIC_REQUIRES,
-  }, {
-    tab: 'statistics', rank: 53, pref: 'statsFooterCost', parent: 'statsPosition', title: 'statsFooterCostTitle', requires: FOOTER_METRIC_REQUIRES,
-  }, {
-    tab: 'statistics', rank: 54, pref: 'statsFooterTotal', parent: 'statsPosition', title: 'statsFooterTotalTitle', requires: FOOTER_METRIC_REQUIRES,
-  }, {
-    // One unit choice serves the independent line, the compact footer and
-    // the details rail, so it stays available in every statistics position.
+    // Independent of whether the composer statistics bar is on: this unit choice
+    // reaches the bar, the context popover and the session panel alike (D112).
     tab: 'statistics',
     rank: 55,
     pref: 'statsFooterTokenFormat',
-    parent: 'statsPosition',
     title: 'statsFooterTokenFormatTitle',
+    desc: 'statsFooterTokenFormatDesc',
     choiceLabels: {
       [FOOTER_TOKEN_DIGITS]: 'statsFooterTokenDigitsSample',
       [FOOTER_TOKEN_UNITS]: 'statsFooterTokenUnitsSample',
@@ -94,8 +62,6 @@ export default {
     requires: CONVERSATION_COMPOSER_REQUIRES,
   }, {
     tab: 'statistics',
-    // Under the currency it prices in: the table's own unit is that currency,
-    // and with billing off there is no cost for it to set.
     rank: 58,
     pref: 'billingTable',
     parent: 'billingCurrency',

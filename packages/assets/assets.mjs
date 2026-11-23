@@ -44,6 +44,9 @@ export const SOURCE_ONLY = new Set([
   // Tencent Hunyuan's own mark: scripts/data/fetch-lobe-combines.py composes the
   // tencent lockup from this mark and Lobe's English wordmark.
   'icons/tencent.svg',
+  // Z.ai mark paired with a custom geometric GLM wordmark matching its diagonal cut;
+  // scripts/data/fetch-lobe-combines.py composes combine/zai.svg from this file.
+  'icons/zai.svg',
 ])
 
 const SHEET_FILE = /^[a-z]+(?:-[a-z]+)*\.png$/

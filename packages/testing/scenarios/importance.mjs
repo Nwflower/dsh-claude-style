@@ -84,7 +84,7 @@ const MARKS = [
   ['sidebar relaxed', 'data-dsh-claude-sidebar-layout', 'relaxed'],
   ['sidebar compact', 'data-dsh-claude-sidebar-layout', 'compact'],
   ['stats inline', 'data-dsh-claude-stats-position', 'inline'],
-  ['stats context', 'data-dsh-claude-stats-position', 'context'],
+  ['stats off', 'data-dsh-claude-stats-position', 'off'],
   ['footer takeover', 'data-dsh-claude-footer-takeover', ''],
   ['mascot crab', 'data-dsh-claude-mascot', 'crab'],
   ['mascot deepy', 'data-dsh-claude-mascot', 'deepy'],

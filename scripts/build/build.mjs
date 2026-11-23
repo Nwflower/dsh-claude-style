@@ -358,6 +358,8 @@ async function main() {
     // The client build version the host's account Remote carries on every call.
     CLIENT_VERSION: PACKAGE.version,
     CRAB_SHEET_URLS: crab,
+    // Idle sheet alone for the settings card preview so the settings chunk carries no other crab animations.
+    CRAB_IDLE_SHEET_URL: crab.idle,
     DEEPY_SHEET_URLS: deepyUrls,
     WHALE_GIRL_SHEET_URLS: whaleGirlUrls,
     // The motion tokens, by name: the browser half reads the same table the token

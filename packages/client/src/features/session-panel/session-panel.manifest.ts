@@ -5,8 +5,9 @@ export default {
   order: 267,
   pref: 'sessionPanel',
   // The sections live in the host's session panel; the page mark follows that
-  // panel, and the header's work chips step aside while it shows (D110).
-  contracts: ['conversation.session-panel', 'header.action-chips'],
+  // panel, the header's work chips step aside while it shows (D112), and the
+  // sections carry skin-side folding while the host's section contract holds (D113).
+  contracts: ['conversation.session-panel', 'conversation.session-panel-section', 'header.action-chips'],
   // The two figures tables print the statistics feature's live reading, the same
   // one the composer's line prints (features/session-panel/session-panel-figures.ts).
   reads: ['contextStats'],

@@ -72,7 +72,7 @@ function usageBilled(usage: HostTokenUsageProjection): number | null {
  * @param chat - the host's `chat` translate seat.
  * @param compact - whether the host rendered its compact statistics row.
  */
-export function sessionStatsSections(stats: HostSessionStatsProjection | null, usage: HostTokenUsageProjection | null, cost: number | null, currency: Currency | null, chat: HostText, compact: boolean) {
+export function sessionStatsSections(stats: HostSessionStatsProjection | null, usage: HostTokenUsageProjection | null, cost: number | null, currency: Currency | null, chat: HostText, compact: boolean, units = false) {
   const sections: { title: string, rows: StatsRow[] }[] = []
   const costRow: StatsRow | null = cost === null ? null : { label: copy('contextCost'), value: formatMoneyMicro(cost, currency ?? 'CNY') }
   if (compact) {
@@ -103,12 +103,12 @@ export function sessionStatsSections(stats: HostSessionStatsProjection | null, u
       if (costRow !== null) rows.push(costRow)
       const hit = sessionStatsCacheHit(usage.cacheReadTokens, billed)
       if (hit !== null) rows.push({ label: chat('message.turnUsage.cacheHit'), value: `${hit}%` })
-      rows.push({ label: chat('message.turnUsage.input'), value: sessionStatsTokens(usage.uncachedInputTokens, chat) })
-      rows.push({ label: chat('message.turnUsage.cacheRead'), value: sessionStatsTokens(usage.cacheReadTokens, chat) })
+      rows.push({ label: chat('message.turnUsage.input'), value: sessionStatsTokens(usage.uncachedInputTokens, chat, units) })
+      rows.push({ label: chat('message.turnUsage.cacheRead'), value: sessionStatsTokens(usage.cacheReadTokens, chat, units) })
       if (usage.cacheWriteTokens !== 0) {
-        rows.push({ label: chat('message.turnUsage.cacheWrite'), value: sessionStatsTokens(usage.cacheWriteTokens, chat) })
+        rows.push({ label: chat('message.turnUsage.cacheWrite'), value: sessionStatsTokens(usage.cacheWriteTokens, chat, units) })
       }
-      rows.push({ label: chat('message.turnUsage.output'), value: sessionStatsTokens(usage.outputTokens, chat) })
+      rows.push({ label: chat('message.turnUsage.output'), value: sessionStatsTokens(usage.outputTokens, chat, units) })
       if (rows.length > 0) sections.push({ title: chat('stats.dialog.usageTitle'), rows })
     }
   }

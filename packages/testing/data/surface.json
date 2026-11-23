@@ -71,6 +71,10 @@
     { "id": "mascot.bubble-row", "selector": ".dsh-claude-mascot-bubble-row", "feature": "mascot", "sees": "one line of the bubble: its label, then its figures" },
     { "id": "mascot.bubble-row-kind", "attribute": "data-row", "feature": "mascot", "sees": "which line it is: the balance on top, the session's cost under it" },
     { "id": "mascot.bubble-figure", "selector": ".dsh-claude-mascot-bubble-figure", "feature": "mascot", "sees": "one amount on a bubble line" },
+    { "id": "mascot.preview-card", "selector": ".dsh-claude-mascot-card", "feature": "mascot", "sees": "one character preview card in the mascot settings row" },
+    { "id": "mascot.preview-id", "attribute": "data-mascot", "feature": "mascot", "sees": "which character a mascot settings preview card represents" },
+    { "id": "mascot.preview-tag", "selector": ".dsh-claude-preview-card-tag", "feature": "mascot", "sees": "the quiet status label on the active mascot card while following the theme" },
+    { "id": "mascot.preview-reset", "selector": ".dsh-claude-preview-card-action", "feature": "mascot", "sees": "the button on a pinned mascot card that returns it to following the theme" },
     { "id": "effort.popover", "selector": ".dsh-claude-effort-popover", "feature": "effort", "sees": "the floating panel the effort card sits in: the box the seat's right edge anchors, opened and closed by data-open" },
     { "id": "model.seat", "selector": ".dsh-claude-model-seat", "feature": "model", "sees": "the box the composer's seat shares: the model's name and the effort level as one row item, whose right end is the edge both cards hang from" },
     { "id": "model.seat-model", "selector": ".dsh-claude-model-seat-model", "feature": "model", "sees": "the model name's own part of the seat box, with its own hover plate" },
@@ -162,6 +166,18 @@
     { "id": "permissions.trigger", "selector": ".dsh-claude-perm-btn", "feature": "permissions", "sees": "the Claude permission trigger: the words of the tier the composer's session runs, with an icon of the same tier" },
     { "id": "permissions.popover", "selector": ".dsh-claude-perm-popover", "feature": "permissions", "sees": "one permission control's tier card, which stays in the page and opens under its own trigger" },
     { "id": "permissions.auto-mode", "selector": "[data-preset=\"auto-mode\"]", "feature": "permissions", "sees": "the Auto mode row inside a tier card, which writes the preset to the session that card's composer shows" },
-    { "id": "permissions.control", "attribute": "data-dsh-claude-control", "feature": "permissions", "sees": "the host control a skin feature replaces, named by that feature: the access trigger carries `access` while the permission control stands" }
+    { "id": "permissions.control", "attribute": "data-dsh-claude-control", "feature": "permissions", "sees": "the host control a skin feature replaces, named by that feature: the access trigger carries `access` while the permission control stands" },
+    { "id": "session-panel.foldable", "attribute": "data-dsh-claude-section-foldable", "feature": "session-panel", "sees": "a host session panel section whose head/body contract passed the probe and carries skin-side folding (D113)" },
+    { "id": "session-panel.folded", "attribute": "data-dsh-claude-section-folded", "feature": "session-panel", "sees": "a host session panel section currently folded by the skin (D113)" },
+    { "id": "session-panel.fold-head", "attribute": "data-dsh-claude-fold-head", "feature": "session-panel", "sees": "the title row the skin marked as a fold toggle on a host session panel section (D113)" },
+    { "id": "stats.settings-card", "selector": ".dsh-claude-stats-bar-card", "feature": "context-stats", "sees": "one layout preview card in the composer statistics bar configurator, showing either the toolbar seat or the dedicated dock row" },
+    { "id": "stats.settings-layout", "attribute": "data-stats-layout", "feature": "context-stats", "sees": "which composer statistics bar placement a preview card illustrates" },
+    { "id": "stats.settings-seat", "selector": ".dsh-claude-stats-bar-sample-seat", "feature": "context-stats", "sees": "the toolbar statistics seat inside the toolbar-layout preview card, following the chosen horizontal position" },
+    { "id": "stats.settings-dock", "selector": ".dsh-claude-stats-bar-sample-dock", "feature": "context-stats", "sees": "the dedicated dock statistics row inside the own-row preview card, following the chosen horizontal position" },
+    { "id": "stats.settings-align", "attribute": "data-align", "feature": "context-stats", "sees": "the horizontal position applied to the sample statistics bar inside a preview card" },
+    { "id": "stats.settings-figures", "selector": ".dsh-claude-stats-bar-sample-figures", "feature": "context-stats", "sees": "the live sample figures inside a statistics-bar preview card, reflecting enabled metrics, token units and currency" },
+    { "id": "stats.settings-chip", "selector": ".dsh-claude-stats-metric-chip", "feature": "context-stats", "sees": "one multi-select toggle chip for a session-aggregate figure on the composer statistics bar" },
+    { "id": "stats.settings-metric", "attribute": "data-metric", "feature": "context-stats", "sees": "the figure identifier on a multi-select metric chip in the composer statistics bar configurator" },
+    { "id": "stats.settings-hint", "selector": ".dsh-claude-stats-bar-hint", "feature": "context-stats", "sees": "the inline note under the metric chips when session cost is enabled while billing currency is off" }
   ]
 }

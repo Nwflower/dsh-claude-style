@@ -7,6 +7,13 @@ export const PREVIEW_PICKER_CLASS = 'dsh-claude-preview-picker'
 /** One card of the row: the shell every preview card wears. */
 export const PREVIEW_CARD_CLASS = 'dsh-claude-preview-card'
 
+/** Activate a composite `role="button"` card on Enter or Space without intercepting nested controls. */
+export function activateOnCardKey(event: React.KeyboardEvent<HTMLElement>, run: () => void) {
+  if (event.target !== event.currentTarget || (event.key !== 'Enter' && event.key !== ' ')) return
+  event.preventDefault()
+  run()
+}
+
 /** One option a preview row offers. */
 export interface PreviewOption<V extends string> {
   /** The value the card stores when it is pressed. */

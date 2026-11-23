@@ -216,7 +216,7 @@ function page(name, tier, cases, probe = PROBE) {
   var heroLayout = name === 'popovers'
     ? '<style>' +
         '._heroWorkspaceRow_x_1 { position: fixed; left: 45%; bottom: 120px; display: flex; gap: 8px; }' +
-        'body > [role="menu"] { position: fixed; }' +
+        'body > :is([role="menu"], [data-menu-popup]) { position: fixed; }' +
       '</style>'
     : ''
   var hostControls = '<style>' +

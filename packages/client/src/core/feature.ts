@@ -104,6 +104,8 @@ export interface FeatureSettingsRow {
   stillWhenReduced?: boolean
   /** Names a feature module collected by the settings build (D76). */
   control?: string
+  /** Names a feature module seated in the row header beside its title and description. */
+  asideControl?: string
   /** Custom controls default to a block; an inline one uses the ordinary right-hand control slot. */
   controlLayout?: 'block' | 'inline'
   /** Values outside this pair display as off and remain stored until flipped. */
@@ -137,7 +139,9 @@ export type SettingsRowControls = Readonly<Record<string, React.ComponentType<Se
 
 /** The names a manifest's `settingsRows` give their own controls and status lines. */
 export type RowControlNames<M> = M extends { settingsRows: readonly (infer R)[] }
-  ? (R extends { control: infer C extends string } ? C : never) | (R extends { status: infer S extends string } ? S : never)
+  ? (R extends { control: infer C extends string } ? C : never)
+    | (R extends { asideControl: infer A extends string } ? A : never)
+    | (R extends { status: infer S extends string } ? S : never)
   : never
 
 /**

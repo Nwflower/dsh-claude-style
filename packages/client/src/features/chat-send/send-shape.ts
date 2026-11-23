@@ -183,9 +183,17 @@ export function chatSendTextWindows(bubble: Element, style: CSSStyleDeclaration,
 
   // Use each step's narrowest width so words cannot outgrow the shrinking shell;
   // the first step retains the draft's own line breaking.
+  //
+  // The width is rounded up to the next whole pixel. The samples are interpolated
+  // floats, and a CJK line whose advance sum lands within a fraction of a pixel of
+  // the interpolated width breaks one character early: the words then sit a line
+  // taller than the row they land on, which the reader sees as the last character
+  // alone on a second line for the whole flight. The shell clips at the sample's
+  // own width either way, so the extra fraction costs nothing.
   const widths = samples.map((sample, index) => {
     const next = samples[index + 1]
-    return index === 0 || next === undefined ? sample.content : Math.min(sample.content, next.content)
+    const content = index === 0 || next === undefined ? sample.content : Math.min(sample.content, next.content)
+    return Math.ceil(content)
   })
   // Greedy line breaking is monotonic: equal layouts at both ends imply equal layouts between them.
   const perSample: ({ signature: string, lines: number } | undefined)[] = new Array(widths.length)

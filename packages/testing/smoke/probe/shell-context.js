@@ -208,11 +208,12 @@
       column.appendChild(dock)
       // The figures the reader asked for: 2 turns and 374 steps, 279 tok/s, a
       // prompt of 777,345,457 tokens read 99% from cache, and 7,345,457 written back.
+      window.__pushForm({ statsFooterCounts: true, statsFooterSpeed: true, statsFooterCost: false })
       window.__pushStats('sessionStats', { turns: 2, steps: 374, decodeMs: 2000, decodeTokens: 558 })
       window.__pushStats('tokenUsage', { uncachedInputTokens: 6345457, cacheReadTokens: 771000000, cacheWriteTokens: 0, outputTokens: 7345457 })
       await sleep(400)
       var line = document.querySelector('[data-dsh-claude-inline-stats]')
-      var meter = document.querySelector('[data-dsh-claude-context-meter]')
+      var meter = document.querySelector('[data-dsh-claude-meter-ring]')
       var row = document.querySelector('[data-composer-stat]')
       var cache = line === null ? null : line.querySelector('[data-dsh-claude-ramp="cache"]')
       var cacheFigure = cache === null ? null : cache.querySelector('.dsh-claude-digit-group')
@@ -241,7 +242,7 @@
         glyphs: line === null ? 0 : line.querySelectorAll('svg, img').length,
         rowDisplay: row === null ? null : getComputedStyle(row).display,
         dockPosition: dock === null ? null : getComputedStyle(dock).position,
-        meterPosition: meter === null ? null : getComputedStyle(meter).position,
+        meterInRow: meter !== null && card.contains(meter),
         cacheRamp: cache === null ? null : {
           span: cache.getAttribute('data-dsh-claude-ramp-span'),
           // The band reaches the figure and the percent sign after it; the
@@ -314,11 +315,9 @@
           output: shows('.dsh-claude-inline-output'),
           total: shows('.dsh-claude-inline-total'),
           totalText: total === null ? null : (total.textContent || '').trim(),
-          meterTight: meter !== null && meter.hasAttribute('data-dsh-claude-meter-tight'),
           meterNumber: number === null ? null : number.getClientRects().length > 0,
           cardWidth: fitCard === null ? null : fitCard.clientWidth,
-          needed: line === null || meter === null ? null
-            : Math.round(meter.getBoundingClientRect().right - line.getBoundingClientRect().left),
+          needed: line === null ? null : Math.round(line.getBoundingClientRect().width),
           boxes: line === null || meter === null ? null : {
             line: [Math.round(line.getBoundingClientRect().left), Math.round(line.getBoundingClientRect().width)],
             meter: [Math.round(meter.getBoundingClientRect().left), Math.round(meter.getBoundingClientRect().width)],
@@ -327,16 +326,21 @@
         }
       }
       r.statsInline.roomy = readFit()
-      var widths = ['260px', '130px']
-      var fitted = []
-      for (var w = 0; w < widths.length; w++) {
-        fitCard.style.width = widths[w]
+      var tight = null
+      var tightest = null
+      for (var width = 440; width >= 140; width -= 20) {
+        fitCard.style.width = width + 'px'
         wakePass()
-        await sleep(350)
-        fitted.push(readFit())
+        await sleep(120)
+        var step = readFit()
+        if (tight === null && step.total === true && /^[\d,]+$/.test(step.totalText || '')) tight = step
+        if (tightest === null && step.total === true && /^[\d.]+[kMB]$/.test(step.totalText || '')) {
+          tightest = step
+          break
+        }
       }
-      r.statsInline.tight = fitted[0]
-      r.statsInline.tightest = fitted[1]
+      r.statsInline.tight = tight || readFit()
+      r.statsInline.tightest = tightest || readFit()
       fitCard.style.width = ''
       wakePass()
       await sleep(350)
@@ -356,9 +360,8 @@
       await sleep(700)
       var countAfter = readFigures()
       r.statsInline.count = { before: countBefore, during: countDuring, after: countAfter }
-      // The choice the other way, live: the popover's own surface takes the
-      // numbers back and the line goes.
-      window.__pushForm({ statsPosition: 'context' })
+      // Switching the composer bar off removes the line live while the popover keeps its rows.
+      window.__pushForm({ statsPosition: 'off' })
       await sleep(600)
       r.statsInline.backAttr = document.body.getAttribute('data-dsh-claude-stats-position')
       r.statsInline.backLine = document.querySelectorAll('[data-dsh-claude-inline-stats]').length

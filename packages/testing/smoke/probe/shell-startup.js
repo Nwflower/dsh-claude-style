@@ -43,7 +43,7 @@
       var presetTrigger = document.getElementById('hero-preset')
       function permUp() { return document.querySelectorAll('.dsh-claude-perm-popover[data-open="true"]').length }
       function drawerUp() { return document.querySelectorAll('.dsh-claude-account-popover[data-open="true"]').length }
-      function hostCards() { return document.querySelectorAll('body > [role="menu"]:not(:is([class^="dsh-claude"], [class*=" dsh-claude"]))').length }
+      function hostCards() { return document.querySelectorAll('body > :is([role="menu"], [data-menu-popup]):not(:is([class^="dsh-claude"], [class*=" dsh-claude"]))').length }
       // The dwell is 100 ms: at 50 ms a crossing pointer has opened nothing, and
       // by 250 ms a pointer that stayed has the card.
       permTrigger.dispatchEvent(new MouseEvent('mouseenter'))
@@ -155,7 +155,7 @@
         r.workspaceStampDiagnostics = {
           expanded: heroTrigger.getAttribute('aria-expanded'),
           triggerAnchor: heroTrigger.style.getPropertyValue('anchor-name'),
-          cards: Array.prototype.map.call(document.querySelectorAll('[role="menu"]'), function (card) {
+          cards: Array.prototype.map.call(document.querySelectorAll(':is([role="menu"], [data-menu-popup])'), function (card) {
             return {
               skin: /dsh-claude-/.test(card.className),
               positionAnchor: card.style.getPropertyValue('position-anchor'),
@@ -163,6 +163,28 @@
             }
           })
         }
+      }
+      // The pointer travels from the trigger to the card across the air between
+      // them: the grace keeps the card while the pointer crosses, and the card's
+      // own hover cancels the close once it arrives. A card the stamp never
+      // landed on answers neither, and the leave folds it mid-travel.
+      var stampedCard = document.querySelector(heroStamp)
+      var triggerBox = heroTrigger.getBoundingClientRect()
+      var cardBox = stampedCard === null ? null : stampedCard.getBoundingClientRect()
+      if (cardBox !== null) {
+        var gapY = (cardBox.bottom + triggerBox.top) / 2
+        heroTrigger.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: document.body }))
+        document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: triggerBox.x + triggerBox.width / 2, clientY: gapY }))
+        await sleep(300)
+        r.workspaceUpInGap = window.__heroMenuOpen('hero-workspace')
+        stampedCard.dispatchEvent(new MouseEvent('mouseover', { bubbles: true, relatedTarget: heroTrigger }))
+        document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: cardBox.x + cardBox.width / 2, clientY: cardBox.y + cardBox.height / 2 }))
+        await sleep(150)
+        r.workspaceUpAfterTravel = window.__heroMenuOpen('hero-workspace')
+        // The pointer leaves the card for desktop far from the row, so the leave
+        // below reads a departure rather than a crossing.
+        stampedCard.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: document.body }))
+        document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 5, clientY: 5 }))
       }
       // Leaving the row folds the menu the hover opened, and only that one.
       heroTrigger.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: document.body }))

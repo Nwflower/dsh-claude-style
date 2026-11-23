@@ -63,14 +63,6 @@ Switch between the Claude and DeepSeek brands in settings; light and dark follow
   </tr>
 </table>
 
-## Message rewind and revision history
-
-Retract, edit, rerun and delete-turn open a confirmation dialog listing the turns leaving the current timeline and the files that can be restored. The conversation then continues from the original message position while the sidebar keeps presenting one logical conversation. Source sessions and later revisions move into the host archive and can be unarchived from **Revision history** in the message actions. Inherited-history dividers and fork-generated turn tails stay out of this continuous timeline.
-
-The plugin records a workspace checkpoint for each turn and can restore code changes at the same time. History recorded before installation, or with an incomplete checkpoint, rewinds messages only and says so in the dialog. Git commits, external services and other command side effects are not undone.
-
-With [dsh-rewind](https://github.com/SiriLee/dsh-rewind) installed as well, retract, edit, rerun and delete come from it: this plugin's four buttons leave the message actions and no checkpoint is recorded for new turns. Existing revision history still opens from the message actions, and the **Message actions** row in settings says so. Once dsh-rewind is removed, the four buttons and checkpoint recording return, and the turns taken in between rewind messages only.
-
 ## Installation
 
 From the official plugin page add the package below, or from a terminal:
@@ -87,49 +79,6 @@ dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub releas
 Also available from the [plugin market](https://github.com/dsh-market/dsh-market) or the Skin Center of dsh-web-all. Keep one theme enabled at a time; dsh ≥ 0.2.2-rc.3 is required, and restart DeepSeek Harness after installing.
 
 The official DSH web and desktop frontends supply the browser module `@deepseek-ai/dsh-client-ui-primitives`. Profiles with pnpm’s `autoInstallPeers` disabled can use it without installing the package separately.
-
-## Declarative appearance configuration
-
-`paletteSchemes` and `brandingPresets` accept both nested YAML objects and the existing JSON-string records. This snippet shows plugin fields only, not a complete Harness profile:
-
-```yaml
-palette: claude
-paletteColors: company-ocean
-paletteSchemes:
-  - id: company-ocean
-    name: Company Ocean
-    base: deepseek
-    accent: "#2855d9"
-    background:
-      light: "#f7f9ff"
-      dark: "#111827"
-    code:
-      light: "#173f99"
-      dark: "#b8ceff"
-
-brandingPreset: company-primary
-brandingPresets:
-  - id: company-primary
-    name: Company Primary
-    ink: original
-    mark:
-      light: "./branding/primary-mark-light.svg"
-      dark: "./branding/primary-mark-dark.svg"
-    wordmark: "./branding/primary-wordmark.svg"
-
-modelOrder: custom
-modelOrderRows:
-  - deepseek-official/deepseek-v4.1-pro
-  - sensenova/sensenova-6.8-flash
-```
-
-- Colour records use the five-seed model (`accent`, `background`, `text`, `code`, `link`) plus `edges`. The six built-in presets (`claude`, `deepseek`, `parchment`, `forest`, `dusk`, `rose`) and **Follow the brand** remain available.
-- A logo preset has a stable `id`, an optional `name`, at least one of `mark` or `wordmark`, and an optional `ink` field (`original`, `accent` or `text`, defaulting to the original image colours). One string uses the same image in both appearances; a `light` / `dark` pair selects by appearance, with the supplied side covering a missing side.
-- Relative image paths resolve from `$DSH_HOME/dsh-claude-style/` and must stay inside it. PNG, SVG and WebP files up to 2 MB are accepted. UI uploads live under `branding/presets/<id>/`, so switching presets needs no repeated upload.
-- Appearance settings include eight built-in vendor presets (OpenAI, Gemini, Qwen, Kimi Code, ZCode, MiniMax, Grok, Xiaomi MiMo) and let you create, duplicate, rename, select and delete logo presets, replace light and dark images separately, and adjust logo colour. An empty `brandingPreset` follows the active theme's logo, and any earlier standalone global uploads are migrated into a **Current images** preset automatically. Logo and colour selections stay independent.
-- UI edits persist in the plugin-managed `appearance-overlays.json` and merge with base YAML by `id`. UI-created or edited records and selection overrides win; records added later to the file are merged in, and base records deleted through the UI do not return after a reload. After a manual configuration edit and reload, unconflicted records follow the file, while conflicts follow the latest UI edit.
-- Invalid records are reported and skipped without removing valid ones. A missing or invalid image affects only that image and leaves the other presets and settings UI working.
-- `modelOrder` accepts `id`, `brand`, `catalog` and `custom`. Brand order places recognised vendors first and hides descriptions on unrecognised rows. Custom order follows `provider/model` entries in `modelOrderRows`; remaining models follow in ID order.
 
 ## Fonts
 
@@ -149,9 +98,9 @@ To enable them, install the `.ttf` files on your system, or copy them into `$DSH
 
 ## License
 
-Except where otherwise stated, this repository is licensed under MIT.
+Except where otherwise stated, this repository is licensed under MIT (see [LICENSE](LICENSE)).
 
-The Sodium rendering engine is licensed under the [PolyForm Shield License 1.0.0](packages/client/src/features/sodium/LICENSE).
+The Sodium rendering engine is licensed under the [PolyForm Shield License 1.0.0](packages/client/src/features/sodium/LICENSE). Third-party code and asset notices are listed in [THIRD_PARTY_NOTICES.md](docs/THIRD_PARTY_NOTICES.md).
 
 ## Acknowledgements
 

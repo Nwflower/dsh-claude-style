@@ -141,10 +141,16 @@ def tint(body, colour):
 
 
 def recolour_illegible(body, canvas):
-    """Replace only an illegible dominant fill; highlights and non-literal
-    colours such as gradients and currentColor stay unchanged."""
+    """Replace only an illegible dominant fill outside <mask> blocks; highlights
+    and non-literal colours such as gradients and currentColor stay unchanged."""
+    # `<mask>` fills are opacity/luminance channels (`#fff` = opaque), never ink.
+    masks = []
+    def stash(m):
+        masks.append(m.group(0))
+        return '__DSH_MASK_%d__' % (len(masks) - 1)
+    visible = re.sub(r'<mask\b[^>]*>.*?</mask>', stash, body, flags=re.S)
     weight = {}
-    for tag in re.findall(r'<path[^>]*>', body):
+    for tag in re.findall(r'<path[^>]*>', visible):
         colour = re.search(r'fill="(#[^"]+)"', tag)
         d = re.search(r'\sd="([^"]+)"', tag)
         if colour is None or d is None:
@@ -160,7 +166,10 @@ def recolour_illegible(body, canvas):
     dominant = max(weight.items(), key=lambda item: item[1])[0]
     if contrast(dominant, canvas) >= ART_MIN_CONTRAST:
         return body
-    return body.replace('fill="%s"' % dominant, 'fill="currentColor"')
+    recoloured = visible.replace('fill="%s"' % dominant, 'fill="currentColor"')
+    for idx, original in enumerate(masks):
+        recoloured = recoloured.replace('__DSH_MASK_%d__' % idx, original)
+    return recoloured
 
 
 def scale_mark(body, scale, dx, dy):

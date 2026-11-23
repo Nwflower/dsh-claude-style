@@ -250,7 +250,7 @@
         "body[data-dsh-claude-style][data-dsh-claude-page-under-480] [data-dsh-claude-meter-ring]>button>span",
         "body[data-dsh-claude-style][data-dsh-claude-page-under-1000] .dsh-claude-ban-column",
         "body[data-dsh-claude-style][data-dsh-claude-page-under-1000] .dsh-claude-ban-toast",
-        "body[data-dsh-claude-style][data-dsh-claude-page-under-768][data-dsh-claude-home-layout=studio] [data-dsh-claude-part~=composer-hero]>:is([data-slot=\"conversation.input.dock\"],.dsh-claude-home-seat)>*",
+        "body[data-dsh-claude-style][data-dsh-claude-page-under-768][data-dsh-claude-home-layout=studio] [data-dsh-claude-part~=composer-hero] :is([data-slot=\"conversation.input.dock\"]>*, .dsh-claude-home-seat>*, .dsh-claude-home-panel)",
         "body[data-dsh-claude-style][data-dsh-claude-page-under-768] .dsh-claude-home-stats",
         "body[data-dsh-claude-style][data-dsh-claude-page-under-768] [data-dsh-claude-part~=layout-frame][data-rightbar-collapsed]",
         "body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claude-page-under-768]) [data-dsh-claude-part~=layout-frame]:not([data-sidebar-drawer])[data-sidebar-collapsed][data-rightbar-collapsed]",

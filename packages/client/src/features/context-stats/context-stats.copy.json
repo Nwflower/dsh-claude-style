@@ -40,28 +40,36 @@
     "en": "Show the percentage value next to the context meter."
   },
   "statsPositionTitle": {
-    "zh": "对话统计信息位置",
-    "en": "Conversation statistics position"
+    "zh": "对话统计栏",
+    "en": "Conversation statistics bar"
+  },
+  "statsPositionDesc": {
+    "zh": "在输入区展示当前会话的实时聚合读数。",
+    "en": "Show live session-level figures in the composer."
+  },
+  "statsPositionFooter": {
+    "zh": "随宽度同行",
+    "en": "Inline with toolbar"
   },
   "statsPositionInline": {
     "zh": "独立成行",
     "en": "On its own line"
   },
-  "statsPositionContext": {
-    "zh": "收进上下文",
-    "en": "Inside the context popover"
+  "statsSamplePrompt": {
+    "zh": "继续推进当前任务…",
+    "en": "Continue with this task…"
   },
-  "statsPositionFooter": {
-    "zh": "紧凑底栏",
-    "en": "Compact footer"
+  "statsSampleTurnsSteps": {
+    "zh": "4 轮 12 步",
+    "en": "4 turns · 12 steps"
   },
-  "statsPositionRail": {
-    "zh": "跟随会话面板",
-    "en": "Follow the session panel"
+  "statsSamplePerm": {
+    "zh": "自动编辑",
+    "en": "Accept edits"
   },
   "statsFooterAlignTitle": {
-    "zh": "底栏统计位置",
-    "en": "Footer alignment"
+    "zh": "水平位置",
+    "en": "Horizontal position"
   },
   "statsFooterAlignLeft": {
     "zh": "左侧",
@@ -75,22 +83,54 @@
     "zh": "右侧",
     "en": "Right"
   },
-  "statsFooterAlignRequired": {
-    "zh": "只在选择「紧凑底栏」时生效。",
-    "en": "Applies only to the Compact footer position."
+  "statsMetricsTitle": {
+    "zh": "显示指标",
+    "en": "Shown figures"
   },
-  "statsFooterMetricRequired": {
-    "zh": "只在选择「紧凑底栏」时生效；速度、首 Token、缓存、费用和总量均为会话级聚合。",
-    "en": "Applies to the Compact footer; speed, TTFT, cache, cost and token total are session-level aggregates."
+  "statsFooterCostTitle": {
+    "zh": "会话费用",
+    "en": "Session cost"
   },
-  "statsFooterSpeedTitle": { "zh": "底栏输出速度", "en": "Footer output speed" },
-  "statsFooterTtftTitle": { "zh": "底栏首 Token 时间", "en": "Footer time to first token" },
-  "statsFooterCacheTitle": { "zh": "底栏缓存命中率", "en": "Footer cache-hit rate" },
-  "statsFooterCostTitle": { "zh": "底栏会话费用", "en": "Footer session cost" },
-  "statsFooterTotalTitle": { "zh": "底栏 Token 总量", "en": "Footer token total" },
-  "statsFooterTokenFormatTitle": { "zh": "Token 单位", "en": "Token units" },
-  "statsFooterTokenDigitsSample": { "zh": "1,000,000 tok", "en": "1,000,000 tok" },
-  "statsFooterTokenUnitsSample": { "zh": "1.0M tok", "en": "1.0M tok" },
+  "statsFooterTotalTitle": {
+    "zh": "Token 用量",
+    "en": "Token usage"
+  },
+  "statsFooterCacheTitle": {
+    "zh": "缓存命中率",
+    "en": "Cache-hit rate"
+  },
+  "statsFooterSpeedTitle": {
+    "zh": "输出速度",
+    "en": "Output speed"
+  },
+  "statsFooterTtftTitle": {
+    "zh": "首 Token 时间",
+    "en": "Time to first token"
+  },
+  "statsFooterCountsTitle": {
+    "zh": "轮次与步数",
+    "en": "Turns and steps"
+  },
+  "statsCostBillingOffNote": {
+    "zh": "「计费币种」设为人民币或美元后显示会话费用。",
+    "en": "Pick CNY or USD in Billing currency to show session cost."
+  },
+  "statsFooterTokenFormatTitle": {
+    "zh": "Token 单位",
+    "en": "Token units"
+  },
+  "statsFooterTokenFormatDesc": {
+    "zh": "控制对话统计栏、上下文弹层与会话面板中的数值写法。",
+    "en": "Format token counts in the statistics bar, context popover and session panel."
+  },
+  "statsFooterTokenDigitsSample": {
+    "zh": "1,000,000 tok",
+    "en": "1,000,000 tok"
+  },
+  "statsFooterTokenUnitsSample": {
+    "zh": "1.0M tok",
+    "en": "1.0M tok"
+  },
   "billingCurrencyTitle": {
     "zh": "计费币种",
     "en": "Billing currency"

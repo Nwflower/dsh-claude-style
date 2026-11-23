@@ -1,3 +1,5 @@
+import { FOOTER_TOKEN_UNITS } from '../../constants'
+import { readPrefs } from '../../core/prefs'
 import { buildElement, writeTextInPlace } from '@dsh-claude-style/engine/dom'
 import { findComposerStats } from '@dsh-claude-style/engine/host'
 import { createStatsCount } from './stats-count'
@@ -190,7 +192,8 @@ export function createStatsBlock(read: () => StatsReading, chatText: () => HostT
    * nothing.
    */
   function writeBlock(panel: Element, reading: StatsReading, chat: HostText, compact: boolean) {
-    const sections = sessionStatsSections(reading.stats, reading.usage, reading.cost, currency(), chat, compact)
+    const units = readPrefs().statsFooterTokenFormat === FOOTER_TOKEN_UNITS
+    const sections = sessionStatsSections(reading.stats, reading.usage, reading.cost, currency(), chat, compact, units)
     if (sections.length === 0) {
       removeContextBlock(panel)
       return

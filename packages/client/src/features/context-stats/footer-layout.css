@@ -17,15 +17,20 @@ body[data-dsh-claude-style] .dsh-claude-footer-seat {
   overflow: clip;
 }
 
-body[data-dsh-claude-style] [data-dsh-claude-footer-align="center"] {
+body[data-dsh-claude-style] .dsh-claude-footer-seat[data-dsh-claude-footer-align="center"] {
   justify-content: center;
 }
 
-body[data-dsh-claude-style] [data-dsh-claude-footer-align="right"] {
+body[data-dsh-claude-style] .dsh-claude-footer-seat[data-dsh-claude-footer-align="right"] {
   justify-content: flex-end;
 }
 
-body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-footer-line] {
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-dock"][data-dsh-claude-holds~="footer-below"] {
+  display: flex;
+  align-items: center;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-footer-line] {
   flex: none;
   white-space: nowrap;
   flex-wrap: nowrap;
@@ -33,13 +38,25 @@ body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-c
   overflow: hidden;
 }
 
-/* The dock reserves a row only when the toolbar cannot fit even the short line. */
+body[data-dsh-claude-style] [data-dsh-claude-footer-line="below"] {
+  margin-inline: 0 auto;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-footer-line="below"][data-dsh-claude-footer-align="center"] {
+  margin-inline: auto;
+}
+
+body[data-dsh-claude-style] [data-dsh-claude-footer-line="below"][data-dsh-claude-footer-align="right"] {
+  margin-inline: auto 0;
+}
+
+/* The dock reserves a row under `footer` only when the toolbar cannot fit even the short line. */
 body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-part~="composer-dock"]:not([data-dsh-claude-holds~="footer-below"]) {
   min-height: 0;
   padding-top: 0;
 }
 
-body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] [data-dsh-claude-footer-line=""] {
+body[data-dsh-claude-style] [data-dsh-claude-footer-line=""] {
   display: none;
 }
 

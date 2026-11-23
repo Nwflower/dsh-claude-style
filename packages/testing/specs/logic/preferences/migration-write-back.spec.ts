@@ -12,8 +12,9 @@ import { BRAND_DEEPSEEK, PALETTE_PRESETS, clampPrefs, migrationWriteBack } from 
 import { parsePaletteScheme } from '@dsh-claude-style/contracts/palette-schemes'
 
 test('every declared legacy value is written back as the value it reads as', () => {
-  const patch = migrationWriteBack({ brand: 'off', statusDetail: 'simple', autoPopover: false, pageZoom: '0.8', chatAnimations: 'off' })
-  expect(patch).toEqual({ brand: BRAND_DEEPSEEK, statusDetail: false, autoPopover: 'off', pageZoom: '80', chatAnimations: false })
+  const patch = migrationWriteBack({ brand: 'off', statusDetail: 'simple', autoPopover: false, pageZoom: '0.8', chatAnimations: 'off', statsPosition: 'context' })
+  expect(patch).toEqual({ brand: BRAND_DEEPSEEK, statusDetail: false, autoPopover: 'off', pageZoom: '80', chatAnimations: false, statsPosition: 'off' })
+  expect(migrationWriteBack({ statsPosition: 'rail' })).toEqual({ statsPosition: 'inline' })
 })
 
 test('canonical, unmapped and absent values produce no write', () => {

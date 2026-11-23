@@ -54,7 +54,7 @@ body[data-dsh-claude-style] .dsh-claude-home-seat {
   display: contents;
 }
 
-body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] > :is([data-slot="conversation.input.dock"], .dsh-claude-home-seat) > * {
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] :is([data-slot="conversation.input.dock"] > *, .dsh-claude-home-seat > *, .dsh-claude-home-panel) {
   order: 1;
   /* A window too short for the whole panel shrinks the panel instead of the
      page: the greeting stays on the top edge, the context row and the card on
@@ -74,27 +74,39 @@ body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-clau
    sort in the column by the rules above; a wrapper that draws one instead has to
    take its place itself, or the composer card lands straight under the greeting
    with the panel after it (#177). */
-body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] > :is([data-slot="conversation.input.dock"], .dsh-claude-home-seat) {
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] :is([data-dsh-claude-holds~="home-dock"], [data-slot="conversation.input.dock"], .dsh-claude-home-seat) {
   order: 1;
 }
 
-body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] > [data-slot="conversation.composer.bar"] {
+/* Every wrapper between the hero stack and the card takes order 3, so an extra
+   slot or plugin container around `conversation.composer.bar` cannot drop the
+   card back to order 0 under the greeting (#464). */
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] :is([data-dsh-claude-holds~="composer-card"], [data-composer-card]) {
   order: 3;
 }
 
-body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] > [data-dsh-claude-part~="hero-workspace-row"] {
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] :is([data-dsh-claude-holds~="hero-workspace-row"], [data-dsh-claude-part~="hero-workspace-row"]) {
   order: 2;
   /* Everything below the panel drops to the bottom edge: the auto margin eats
      the free column and carries the context row and the card down with it. */
   margin-top: auto;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] [data-dsh-claude-part~="hero-workspace-row"] {
   gap: 8px;
+}
+
+/* When the hero stack carries no context row, the composer card takes the auto
+   margin itself so it still rests on the bottom edge (#464). */
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"]:not([data-dsh-claude-holds~="has-hero-workspace-row"]) :is([data-dsh-claude-holds~="composer-card"], [data-composer-card]) {
+  margin-top: auto;
 }
 
 /* The host's hero options cluster — the worktree picker, and whatever else a
    plugin hangs in `conversation.hero.options` — carries `margin-left: auto` and
    lands on the row's far end. The context row reads left to right, so the
    cluster takes its place beside the mode seat instead. */
-body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] > [data-dsh-claude-part~="hero-workspace-row"] [data-dsh-claude-part~="hero-options"] {
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] [data-dsh-claude-part~="hero-workspace-row"] [data-dsh-claude-part~="hero-options"] {
   margin-left: 0;
 }
 
@@ -104,7 +116,7 @@ body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-clau
    widest one: the whalegirl's 138px plus her 8px inset and 4px of slack. The
    row spans the whole stack while the card sits inside the side clearance,
    so the clearance joins the sum. */
-body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"][data-dsh-claude-mascot-standing] > [data-dsh-claude-part~="hero-workspace-row"] {
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"][data-dsh-claude-mascot-standing] [data-dsh-claude-part~="hero-workspace-row"] {
   padding-right: calc(var(--dsh-composer-side-clearance, 16px) + 150px);
 }
 
@@ -124,13 +136,9 @@ body[data-dsh-claude-style] [data-dsh-claude-home-hero] [data-dsh-claude-part~="
   background: color-mix(in srgb, var(--dsw-alias-label-primary, #161616) 5%, transparent);
 }
 
-body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] > [data-slot="conversation.composer.bar"] > * {
-  order: 3;
-}
-
 /* On a narrow page the dashboard centres in the available column; the desktop
    rule above keeps its left edge beside the composer. */
-body[data-dsh-claude-style][data-dsh-claude-page-under-768][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] > :is([data-slot="conversation.input.dock"], .dsh-claude-home-seat) > * {
+body[data-dsh-claude-style][data-dsh-claude-page-under-768][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] :is([data-slot="conversation.input.dock"] > *, .dsh-claude-home-seat > *, .dsh-claude-home-panel) {
   max-width: calc(100% - var(--dsh-composer-side-clearance, 0px) - var(--dsh-composer-side-clearance, 0px));
   margin-inline: auto;
 }
@@ -175,7 +183,7 @@ body[data-dsh-claude-style] .dsh-claude-home-panel {
   display: none;
 }
 
-body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] > :is([data-slot="conversation.input.dock"], .dsh-claude-home-seat) > .dsh-claude-home-panel {
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] .dsh-claude-home-panel {
   display: flex;
 }
 

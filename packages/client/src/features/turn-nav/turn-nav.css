@@ -12,19 +12,16 @@ body[data-dsh-claude-style] [data-conversation-scroll] nav[data-dsh-claude-turn-
   pointer-events: none;
 }
 
-/* The skin's rail takes the host rail's seat by the host rail's own rules
-   (ui-chat's TurnNavigator stylesheet): 12px in from the slot's right edge,
-   centred in the band between the conversation's top and the composer, at
-   most the band less 64px — and at most ten turns. */
+/* The skin's rail stands 12px in from the slot's left edge, pinned near the
+   top of the conversation, at most the band less 64px — and at most ten turns. */
 body[data-dsh-claude-style] .dsh-claude-turn-rail {
   --dsh-claude-turn-rail-band: calc(var(--dsh-conversation-viewport-height, var(--dsh-claude-page-height, 100dvh)) - var(--dsh-composer-height, 152px));
   position: absolute;
-  top: calc(var(--dsh-claude-turn-rail-band) / 2);
-  right: 12px;
+  top: 16px;
+  left: 12px;
   width: 28px;
   height: var(--dsh-claude-turn-rail-height);
   max-height: min(max(0px, calc(var(--dsh-claude-turn-rail-band) - 64px)), 240px);
-  transform: translateY(-50%);
   overflow: hidden;
   pointer-events: auto;
   cursor: pointer;
@@ -70,13 +67,13 @@ body[data-dsh-claude-style] .dsh-claude-turn-nav-dash {
   border-radius: 2px;
   background: var(--dsw-alias-border-l4);
   transform: scaleX(0.6);
-  transform-origin: 100% 50%;
+  transform-origin: 0% 50%;
   transition: transform var(--dsh-claude-timing-feedback), background-color var(--dsh-claude-timing-feedback);
 }
 body[data-dsh-claude-style] .dsh-claude-turn-rail-mark::before {
   content: "";
   position: absolute;
-  right: 0;
+  left: 0;
   top: 11px;
 }
 body[data-dsh-claude-style] .dsh-claude-turn-rail-mark[data-unloaded]::before,
@@ -103,7 +100,7 @@ body[data-dsh-claude-style] .dsh-claude-turn-nav-row[data-current] .dsh-claude-t
 body[data-dsh-claude-style] .dsh-claude-turn-nav,
 body[data-dsh-claude-style] .dsh-claude-turn-nav[data-open="true"] {
   position: absolute;
-  left: auto;
+  right: auto;
   width: 288px;
   max-width: calc(var(--dsh-claude-page-width, 100vw) - 16px);
   transform: none;
@@ -127,7 +124,7 @@ body[data-dsh-claude-style] .dsh-claude-turn-nav-row {
   gap: 12px;
   width: 100%;
   height: 24px;
-  padding: 0 0 0 10px;
+  padding: 0 10px 0 0;
   border: none !important;
   border-radius: 6px;
   background: transparent;

@@ -793,16 +793,23 @@ setting: the official CNY and USD tables are stored apart, so the setting picks 
 table rather than converting one. A model the official table does not carry is
 priced from the snapshot's catalogue — its published CNY line when the vendor has
 one, its USD list price converted at the snapshot's fixed rate otherwise; a model
-neither carries keeps the segment out of the line. On the line it stands between
-the written-back tokens and the cache share, and it is among the figures the
-ladder gives up when the line needs the room for the total; in the block it is
-the usage section's first row.
+neither carries keeps the segment out of the line. On the line it leads the
+token figures ahead of the cache share, and in the block it is the usage
+section's first row.
 
-Compact footer figures join the tool row between the left controls and the
-model and context controls. Their seat takes the space available in that row.
-When even the shortest statistics line cannot fit, it takes its own row below
-the tools. The invisible measuring copy stays inside its positioning box so
-it cannot extend the transcript's scroll range beyond the composer.
+The composer statistics bar offers two placements of one unified line: joining
+the tool row between the left controls and the model and context controls while
+width permits (wrapping onto its own row below when even the shortest step does
+not fit), or always standing on its own row below the tools. Both placements
+share horizontal position (`left`, `center`, `right`), the six session-aggregate
+figure switches (cost, token total, cache share, output speed, TTFT, and turns
+and steps), and the unified detail ladder (`full` → `directions` → `exact` →
+`compact`). The token unit choice (`statsFooterTokenFormat`) reaches the
+statistics bar, the context popover and the session panel alike, and the context
+meter ring stays in the composer toolbar row regardless of whether the bar is
+off or which placement is chosen. The invisible measuring copy stays inside its
+positioning box so it cannot extend the transcript's scroll range beyond the
+composer.
 
 In the toolbar the cost segment keeps its width across a session switch:
 the session's figure is replaced while the next one is being priced, so the

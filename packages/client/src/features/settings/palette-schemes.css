@@ -21,7 +21,7 @@ body[data-dsh-claude-style] .dsh-claude-palette-card-actions {
 
 /* The smallest type, for what is read once: a card's tag, the limit on records
    and the editor's note on its figures. */
-body[data-dsh-claude-style] :is(.dsh-claude-palette-card-tag, .dsh-claude-scheme-limit, .dsh-claude-scheme-note) {
+body[data-dsh-claude-style] :is(.dsh-claude-palette-card-tag, .dsh-claude-preview-card-tag, .dsh-claude-scheme-limit, .dsh-claude-scheme-note) {
   color: var(--dsw-alias-label-tertiary);
   font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 16px;
