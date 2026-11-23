@@ -88,8 +88,8 @@ test('a price is the sum of the buckets against their own rates', () => {
   expect(costMicro({ input: 1_000_000, output: 1_000_000, cacheRead: 0, cacheWrite: 0 }, offPeak)).toBe(5_000_000)
   const peak = priceTierAt(document.models['deepseek-flash'].CNY, Date.parse('2026-10-19T02:00:00Z'), schedule)
   expect(costMicro({ input: 1_000_000, output: 1_000_000, cacheRead: 0, cacheWrite: 0 }, peak)).toBe(10_000_000)
-  // Cache writes follow the hit rate; reasoning tokens are already inside output.
-  expect(costMicro({ input: 0, output: 0, cacheRead: 0, cacheWrite: 1_000_000 }, peak)).toBe(40_000)
+  // Cache writes bill at the input (miss) rate, never cheaper than uncached input; reasoning tokens are already inside output.
+  expect(costMicro({ input: 0, output: 0, cacheRead: 0, cacheWrite: 1_000_000 }, peak)).toBe(2_000_000)
 })
 
 test('a route is resolved through its aliases and a provider prefix', () => {

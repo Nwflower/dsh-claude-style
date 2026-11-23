@@ -535,10 +535,17 @@ export function hostUiSession(lookup: HostServiceLookup | null | undefined): Hos
   return uiSession ?? null
 }
 
-/** Live per-session status, the host's own `uiSession.sessionStatus` service: the per-session map every status reader follows. */
+/**
+ * Live per-session status: the per-session map every status reader follows. The
+ * host offers it either as the standalone `uiSession.sessionStatus` service or
+ * as a property of the `uiSession` service (the desktop app ships the property,
+ * not the dotted service), so the property is read when the dotted lookup misses.
+ */
 export function hostSessionStatus(lookup: HostServiceLookup | null | undefined): HostSessionStatusService | null {
   const direct = lookup?.get('uiSession.sessionStatus') as HostSessionStatusService | undefined
-  return direct ?? null
+  if (direct !== undefined && direct !== null) return direct
+  const uiSession = lookup?.get('uiSession') as HostUiSessionService | undefined
+  return uiSession?.sessionStatus ?? null
 }
 
 /** One session's model directory: the catalog, its load and the pick. */

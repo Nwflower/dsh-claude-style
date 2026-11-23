@@ -27,16 +27,20 @@ export async function setup(t, { status, list }) {
     const emit = (key) => { for (const listener of [...channels[key]]) listener() }
     let statusNow = new Map(Object.entries(initialStatus))
     let listNow = initialList
+    // The desktop host publishes the status table as a property of uiSession
+    // and offers no standalone 'uiSession.sessionStatus'; the fixture mirrors
+    // that so the feature's fallback read is what the spec exercises.
+    const sessionStatus = { getSnapshot: () => statusNow, subscribe: subscribe('status') }
     const uiSession = {
       current: { value: { key: 'a' }, subscribe: () => () => {} },
+      sessionStatus,
     }
-    const sessionStatus = { getSnapshot: () => statusNow, subscribe: subscribe('status') }
     const sessions = {
       list: { getSnapshot: () => listNow, subscribe: subscribe('list') },
       binding: () => null,
       refresh: () => Promise.resolve(),
     }
-    const services = { uiSession, 'uiSession.sessionStatus': sessionStatus, sessions }
+    const services = { uiSession, sessions }
     const originalGet = window.__ctxOriginalGet ?? window.__ctx.get.bind(window.__ctx)
     window.__ctxOriginalGet = originalGet
     window.__ctx.get = (name) => Object.hasOwn(services, name) ? services[name] : originalGet(name)

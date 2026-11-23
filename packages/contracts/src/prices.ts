@@ -18,7 +18,7 @@ export const CURRENCY_SYMBOL: Record<Currency, string> = {
 /** The document version this reader understands. */
 export const PRICE_SCHEMA_VERSION = 1
 
-/** One tier's three rates, per million tokens. Cache writes bill at the hit rate: the official page lists no write price. */
+/** One tier's three rates, per million tokens. The official page lists no separate write price, so a cache write bills at the input (miss) rate: a write is never cheaper than uncached input. */
 export interface PriceTier {
   cacheHit: number
   cacheMiss: number
@@ -213,12 +213,12 @@ export function priceTierAt(price: ModelPrice, atMs: number, schedule: PriceSche
   return isPeak(atMs, schedule) ? price.peak : price.offPeak
 }
 
-/** Cache writes use the hit rate; reasoning tokens are already included in `output`. */
+/** Cache writes bill at the input (miss) rate, never cheaper than uncached input; reasoning tokens are already included in `output`. */
 export function costMicro(usage: PriceUsage, tier: PriceTier): number {
   const count = (value: number) => (Number.isFinite(value) && value > 0 ? value : 0)
   const cost = count(usage.input) * tier.cacheMiss
     + count(usage.cacheRead) * tier.cacheHit
-    + count(usage.cacheWrite) * tier.cacheHit
+    + count(usage.cacheWrite) * tier.cacheMiss
     + count(usage.output) * tier.output
   return Number.isFinite(cost) && cost > 0 ? cost : 0
 }
