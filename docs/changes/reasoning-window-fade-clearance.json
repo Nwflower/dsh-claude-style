@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-23",
-  "group": "fixes",
-  "order": 439,
-  "external": true,
-  "zh": "修复过程滚动区域内步进思考窗口过高导致「思考」标题上端落入顶部渐隐遮罩的问题",
-  "en": "Fix the stepped reasoning window inside a capped process group pushing the Thinking header into the group's top fade mask"
-}

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-23",
-  "group": "fixes",
-  "order": 10,
-  "external": true,
-  "zh": "桌面版开启系统通知后，后台任务结束不自动提醒，原因是事件订阅等待的点号依赖 uiSession.sessionStatus 并不存在，桌面宿主把状态表作为 uiSession 的属性发布，改为等待 uiSession 服务并读取其 sessionStatus 属性，宿主访问器同时兼容两种形态，提示音也一并恢复",
-  "en": "System notifications stayed silent after a background task on the desktop app because the event subscription waited on the dotted uiSession.sessionStatus dependency the desktop host never provides, publishing the status table as a property of uiSession instead, so the wait now names the uiSession service and reads its sessionStatus property, the host accessor resolves either form, and the sound cues recover with it"
-}

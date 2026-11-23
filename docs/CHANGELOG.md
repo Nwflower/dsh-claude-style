@@ -2,6 +2,52 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.22.1] - 2026-11-23
+
+[中文](#cn-0.22.1) | [English](#en-0.22.1)
+
+<h3 id="cn-0.22.1">体验优化</h3>
+
+- 对话详情栏并入宿主的会话面板，上下文、会话统计、Token 用量与产出成为面板里的节，停靠时每节一张卡片、不显示滚动条，环境一节补上本机与预设行；分支、进程、子智能体、团队与变更改由宿主面板自己的行与节展示
+- 外观设置页的吉祥物项改为标题行开关与三张角色预览卡片（Clawd、Deepy、鲸娘），关闭时收起卡片，跟随主题时在对应卡片下标出「跟随主题显示」，手动固定角色后显示「恢复跟随主题」按钮
+- 补齐 Gemini 4、GPT-6 Terra、Qwen 4 Max、HY-MT2、Xiaomi MiMo、LongCat、Reflection Beam、Mistral 全系子线以及 NVIDIA Nemotron、Inkling、蚂蚁百灵、Sakana Fugu、Solar、Liquid LFM、AI21 Jamba、讯飞星火、IBM Granite、华为盘古、快手 KAT-Coder、Apodex 与 Motif 的品牌组合标与双语描述，重绘 GLM 与 SCNet 组合标，修复 Amazon Nova 浅色主题星芒遮罩，并收紧短别名与蒸馏模型匹配边界
+- 与 dsh-rewind 同时安装时，撤回、编辑、重跑和删除交给 dsh-rewind 提供，消息操作行只保留版本历史，宿主端也不再为新的轮次记录检查点；设置页的「消息操作行」下写明这一点，dsh-rewind 中途装上或卸下时随即跟随
+- 重做「对话统计栏」设置面板并统一「随宽度同行」与「独立成行」两套底栏排布，合并水平停靠方向、六项会话级指标多选胶囊与实时微缩预览卡片，并让「Token 单位」同时作用于统计栏、上下文弹层与会话面板
+- 重绘后的消息导航栏移至对话区左侧上方，展开卡片改为从左侧向右伸出，短横线贴左与轨道重合，指针移至短横线右侧文字区时列表保持静止
+- 将「上下文占用图示」与「上下文占用百分比」整合为统一设置块，升级为 1% 至 100% 往复动态演示的「饼图」与「圆环」预览卡片，并以分段控件提供「默认绿橙红」「蓝黄红」与按需展开可拖动多色标 OKLCH 渐变编辑器的「自定义」色带
+- 为宿主会话面板的各节补齐折叠与收起态摘要读数，并在探测到宿主节契约变更或引入原生折叠时自动回退
+
+### 问题修复
+
+- 会话费用把缓存写入 token 按缓存命中（读取）价计费，结果偏低；官方页面只列出输入未命中、缓存命中与输出三档，缓存写入没有单列价格，现改为按输入（未命中）价计费，缓存写入不再低于普通输入
+- 修复宿主 0.2.3 起带搜索框的工作区菜单无法被识别的问题，悬停展开后指针穿越触发按钮与卡片之间的间隙时弹层保持展开，卡片恢复皮肤落位与文件夹菜单样式
+- 桌面版开启系统通知后，后台任务结束不自动提醒，原因是事件订阅等待的点号依赖 uiSession.sessionStatus 并不存在，桌面宿主把状态表作为 uiSession 的属性发布，改为等待 uiSession 服务并读取其 sessionStatus 属性，宿主访问器同时兼容两种形态，提示音也一并恢复
+- 修复工作台首页在缺少上下文行或输入框与槽位外层存在额外包裹容器时输入卡片悬停在窗口顶部、导致向上展开的插件弹层被窗口上沿裁切的问题
+- 修复其他插件整体改写页面 body 样式后，所选配色方案的颜色丢失、账号菜单与更多菜单背景变透明的问题
+- 修复发送消息时飞入动画把最后一个汉字挤到第二行的问题
+- 修复过程滚动区域内步进思考窗口过高导致「思考」标题上端落入顶部渐隐遮罩的问题
+
+<h3 id="en-0.22.1">Improvements</h3>
+
+- Move the conversation details rail into the host's session panel, with Context, Session stats, Token usage and Outputs as its sections, one card per section and no scrollbar while docked, and this computer and the preset added to its Environment section, while the branch, processes, subagents, the team and change requests are shown by the panel's own rows and sections
+- Replace the Mascot segmented control in Appearance settings with a header switch and three character preview cards (Crab, Deepy, Whale Girl); turning it off collapses the cards, following the theme marks the active brand's character as Following theme, and pinning a character offers a Follow theme again button
+- Add brand lockups and bilingual descriptions for Gemini 4 elemental lines, GPT-6 Terra, Qwen 4 Max, HY-MT2, Xiaomi MiMo, LongCat, Reflection Beam, Mistral sub-lines, NVIDIA Nemotron, Inkling, Ant Ling, Sakana Fugu, Upstage Solar, Liquid LFM, AI21 Jamba, iFlytek Spark, IBM Granite, Huawei OpenPangu, KwaiKAT, Apodex and Motif, redraw the GLM and SCNet lockups, fix Amazon Nova's light-theme mark mask, and tighten short-alias and distilled-model matching boundaries
+- Hand retract, edit, rerun and delete over to dsh-rewind when it is installed alongside, keeping only revision history in the message actions and recording no checkpoint for new turns on the host side, with the Message actions row in settings saying so and the hand-over following dsh-rewind being loaded or removed mid-session
+- Redesign the conversation statistics bar settings with live miniature composer preview cards, unifying the toolbar-adaptive and dedicated-row placements across horizontal position, six multi-select metric chips, and shared token units across the bar, context popover, and session panel
+- Move the redrawn message navigator rail to the top-left of the conversation area, opening its card to the right with left-aligned dashes over the rail marks and holding the list still while the pointer rests over the text to the right
+- Consolidate context meter and percentage settings into one unified block with animated 1%–100% Pie and Ring preview cards and a segmented color-ramp control offering Green-to-red, Blue-yellow-red, and an expandable Custom OKLCH multi-stop editor
+- Add section folding and collapsed summary readings to the host session panel, automatically rolling back when host section contract drift or native folding is detected
+
+### Bug Fixes
+
+- Session cost priced cache-write tokens at the cache-hit (read) rate, coming out too low; the official page lists only input cache-miss, cache-hit and output with no separate write price, so a write now bills at the input (cache-miss) rate and is never cheaper than uncached input
+- Fix the workspace menu with a search field going unrecognized since host 0.2.3, keeping the hover-opened popup up while the pointer crosses the air between trigger and card and restoring the skin's placement and folder-menu look
+- System notifications stayed silent after a background task on the desktop app because the event subscription waited on the dotted uiSession.sessionStatus dependency the desktop host never provides, publishing the status table as a property of uiSession instead, so the wait now names the uiSession service and reads its sessionStatus property, the host accessor resolves either form, and the sound cues recover with it
+- Fix the studio home composer card sticking near the top edge and clipping upward-opening popovers when the context row is absent or extra wrappers surround the composer bar or dock slots
+- Fix the selected colour scheme losing its colours, and the account and More menus turning transparent, after another plugin rewrote the page body's whole style attribute
+- Fix the last character of a sent message breaking onto a second line during the flight animation
+- Fix the stepped reasoning window inside a capped process group pushing the Thinking header into the group's top fade mask
+
 ## [0.22.0] - 2026-11-22
 
 [中文](#cn-0.22.0) | [English](#en-0.22.0)

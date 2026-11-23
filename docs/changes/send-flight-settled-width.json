@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-23",
-  "group": "fixes",
-  "order": 438,
-  "external": true,
-  "zh": "修复发送消息时飞入动画把最后一个汉字挤到第二行的问题",
-  "en": "Fix the last character of a sent message breaking onto a second line during the flight animation"
-}

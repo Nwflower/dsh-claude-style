@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-22",
-  "group": "fixes",
-  "order": 437,
-  "external": true,
-  "zh": "修复其他插件整体改写页面 body 样式后，所选配色方案的颜色丢失、账号菜单与更多菜单背景变透明的问题",
-  "en": "Fix the selected colour scheme losing its colours, and the account and More menus turning transparent, after another plugin rewrote the page body's whole style attribute"
-}

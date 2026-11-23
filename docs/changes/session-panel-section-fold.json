@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-23",
-  "group": "improvements",
-  "order": 35,
-  "external": true,
-  "zh": "为宿主会话面板的各节补齐折叠与收起态摘要读数，并在探测到宿主节契约变更或引入原生折叠时自动回退",
-  "en": "Add section folding and collapsed summary readings to the host session panel, automatically rolling back when host section contract drift or native folding is detected"
-}

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-23",
-  "group": "improvements",
-  "order": 30,
-  "external": true,
-  "zh": "重绘后的消息导航栏移至对话区左侧上方，展开卡片改为从左侧向右伸出，短横线贴左与轨道重合，指针移至短横线右侧文字区时列表保持静止",
-  "en": "Move the redrawn message navigator rail to the top-left of the conversation area, opening its card to the right with left-aligned dashes over the rail marks and holding the list still while the pointer rests over the text to the right"
-}
