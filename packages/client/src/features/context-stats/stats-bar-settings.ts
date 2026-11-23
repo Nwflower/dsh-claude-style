@@ -11,7 +11,14 @@ import { PreviewCards } from '../../shared/preview-cards'
 import { SEGMENT_CLASS } from '../../shared/segment-control'
 import { ClaudeStyleSegmentGroup } from '../../shared/segment-group'
 import { ClaudeStyleSwitch } from '../../shared/settings-switch'
+import {
+  ContextMeterSample,
+  SettingsSubField,
+  resolveContextRampStops,
+  useContextDarkTheme,
+} from './context-ramp-settings'
 import { copy } from './copy'
+import type { ContextRampStop } from '@dsh-claude-style/contracts/context-ramp'
 import type { CopyKey } from './copy'
 import type { PreviewOption } from '../../shared/preview-cards'
 import type { Prefs } from '../../constants'
@@ -106,7 +113,12 @@ function sampleFigures(prefs: Prefs, layout: ActiveBarLayout): React.ReactElemen
 }
 
 /** One miniature composer card showing where the statistics bar sits under `layout`. */
-function sampleComposer(prefs: Prefs, layout: ActiveBarLayout): React.ReactNode {
+function sampleComposer(
+  prefs: Prefs,
+  layout: ActiveBarLayout,
+  stops: readonly ContextRampStop[],
+  dark: boolean,
+): React.ReactNode {
   const figures = sampleFigures(prefs, layout)
   return [
     React.createElement(
@@ -138,7 +150,14 @@ function sampleComposer(prefs: Prefs, layout: ActiveBarLayout): React.ReactNode 
           'span',
           { className: 'dsh-claude-stats-bar-sample-trailing' },
           React.createElement('span', { className: 'dsh-claude-stats-bar-sample-model' }, 'V4'),
-          React.createElement('span', { className: 'dsh-claude-stats-bar-sample-ring' }),
+          React.createElement(ContextMeterSample, {
+            face: prefs.contextDisplay,
+            percent: 62,
+            stops,
+            showNumber: prefs.contextNumbers,
+            dark,
+            compact: true,
+          }),
         ),
       ),
       layout === STATS_POSITION_INLINE
@@ -160,23 +179,25 @@ function sampleComposer(prefs: Prefs, layout: ActiveBarLayout): React.ReactNode 
 /** Expandable configurator below the statistics-bar switch while enabled. */
 export function StatsBarPicker(props: SettingsRowView) {
   const { prefs, write, disabled } = props
+  const dark = useContextDarkTheme()
   if (prefs.statsPosition === STATS_POSITION_OFF) return null
 
   const activeLayout: ActiveBarLayout = prefs.statsPosition === STATS_POSITION_INLINE ? STATS_POSITION_INLINE : STATS_POSITION_FOOTER
   rememberedLayout = activeLayout
+  const stops = resolveContextRampStops(prefs.contextRampMode, prefs.contextRamp, dark)
 
   const layoutOptions: PreviewOption<ActiveBarLayout>[] = [
     {
       value: STATS_POSITION_FOOTER,
       label: copy('statsPositionFooter'),
       attributes: { 'data-stats-layout': STATS_POSITION_FOOTER },
-      content: sampleComposer(prefs, STATS_POSITION_FOOTER),
+      content: sampleComposer(prefs, STATS_POSITION_FOOTER, stops, dark),
     },
     {
       value: STATS_POSITION_INLINE,
       label: copy('statsPositionInline'),
       attributes: { 'data-stats-layout': STATS_POSITION_INLINE },
-      content: sampleComposer(prefs, STATS_POSITION_INLINE),
+      content: sampleComposer(prefs, STATS_POSITION_INLINE, stops, dark),
     },
   ]
 
@@ -236,23 +257,28 @@ export function StatsBarPicker(props: SettingsRowView) {
       label: copy('statsPositionTitle'),
     }),
     React.createElement(
-      'div',
-      { className: 'dsh-claude-stats-bar-field' },
-      React.createElement('span', { className: 'dsh-claude-stats-bar-field-label' }, copy('statsFooterAlignTitle')),
+      SettingsSubField,
+      {
+        title: copy('statsFooterAlignTitle'),
+        desc: copy('statsFooterAlignDesc'),
+      },
       React.createElement(ClaudeStyleSegmentGroup, { label: copy('statsFooterAlignTitle') }, alignButtons),
     ),
     React.createElement(
-      'div',
-      { className: 'dsh-claude-stats-bar-field dsh-claude-stats-bar-metrics-field' },
-      React.createElement('span', { className: 'dsh-claude-stats-bar-field-label' }, copy('statsMetricsTitle')),
+      SettingsSubField,
+      {
+        title: copy('statsMetricsTitle'),
+        desc: copy('statsMetricsDesc'),
+        className: 'dsh-claude-stats-bar-metrics-field',
+        footer: costUnbilled
+          ? React.createElement('span', { className: 'dsh-claude-stats-bar-hint' }, copy('statsCostBillingOffNote'))
+          : null,
+      },
       React.createElement(
         'div',
         { className: 'dsh-claude-stats-bar-chips', role: 'group', 'aria-label': copy('statsMetricsTitle') },
         metricChips,
       ),
-      costUnbilled
-        ? React.createElement('span', { className: 'dsh-claude-stats-bar-hint' }, copy('statsCostBillingOffNote'))
-        : null,
     ),
   )
 }

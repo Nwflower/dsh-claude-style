@@ -466,39 +466,9 @@ body[data-dsh-claude-style] [data-dsh-claude-ramp="cache"][data-dsh-claude-ramp-
 body[data-dsh-claude-style] [data-dsh-claude-ramp="cache"][data-dsh-claude-ramp-span="high"] {
   --dsh-claude-ramp-from: var(--dsh-claude-tone-green);
 }
-/* The context occupancy: green below 40%, through light green, yellow and
-   orange, to red from 80% on. */
-body[data-dsh-claude-style] [data-dsh-claude-ramp="context"][data-dsh-claude-ramp-span="low"] {
-  --dsh-claude-ramp-from: var(--dsh-claude-tone-green);
-}
-body[data-dsh-claude-style] [data-dsh-claude-ramp="context"][data-dsh-claude-ramp-span="0"] {
-  --dsh-claude-ramp-from: var(--dsh-claude-tone-green);
-  --dsh-claude-ramp-to: var(--dsh-claude-tone-green-light);
-}
-body[data-dsh-claude-style] [data-dsh-claude-ramp="context"][data-dsh-claude-ramp-span="1"] {
-  --dsh-claude-ramp-from: var(--dsh-claude-tone-green-light);
-  --dsh-claude-ramp-to: var(--dsh-claude-tone-yellow);
-}
-body[data-dsh-claude-style] [data-dsh-claude-ramp="context"][data-dsh-claude-ramp-span="2"] {
-  --dsh-claude-ramp-from: var(--dsh-claude-tone-yellow);
-  --dsh-claude-ramp-to: var(--dsh-claude-tone-orange);
-}
-body[data-dsh-claude-style] [data-dsh-claude-ramp="context"][data-dsh-claude-ramp-span="3"] {
-  --dsh-claude-ramp-from: var(--dsh-claude-tone-orange);
-  --dsh-claude-ramp-to: var(--dsh-claude-tone-red-orange);
-}
-body[data-dsh-claude-style] [data-dsh-claude-ramp="context"][data-dsh-claude-ramp-span="4"] {
-  --dsh-claude-ramp-from: var(--dsh-claude-tone-red-orange);
-  --dsh-claude-ramp-to: var(--dsh-claude-tone-red);
-}
-body[data-dsh-claude-style] [data-dsh-claude-ramp="context"][data-dsh-claude-ramp-span="high"] {
-  --dsh-claude-ramp-from: var(--dsh-claude-tone-red);
-}
-/* The reading takes the mixed colour, the ring the same two ends while it
-   stands in for a reading that could not be taken, and the pie samples the
-   reading's own colour, so the three can never disagree. The cache share's band
-   is written on the segment its figure and percent sign stand in, and reaches
-   those two alone: the label before them keeps the line's tone. */
+/* The cache share's band is written on the segment its figure and percent sign
+   stand in, and reaches those two alone; the host's context meter reads the
+   evaluated OKLCH ramp variables written by features/context-stats/context-ramp.ts. */
 body[data-dsh-claude-style] .dsh-claude-inline-stats [data-dsh-claude-ramp="cache"] {
   --dsh-claude-ramp-ink: color-mix(in oklch, var(--dsh-claude-ramp-from), var(--dsh-claude-ramp-to, var(--dsh-claude-ramp-from)) var(--dsh-claude-ramp-position, 0%));
 }
@@ -507,21 +477,10 @@ body[data-dsh-claude-style] .dsh-claude-inline-stats [data-dsh-claude-ramp="cach
   color: var(--dsh-claude-ramp-ink);
 }
 body[data-dsh-claude-style] [data-dsh-claude-context-meter][data-dsh-claude-ramp="context"] button > span {
-  color: color-mix(in oklch, var(--dsh-claude-ramp-from), var(--dsh-claude-ramp-to, var(--dsh-claude-ramp-from)) var(--dsh-claude-ramp-position, 0%));
+  color: var(--dsh-claude-context-ink);
 }
 body[data-dsh-claude-style] [data-dsh-claude-context-meter][data-dsh-claude-ramp="context"] circle[stroke-dasharray] {
-  stroke: color-mix(in oklch, var(--dsh-claude-ramp-from), var(--dsh-claude-ramp-to, var(--dsh-claude-ramp-from)) var(--dsh-claude-ramp-position, 0%));
-}
-/* The three-band face on the host's own meter, while the skin's ring does not
-   stand in its place: the graphic keeps the measured colour and the number
-   takes the band's ink (features/context-stats/context-meter-face.ts; the band
-   map lives in context-stats/meter-ring.css and the values in
-   composer/vars.css). */
-body[data-dsh-claude-style] [data-dsh-claude-context-meter][data-dsh-claude-context-band] button > span {
-  color: var(--dsh-claude-band-ink);
-}
-body[data-dsh-claude-style] [data-dsh-claude-context-meter][data-dsh-claude-context-band] circle[stroke-dasharray] {
-  stroke: var(--dsh-claude-band-graphic);
+  stroke: var(--dsh-claude-context-graphic);
 }
 
 /* ---------- the meter's pie ---------- */

@@ -17,7 +17,7 @@ export default {
     const expected = {
       general: ['brand', 'username', 'pageZoom', 'interfaceFontSize', 'sodium', 'soundCues', 'systemNotifications'],
       appearance: ['sidebarBrand', 'brandLockup', 'typeface', 'homeLayout', 'homeSessionScope', 'homeRipple', 'mascot', 'mascotScope', 'palette', 'paletteCards', 'backgroundOpacity'],
-      'main-window': ['turnNav', 'messageActions', 'conversationWidth', 'viewTabs', 'hideToolbarOutsideConversation', 'headerBand', 'processRows', 'answerAnchor', 'composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'contextNumbers', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable'],
+      'main-window': ['turnNav', 'messageActions', 'conversationWidth', 'viewTabs', 'hideToolbarOutsideConversation', 'headerBand', 'processRows', 'answerAnchor', 'composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable'],
       sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'sidebarEntries', 'workspaceView', 'sidebarPeek', 'sidebarLayout', 'sessionPanel'],
       motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator', 'reasoningDisplay', 'autoPopover'],
     }
@@ -27,7 +27,7 @@ export default {
     const mainWindowGroups = [
       { label: 'Conversation', rows: ['turnNav', 'messageActions', 'conversationWidth', 'viewTabs', 'hideToolbarOutsideConversation', 'headerBand', 'processRows', 'answerAnchor'] },
       { label: 'Composer', rows: ['composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent'] },
-      { label: 'Context and cost', rows: ['contextDisplay', 'contextNumbers', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable'] },
+      { label: 'Context and cost', rows: ['contextDisplay', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable'] },
     ]
     // The home session scope waits for the Code home layout, and the title-bar
     // band for the Windows desktop window; the statistics bar's child controls
@@ -103,13 +103,13 @@ export default {
       JSON.stringify(offAppearance))
     const unmet = settings.requirementsOff || {}
     check('with the composer restyle off, the model picker with its sub-rows, the permission control and the statistics\' figures grey out, the two switches and the statistics rows saying what they wait for; with the footer takeover off, so does the easter egg under it',
-      !!unmet.mainWindow && JSON.stringify(unmet.mainWindow.disabled) === '["headerBand","composerBottomGap","permissionsControl","modelPicker","effortSlider","modelOrder","modelDescriptions","quickProviders","peakrate","effortAccent","contextDisplay","contextNumbers","statsPosition","statsFooterTokenFormat","billingCurrency","billingTable"]' &&
-        JSON.stringify(unmet.mainWindow.notes) === '["headerBand","composerBottomGap","permissionsControl","modelPicker","contextDisplay","contextNumbers","statsPosition","statsFooterTokenFormat","billingCurrency","billingTable"]' &&
+      !!unmet.mainWindow && JSON.stringify(unmet.mainWindow.disabled) === '["headerBand","composerBottomGap","permissionsControl","modelPicker","effortSlider","modelOrder","modelDescriptions","quickProviders","peakrate","effortAccent","contextDisplay","statsPosition","statsFooterTokenFormat","billingCurrency","billingTable"]' &&
+        JSON.stringify(unmet.mainWindow.notes) === '["headerBand","composerBottomGap","permissionsControl","modelPicker","contextDisplay","statsPosition","statsFooterTokenFormat","billingCurrency","billingTable"]' &&
         !!unmet.sidebar && JSON.stringify(unmet.sidebar.disabled) === '["banLocale"]' && JSON.stringify(unmet.sidebar.notes) === '[]',
       JSON.stringify(unmet))
     const hero = settings.heroOnly || {}
     check('with the restyle on the home page alone, the picker and the permission control take input, the statistics\' position still waits for a conversation and the title-bar band for the window',
-      !!hero.mainWindow && JSON.stringify(hero.mainWindow.disabled) === '["headerBand","composerBottomGap","contextDisplay","contextNumbers","statsPosition","statsFooterTokenFormat","billingCurrency","billingTable"]',
+      !!hero.mainWindow && JSON.stringify(hero.mainWindow.disabled) === '["headerBand","composerBottomGap","contextDisplay","statsPosition","statsFooterTokenFormat","billingCurrency","billingTable"]',
       JSON.stringify(hero))
     const pageZoom = settings.pageZoom || {}
     const zoomed = pageZoom.zoomed || {}

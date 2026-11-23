@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-23",
+  "group": "improvements",
+  "order": 31,
+  "external": true,
+  "zh": "将「上下文占用图示」与「上下文占用百分比」整合为统一设置块，升级为 1% 至 100% 往复动态演示的「饼图」与「圆环」预览卡片，并以分段控件提供「默认绿橙红」「蓝黄红」与按需展开可拖动多色标 OKLCH 渐变编辑器的「自定义」色带",
+  "en": "Consolidate context meter and percentage settings into one unified block with animated 1%–100% Pie and Ring preview cards and a segmented color-ramp control offering Green-to-red, Blue-yellow-red, and an expandable Custom OKLCH multi-stop editor"
+}

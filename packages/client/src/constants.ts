@@ -90,7 +90,7 @@ export const ONGOING_INDICATOR_ATTR = 'data-dsh-claude-ongoing-indicator'
 /** Which end of its row that mark takes (features/sidebar-status/sidebar-status.css): `left` keeps the host's leading slot in the row's flow, `right` moves the mark to the trailing column. */
 export const ONGOING_SIDE_ATTR = 'data-dsh-claude-ongoing-side'
 export const STATS_POSITION_ATTR = 'data-dsh-claude-stats-position'
-/** The face the context meter is drawn with (features/context-stats/context-meter-face.ts): the pie, dsh's own ring on the continuous band, or the measured ring on three bands. The value is `contextDisplay` itself. */
+/** The face the context meter is drawn with (`pie` or `ring`, CONTEXT_DISPLAYS). */
 export const CONTEXT_DISPLAY_ATTR = 'data-dsh-claude-context-display'
 /** Whether the percentage stands beside that face, as `on` or `off` (features/context-stats/meter-ring.css). */
 export const CONTEXT_NUMBERS_ATTR = 'data-dsh-claude-context-numbers'

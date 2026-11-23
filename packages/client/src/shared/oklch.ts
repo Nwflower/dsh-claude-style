@@ -42,7 +42,7 @@ export function oklchSeed(hex: string): string {
  * paints an out-of-gamut relative colour, so a resolved read-out is the value
  * the page shows (culori, scripts/build/theme-tokens.mjs).
  */
-function hexOfOklch(lightness: number, chroma: number, hue: number) {
+export function hexOfOklch(lightness: number, chroma: number, hue: number) {
   const radian = hue * Math.PI / 180
   const a = chroma * Math.cos(radian)
   const b = chroma * Math.sin(radian)

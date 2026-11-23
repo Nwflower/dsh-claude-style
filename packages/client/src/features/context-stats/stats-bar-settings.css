@@ -1,14 +1,16 @@
-/* ---------- Conversation statistics bar settings configurator (D112) ---------- */
+/* ---------- Conversation statistics & context meter settings configurators (D112) ---------- */
 
-body[data-dsh-claude-style] .dsh-claude-stats-bar-config {
+body[data-dsh-claude-style] .dsh-claude-stats-bar-config,
+body[data-dsh-claude-style] .dsh-claude-context-display-config {
   align-self: stretch;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   min-width: 0;
 }
 
-body[data-dsh-claude-style] .dsh-claude-stats-bar-card {
+body[data-dsh-claude-style] .dsh-claude-stats-bar-card,
+body[data-dsh-claude-style] .dsh-claude-context-display-card {
   align-items: stretch;
   justify-content: space-between;
   gap: 10px;
@@ -16,22 +18,27 @@ body[data-dsh-claude-style] .dsh-claude-stats-bar-card {
   min-width: 0;
 }
 
-body[data-dsh-claude-style] .dsh-claude-stats-bar-card > .dsh-claude-settings-card-label {
+body[data-dsh-claude-style] .dsh-claude-stats-bar-card > .dsh-claude-settings-card-label,
+body[data-dsh-claude-style] .dsh-claude-context-display-card > .dsh-claude-settings-card-label {
   text-align: center;
 }
 
-/* Miniature composer stage inside each placement preview card. */
-body[data-dsh-claude-style] .dsh-claude-stats-bar-stage {
+/* Miniature stage shell inside placement and meter preview cards. */
+body[data-dsh-claude-style] .dsh-claude-stats-bar-stage,
+body[data-dsh-claude-style] .dsh-claude-context-display-stage {
   display: flex;
+  border-radius: 9px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  background: var(--dsw-alias-bg-base);
+  box-sizing: border-box;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-stage {
   flex-direction: column;
   justify-content: center;
   gap: 5px;
   min-height: 68px;
   padding: 8px 10px;
-  border-radius: 9px;
-  border: 1px solid var(--dsw-alias-border-l1);
-  background: var(--dsw-alias-bg-base);
-  box-sizing: border-box;
   overflow: hidden;
 }
 
@@ -101,16 +108,6 @@ body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-model {
   line-height: 14px;
 }
 
-body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-ring {
-  flex: none;
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  corner-shape: round;
-  box-sizing: border-box;
-  border: 1.6px solid var(--dsh-claude-tone-green, #25a06b);
-}
-
 /* Live statistics strip inside the toolbar seat or on its own dock line below. */
 body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-seat,
 body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-dock {
@@ -166,13 +163,13 @@ body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-cache {
   color: var(--dsh-claude-tone-green, #25a06b);
 }
 
-/* Sub-controls under the preview cards: horizontal position and figure chips. */
+/* Unified sub-rows under preview cards: matching settings-row title and description rhythm. */
 body[data-dsh-claude-style] .dsh-claude-stats-bar-field {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 8px 12px;
+  gap: 10px 16px;
   min-width: 0;
 }
 
@@ -180,11 +177,12 @@ body[data-dsh-claude-style] .dsh-claude-stats-bar-metrics-field {
   align-items: flex-start;
 }
 
-body[data-dsh-claude-style] .dsh-claude-stats-bar-field-label {
-  flex: none;
-  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 28px;
-  color: var(--dsw-alias-label-secondary);
+body[data-dsh-claude-style] .dsh-claude-stats-bar-field-text {
+  flex: 1 1 200px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-stats-bar-chips {

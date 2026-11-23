@@ -5,7 +5,7 @@ export default {
   id: 'contextStats',
   order: 70,
   load: 'deferred',
-  contracts: ['chat.call', 'chat.call-tool', 'chat.call-tool-attribute', 'chat.streaming', 'composer.card', 'composer.dialog-trigger', 'composer.dock', 'composer.meter-fill', 'composer.stat', 'composer.trailing'],
+  contracts: ['chat.call', 'chat.call-tool', 'chat.call-tool-attribute', 'chat.streaming', 'composer.card', 'composer.dialog-trigger', 'composer.dock', 'composer.meter-fill', 'composer.stat', 'composer.trailing', 'shell.dark-theme'],
   // The ring of the same directory draws the row's reading, and the panel this
   // feature owns hangs from it (features/context-stats/meter-ring.ts).
   reads: ['meterRing', 'model'],
@@ -14,6 +14,7 @@ export default {
     { file: 'footer-layout.css', rank: 106, gate: true },
     { file: 'billing-table.css', rank: 108, gate: true },
     { file: 'stats-bar-settings.css', rank: 318 },
+    { file: 'context-ramp-settings.css', rank: 324 },
   ],
   settingsRows: [{
     tab: 'statistics',
@@ -22,13 +23,6 @@ export default {
     title: 'contextDisplayTitle',
     desc: 'contextDisplayDesc',
     control: 'context-display',
-    requires: CONVERSATION_COMPOSER_REQUIRES,
-  }, {
-    tab: 'statistics',
-    rank: 47,
-    pref: 'contextNumbers',
-    title: 'contextNumbersTitle',
-    desc: 'contextNumbersDesc',
     requires: CONVERSATION_COMPOSER_REQUIRES,
   }, {
     tab: 'statistics',

@@ -129,7 +129,6 @@
     { "id": "stats.ramp", "attribute": "data-dsh-claude-ramp", "feature": "context-stats", "sees": "which colour band a reading follows — the cache share's or the context occupancy's (features/context-stats/stats-ramp.ts)" },
     { "id": "stats.ramp-span", "attribute": "data-dsh-claude-ramp-span", "feature": "context-stats", "sees": "the segment of that band the reading fell in, `low` and `high` naming the ends" },
     { "id": "stats.meter-pie", "attribute": "data-dsh-claude-meter-pie", "feature": "context-stats", "sees": "a meter whose reading is drawn as a pie: its own circle stands down under the plate the feature paints" },
-    { "id": "stats.context-band", "attribute": "data-dsh-claude-context-band", "feature": "context-stats", "sees": "the three-band face's band for one reading — blue below 70 %, yellow through 70–90 %, red from 90 % on — on the meter whose ring and number take that band's ink" },
     { "id": "account.menu", "selector": "[data-dsh-claude-account-menu]", "feature": "account", "sees": "the host's account menu while it stands open, drawn as the skin's own menu card: the account header, the settings row and the plugin rows" },
     { "id": "account.armed", "attribute": "data-dsh-claude-account-armed", "feature": "account", "sees": "the warm-up window on <body>, open from the account row's press until the host unmounts its card, during which that card stays unpainted until the skin's rows are in and the host's placement stands still" },
     { "id": "account.ready", "attribute": "data-dsh-claude-account-ready", "feature": "account", "sees": "the account menu after its rows and placement are ready to be painted" },
@@ -179,6 +178,13 @@
     { "id": "stats.settings-figures", "selector": ".dsh-claude-stats-bar-sample-figures", "feature": "context-stats", "sees": "the live sample figures inside a statistics-bar preview card, reflecting enabled metrics, token units and currency" },
     { "id": "stats.settings-chip", "selector": ".dsh-claude-stats-metric-chip", "feature": "context-stats", "sees": "one multi-select toggle chip for a session-aggregate figure on the composer statistics bar" },
     { "id": "stats.settings-metric", "attribute": "data-metric", "feature": "context-stats", "sees": "the figure identifier on a multi-select metric chip in the composer statistics bar configurator" },
-    { "id": "stats.settings-hint", "selector": ".dsh-claude-stats-bar-hint", "feature": "context-stats", "sees": "the inline note under the metric chips when session cost is enabled while billing currency is off" }
+    { "id": "stats.settings-hint", "selector": ".dsh-claude-stats-bar-hint", "feature": "context-stats", "sees": "the inline note under the metric chips when session cost is enabled while billing currency is off" },
+    { "id": "stats.meter-card", "selector": ".dsh-claude-context-display-card", "feature": "context-stats", "sees": "one animated shape preview card (`pie` or `ring`) in the context meter configurator" },
+    { "id": "stats.meter-face-attr", "attribute": "data-face", "feature": "context-stats", "sees": "the context meter shape (`pie` or `ring`) previewed on a shape card or sample" },
+    { "id": "stats.meter-sample-value", "selector": ".dsh-claude-context-sample-value", "feature": "context-stats", "sees": "the percentage figure beside a context-meter sample in the shape preview cards and miniature toolbar" },
+    { "id": "stats.ramp-preset-attr", "attribute": "data-preset", "feature": "context-stats", "sees": "the colour-ramp mode identifier (`default`, `classic` or `custom`) on a segment button" },
+    { "id": "stats.ramp-stage", "selector": ".dsh-claude-context-ramp-stage", "feature": "context-stats", "sees": "the custom OKLCH colour-ramp editor card unfolded only while the `custom` segment is active" },
+    { "id": "stats.ramp-stop", "selector": ".dsh-claude-context-ramp-stop", "feature": "context-stats", "sees": "one draggable colour-stop handle along the 0–100 % custom context-ramp gradient bar" },
+    { "id": "stats.ramp-remove", "selector": ".dsh-claude-context-ramp-remove", "feature": "context-stats", "sees": "the button removing the selected colour stop while more than two stops stand on the custom ramp" }
   ]
 }

@@ -6,6 +6,21 @@ import { OFFICIAL_MODEL_GROUP } from './services'
 import { PALETTE_SCHEME_CUSTOM, PALETTE_SCHEME_ENTRY_MAX, PALETTE_SCHEME_FOLLOW, PALETTE_SCHEME_ID_MAX, PALETTE_SCHEME_LIMIT, carryClassicInlineCode, carryCustomPalette, findPaletteScheme, normalizePaletteSchemes, parsePaletteScheme } from './palette-schemes'
 import { CURRENCIES, CURRENCY_CNY } from './prices'
 import { BRAND_INK_ORIGINAL, BRAND_INKS, BRANDING_PRESET_ENTRY_MAX, BRANDING_PRESET_ID_MAX, BRANDING_PRESET_LIMIT, brandingVendorOf, findBrandingPreset, normalizeBrandingPresets, parseBrandingPreset } from './branding-presets'
+import {
+  CONTEXT_RAMP_CLASSIC,
+  CONTEXT_RAMP_ENTRY_MAX,
+  CONTEXT_RAMP_MODES,
+  CONTEXT_RAMP_MODE_CLASSIC,
+  CONTEXT_RAMP_MODE_CUSTOM,
+  CONTEXT_RAMP_MODE_DEFAULT,
+  normalizeContextRamp,
+} from './context-ramp'
+export {
+  CONTEXT_RAMP_MODES,
+  CONTEXT_RAMP_MODE_CLASSIC,
+  CONTEXT_RAMP_MODE_CUSTOM,
+  CONTEXT_RAMP_MODE_DEFAULT,
+} from './context-ramp'
 import { SOUND_LEVELS, SOUND_LEVEL_OFF } from './sound'
 
 /* ---------- the value vocabulary ---------- */
@@ -152,11 +167,12 @@ export const FOOTER_TOKEN_DIGITS = 'digits'
 export const FOOTER_TOKEN_UNITS = 'units'
 export const FOOTER_TOKEN_FORMATS = [FOOTER_TOKEN_DIGITS, FOOTER_TOKEN_UNITS] as const
 
-/** Context meter face: pie, continuous-band ring or three-band ring. */
+/** Context meter shape: pie or ring; colour stops live in `contextRampMode` and `contextRamp`. */
 export const CONTEXT_DISPLAY_PIE = 'pie'
-export const CONTEXT_DISPLAY_RING_RAMP = 'ring-ramp'
-export const CONTEXT_DISPLAY_RING_BAND = 'ring-band'
-export const CONTEXT_DISPLAYS = [CONTEXT_DISPLAY_PIE, CONTEXT_DISPLAY_RING_RAMP, CONTEXT_DISPLAY_RING_BAND] as const
+export const CONTEXT_DISPLAY_RING = 'ring'
+export const CONTEXT_DISPLAY_RING_RAMP_LEGACY = 'ring-ramp'
+export const CONTEXT_DISPLAY_RING_BAND_LEGACY = 'ring-band'
+export const CONTEXT_DISPLAYS = [CONTEXT_DISPLAY_PIE, CONTEXT_DISPLAY_RING] as const
 
 /** How wide the conversation column draws, as a factor of the width the host gives it. */
 export const CONVERSATION_WIDTH_FULL = '1'
@@ -357,7 +373,19 @@ export const PREFS = {
     },
   },
   /** The face the context meter is drawn with (CONTEXT_DISPLAYS). */
-  contextDisplay: { type: 'choice', values: CONTEXT_DISPLAYS, default: CONTEXT_DISPLAY_PIE },
+  contextDisplay: {
+    type: 'choice',
+    values: CONTEXT_DISPLAYS,
+    default: CONTEXT_DISPLAY_PIE,
+    legacy: {
+      [CONTEXT_DISPLAY_RING_RAMP_LEGACY]: CONTEXT_DISPLAY_RING,
+      [CONTEXT_DISPLAY_RING_BAND_LEGACY]: CONTEXT_DISPLAY_RING,
+    },
+  },
+  /** Which colour ramp maps context occupancy: default green-to-red, classic blue-yellow-red, or custom stops. */
+  contextRampMode: { type: 'choice', values: CONTEXT_RAMP_MODES, default: CONTEXT_RAMP_MODE_DEFAULT },
+  /** Custom `percent:#rrggbb` stops used while `contextRampMode` is `custom`. */
+  contextRamp: { type: 'text', default: '', max: CONTEXT_RAMP_ENTRY_MAX },
   /** Whether the percentage stands beside that face. */
   contextNumbers: { type: 'boolean', default: true },
   statsFooterAlign: { type: 'choice', values: STATS_FOOTER_ALIGNS, default: 'center' },
@@ -479,6 +507,12 @@ export function clampPrefs(value: unknown): Prefs {
   }
   const out: Record<string, unknown> = {}
   for (const [key, spec] of Object.entries(PREFS) as [PrefKey, PrefSpec][]) out[key] = clampPref(spec, section[key])
+  out.contextRamp = normalizeContextRamp(out.contextRamp)
+  if (section.contextDisplay === CONTEXT_DISPLAY_RING_BAND_LEGACY && section.contextRampMode === undefined) {
+    out.contextRampMode = CONTEXT_RAMP_MODE_CLASSIC
+  } else if (section.contextRampMode === undefined && out.contextRamp !== '') {
+    out.contextRampMode = out.contextRamp === CONTEXT_RAMP_CLASSIC ? CONTEXT_RAMP_MODE_CLASSIC : CONTEXT_RAMP_MODE_CUSTOM
+  }
   // A stored accent becomes the first of the reader's four colours, and the custom card is the one in force.
   if (typeof out.brandAccent === 'string' && out.brandAccent !== '') {
     if (out.customAccent === '') out.customAccent = out.brandAccent
@@ -509,6 +543,9 @@ export function migrationWriteBack(value: unknown): Partial<Prefs> | null {
     if (spec.legacy !== undefined && (typeof raw === 'string' || typeof raw === 'boolean') && Object.hasOwn(spec.legacy, String(raw))) {
       patch[key] = clamped[key]
     }
+  }
+  if (section.contextDisplay === CONTEXT_DISPLAY_RING_BAND_LEGACY && section.contextRampMode === undefined) {
+    patch.contextRampMode = clamped.contextRampMode
   }
   if (PALETTE_CARRY_KEYS.some(key => section[key] !== undefined && section[key] !== '' && section[key] !== clamped[key])) {
     for (const key of PALETTE_CARRY_KEYS) patch[key] = clamped[key]

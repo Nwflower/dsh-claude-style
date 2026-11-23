@@ -16,20 +16,60 @@
     "en": "Context meter"
   },
   "contextDisplayDesc": {
-    "zh": "控制输入区上下文占用指标的展示形态。",
-    "en": "Control the display style of the context meter in the composer."
+    "zh": "控制输入区工具栏上下文占用指标的展示形态。",
+    "en": "Choose the context meter shape in the composer toolbar."
   },
   "contextDisplayPie": {
     "zh": "饼图",
     "en": "Pie"
   },
-  "contextDisplayRingRamp": {
-    "zh": "圆环 · 绿到红",
-    "en": "Ring · green to red"
+  "contextDisplayRing": {
+    "zh": "圆环",
+    "en": "Ring"
   },
-  "contextDisplayRingBand": {
-    "zh": "圆环 · 蓝黄红",
-    "en": "Ring · blue, yellow, red"
+  "contextRampTitle": {
+    "zh": "占用色带",
+    "en": "Color ramp"
+  },
+  "contextRampDesc": {
+    "zh": "按上下文占用比例映射图示与百分比的颜色过渡。",
+    "en": "Map meter and percentage colors across context usage."
+  },
+  "contextRampPresetDefault": {
+    "zh": "默认绿橙红",
+    "en": "Green to red"
+  },
+  "contextRampPresetClassic": {
+    "zh": "蓝黄红",
+    "en": "Blue, yellow, red"
+  },
+  "contextRampPresetCustom": {
+    "zh": "自定义",
+    "en": "Custom"
+  },
+  "contextRampAddHint": {
+    "zh": "点击色带空白处添加色标（最多 {max} 个）",
+    "en": "Click the bar to add a stop (up to {max})"
+  },
+  "contextRampStopLabel": {
+    "zh": "色标 {index} · {percent}%",
+    "en": "Stop {index} · {percent}%"
+  },
+  "contextRampStopColor": {
+    "zh": "色标颜色",
+    "en": "Stop color"
+  },
+  "contextRampStopHex": {
+    "zh": "十六进制色值",
+    "en": "Hex color"
+  },
+  "contextRampStopPercent": {
+    "zh": "色标阈值百分比",
+    "en": "Stop threshold percentage"
+  },
+  "contextRampStopRemove": {
+    "zh": "移除色标",
+    "en": "Remove stop"
   },
   "contextNumbersTitle": {
     "zh": "上下文占用百分比",
@@ -37,7 +77,7 @@
   },
   "contextNumbersDesc": {
     "zh": "在上下文占用图示旁显示百分比数值。",
-    "en": "Show the percentage value next to the context meter."
+    "en": "Show the percentage figure beside the context meter."
   },
   "statsPositionTitle": {
     "zh": "对话统计栏",
@@ -71,6 +111,10 @@
     "zh": "水平位置",
     "en": "Horizontal position"
   },
+  "statsFooterAlignDesc": {
+    "zh": "统计读数在输入区行内的对齐方向。",
+    "en": "Alignment of the statistics strip across the composer."
+  },
   "statsFooterAlignLeft": {
     "zh": "左侧",
     "en": "Left"
@@ -86,6 +130,10 @@
   "statsMetricsTitle": {
     "zh": "显示指标",
     "en": "Shown figures"
+  },
+  "statsMetricsDesc": {
+    "zh": "选择统计栏实时展示的会话聚合指标，至少保留一项。",
+    "en": "Choose which session figures appear in the bar; at least one stays on."
   },
   "statsFooterCostTitle": {
     "zh": "会话费用",

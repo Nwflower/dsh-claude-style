@@ -25,8 +25,8 @@ export function contrastRatio(first: string, second: string) {
 }
 
 /** The two inks text on an accent fill can take: the dark and the light canvas (docs/STYLE.md). */
-const INK_DARK = '#191919'
-const INK_LIGHT = '#faf9f5'
+export const INK_DARK = '#191919'
+export const INK_LIGHT = '#faf9f5'
 
 /** The ink that reads best on a `#rrggbb` accent fill: whichever canvas colour has the higher contrast with it. */
 export function accentInk(accent: string) {

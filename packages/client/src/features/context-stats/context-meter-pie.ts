@@ -39,29 +39,24 @@ export function contextPieImage(percent: number, tone: string, rest: string) {
   return splitImage(percent, tone, rest)
 }
 
-/** The two colours a pie is drawn in, as the page computed them for one trigger. */
-export interface PieColours {
+/** The unoccupied plate's colour, read from the computed style for one trigger. */
+export interface PieRest {
   trigger: HTMLElement
-  tone: string
   rest: string
 }
 
 /**
- * Read the colours the meter's pie takes, or null while the meter has no trigger
- * or reading. Reading a computed style settles the page's styles, so the caller
- * takes this in the pass's read phase (D40).
+ * Read the unoccupied plate colour the meter's pie takes, or null while the
+ * meter has no trigger. Reading a computed style settles the page's styles, so
+ * the caller takes this in the pass's read phase (D40).
  *
- * @param meter - the host's meter root.
+ * @param meter - the host's meter root or the skin's ring root.
  */
-export function readPieColours(meter: HTMLElement): PieColours | null {
+export function readPieRest(meter: HTMLElement): PieRest | null {
   const trigger = meter.querySelector('button')
-  const reading = trigger === null ? null : trigger.querySelector('span')
-  if (!(trigger instanceof HTMLElement) || !(reading instanceof HTMLElement)) return null
-  // The reading's own colour is the band's answer, mixed by the browser
-  // (features/composer/inline-bar.css), so the two can never disagree.
+  if (!(trigger instanceof HTMLElement)) return null
   return {
     trigger,
-    tone: getComputedStyle(reading).color,
     rest: getComputedStyle(trigger).getPropertyValue(REST_VAR).trim(),
   }
 }
@@ -69,19 +64,24 @@ export function readPieColours(meter: HTMLElement): PieColours | null {
 /**
  * Paint the meter's reading as a pie, or give the host's ring back.
  *
- * @param meter - the host's meter root.
+ * @param meter - the host's meter root or the skin's ring root.
  * @param percent - the occupancy the reader sees, or null when no reading can
  *   be taken (the ring then stands, in whatever colour the host gives it).
- * @param colours - the colours readPieColours took for the meter's current trigger.
+ * @param tone - the evaluated ramp colour for `percent`.
+ * @param pieRest - the plate colour readPieRest took for the current trigger.
  */
-export function paintContextPie(meter: HTMLElement, percent: number | null, colours: PieColours | null) {
-  if (percent === null || colours === null) {
+export function paintContextPie(
+  meter: HTMLElement,
+  percent: number | null,
+  tone: string | null,
+  pieRest: PieRest | null,
+) {
+  if (percent === null || tone === null || tone === '' || pieRest === null) {
     releaseContextPie(meter)
     return
   }
-  const { trigger, tone, rest } = colours
-  // No stylesheet, no pie: the ring the host drew is the honest fallback.
-  if (tone === '' || rest === '') {
+  const { trigger, rest } = pieRest
+  if (rest === '') {
     releaseContextPie(meter)
     return
   }

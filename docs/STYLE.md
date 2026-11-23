@@ -560,6 +560,7 @@ edit the JSON, not the table.
 | `--dsh-claude-period-preview-reveal` | `4000ms` | one turn of the settings page's new-text fade preview: the sample arriving character by character, then standing before the next wipe |
 | `--dsh-claude-period-preview-caret` | `4000ms` | one turn of the settings page's caret preview: the sample line typed out, then standing whole before the next turn |
 | `--dsh-claude-period-preview-enter` | `2600ms` | one turn of the Motion tab's message-entrance card: one message arriving, standing, and giving way to the next |
+| `--dsh-claude-period-preview-meter` | `5200ms` | one round trip of the settings page's context-meter preview from 1% up to 100% and back to 1% |
 | `--dsh-claude-period-wash-hue` | `4000ms` | one turn of the hue rotation the waiting line's colour wash runs through |
 | `--dsh-claude-period-wash-drift` | `5000ms` | one orbit of the colour washes around the waiting line's glyph box |
 | `--dsh-claude-period-pulse` | `1600ms` | a placeholder breathing while its numbers are computed |

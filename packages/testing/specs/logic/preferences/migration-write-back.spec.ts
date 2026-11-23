@@ -15,6 +15,8 @@ test('every declared legacy value is written back as the value it reads as', () 
   const patch = migrationWriteBack({ brand: 'off', statusDetail: 'simple', autoPopover: false, pageZoom: '0.8', chatAnimations: 'off', statsPosition: 'context' })
   expect(patch).toEqual({ brand: BRAND_DEEPSEEK, statusDetail: false, autoPopover: 'off', pageZoom: '80', chatAnimations: false, statsPosition: 'off' })
   expect(migrationWriteBack({ statsPosition: 'rail' })).toEqual({ statsPosition: 'inline' })
+  expect(migrationWriteBack({ contextDisplay: 'ring-ramp' })).toEqual({ contextDisplay: 'ring' })
+  expect(migrationWriteBack({ contextDisplay: 'ring-band' })).toEqual({ contextDisplay: 'ring', contextRampMode: 'classic' })
 })
 
 test('canonical, unmapped and absent values produce no write', () => {
@@ -52,7 +54,7 @@ test('the retired inline-code choice is carried and reads as the palette', () =>
 })
 
 test('a value the write-back produced needs no second write', () => {
-  for (const stored of [{ brand: 'off', pageZoom: '0.8' }, { brandAccent: '#1A7F5A' }, { customAccent: '#1a7f5a', paletteColors: 'custom' }, { inlineCodeColor: 'classic' }]) {
+  for (const stored of [{ brand: 'off', pageZoom: '0.8' }, { contextDisplay: 'ring-band' }, { brandAccent: '#1A7F5A' }, { customAccent: '#1a7f5a', paletteColors: 'custom' }, { inlineCodeColor: 'classic' }]) {
     const patch = migrationWriteBack(stored)
     expect(patch).not.toBeNull()
     expect(migrationWriteBack({ ...stored, ...patch })).toBeNull()

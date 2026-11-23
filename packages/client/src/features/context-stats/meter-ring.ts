@@ -1,18 +1,18 @@
-import { COMPOSER_ATTR, CONTEXT_DISPLAY_PIE, CONTEXT_DISPLAY_RING_BAND, SLOT_NODE_ATTR } from '../../constants'
+import { COMPOSER_ATTR, CONTEXT_DISPLAY_PIE, SLOT_NODE_ATTR } from '../../constants'
 import { COMPOSER_VARIANT_ATTRIBUTE, DIALOG_TRIGGER_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { closestComposerCard, findModelSlotIn, findPrimaryModelSlot, observeComposerCards } from '@dsh-claude-style/engine/host'
-import { readPrefs } from '../../core/prefs'
+import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { removeStrayNodes } from '../../shared/popover'
 import { setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
-import { CONTEXT_STOPS, rampPosition, writeRamp } from './stats-ramp'
+import { isContextDarkTheme, writeContextRamp } from './context-ramp'
 import { composerCardOf, contextMeterOf, findContextMeter, markContextMeter, meterOccupancy } from './stats-panel'
-import { paintContextPie, readPieColours, releaseContextPie } from './context-meter-pie'
-import { METER_RING_RADIUS, METER_RING_SIZE, ringDash, writeContextBand } from './context-meter-face'
+import { paintContextPie, readPieRest, releaseContextPie } from './context-meter-pie'
+import { METER_RING_RADIUS, METER_RING_SIZE, ringDash } from './context-meter-face'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { FeatureHandle } from '@dsh-claude-style/engine/scheduler'
 import type { FeatureUi } from '../../core/feature'
-import type { PieColours } from './context-meter-pie'
+import type { PieRest } from './context-meter-pie'
 import type manifest from './meter-ring.manifest'
 
 /**
@@ -74,8 +74,8 @@ interface RingFace {
   answered: number | null
   /** The percentage the ring was last drawn for, so an unmoved reading writes nothing. */
   shown: number | null
-  /** The pie's colours, read in a pass's own read phase (D40). */
-  colours: PieColours | null
+  /** The pie's unoccupied plate colour, read in a pass's own read phase (D40). */
+  rest: PieRest | null
 }
 
 /** What the context statistics read off the ring (ui.meterRing). */
@@ -173,7 +173,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       stopExpandedWatch: null,
       answered: null,
       shown: null,
-      colours: null,
+      rest: null,
     }
     faces.set(card, face)
     return face
@@ -221,10 +221,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     face.fill.toggleAttribute('data-empty', percent === null || percent <= 0)
   }
 
-  /** Read the colours a ring's pie takes: their band, mixed by the browser (stats-ramp.ts). A drawn ring takes its colour from the stylesheet, so only the pie is read. */
-  function readColoursFor(face: RingFace) {
-    face.colours = readPrefs().contextDisplay !== CONTEXT_DISPLAY_PIE ? null : readPieColours(face.ring)
-    return face.colours
+  /** Read the unoccupied plate colour in the pass's read phase (D40). */
+  function readRestFor(face: RingFace) {
+    face.rest = readPrefs().contextDisplay !== CONTEXT_DISPLAY_PIE ? null : readPieRest(face.ring)
+    return face.rest
   }
 
   /**
@@ -234,7 +234,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    */
   function paintRing(face: RingFace) {
     const percent = readingOf(face)
-    const display = readPrefs().contextDisplay
+    const prefs = readPrefs()
     // The ring stands in the card whose meter it hides, so the words it mirrors
     // are that card's trigger's: a docked conversation's meter is its own.
     const trigger = triggerOf(face)
@@ -244,25 +244,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
     mirrorExpanded(face)
     drawReading(face, percent)
-    if (display === CONTEXT_DISPLAY_PIE) {
-      writeContextBand(face.ring, null)
-      writeRamp(face.ring, 'context', percent === null ? null : rampPosition(percent, CONTEXT_STOPS))
-      // The plate's image is drawn from the colours this pass read before any
-      // write (the meter's `measure`, D40); reading them here would force a
-      // style recalculation between the writes.
-      paintContextPie(face.ring, percent, face.colours)
+    const graphicRgb = writeContextRamp(face.ring, percent, prefs.contextRampMode, prefs.contextRamp, isContextDarkTheme())
+    if (prefs.contextDisplay === CONTEXT_DISPLAY_PIE) {
+      paintContextPie(face.ring, percent, graphicRgb, face.rest ?? readPieRest(face.ring))
       return
     }
-    // The drawn ring: no plate, and the colour rule the reader picked — the
-    // continuous band, or the three bands with their floor at 70 and 90.
     releaseContextPie(face.ring)
-    if (display === CONTEXT_DISPLAY_RING_BAND) {
-      writeRamp(face.ring, 'context', null)
-      writeContextBand(face.ring, percent)
-    } else {
-      writeContextBand(face.ring, null)
-      writeRamp(face.ring, 'context', percent === null ? null : rampPosition(percent, CONTEXT_STOPS))
-    }
   }
 
   /** Say on the ring whether the host's panel is open, as that card's trigger says it. */
@@ -341,8 +328,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const triggers = observeMatches<HTMLElement>(DIALOG_TRIGGER_SELECTOR, () => {
     for (const face of Array.from(faces.values())) hideHostMeter(face)
   })
+  const offPrefs = subscribePrefs(() => { ui.schedule?.() })
 
   function teardown() {
+    offPrefs()
     triggers.release()
     cards.release()
     dropAll()
@@ -353,14 +342,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   removeStrayNodes(document, `[${METER_RING_ATTR}]`, [])
   ui.meterRing = {
     sync: syncRing,
-    // The ring's colours come off the page's own styles, which a pass reads in
-    // its read phase alone (D40).
+    // The ring's plate colour comes off the page's own styles, which a pass
+    // reads in its read phase alone (D40).
     measure() {
       const main = primaryFace()
-      let primary: PieColours | null = null
+      let primary: PieRest | null = null
       for (const face of faces.values()) {
-        const colours = readColoursFor(face)
-        if (face === main) primary = colours
+        const rest = readRestFor(face)
+        if (face === main) primary = rest
       }
       return primary
     },

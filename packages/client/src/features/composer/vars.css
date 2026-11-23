@@ -25,18 +25,6 @@ body[data-dsh-claude-style] {
   --dsh-claude-tone-lime: #b0c988;
   --dsh-claude-tone-green-light: #a2dda4;
   --dsh-claude-tone-green: #6faf73;
-  /* The three-band face's colours (features/context-stats/context-meter-face.ts):
-     the blue and the gold measured from the reference images, and the red given
-     for the third face (#DC3C3D). The ink values are what the number beside the
-     ring wears; the graphic keeps these colours on either canvas, and the light
-     canvas darkens the blue and the gold ink, where a 12 px number has to stay
-     readable. */
-  --dsh-claude-band-blue: #257de0;
-  --dsh-claude-band-yellow: #fbb315;
-  --dsh-claude-band-red: #dc3c3d;
-  --dsh-claude-band-blue-ink: var(--dsh-claude-band-blue);
-  --dsh-claude-band-yellow-ink: var(--dsh-claude-band-yellow);
-  --dsh-claude-band-red-ink: var(--dsh-claude-band-red);
   /* The plate the meter's pie has not taken (features/context-stats/
      context-meter-pie.ts): the quiet end of the same band. */
   --dsh-claude-pie-rest: rgba(250, 249, 245, 0.18);
@@ -50,9 +38,5 @@ body[data-dsh-claude-style]:not([data-ds-dark-theme]) {
   --dsh-claude-tone-lime: #779756;
   --dsh-claude-tone-green-light: #6da173;
   --dsh-claude-tone-green: #46784e;
-  /* The number's inks at the step a light canvas keeps legible; the graphic
-     keeps the measured colours, and the red #DC3C3D stands on either. */
-  --dsh-claude-band-blue-ink: #1f6fce;
-  --dsh-claude-band-yellow-ink: #8a5f00;
   --dsh-claude-pie-rest: rgba(20, 20, 19, 0.14);
 }

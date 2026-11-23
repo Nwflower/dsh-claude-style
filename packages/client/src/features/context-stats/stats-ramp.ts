@@ -21,8 +21,6 @@ export const RAMP_SPAN_HIGH = 'high'
 
 /** The cache-hit stops: red below 90%, dark green from 99% on. */
 export const CACHE_HIT_STOPS = [90, 92, 94, 96, 98, 99]
-/** The context-occupancy stops: green below 40%, red from 80% on. */
-export const CONTEXT_STOPS = [40, 48, 56, 64, 72, 80]
 
 /** Which band of colours an element takes: the cache share, or the occupancy. */
 export type RampKind = 'cache' | 'context'

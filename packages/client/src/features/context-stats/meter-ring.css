@@ -53,44 +53,13 @@ body[data-dsh-claude-style] .dsh-claude-meter-ring-fill[data-empty] {
   stroke: none;
 }
 
-/* The reading's own colour band, the ring and the number together
-   (features/context-stats/stats-ramp.ts places the reading; the band's stops
-   stand in features/composer/inline-bar.css). */
+/* Evaluated OKLCH ramp variables written by features/context-stats/context-ramp.ts:
+   graphic keeps the chosen ramp stop colour, ink guarantees >= 3.5:1 contrast. */
 body[data-dsh-claude-style] [data-dsh-claude-meter-ring][data-dsh-claude-ramp="context"] > button > span {
-  color: color-mix(in oklch, var(--dsh-claude-ramp-from), var(--dsh-claude-ramp-to, var(--dsh-claude-ramp-from)) var(--dsh-claude-ramp-position, 0%));
+  color: var(--dsh-claude-context-ink);
 }
 body[data-dsh-claude-style] [data-dsh-claude-meter-ring][data-dsh-claude-ramp="context"] circle[stroke-dasharray] {
-  stroke: color-mix(in oklch, var(--dsh-claude-ramp-from), var(--dsh-claude-ramp-to, var(--dsh-claude-ramp-from)) var(--dsh-claude-ramp-position, 0%));
-}
-
-/* The three-band face (features/context-stats/context-meter-face.ts): blue
-   below 70 %, yellow from 70 to under 90, red from 90 on. The band maps two
-   values: the graphic keeps the measured colour on either canvas, the ink is
-   what the number beside it wears (darker on a light canvas); the host's own
-   meter takes the same pair in features/composer/inline-bar.css. */
-body[data-dsh-claude-style] [data-dsh-claude-context-band="blue"] {
-  --dsh-claude-band-graphic: var(--dsh-claude-band-blue);
-  --dsh-claude-band-ink: var(--dsh-claude-band-blue-ink);
-}
-body[data-dsh-claude-style] [data-dsh-claude-context-band="yellow"] {
-  --dsh-claude-band-graphic: var(--dsh-claude-band-yellow);
-  --dsh-claude-band-ink: var(--dsh-claude-band-yellow-ink);
-}
-body[data-dsh-claude-style] [data-dsh-claude-context-band="red"] {
-  --dsh-claude-band-graphic: var(--dsh-claude-band-red);
-  --dsh-claude-band-ink: var(--dsh-claude-band-red-ink);
-}
-body[data-dsh-claude-style] [data-dsh-claude-meter-ring][data-dsh-claude-context-band] > button > span {
-  color: var(--dsh-claude-band-ink);
-}
-body[data-dsh-claude-style] [data-dsh-claude-meter-ring][data-dsh-claude-context-band] circle[stroke-dasharray] {
-  stroke: var(--dsh-claude-band-graphic);
-}
-
-/* The measured face's heavier stroke: 2.2 px on the 5.5 px radius is the
-   4.5 px / 27 px the reference image carries at twice the size. */
-body[data-dsh-claude-style][data-dsh-claude-context-display="ring-band"] [data-dsh-claude-meter-ring] circle {
-  stroke-width: 2.2px;
+  stroke: var(--dsh-claude-context-graphic);
 }
 
 /* The percentage is the reader's own choice: hidden beside the face when the

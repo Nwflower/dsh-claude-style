@@ -12,9 +12,11 @@ import fc from 'fast-check'
 import { resolveMascot } from '@dsh-claude-style/client/pure'
 import {
   BRAND_CLAUDE, BRAND_DEEPSEEK, BRAND_DEEPSEEK_LEGACY, BRAND_INK_ORIGINAL, BRAND_INK_TEXT, BRAND_NAME_MAX,
-  CHAT_ANIMATIONS_OFF, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_OFF, ONGOING_INDICATOR_BREATHE, ONGOING_INDICATOR_RING, ONGOING_INDICATOR_SHIMMER, ONGOING_SIDE_LEFT, ONGOING_SIDE_RIGHT, PREFS, PREF_DEFAULTS,
+  CHAT_ANIMATIONS_OFF, CONTEXT_DISPLAY_PIE, CONTEXT_DISPLAY_RING, CONTEXT_RAMP_MODE_CLASSIC, CONTEXT_RAMP_MODE_CUSTOM, CONTEXT_RAMP_MODE_DEFAULT,
+  MASCOT_CRAB, MASCOT_DEEPY, MASCOT_OFF, ONGOING_INDICATOR_BREATHE, ONGOING_INDICATOR_RING, ONGOING_INDICATOR_SHIMMER, ONGOING_SIDE_LEFT, ONGOING_SIDE_RIGHT, PREFS, PREF_DEFAULTS,
   PALETTE_PRESETS, PROVIDER_ID_MAX, QUICK_PROVIDERS_MAX, STATS_POSITION_FOOTER, STATS_POSITION_INLINE, STATS_POSITION_OFF, STATUS_MOTION_WASH, USERNAME_MAX, clampPrefs,
 } from '@dsh-claude-style/contracts/prefs'
+import { CONTEXT_RAMP_CLASSIC } from '@dsh-claude-style/contracts/context-ramp'
 import { parsePaletteScheme } from '@dsh-claude-style/contracts/palette-schemes'
 import { OFFICIAL_MODEL_GROUP } from '@dsh-claude-style/contracts/services'
 
@@ -192,4 +194,27 @@ test('the retired conversation statistics positions map to off and inline, and t
   expect(clampPrefs({ statsPosition: STATS_POSITION_FOOTER }).statsPosition).toBe(STATS_POSITION_FOOTER)
   expect(clampPrefs({ statsPosition: STATS_POSITION_INLINE }).statsPosition).toBe(STATS_POSITION_INLINE)
   expect(clampPrefs({ statsPosition: 'sidebar' }).statsPosition).toBe(STATS_POSITION_OFF)
+})
+
+test('context meter faces map legacy ring choices to ring, carry ring-band to classic mode, and normalize custom ramps', () => {
+  expect(PREF_DEFAULTS.contextDisplay).toBe(CONTEXT_DISPLAY_PIE)
+  expect(PREF_DEFAULTS.contextRampMode).toBe(CONTEXT_RAMP_MODE_DEFAULT)
+  expect(PREF_DEFAULTS.contextRamp).toBe('')
+  expect(clampPrefs({ contextDisplay: 'ring-ramp' })).toMatchObject({
+    contextDisplay: CONTEXT_DISPLAY_RING,
+    contextRampMode: CONTEXT_RAMP_MODE_DEFAULT,
+  })
+  expect(clampPrefs({ contextDisplay: 'ring-band' })).toMatchObject({
+    contextDisplay: CONTEXT_DISPLAY_RING,
+    contextRampMode: CONTEXT_RAMP_MODE_CLASSIC,
+  })
+  expect(clampPrefs({ contextRamp: '85:#FF2244, 25:#11AA55' })).toMatchObject({
+    contextRampMode: CONTEXT_RAMP_MODE_CUSTOM,
+    contextRamp: '25:#11aa55,85:#ff2244',
+  })
+  expect(clampPrefs({ contextRampMode: CONTEXT_RAMP_MODE_DEFAULT, contextRamp: CONTEXT_RAMP_CLASSIC })).toMatchObject({
+    contextRampMode: CONTEXT_RAMP_MODE_DEFAULT,
+    contextRamp: CONTEXT_RAMP_CLASSIC,
+  })
+  expect(clampPrefs({ contextRamp: 'only-one:50:#11aa55' }).contextRamp).toBe('')
 })

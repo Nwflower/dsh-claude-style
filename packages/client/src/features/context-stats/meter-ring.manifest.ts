@@ -13,7 +13,7 @@ export default {
   pref: 'composerScope',
   prefValues: [COMPOSER_SCOPE_CONVERSATION, COMPOSER_SCOPE_ALL],
   reads: ['model'],
-  contracts: ['composer.card', 'composer.dialog-trigger', 'composer.model-slot'],
+  contracts: ['composer.card', 'composer.dialog-trigger', 'composer.model-slot', 'shell.dark-theme'],
   stylesheets: [{ file: 'meter-ring.css', rank: 105 }],
   cases: [],
 } satisfies FeatureManifest
