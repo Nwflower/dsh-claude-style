@@ -60,7 +60,7 @@ export function chunkModulesModule(ids) {
 
 /** Keep custom settings controls in the settings page's own chunk (D76). */
 export function settingsControlsModule(manifests) {
-  const owners = manifests.filter((manifest) => (manifest.settingsRows ?? []).some((row) => row.control !== undefined || row.status !== undefined))
+  const owners = manifests.filter((manifest) => (manifest.settingsRows ?? []).some((row) => row.control !== undefined || row.asideControl !== undefined || row.status !== undefined))
   const imports = owners.map((manifest) => `import { controls as ROWS_${manifest.id} } from ${JSON.stringify(`./features/${manifest.dir}/${manifest.dir}.settings`)}`)
   const entries = owners.map((manifest) => `  ${JSON.stringify(manifest.id)}: ROWS_${manifest.id},`)
   const contents = `${imports.join('\n')}\nexport const ROW_CONTROLS = {\n${entries.join('\n')}\n}\n`

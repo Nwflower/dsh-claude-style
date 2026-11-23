@@ -118,7 +118,7 @@ function checkManifests(manifests) {
         if (typeof row.pref !== 'string' || !(row.pref in PREFS)) fail(manifest, `has a settings row for "${row.pref}", which packages/contracts/src/prefs.ts PREFS does not carry`)
         if (owners.has(row.pref)) fail(manifest, `owns the settings row of "${row.pref}", which packages/client/src/${owners.get(row.pref)} owns already`)
         owners.set(row.pref, manifest.file)
-        for (const [field, name] of [['control', row.control], ['status', row.status]]) {
+        for (const [field, name] of [['control', row.control], ['asideControl', row.asideControl], ['status', row.status]]) {
           if (name === undefined) continue
           if (typeof name !== 'string' || name === '') fail(manifest, `has a settings row with an empty "${field}" name`)
           const module = path.join(FEATURES, manifest.dir, `${manifest.dir}.settings.ts`)
@@ -147,7 +147,7 @@ function checkManifests(manifests) {
           if (row.placement !== 'header') fail(manifest, `has a settings row placed at "${row.placement}", which is not a place a row takes`)
           if (row.parent === undefined) fail(manifest, `places the settings row of "${row.pref}" in a header without naming the row in "parent"`)
           if (row.title === undefined) fail(manifest, `places the settings row of "${row.pref}" in a header without a "title" for its accessible name`)
-          for (const field of ['desc', 'control', 'status', 'requires', 'sharedWith', 'experimental']) {
+          for (const field of ['desc', 'control', 'asideControl', 'status', 'requires', 'sharedWith', 'experimental']) {
             if (row[field] !== undefined) fail(manifest, `places the settings row of "${row.pref}" in a header, which has no line for its "${field}"`)
           }
         }

@@ -8,25 +8,11 @@
  * @risk A preview falls back to anonymous placeholder bars, loses the dashboard or composer, or shows the wrong pieces for its layout.
  */
 import { spec } from '../../fixtures/behaviour.mjs'
+import { inspectSettingsTab } from '../../fixtures/settings-tree.mjs'
 
 /** The cards' contents, read from the settings section's rendered tree. */
 async function readCards(t) {
-  return t.page.evaluate((names) => {
-    const Section = window.__slotComponents?.['claude-style']
-    if (Section === undefined) throw new Error('the Claude Style settings section is not registered')
-    const react = window.__react
-    react.rendering = true
-    react.states = { general: 'appearance' }
-    const tree = Section({})
-    react.rendering = false
-    react.states = null
-    const walk = (node, visit) => {
-      if (node === null || node === undefined || typeof node !== 'object') return
-      if (Array.isArray(node)) { node.forEach(child => walk(child, visit)); return }
-      visit(node)
-      walk(node.props?.children, visit)
-    }
-    const has = (node, name) => (` ${node.props?.className ?? ''} `).includes(` ${name} `)
+  return inspectSettingsTab(t, 'appearance', (tree, { walk, has }, names) => {
     const cards = []
     walk(tree, node => {
       if (!has(node, names.card)) return

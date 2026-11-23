@@ -1,11 +1,11 @@
 {
   "mascotTitle": { "zh": "吉祥物", "en": "Mascot" },
   "mascotDesc": { "zh": "站在输入框上沿的像素小伙伴。", "en": "The pixel companion on the input area's top edge." },
-  "mascotBrand": { "zh": "自动", "en": "Follow the brand" },
+  "mascotFollowingTheme": { "zh": "跟随主题显示", "en": "Following theme" },
+  "mascotFollowTheme": { "zh": "恢复跟随主题", "en": "Follow theme again" },
   "mascotCrab": { "zh": "Clawd", "en": "Crab" },
   "mascotDeepy": { "zh": "Deepy", "en": "Deepy" },
   "mascotWhaleGirl": { "zh": "鲸娘", "en": "Whale Girl" },
-  "mascotOff": { "zh": "关闭", "en": "Off" },
   "mascotScopeTitle": { "zh": "出现位置", "en": "Where it appears" },
   "mascotScopeHome": { "zh": "首页", "en": "Home" },
   "mascotScopeAll": { "zh": "首页与对话", "en": "Home and conversation" },

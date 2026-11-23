@@ -230,7 +230,15 @@ function featureRowParts(feature: Feature, row: FeatureSettingsRow, view: Settin
   const ownStatus = row.status === undefined ? undefined : ROW_CONTROLS[feature.id]?.[row.status]
   const status = ownStatus === undefined ? null : React.createElement(ownStatus, { key: 'status', prefs: view.prefs, write: view.write, disabled: off })
   const description = status === null ? described : described === null ? status : [described, status]
-  return { title, description, control, off, drawn: own !== undefined }
+  const ownAside = row.asideControl === undefined ? undefined : ROW_CONTROLS[feature.id]?.[row.asideControl]
+  const aside = ownAside === undefined
+    ? null
+    : React.createElement(
+      'div',
+      { key: `aside-${row.pref}`, className: 'dsh-claude-settings-row-aside' },
+      React.createElement(ownAside, { prefs: view.prefs, write: view.write, disabled: off }),
+    )
+  return { title, description, control, aside, off, drawn: own !== undefined }
 }
 
 /**
@@ -242,7 +250,7 @@ function featureRows(slot: SettingsRowSlot, view: SettingsView): SettingsRow[] {
   const controls = view.controls
   const rowsByPref = rowsByPrefOf(slot)
   return settingsRowsOf(slot).filter(({ row }) => row.placement !== 'header').map(({ feature, row }) => {
-    const { title, description, control, off, drawn } = featureRowParts(feature, row, view, rowsByPref)
+    const { title, description, control, aside, off, drawn } = featureRowParts(feature, row, view, rowsByPref)
     // A feature's own control (preview cards, a table) takes the line under the
     // row's text, or the whole row when it has none, under a parent row too: a
     // row of cards stays a block so its title keeps the line above them.
@@ -252,6 +260,7 @@ function featureRows(slot: SettingsRowSlot, view: SettingsView): SettingsRow[] {
         block: drawn && row.controlLayout !== 'inline',
         sub: row.parent !== undefined,
         experimental: row.experimental === true,
+        aside,
       })
       : controls.subRow(row.pref, title ?? '', description, control, !off, row.experimental === true)
     return { rank: row.rank, node }

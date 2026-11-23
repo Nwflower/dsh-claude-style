@@ -70,6 +70,29 @@ body[data-dsh-claude-style] .dsh-claude-preview-card[data-active] {
   border-color: var(--dsw-alias-brand-primary, #d97757);
 }
 
+body[data-dsh-claude-style] .dsh-claude-preview-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 16px;
+}
+
+body[data-dsh-claude-style] :is(.dsh-claude-preview-card-action, .dsh-claude-palette-reset) {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--dsw-alias-label-tertiary);
+  font: inherit;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 16px;
+  cursor: pointer;
+  transition: color var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] :is(.dsh-claude-preview-card-action, .dsh-claude-palette-reset):hover {
+  color: var(--dsw-alias-label-secondary);
+}
+
 body[data-dsh-claude-style] .dsh-claude-brand-card-logo {
   width: 32px;
   height: 32px;

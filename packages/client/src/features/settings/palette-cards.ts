@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { BRAND_DEFAULT_PRESETS, PALETTE_COLORING_BRAND } from '../../constants'
+import { activateOnCardKey } from '../../shared/preview-cards'
 import { storedSchemes } from '../../shared/palette-scheme'
 import { cardSchemes, isPresetScheme, schemeDiscs, schemeLabel, Swatches } from './palette-parts'
 import { openPaletteManager } from './palette-manager'
@@ -32,12 +33,6 @@ function PaletteCards(props: { prefs: Prefs, write: SettingsView['write'] }) {
   const painted = following ? BRAND_DEFAULT_PRESETS[prefs.brand] : prefs.paletteColors
   const follow = () => write({ paletteColors: PALETTE_COLORING_BRAND })
   const pick = (scheme: PaletteScheme) => write({ paletteColors: scheme.id })
-  // Enter and Space on a card itself pick it; the buttons inside it handle their own keys.
-  const keyPick = (event: React.KeyboardEvent<HTMLDivElement>, run: () => void) => {
-    if (event.target !== event.currentTarget || (event.key !== 'Enter' && event.key !== ' ')) return
-    event.preventDefault()
-    run()
-  }
   const stored = storedSchemes(prefs)
   const cards = cardSchemes(prefs).map((scheme) => {
     const selected = scheme.id === painted
@@ -56,7 +51,7 @@ function PaletteCards(props: { prefs: Prefs, write: SettingsView['write'] }) {
         'aria-pressed': selected ? 'true' : 'false',
         'aria-label': label,
         onClick: () => { if (!selected) pick(scheme) },
-        onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => keyPick(event, () => { if (!selected) pick(scheme) }),
+        onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => activateOnCardKey(event, () => { if (!selected) pick(scheme) }),
       },
       React.createElement(Swatches, {
         colours: schemeDiscs(scheme, isPresetScheme(scheme) && !edited),

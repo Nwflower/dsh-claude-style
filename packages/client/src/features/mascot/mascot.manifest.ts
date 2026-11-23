@@ -11,6 +11,7 @@ export default {
   prefValues: [MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_WHALEGIRL],
   stylesheets: [
     { file: 'mascot-frame.css', rank: 345 },
+    { file: 'mascot-preview.css', rank: 346 },
     { file: 'crab.css', rank: 350 },
     { file: 'whale.css', rank: 360 },
     { file: 'whale-girl.css', rank: 365 },
@@ -22,7 +23,8 @@ export default {
     pref: 'mascot',
     title: 'mascotTitle',
     desc: 'mascotDesc',
-    choiceLabels: { brand: 'mascotBrand', crab: 'mascotCrab', deepy: 'mascotDeepy', whalegirl: 'mascotWhaleGirl', off: 'mascotOff' },
+    asideControl: 'mascot-toggle',
+    control: 'mascot-picker',
   }, {
     // It belongs to the mascot switch above it.
     tab: 'appearance',
