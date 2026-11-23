@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-23",
+  "group": "improvements",
+  "order": 20,
+  "external": true,
+  "zh": "补齐 Gemini 4、GPT-6 Terra、Qwen 4 Max、HY-MT2、Xiaomi MiMo、LongCat 与 Reflection Beam 等模型描述，收紧短别名与蒸馏模型匹配边界，并统一各模型的双语文案表述",
+  "en": "Add model descriptions for Gemini 4 elemental lines, GPT-6 Terra, Qwen 4 Max, HY-MT2, Xiaomi MiMo, LongCat and Reflection Beam, tighten short-alias and distilled-model matching boundaries, and unify bilingual model copy"
+}
