@@ -14,6 +14,7 @@
  */
 import * as React from 'react'
 import {
+  SESSION_PANEL_ACTIONS_SLOT_SELECTOR,
   SESSION_PANEL_SECTION_ATTRIBUTE,
   SESSION_PANEL_SECTION_SELECTOR,
   SESSION_PANEL_SELECTOR,
@@ -27,7 +28,6 @@ import {
   SESSION_PANEL_FOLD_HEAD_ATTR,
 } from '../../constants'
 
-const ACTIONS_SLOT_SELECTOR = '[data-slot="conversation.session.panel.section.actions"]'
 const INTERACTIVE_SELECTOR = 'a, button, input, select, textarea, summary, [role="button"]'
 const NATIVE_CONTROL_SELECTOR = 'button, summary, [aria-expanded]'
 const NATIVE_FOLD_ATTRS = [
@@ -124,7 +124,7 @@ export function probeSectionContract(section: Element): boolean {
   }
   if (!hasHeading) return false
   for (const control of head.querySelectorAll(NATIVE_CONTROL_SELECTOR)) {
-    if (control.closest(ACTIONS_SLOT_SELECTOR) === null) return false
+    if (control.closest(SESSION_PANEL_ACTIONS_SLOT_SELECTOR) === null) return false
   }
   if (body.querySelector(SLOT_ANCHOR_SELECTOR) === null) return false
   return true

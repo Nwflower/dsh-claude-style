@@ -358,6 +358,8 @@ export const SESSION_PANEL_SELECTOR = '[data-session-panel]'
 /** One section of the host's session panel, valued with the section's registration id (D113). */
 export const SESSION_PANEL_SECTION_ATTRIBUTE = 'data-session-panel-section'
 export const SESSION_PANEL_SECTION_SELECTOR = `[${SESSION_PANEL_SECTION_ATTRIBUTE}]`
+/** A section's trailing actions slot in the host's session panel: the seat the skin's folded summary readings register into (D113). */
+export const SESSION_PANEL_ACTIONS_SLOT_SELECTOR = '[data-slot="conversation.session.panel.section.actions"]'
 /** The right panel publishes its expanded state before the frame starts its width transition. */
 export const RIGHTBAR_OPEN_ATTRIBUTE = 'data-sidebar-right-open'
 /** The panel chrome strip's own collapse control; present only while the panel is open. */
