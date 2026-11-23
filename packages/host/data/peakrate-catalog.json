@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-21",
+  "updatedAt": "2026-11-22",
   "defaultProfile": "deepseek-v4",
   "profiles": [
     {
@@ -2483,6 +2483,51 @@
       },
       "source": "https://cloud.tencent.cn/document/product/1759/127343",
       "verifiedAt": "2026-11-21"
+    },
+    {
+      "id": "sference-chat",
+      "slug": "sference",
+      "provider": "Sference",
+      "model": "Chat models",
+      "product": "Realtime chat API",
+      "shortName": "SF",
+      "title": "Sference chat pricing clock",
+      "subtitle": "Request arrival pricing in your local time",
+      "kicker": "Half-price chat requests overnight",
+      "policyNote": "Automatic 50% discount for chat requests arriving daily 22:00–06:00 Europe/Berlin, following daylight saving. Arrival, not completion, determines pricing. Priority retains its premium; The provider states that Batch API and decisions models are not discounted further. No published end date.",
+      "schedule": {
+        "timeZone": "Europe/Berlin",
+        "peakDays": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "peakWindows": [
+          {
+            "start": "06:00",
+            "end": "22:00"
+          }
+        ],
+        "windowName": "peak"
+      },
+      "periods": {
+        "peak": {
+          "name": "Standard chat rate",
+          "status": "Standard chat rate on arrival",
+          "badge": "1× standard"
+        },
+        "offPeak": {
+          "name": "Night chat rate",
+          "status": "Discounted chat rate on arrival",
+          "badge": "0.5× standard"
+        }
+      },
+      "source": "https://sference.com/",
+      "verifiedAt": "2026-11-22"
     }
   ]
 }

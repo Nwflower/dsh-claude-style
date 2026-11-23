@@ -1,3 +1,4 @@
+import { QUIET_ATTR } from '../../constants'
 import { CHAT_CHROME_GONE_AT, CHAT_CHROME_MIN_SCALE, CHAT_FLIGHT_MS, CHAT_HALO_GONE_AT, CHAT_MIN_REVERSE_DIVISOR, CHAT_MORPH_END, CHAT_SHAPE_SAMPLES, chatSendCornerRadius, chatSendMorphProgress, chatSendRiseProgress, chatSendShadowSpread, chatSendStepOpacity, chatSendTextLayer, chatSendTextWindows } from './send-shape'
 import type { ShapeSample } from './send-shape'
 import { CHAT_SEND_GHOST_ATTR, CHAT_SEND_LINK_ATTR, chatSendGhostHost, chatSendOpaque, chatSendPixel } from './send-snapshot'
@@ -12,10 +13,52 @@ interface TextInsets {
   lineHeight: number
 }
 
+/**
+ * The border-box width a self-sizing bubble settles at, in page pixels.
+ *
+ * The row can still be growing when the flight takes off, so its own box can be
+ * narrower than the message it will hold. Measuring a quiet copy that carries the
+ * bubble's own children, typesetting, insets and `max-width` inside a host sized
+ * to the parent's content width reports the settled width without outgrowing a
+ * wrapped bubble's cap or mixing viewport and page pixels under `pageZoom`.
+ */
+export function maxContentWidthOf(bubble: HTMLElement) {
+  const style = window.getComputedStyle(bubble)
+  const parent = bubble.parentElement
+  let parentWidth = 0
+  if (parent !== null) {
+    const parentStyle = window.getComputedStyle(parent)
+    parentWidth = Math.max(0, inPagePixels(parent.getBoundingClientRect().width)
+      - chatSendPixel(parentStyle.paddingLeft) - chatSendPixel(parentStyle.paddingRight)
+      - chatSendPixel(parentStyle.borderLeftWidth) - chatSendPixel(parentStyle.borderRightWidth))
+  }
+  const probeHost = document.createElement('div')
+  // Marked quiet so the shared MutationObserver scheduler ignores this probe (D40).
+  probeHost.setAttribute(QUIET_ATTR, '')
+  probeHost.style.cssText = 'position:fixed;left:-100000px;top:0;visibility:hidden;contain:layout style;pointer-events:none'
+  if (parentWidth > 0) probeHost.style.width = parentWidth + 'px'
+  const probe = chatSendTextLayer(bubble, style)
+  probe.style.position = 'static'
+  probe.style.width = parentWidth > 0 ? 'fit-content' : 'max-content'
+  probe.style.maxWidth = style.maxWidth
+  probe.style.boxSizing = style.boxSizing
+  probe.style.paddingLeft = style.paddingLeft
+  probe.style.paddingRight = style.paddingRight
+  probe.style.borderLeft = style.borderLeftWidth + ' solid transparent'
+  probe.style.borderRight = style.borderRightWidth + ' solid transparent'
+  probeHost.appendChild(probe)
+  document.body.appendChild(probeHost)
+  const width = inPagePixels(probe.getBoundingClientRect().width)
+  probeHost.remove()
+  return width
+}
+
 /** Precompute one compositor timeline because the host replaces the echo before the real row arrives. */
-export function chatSendSamples(start: DOMRect, end: DOMRect, from: TextInsets, to: TextInsets, W0: number, H0: number, W1: number, H1: number, R0: number, R1: number, dx: number) {
+export function chatSendSamples(from: TextInsets, to: TextInsets, W0: number, H0: number, W1: number, H1: number, R0: number, R1: number, dx: number) {
   // Clamp the right edge to the destination if shape and displacement ever disagree.
-  const reach = end.right - start.left
+  // `reach` is measured from the take-off edge like `dx`, so `reach - dx` is `W1`
+  // when the flight lands.
+  const reach = dx + W1
   const samples: ShapeSample[] = []
   for (let step = 0; step <= CHAT_SHAPE_SAMPLES; step += 1) {
     const u = step / CHAT_SHAPE_SAMPLES
@@ -50,7 +93,10 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
   const style = window.getComputedStyle(bubble)
   const W0 = start.width
   const H0 = start.height
-  const W1 = end.width
+  // A self-sizing bubble flies to its settled border-box width so a growing row
+  // does not break CJK words one character early; a folded bubble keeps its cap.
+  const settledWidth = capped ? end.width : maxContentWidthOf(bubble)
+  const W1 = settledWidth > 0 ? settledWidth : end.width
   // Reread the growing row so the stand-in covers its full final height.
   const H1 = Math.max(end.height, inPagePixels(bubble.getBoundingClientRect().height))
   const R0 = snapshot.radius
@@ -69,7 +115,7 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
   const boxHeight = Math.max(H0, H1)
   const dx = end.left - start.left
   const dy = end.top - start.top
-  const samples = chatSendSamples(start, end, from, to, W0, H0, W1, H1, R0, R1, dx)
+  const samples = chatSendSamples(from, to, W0, H0, W1, H1, R0, R1, dx)
 
   const wrapper = document.createElement('div')
   wrapper.setAttribute(CHAT_SEND_GHOST_ATTR, '')

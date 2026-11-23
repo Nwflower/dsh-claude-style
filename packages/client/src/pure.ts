@@ -36,6 +36,8 @@ export {
   chatSendStepOpacity, chatSendTextWindows,
 } from './features/chat-send/send-shape'
 export type { ShapeSample } from './features/chat-send/send-shape'
+export { PAGE_ZOOM_ATTR, QUIET_ATTR } from './constants'
+export { chatSendSamples, maxContentWidthOf } from './features/chat-send/send-morph'
 export { chatSendOpaque } from './features/chat-send/send-snapshot'
 export { foreignRunningLineOwns } from './features/chat-wait/running-owner'
 export { WAIT_OVERTIME_MS, WORD_LOCK_MS, openTurn, overtimeMargin, waitStart, wordForPass } from './features/chat-wait/wait-state'
