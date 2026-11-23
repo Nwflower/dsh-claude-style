@@ -2,7 +2,7 @@ import path from 'node:path'
 import { Readable } from 'node:stream'
 
 function fakeHost(mod, options = {}) {
-  const { fenced, home, live = [], events, launch, stored, reads, releases, lists, listCalls, registry, tails, queryShapes, broken, onRead, projections, jobs, agents, commands, directories = {}, filesystem, listen = false } = options
+  const { fenced, home, live = [], events, launch, stored, reads, releases, lists, listCalls, registry, tails, queryShapes, broken, onRead, projections, jobs, agents, commands, directories = {}, filesystem, loader, listen = false } = options
   const shapes = queryShapes ?? ['observeSession', 'readTitleSnapshots']
   const routes = {}
   const listeners = {}
@@ -111,6 +111,8 @@ function fakeHost(mod, options = {}) {
       }
       if (name === 'workspaceRegistry' && registry !== undefined) return registry
       if (name === 'fs' && filesystem !== undefined) return filesystem
+      // The host loader, as the rewind's peer check reads it: every entry of its tree (D111).
+      if (name === 'loader' && loader !== undefined) return loader
       return undefined
     },
     effect: (fn) => fn(),

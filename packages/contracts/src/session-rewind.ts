@@ -1,4 +1,11 @@
-/** The fork-backed logical conversation and rewind plan shared by the browser and host halves (D105). */
+/** The fork-backed logical conversation and rewind plan shared by the browser and host halves (D111). */
+
+/**
+ * dsh-rewind's package name: its entry id in the boot graph, the tag on its
+ * stylesheet and the module name of its loader entry. While it runs, the write
+ * actions and the turn checkpoints are its own (D111).
+ */
+export const REWIND_PEER_PACKAGE = 'dsh-rewind-plugin'
 
 export type RewindAction = 'retract' | 'edit' | 'rerun' | 'delete'
 

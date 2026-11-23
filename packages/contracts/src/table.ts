@@ -3,6 +3,7 @@
  * Every literal needs an entry and every id a manifest owner (D76).
  */
 import * as dom from './dom'
+import { REWIND_PEER_PACKAGE } from './session-rewind'
 
 /** Live page state required by a probe; `any` has no state requirement (D92). */
 type HostDomProbeState = 'any' | 'hero' | 'sending' | 'streaming' | 'conversation' | 'menu' | 'dark'
@@ -123,7 +124,7 @@ export const HOST_DOM: HostDomEntry[] = [
   { id: 'chat.group-part-reasoning', value: dom.CHAT_GROUP_PART_REASONING, probe: { state: 'conversation', kind: 'value' }, use: 'the part value of a step\u2019s thinking row' },
   { id: 'chat.answer-row', value: dom.CHAT_ANSWER_ROW_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'the answer\u2019s own row of an assistant step, named by its part: a live turn marks the answer row as a process member too, so the member mark tells the answer only once the answer has ended' },
   { id: 'chat.turn-tail', value: dom.TURN_TAIL_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'the settled turn\u2019s tail row, which carries the answer\u2019s own action controls for the turn named by data-chat-turn' },
-  { id: 'chat.inherited-history', value: dom.INHERITED_HISTORY_ROW_SELECTOR, probe: { state: 'conversation', kind: 'selector', min: 0 }, use: 'the divider a host fork inserts after inherited events; logical-conversation revisions hide this separator and forked turn tails to keep one continuous timeline (D105)' },
+  { id: 'chat.inherited-history', value: dom.INHERITED_HISTORY_ROW_SELECTOR, probe: { state: 'conversation', kind: 'selector', min: 0 }, use: 'the divider a host fork inserts after inherited events; logical-conversation revisions hide this separator and forked turn tails to keep one continuous timeline (D111)' },
   { id: 'process.header-label', value: dom.PROCESS_HEADER_LABEL_SELECTOR, probe: { state: 'conversation', kind: 'selector', within: 'process.activity' }, use: 'the words of a process group\u2019s header, which the counted summary stands in for' },
   { id: 'chat.running-text', value: dom.CHAT_RUNNING_TEXT_SELECTOR, probe: { state: 'streaming', kind: 'selector', within: 'chat.running' }, use: 'the words of the live turn\u2019s running row, which the waiting line stands in for beside the host\u2019s whale' },
   { id: 'chat.running-icon', value: dom.CHAT_RUNNING_ICON_SELECTOR, probe: { state: 'streaming', kind: 'selector', within: 'chat.running' }, use: 'the host\u2019s own running indicator at the head of the live turn\u2019s row, which the waiting line hides under the Claude brand and stands its own loader in for' },
@@ -213,6 +214,8 @@ export const HOST_DOM: HostDomEntry[] = [
   { id: 'boot.graph', value: '__DSH_BOOT__', probe: { state: 'any', kind: 'global' }, use: 'the boot graph, naming every client entry before any of them runs', owner: 'core' },
   { id: 'boot.peer-entry', value: 'dsh-chat-ux', probe: { state: 'any', kind: 'none' }, use: 'the peer plugin\u2019s entry id inside the boot graph, read to stand the chat features down (D74); this instance does not install it', owner: 'core' },
   { id: 'boot.peer-sheet', value: dom.PEER_SHEET_SELECTOR, probe: { state: 'any', kind: 'none' }, use: 'the peer plugin\u2019s own stylesheet, the other half of that verdict; this instance does not install it' },
+  { id: 'boot.rewind-entry', value: REWIND_PEER_PACKAGE, probe: { state: 'any', kind: 'none' }, use: 'dsh-rewind\u2019s entry id inside the boot graph, read to hand the rewind write actions over (D111); this instance does not install it', owner: 'core' },
+  { id: 'boot.rewind-sheet', value: dom.REWIND_PEER_SHEET_SELECTOR, probe: { state: 'any', kind: 'none' }, use: 'dsh-rewind\u2019s own stylesheet, mounted and removed with its browser half: the other half of that verdict, followed while the page runs (D111); this instance does not install it', owner: 'core' },
   { id: 'ds-bot.entry', value: 'ds-bot', probe: { state: 'any', kind: 'none' }, use: 'ds-bot\u2019s entry id inside the boot graph: the page has its Bot surface to give way to (D74); this instance does not install it', owner: 'core' },
   { id: 'ds-bot.surface', value: dom.DS_BOT_SURFACE_ATTRIBUTE, probe: { state: 'any', kind: 'none' }, use: 'ds-bot\u2019s Bot surface is painted, so this theme gives the page way (D74); this instance does not install it', owner: 'core' },
   { id: 'ds-bot.saved-mode', value: 'ds-bot:surface', probe: { state: 'any', kind: 'none' }, use: 'the local storage key holding ds-bot\u2019s mode, read before its browser half runs so the first frame already belongs to the right owner (D74); this instance does not install it', owner: 'core' },

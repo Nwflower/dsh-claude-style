@@ -124,7 +124,7 @@ body[data-dsh-claude-style] .dsh-claude-message-editor-save:disabled {
 }
 
 
-/* D105: superseded physical Sessions stay in revision history, while the native
+/* D111: superseded physical Sessions stay in revision history, while the native
    sidebar presents only the active fork as the logical conversation. */
 body[data-dsh-claude-style] [data-dsh-claude-revision-hidden] {
   display: none;

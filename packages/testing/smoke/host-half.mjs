@@ -39,7 +39,8 @@ import { hostRewind } from './host-half-rewind.mjs'
  *   and `onRead` runs for each read as it happens; `stored` is the snapshot list
  *   the fake `sessionPersistence` answers (each listing is pushed onto `lists`);
  *   `registry` is the fake `workspaceRegistry` service object itself, whose
- *   `unarchived` list records every call.
+ *   `unarchived` list records every call; `loader` is the fake host loader,
+ *   whose `entries()` the rewind's peer check walks.
  */
 
 async function hostHalf() {

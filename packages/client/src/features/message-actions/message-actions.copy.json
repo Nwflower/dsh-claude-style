@@ -12,6 +12,7 @@
   "sent": { "zh": "已从原消息位置重新发出", "en": "Sent again from the original message position" },
   "failed": { "zh": "这条消息没能处理完", "en": "The message could not be handled" },
   "actionsTitle": { "zh": "消息操作行", "en": "Message actions" },
+  "rewindPeerNote": { "zh": "撤回、编辑、重跑与删除由插件 dsh-rewind 提供", "en": "Retract, edit, rerun and delete come from the dsh-rewind plugin" },
   "retractConfirm": { "zh": "撤回这条消息？", "en": "Retract this message?" },
   "editConfirm": { "zh": "从这条消息继续？", "en": "Continue from this message?" },
   "rerunConfirm": { "zh": "重跑这一轮？", "en": "Run this turn again?" },

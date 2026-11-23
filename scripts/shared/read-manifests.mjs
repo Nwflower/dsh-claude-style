@@ -132,7 +132,7 @@ function checkManifests(manifests) {
           }
         }
         if (row.experimental !== undefined && typeof row.experimental !== 'boolean') fail(manifest, 'has a settings row whose "experimental" is not true or false')
-        for (const key of [row.title, row.desc, row.requires?.note]) {
+        for (const key of [row.title, row.desc, row.requires?.note, row.sharedWith?.note]) {
           if (key === undefined) continue
           if (typeof key !== 'string' || !carries(key)) fail(manifest, `names the copy key "${key}", which neither packages/client/src/features/${manifest.dir}/${manifest.dir}.copy.json nor the settings page's own copy carries`)
         }
@@ -141,12 +141,13 @@ function checkManifests(manifests) {
           if (spec.type !== 'choice' || !spec.values.includes(value)) fail(manifest, `labels "${value}" for "${row.pref}", which does not carry that value`)
           if (!carries(key)) fail(manifest, `names the copy key "${key}" for the value "${value}", which neither packages/client/src/features/${manifest.dir}/${manifest.dir}.copy.json nor the settings page's own copy carries`)
         }
+        if (row.sharedWith !== undefined && typeof row.sharedWith?.note !== 'string') fail(manifest, `shares the settings row of "${row.pref}" with a plugin without a "note" naming what that plugin takes`)
         const requires = row.requires
         if (row.placement !== undefined) {
           if (row.placement !== 'header') fail(manifest, `has a settings row placed at "${row.placement}", which is not a place a row takes`)
           if (row.parent === undefined) fail(manifest, `places the settings row of "${row.pref}" in a header without naming the row in "parent"`)
           if (row.title === undefined) fail(manifest, `places the settings row of "${row.pref}" in a header without a "title" for its accessible name`)
-          for (const field of ['desc', 'control', 'status', 'requires', 'experimental']) {
+          for (const field of ['desc', 'control', 'status', 'requires', 'sharedWith', 'experimental']) {
             if (row[field] !== undefined) fail(manifest, `places the settings row of "${row.pref}" in a header, which has no line for its "${field}"`)
           }
         }

@@ -64,11 +64,15 @@ async function hostRewind({ mod, fakeHost, request, browser, crossSite }) {
       this.pinnedSessionIds = [id, ...this.pinnedSessionIds.filter(pinned => pinned !== id)]
     },
   }
+  // The host loader's entries: dsh-rewind's row stands in it disabled, with no fiber, until a check
+  // below starts it (D111).
+  const loaderEntries = [{ options: { id: 'rewind-disabled', name: 'dsh-rewind-plugin' } }]
   const host = fakeHost(mod, {
     fenced: true,
     registry,
     home,
     listen: true,
+    loader: { entries: () => loaderEntries.values() },
     live: ['session-source', 'session-child', 'session-racy', 'session-plain'],
     events,
     stored: Object.keys(events).map(id => ({ header: { id }, revision: 'r' })),
@@ -160,6 +164,33 @@ async function hostRewind({ mod, fakeHost, request, browser, crossSite }) {
   const plain = plainAnswer.status === 200 ? JSON.parse(plainAnswer.body).value : null
   check('a historical turn without a checkpoint explicitly offers message-only rewind',
     plain?.restoreAvailable === false && plain.reason !== '', JSON.stringify(plain ?? JSON.parse(plainAnswer.body)))
+
+  // dsh-rewind running in the same host records its own checkpoints, so this half records none
+  // while its entry's fiber is active, and records again once it stops (D111).
+  const peer = { options: { id: 'rewind-active', name: 'dsh-rewind-plugin' }, fiber: { state: 2 } }
+  const plainSession = host.ctx.get('sessions').get('session-plain')
+  const plainExecution = { agent: { session: plainSession } }
+  const runTurn = async (turn) => {
+    await host.emit('session/event', plainSession, { seq: 10 + turn, type: 'turn/start', data: { turn } })
+    await host.emit('tools/pre-execute', plainExecution, async () => {})
+    await host.emit('fs/write-intent', { path: path.join(repo, 'note.txt') }, plainExecution, async () => ({}))
+    await host.emit('session/event', plainSession, { seq: 20 + turn, type: 'turn/end', data: { turn } })
+    // A later tool call waits for the recorder's queue, which ends once the checkpoint is written.
+    await host.emit('tools/pre-execute', plainExecution, async () => {})
+  }
+  const plainTurns = () => (JSON.parse(fs.readFileSync(path.join(rewindHome, 'state.json'), 'utf8')).checkpoints['session-plain'] ?? []).map(row => row.turn)
+  loaderEntries.push(peer)
+  await runTurn(2)
+  const whilePeer = plainTurns()
+  loaderEntries.splice(loaderEntries.indexOf(peer), 1)
+  await runTurn(3)
+  const afterPeer = plainTurns()
+  loaderEntries.push(peer)
+  await runTurn(4)
+  const peerBack = plainTurns()
+  check('no checkpoint is recorded while dsh-rewind runs in the host', whilePeer.length === 0, JSON.stringify(whilePeer))
+  check('a disabled dsh-rewind entry leaves the recording on', JSON.stringify(afterPeer) === '[3]', JSON.stringify(afterPeer))
+  check('dsh-rewind starting again stops the recording at the next turn', JSON.stringify(peerBack) === '[3]', JSON.stringify(peerBack))
 }
 
 export { hostRewind }

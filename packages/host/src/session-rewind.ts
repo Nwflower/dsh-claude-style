@@ -1,5 +1,5 @@
 /**
- * Plugin-owned turn checkpoints and logical conversations (D105).
+ * Plugin-owned turn checkpoints and logical conversations (D111).
  *
  * DSH still owns every physical Session and every configured Agent. This module
  * records exact turn-start trees, records whole files before file-tool mutations,
@@ -24,6 +24,7 @@ import type {
 import type { DshContext, DshSessionObservation } from '@dsh-claude-style/engine/node/dsh'
 import { readEvents } from '@dsh-claude-style/engine/node/session-events'
 import { pluginPath } from './harness-home.js'
+import { rewindPeerActive } from './rewind-peer.js'
 import {
   applyTree,
   diffTrees,
@@ -186,6 +187,13 @@ export class SessionRewind {
       if (session === null || typeof session.id !== 'string') return
       const recorder = this.recorders.get(session.id)
       if (event.type === 'turn/start' && typeof event.data?.turn === 'number') {
+        // While dsh-rewind runs the checkpoints are its own (D111). A turn starts after the one before
+        // it ended, so dropping the recorder here loses no checkpoint in progress; with no recorder,
+        // the pre-execute hook no longer waits for this session.
+        if (rewindPeerActive(this.ctx)) {
+          this.recorders.delete(session.id)
+          return
+        }
         const cwd = sessionCwd(session)
         if (cwd !== null && session.header?.origin !== 'subagent') this.recorderFor(session, cwd).start(event.data.turn)
       } else if (event.type === 'turn/end' && typeof event.data?.turn === 'number') {

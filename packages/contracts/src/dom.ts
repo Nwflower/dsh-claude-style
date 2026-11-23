@@ -423,6 +423,8 @@ export const PLUGIN_SHEET_SELECTOR = 'style[data-plugin]'
 export const PLUGIN_SHEET_OWNER_ATTRIBUTE = 'data-plugin'
 export const PLUGIN_SHEET_PATH_ATTRIBUTE = 'data-plugin-css'
 export const PLUGIN_STYLE_PATH_ATTRIBUTE = 'data-path'
+/** The sheet dsh-rewind's browser half tags with its package name while it runs, read to hand the rewind write actions over (D111). */
+export const REWIND_PEER_SHEET_SELECTOR = 'style[data-plugin="dsh-rewind-plugin"]'
 
 /* ---------- a plugin's footer control ---------- */
 /** Plugin-owned footer naming lets the skin find update controls without hashed class names. */

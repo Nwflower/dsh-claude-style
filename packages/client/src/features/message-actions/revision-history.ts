@@ -1,4 +1,4 @@
-/** Logical-conversation metadata and sidebar visibility (D105). */
+/** Logical-conversation metadata and sidebar visibility (D111). */
 import type { LogicalConversation } from '@dsh-claude-style/contracts/session-rewind'
 import { SESSION_REVISIONS_PATH } from '@dsh-claude-style/contracts/routes'
 import { CHAT_TURN_ATTRIBUTE, SESSION_ROW_KEY_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'

@@ -444,8 +444,9 @@ function page(name, tier, cases, probe = PROBE) {
   // The other chat-behaviour plugin, installed: the host's own startup picture
   // names every client entry before any of them runs, which is the signal
   // packages/client/src/shared/peer-plugin.ts reads first (the style element is the other one).
+  // dsh-rewind stands in the same list, so the same page answers for the rewind's hand-over (D111).
   var boot = name === 'peer-chat-ux'
-    ? '<script>window.__DSH_BOOT__ = { entries: [{ id: "ui-skin-claude-style", rev: "smoke" }, { id: "@alm-allen/dsh-chat-ux", rev: "smoke" }] }</script>'
+    ? '<script>window.__DSH_BOOT__ = { entries: [{ id: "ui-skin-claude-style", rev: "smoke" }, { id: "@alm-allen/dsh-chat-ux", rev: "smoke" }, { id: "dsh-rewind-plugin", rev: "smoke" }] }</script>'
     : ''
   // A skin owns the page from the first frame: the skin center injects this
   // attribute into the served document, before any bundle is evaluated, which

@@ -76,7 +76,7 @@ Captures go through `scripts/shared/privacy.mjs`; a failed leak scan fails the r
 
 Read D5 before editing `packages/client/data/model-descriptions.json`.
 
-Before updating message actions, fork boundaries, workspace checkpoints or session-row visibility, read [D105](docs/adr/D105-logical-conversation-rewind.md). Every message action keeps the shared plan–confirm–fork–commit path, inherited checkpoints, active-revision visibility and teardown in sync; run the real Git host checks and all three message-action browser scenarios after any such update.
+Before updating message actions, fork boundaries, workspace checkpoints or session-row visibility, read [D111](docs/adr/D111-rewind-yields-to-dsh-rewind.md). Every message action keeps the shared plan–confirm–fork–commit path, inherited checkpoints, active-revision visibility and teardown in sync; run the real Git host checks and all three message-action browser scenarios after any such update.
 
 ## Commands
 

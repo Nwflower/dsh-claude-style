@@ -10,13 +10,14 @@ import type { HostUiWorkspaceService } from '@dsh-claude-style/contracts/service
 import type { RewindAction } from '@dsh-claude-style/contracts/session-rewind'
 import type { FeatureUi } from '../../core/feature'
 import { createHostToast } from '../../shared/host-toast'
+import { peerPresent, subscribePeerPresence } from '../../shared/peer-plugin'
 import { ACTION_BUTTON_ATTRIBUTE, BUTTONS_SEAT_ATTRIBUTE, BUTTONS_SEAT_CLASS, MessageActionButtons } from './message-action-buttons'
 import { copy } from './message-actions-copy'
 import type manifest from './message-actions.manifest'
 import { answerPromptOf, answerRowOf, readerMessageOf } from './message-cut'
 import type { ReaderMessage } from './message-cut'
 import { executeRewind, prepareRewind } from './rewind-client'
-import { closeRewindDialogs, confirmRewind, openRevisionHistory } from './rewind-dialog'
+import { closeRewindDialogs, confirmRewind, dismissRewindConfirmations, openRevisionHistory } from './rewind-dialog'
 import { applyForkArtifactVisibility, applyRevisionVisibility, clearRevisionVisibility, conversationFor, refreshConversations, rowSession, REVISIONS_CHANGED_EVENT } from './revision-history'
 
 /**
@@ -34,7 +35,10 @@ import { applyForkArtifactVisibility, applyRevisionVisibility, clearRevisionVisi
  *
  * 四个动作共用确认计划（rewind-client.ts）：DSH 仍从消息前 fork，插件恢复
  * 目标检查点并把新旧 Session 收进同一条逻辑对话。侧边栏只显示活动版本，
- * 原 Session 一个事件都不动，可从版本历史打开（D105）。
+ * 原 Session 一个事件都不动，可从版本历史打开（D111）。
+ *
+ * dsh-rewind 在页面上时，四个动作交给它：按钮不画，编辑框与确认对话框随即
+ * 收起；版本隐藏与版本历史按钮照旧，它们不写会话（D111）。
  */
 
 /** 读者消息的那一行（宿主标出的 kind）。 */
@@ -73,6 +77,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let cancelFrame: (() => void) | null = null
   let released = false
   let pendingAction = false
+  /** dsh-rewind is on the page: the four write actions are its own (D111). */
+  let rewindYielded = peerPresent('dsh-rewind')
+  /** The answer the seats were last drawn under; sync redraws them all when it moves. */
+  let drawnYielded = rewindYielded
 
   /** 一次写入等下一帧：宿主一批挂进来的是一整棵子树，逐条写会把那批拆碎。 */
   function queue(write: () => void) {
@@ -113,7 +121,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   function run(action: () => unknown) {
-    if (pendingAction) return
+    // A button drawn before dsh-rewind arrived can still take a press until the redraw lands.
+    if (pendingAction || rewindYielded) return
     try {
       const answer = action()
       if (answer instanceof Promise) {
@@ -183,6 +192,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** One confirmed plan drives all four actions; cancelling leaves the current Session and editor untouched. */
   async function confirmedRewind(message: ReaderMessage, text: string, send: boolean, action: RewindAction, success: string): Promise<boolean> {
     const plan = await prepareRewind(message)
+    // dsh-rewind arrived while the plan was on its way: the action is its own now.
+    if (rewindYielded) return false
     const choice = await confirmRewind(plan, action)
     if (choice === null) return false
     await executeRewind(ctx, message, plan, text, send, action, choice.restore)
@@ -237,6 +248,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** 各按钮的动作：宿主重画一行时按钮跟着重画，动作本身读的是当时那一行。 */
   function handlersFor(row: HTMLElement, line: HTMLElement) {
     if (row.matches(CHAT_ANSWER_ROW_SELECTOR)) {
+      if (rewindYielded) return {}
       const attachments = answerPromptOf(ctx, row)?.attachments === true
       return {
         ...(attachments ? {} : { rerun() { run(() => rerunAnswer(row)) } }),
@@ -246,12 +258,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const message = readerMessageOf(ctx, row)
     const history = message === null ? undefined : conversationFor(message.sessionId)
     return {
-      retract() {
-        run(() => retractMessage(row))
-      },
-      edit() {
-        run(() => openEditor(row, line))
-      },
+      ...(rewindYielded ? {} : {
+        retract() {
+          run(() => retractMessage(row))
+        },
+        edit() {
+          run(() => openEditor(row, line))
+        },
+      }),
       ...(history === undefined || history.revisions.length < 2 ? {} : {
         history() {
           // Reading revisions is safe while the previous submission settles; it never forks or writes.
@@ -326,7 +340,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const turnTailRows = observeMatches<HTMLElement>(TURN_TAIL_SELECTOR, () => queue(sync))
 
   /**
-   * 收尾行所属会话的快照订阅（D105）：分岔的收尾行先挂上页面，timeline 的
+   * 收尾行所属会话的快照订阅（D111）：分岔的收尾行先挂上页面，timeline 的
    * forked 结束晚一步才发布出来，隐藏判定在行挂载那一帧读到的还是空结束。
    * 宿主每发布一次快照就重新判定一次；行离开页面或换了会话，订阅随之摘下。
    * 按行: 订阅随行元素脱离文档丢弃，换会话时旧订阅先停下。
@@ -350,6 +364,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   function sync() {
+    if (drawnYielded !== rewindYielded) {
+      drawnYielded = rewindYielded
+      if (rewindYielded) {
+        closeEditor()
+        dismissRewindConfirmations()
+      }
+      redrawSeats()
+    }
     applyRevisionVisibility(sessionRows.all())
     const tails = turnTailRows.all()
     for (const row of tails) followTailSnapshot(row)
@@ -391,16 +413,24 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
   })
 
-  function redrawHistoryButtons() {
+  function redrawSeats() {
     for (const [line, seat] of seats) {
       const answer = answerRowOf(line)
       const row = line.closest<HTMLElement>(USER_ROW_SELECTOR) ?? answer
       if (row !== null) draw(seat, row, line)
     }
+  }
+  function redrawHistoryButtons() {
+    redrawSeats()
     queue(sync)
   }
   const revisionsChanged = () => { queue(redrawHistoryButtons) }
   document.addEventListener(REVISIONS_CHANGED_EVENT, revisionsChanged)
+  // dsh-rewind arriving or leaving moves the write actions; sync redraws the seats under the new answer (D111).
+  const stopPeerWatch = subscribePeerPresence(() => {
+    rewindYielded = peerPresent('dsh-rewind')
+    queue(sync)
+  })
   // Background metadata loading is isolated from installation; a failure is reported without uninstalling the row controls.
   void refreshConversations().catch(report)
 
@@ -411,6 +441,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     released = true
     delete ui.messageActions
     stopRemovals()
+    stopPeerWatch()
     document.removeEventListener(REVISIONS_CHANGED_EVENT, revisionsChanged)
     seatsOnPage.release()
     clearRevisionVisibility(sessionRows.all())

@@ -21,7 +21,7 @@ import type { HostContext } from '@dsh-claude-style/engine/host'
 /**
  * 一条读者消息在会话日志里的位置。DSH 的 fork 仍负责创建配置完整的
  * Agent；插件的确认计划、文件恢复和逻辑会话关系在 rewind-client.ts 中编排，
- * 原 Session 永远不被改写（D105）。
+ * 原 Session 永远不被改写（D111）。
  */
 
 /** 活动版本挂上输入框的上限：宿主要先建物理 fork、再把它的绑定交给页面。 */

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-23",
+  "group": "improvements",
+  "order": 20,
+  "external": true,
+  "zh": "与 dsh-rewind 同时安装时，撤回、编辑、重跑和删除交给 dsh-rewind 提供，消息操作行只保留版本历史，宿主端也不再为新的轮次记录检查点；设置页的「消息操作行」下写明这一点，dsh-rewind 中途装上或卸下时随即跟随",
+  "en": "Hand retract, edit, rerun and delete over to dsh-rewind when it is installed alongside, keeping only revision history in the message actions and recording no checkpoint for new turns on the host side, with the Message actions row in settings saying so and the hand-over following dsh-rewind being loaded or removed mid-session"
+}

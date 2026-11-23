@@ -1,68 +1,86 @@
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
+import { REWIND_PEER_SHEET_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { REWIND_PEER_PACKAGE } from '@dsh-claude-style/contracts/session-rewind'
 import { notifyEnvironmentChange } from '../core/prefs'
 import { parkForeignSheets } from '../core/stylesheet'
 import { notifyAll } from '@dsh-claude-style/engine/notify'
 import type { PeerPlugin } from '../core/feature'
 
-/** dsh-chat-ux owns the same interactions, so yielding features must stand down while it is present (D74).
- * The fixed boot list covers startup; its live stylesheet covers later mounts and hot reloads.
+/**
+ * Other plugins that own behaviour this skin also carries. dsh-chat-ux owns the
+ * ported chat interactions (D74); dsh-rewind owns the rewind write actions and
+ * their checkpoints (D111). The fixed boot list covers startup; each plugin's
+ * live stylesheet covers later mounts and hot reloads.
  */
-/** The other plugin's id, as its entry appears in the boot list. */
-const PEER_ENTRY_ID = 'dsh-chat-ux'
-/** The `<style>` its browser half mounts while it is live. */
-const PEER_STYLE_ID = 'dsh-chat-ux-style'
+interface PeerMarks {
+  /** The plugin's id, as its entry appears in the boot list. */
+  entry: string
+  /** Whether its browser half has its stylesheet mounted right now. */
+  live(): boolean
+}
 
-/** The boot list's answer, and whether it has been read. */
-let peerEntrySeen = false
-let peerEntryRead = false
-/** The answer the last announcement carried; null before the first one. */
-let peerAnnounced: boolean | null = null
-/** Who hears about the answer changing. */
-const peerListeners: ((present: boolean) => void)[] = []
+const PEERS: Readonly<Record<PeerPlugin, PeerMarks>> = {
+  'dsh-chat-ux': { entry: 'dsh-chat-ux', live: () => document.getElementById('dsh-chat-ux-style') !== null },
+  'dsh-rewind': { entry: REWIND_PEER_PACKAGE, live: () => document.head.querySelector(REWIND_PEER_SHEET_SELECTOR) !== null },
+}
+const PEER_PLUGINS = Object.keys(PEERS) as PeerPlugin[]
+
+/** The boot list's answer for each plugin, read once: the list is fixed for the page's life. */
+const entrySeen = new Map<PeerPlugin, boolean>()
+/** The answers the last announcement carried; empty before the first one. */
+const announced = new Map<PeerPlugin, boolean>()
+/** Who hears about any answer changing. */
+const peerListeners: (() => void)[] = []
 /** Stops the head watch; set while at least one listener is subscribed. */
 let stopHeadWatch: (() => void) | null = null
 
-/**
- * Whether dsh-chat-ux is installed on this page right now.
- * @returns true while the ported chat features must stand down.
- */
-function dshChatUxPresent() {
-  if (document.getElementById(PEER_STYLE_ID) !== null) return true
-  if (peerEntryRead) return peerEntrySeen
-  peerEntryRead = true
+/** Whether the boot list names this plugin's entry. */
+function bootListNames(plugin: PeerPlugin) {
+  const seen = entrySeen.get(plugin)
+  if (seen !== undefined) return seen
   const entries = window.__DSH_BOOT__?.entries
-  peerEntrySeen = Array.isArray(entries)
-    && entries.some(entry => typeof entry?.id === 'string' && entry.id.includes(PEER_ENTRY_ID))
-  return peerEntrySeen
+  const named = Array.isArray(entries)
+    && entries.some(entry => typeof entry?.id === 'string' && entry.id.includes(PEERS[plugin].entry))
+  entrySeen.set(plugin, named)
+  return named
 }
 
-/** Whether a plugin a manifest yields to is on the page right now. */
+/** Whether a plugin that owns behaviour this skin also carries is on the page right now. */
 export function peerPresent(plugin: PeerPlugin) {
-  if (plugin === PEER_ENTRY_ID) return dshChatUxPresent()
-  throw new Error(`peer-plugin: no presence check for ${plugin}`)
+  return PEERS[plugin].live() || bootListNames(plugin)
+}
+
+/** Every plugin's answer, written into `announced`; true when any of them changed. */
+function announce() {
+  let changed = false
+  for (const plugin of PEER_PLUGINS) {
+    const present = peerPresent(plugin)
+    if (announced.get(plugin) === present) continue
+    announced.set(plugin, present)
+    changed = true
+  }
+  return changed
 }
 
 /** Park untagged sibling sheets in this mutation microtask, before host materialization can claim them (D9).
- * Notify only when peer presence, rather than unrelated head content, changes.
+ * Notify only when a plugin's presence, rather than unrelated head content, changes.
  */
 export function checkPeerPresence() {
   parkForeignSheets()
-  const present = dshChatUxPresent()
-  if (present === peerAnnounced) return
-  peerAnnounced = present
-  notifyAll(peerListeners, present)
+  if (!announce()) return
+  notifyAll(peerListeners)
   // The features that stand down by reading a preference hear about it
   // through the stream they already subscribe to; the one that claims seat
   // keys registers again on its own subscription above.
   notifyEnvironmentChange()
 }
 
-/** The first subscriber starts the head watch and the last stops it. */
-export function subscribePeerPresence(listener: (present: boolean) => void) {
+/** The first subscriber starts the head watch and the last stops it. A listener reads `peerPresent` for the plugin it cares about. */
+export function subscribePeerPresence(listener: () => void) {
   peerListeners.push(listener)
   if (stopHeadWatch === null) {
     stopHeadWatch = subscribeMutations(document.head, { childList: true }, checkPeerPresence)
-    peerAnnounced = dshChatUxPresent()
+    announce()
   }
   return () => {
     const at = peerListeners.indexOf(listener)

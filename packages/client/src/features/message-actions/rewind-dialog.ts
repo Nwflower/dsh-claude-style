@@ -5,10 +5,19 @@ import { Modal } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ConversationRevision, LogicalConversation, RewindAction, RewindFile, RewindPlan } from '@dsh-claude-style/contracts/session-rewind'
 import { copy } from './message-actions-copy'
 
+/** Every open dialog's close. */
 const openDialogs = new Set<() => void>()
+/** Each open confirmation's dismissal, which answers it as cancelled. */
+const openConfirmations = new Set<() => void>()
 
 export function closeRewindDialogs(): void {
+  dismissRewindConfirmations()
   for (const close of [...openDialogs]) close()
+}
+
+/** Close the open confirmations as cancelled, leaving revision history open: it writes nothing (D111). */
+export function dismissRewindConfirmations(): void {
+  for (const dismiss of [...openConfirmations]) dismiss()
 }
 
 function mount(render: (close: () => void) => React.ReactElement): () => void {
@@ -94,16 +103,25 @@ function RewindConfirmation(props: { plan: RewindPlan, action: RewindAction, clo
 export function confirmRewind(plan: RewindPlan, action: RewindAction): Promise<{ restore: boolean } | null> {
   return new Promise(resolve => {
     let settled = false
-    mount(close => React.createElement(RewindConfirmation, {
+    const settle = (choice: { restore: boolean } | null) => {
+      if (settled) return
+      settled = true
+      openConfirmations.delete(dismiss)
+      resolve(choice)
+    }
+    const close = mount(closeDialog => React.createElement(RewindConfirmation, {
       plan,
       action,
       close(choice) {
-        if (settled) return
-        settled = true
-        resolve(choice)
-        close()
+        settle(choice)
+        closeDialog()
       },
     }))
+    const dismiss = () => {
+      settle(null)
+      close()
+    }
+    openConfirmations.add(dismiss)
   })
 }
 

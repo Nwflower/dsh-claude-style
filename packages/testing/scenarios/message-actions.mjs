@@ -1,6 +1,19 @@
 import path from 'node:path'
 import { HOST, check } from '../lane.mjs'
 import { sanitizePage } from '../../../scripts/shared/privacy.mjs'
+import { loadModule } from '../../../scripts/shared/ts-module.mjs'
+import actionCopy from '../../client/src/features/message-actions/message-actions.copy.json' with { type: 'json' }
+
+/** The sheet dsh-rewind's browser half mounts while it runs, tagged with its package name (D111). */
+const { REWIND_PEER_SHEET_SELECTOR } = loadModule('packages/contracts/src/dom.ts')
+const { REWIND_PEER_PACKAGE } = loadModule('packages/contracts/src/session-rewind.ts')
+
+/** How many of each message action the page carries, counted by the label the copy table gives it. */
+function countActions(page) {
+  const count = (key) => page.getByRole('button', { name: new RegExp(`^(${actionCopy[key].zh}|${actionCopy[key].en})$`) }).count()
+  return Promise.all(['retract', 'edit', 'rerun', 'delete', 'history'].map(count))
+    .then(([retract, edit, rerun, remove, history]) => ({ retract, edit, rerun, delete: remove, history }))
+}
 
 /** The visible host Tooltip, read off the page: its words and the look the host gives it. */
 function readTooltip(page) {
@@ -180,6 +193,38 @@ function messageActionsScenario({ check }) {
       }, { timeout: 30000 }).catch(() => {})
       await page.waitForFunction(() => (document.querySelector('[data-composer-input]')?.innerText ?? '').trim() === '', { timeout: 10000 }).catch(() => {})
       const committed = await read()
+      // dsh-rewind arriving mid-session mounts its tagged sheet: the four write actions leave the
+      // rows while revision history stays, an open confirmation closes as cancelled, and the
+      // actions come back once the sheet goes (D111).
+      const confirmRewindButton = page.getByRole('button', { name: new RegExp(`^(${actionCopy.confirmRewind.zh}|${actionCopy.confirmRewind.en})$`) })
+      // The edited message is still being answered until its answer row carries the rerun action:
+      // a press on a running turn only raises the "still running" note.
+      let settled = await countActions(page)
+      for (const until = Date.now() + 60000; settled.rerun === 0 && Date.now() < until; settled = await countActions(page)) await page.waitForTimeout(200)
+      await page.hover(ROW)
+      await retractButton.click()
+      await confirmRewindButton.waitFor({ timeout: 20000 })
+      const peerMounted = await page.evaluate(({ owner, selector }) => {
+        const sheet = document.createElement('style')
+        sheet.setAttribute('data-plugin', owner)
+        document.head.append(sheet)
+        return document.head.querySelector(selector) === sheet
+      }, { owner: REWIND_PEER_PACKAGE, selector: REWIND_PEER_SHEET_SELECTOR })
+      const writeActions = (counts) => counts.retract + counts.edit + counts.rerun + counts.delete
+      let withPeer = await countActions(page)
+      for (const until = Date.now() + 10000; writeActions(withPeer) > 0 && Date.now() < until; withPeer = await countActions(page)) await page.waitForTimeout(100)
+      await confirmRewindButton.waitFor({ state: 'detached', timeout: 5000 }).catch(() => {})
+      const confirmationLeft = await confirmRewindButton.count()
+      const sessionWithPeer = (await read()).sessionId
+      await page.evaluate((selector) => { document.head.querySelector(selector)?.remove() }, REWIND_PEER_SHEET_SELECTOR)
+      let peerGone = await countActions(page)
+      for (const until = Date.now() + 10000; (peerGone.retract === 0 || peerGone.edit === 0) && Date.now() < until; peerGone = await countActions(page)) await page.waitForTimeout(100)
+      // The dismissed confirmation ended its action, so the next press opens the editor again.
+      await page.hover(ROW)
+      await editButton.click()
+      const editorAfterPeer = await page.waitForSelector(EDITOR, { timeout: 5000 }).then(() => true, () => false)
+      await page.keyboard.press('Escape')
+      await page.waitForSelector(EDITOR, { state: 'detached', timeout: 5000 }).catch(() => {})
       await page.getByRole('button', { name: /^(查看版本历史|View revision history)$/ }).click()
       await page.getByRole('dialog', { name: /^(版本历史|Revision history)$/ }).waitFor({ timeout: 10000 })
       const historyCount = await page.locator('.dsh-claude-history-item').count()
@@ -201,6 +246,9 @@ function messageActionsScenario({ check }) {
         check('原文回到活动版本的输入框', rewound.draft === 'hello there', rewound.draft.slice(0, 80)),
         check('文字清空时保存按钮不可按', emptySaveOff === true, `disabled=${emptySaveOff}`),
         check('编辑保存后改过的文字在原历史位置直接发出', committed.sessionId !== rewound.sessionId && committed.bubbleText === 'hello there, edited' && committed.draft === '', `session=${committed.sessionId} draft=${committed.draft.slice(0, 40)} bubble=${committed.bubbleText.slice(0, 60)}`),
+        check('dsh-rewind 在页面上时撤回、编辑、重跑与删除让出，版本历史保留', peerMounted && writeActions(withPeer) === 0 && withPeer.history > 0, `mounted=${peerMounted} ${JSON.stringify(withPeer)}`),
+        check('dsh-rewind 到来时打开着的确认窗口按取消收起', confirmationLeft === 0 && sessionWithPeer === committed.sessionId, `left=${confirmationLeft} session=${sessionWithPeer} expected=${committed.sessionId}`),
+        check('dsh-rewind 离开后撤回与编辑回到控件行，编辑照常打开', peerGone.retract > 0 && peerGone.edit > 0 && peerGone.history > 0 && editorAfterPeer, `${JSON.stringify(peerGone)} editor=${editorAfterPeer}`),
         check('版本历史保留原会话、撤回版本与编辑版本', historyCount === 3, `revisions=${historyCount}`),
         check('历史弹窗可以取消归档并打开最初会话', openedOriginal, `session=${(await read()).sessionId} expected=${resting.sessionId}`),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),

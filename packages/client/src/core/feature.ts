@@ -43,7 +43,8 @@ export interface FeatureFields {
   contracts: string[]
 }
 
-export type PeerPlugin = 'dsh-chat-ux'
+/** A plugin that owns behaviour this skin also carries (shared/peer-plugin.ts). */
+export type PeerPlugin = 'dsh-chat-ux' | 'dsh-rewind'
 
 export type FeatureStylesheet = FeatureStylesheetFile | FeatureStylesheetGenerated
 
@@ -87,11 +88,16 @@ export interface FeatureSettingsRow {
    * `header` seats the row's control in the title line of the row `parent`
    * names, across from that row's text, instead of giving it a row of its own;
    * the title becomes the control's accessible name. The row carries a title
-   * and a plain control and no description, status line, own control or
-   * requirement, because the header has no line to show them on.
+   * and a plain control and no description, status line, own control,
+   * requirement or shared plugin, because the header has no line to show them on.
    */
   placement?: 'header'
   requires?: FeatureRowRequirement
+  /**
+   * A plugin that takes over part of the row's reach while it is on the page:
+   * the row keeps answering, for the part it still governs, and shows `note`.
+   */
+  sharedWith?: FeatureRowPeer
   /** Other platforms show the stored choice but refuse input. */
   windowsOnly?: boolean
   /** Reduced motion swaps previews for distinguishable stills without disabling the choice. */
@@ -111,6 +117,12 @@ export interface FeatureSettingsRow {
 export interface FeatureRowRequirement {
   pref: keyof Prefs
   values: readonly string[]
+  note: string
+}
+
+/** The plugin a row shares its reach with, and the copy key of the line naming what it took. */
+export interface FeatureRowPeer {
+  plugin: PeerPlugin
   note: string
 }
 

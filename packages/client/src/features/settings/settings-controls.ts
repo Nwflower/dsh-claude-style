@@ -10,6 +10,7 @@ import { windowsDesktop } from '@dsh-claude-style/engine/desktop-band'
 import { headerRowsOf, prefYielded, settingsRowsOf } from '../../core/feature'
 import { featureCopy } from '../../core/i18n'
 import { motionReduced } from '../../core/prefs'
+import { peerPresent } from '../../shared/peer-plugin'
 import { copy, sharedLine } from './copy'
 import type { Feature, FeatureSettingsRow } from '../../core/feature'
 import type { Prefs } from '../../constants'
@@ -178,7 +179,9 @@ function blocked(row: FeatureSettingsRow, seen: ReadonlySet<string>, prefs: Pref
  * works under another preference's values (`requires`), one standing under a row
  * that cannot act either (`parent`: the switch above it is off, or that row is
  * itself waiting), and one acting on the Windows desktop window alone
- * (`windowsOnly`) on every page that is not that window.
+ * (`windowsOnly`) on every page that is not that window. A row sharing its
+ * reach with a plugin on the page (`sharedWith`) keeps answering and names what
+ * that plugin took.
  */
 function featureRowParts(feature: Feature, row: FeatureSettingsRow, view: SettingsView, rowsByPref: ReadonlyMap<keyof Prefs, FeatureSettingsRow>) {
   const controls = view.controls
@@ -216,7 +219,9 @@ function featureRowParts(feature: Feature, row: FeatureSettingsRow, view: Settin
           off,
         )
   const still = row.stillWhenReduced === true && motionReduced()
-  const note = waits ?? (offWindows ? sharedLine('windowsOnlyNote') : still ? sharedLine('motionStillNote') : null)
+  // A row sharing its reach with a plugin on the page keeps answering and names what that plugin took (D111).
+  const shared = row.sharedWith !== undefined && peerPresent(row.sharedWith.plugin) ? rowLine(feature, row.sharedWith.note) : null
+  const note = waits ?? shared ?? (offWindows ? sharedLine('windowsOnlyNote') : still ? sharedLine('motionStillNote') : null)
   // A yielded row says who manages it even when it carries no description of
   // its own: the switch rows over the preview cards have none.
   const described = yielded

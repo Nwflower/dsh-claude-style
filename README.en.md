@@ -69,6 +69,8 @@ Retract, edit, rerun and delete-turn open a confirmation dialog listing the turn
 
 The plugin records a workspace checkpoint for each turn and can restore code changes at the same time. History recorded before installation, or with an incomplete checkpoint, rewinds messages only and says so in the dialog. Git commits, external services and other command side effects are not undone.
 
+With [dsh-rewind](https://github.com/SiriLee/dsh-rewind) installed as well, retract, edit, rerun and delete come from it: this plugin's four buttons leave the message actions and no checkpoint is recorded for new turns. Existing revision history still opens from the message actions, and the **Message actions** row in settings says so. Once dsh-rewind is removed, the four buttons and checkpoint recording return, and the turns taken in between rewind messages only.
+
 ## Installation
 
 From the official plugin page add the package below, or from a terminal:
