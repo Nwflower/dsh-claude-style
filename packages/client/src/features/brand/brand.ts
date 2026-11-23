@@ -1,4 +1,5 @@
 import { BRAND_DEFAULT_PRESETS, BRAND_INK_ATTR, BRAND_INK_ORIGINAL, CUSTOM_EDGES_ATTR, CUSTOM_MARK_ATTR, CUSTOM_MARK_NONE_ATTR, CUSTOM_PALETTE_ATTR, CUSTOM_TINT_ATTR, CUSTOM_WORD_ATTR, CUSTOM_WORD_IMAGE, CUSTOM_WORD_TEXT } from '../../constants'
+import { writeBodyProperty } from '@dsh-claude-style/engine/body-properties'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { accentInk } from '../../shared/contrast'
 import { activeScheme } from '../../shared/palette-scheme'
@@ -39,10 +40,10 @@ export function install() {
     if (value === null) body.removeAttribute(name)
     else if (body.getAttribute(name) !== value) body.setAttribute(name, value)
   }
-  const property = (name: string, value: string | null) => {
-    if (value === null) body.style.removeProperty(name)
-    else if (body.style.getPropertyValue(name) !== value) body.style.setProperty(name, value)
-  }
+  // Held through the engine: a seed dropped by a replaced style attribute while
+  // CUSTOM_PALETTE_ATTR stays would leave every scheme colour, the popover cards'
+  // fill among them, resolving to nothing.
+  const property = writeBodyProperty
 
   function apply() {
     const prefs = readPrefs()
@@ -106,6 +107,6 @@ export function install() {
     stopSlots()
     resetBrandImages()
     for (const name of ATTRIBUTES) body.removeAttribute(name)
-    for (const name of BRAND_PROPERTIES) body.style.removeProperty(name)
+    for (const name of BRAND_PROPERTIES) writeBodyProperty(name, null)
   }
 }

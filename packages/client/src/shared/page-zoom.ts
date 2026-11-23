@@ -1,3 +1,4 @@
+import { writeBodyProperty } from '@dsh-claude-style/engine/body-properties'
 import { PAGE_ZOOM_ATTR, PAGE_ZOOM_MAX, PAGE_ZOOM_MIN, PAGE_ZOOM_VAR } from '../constants'
 
 /** CSS `zoom` scales written geometry while DOMRects remain in viewport pixels; conversions must use this factor.
@@ -13,8 +14,8 @@ export function pageZoomFactor() {
 /** Call after every attribute write so the stylesheet cannot retain a stale factor. */
 export function projectPageZoomFactor() {
   const factor = pageZoomFactor()
-  if (factor === 1) document.body.style.removeProperty(PAGE_ZOOM_VAR)
-  else document.body.style.setProperty(PAGE_ZOOM_VAR, pageZoomText(factor))
+  if (factor === 1) writeBodyProperty(PAGE_ZOOM_VAR, null)
+  else writeBodyProperty(PAGE_ZOOM_VAR, pageZoomText(factor))
 }
 
 /** A measured length or coordinate, in the pixels the page's own styles read. */

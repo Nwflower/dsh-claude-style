@@ -1,3 +1,4 @@
+import { writeBodyProperty } from '@dsh-claude-style/engine/body-properties'
 import { ACCOUNT_ARMED_ATTR, AUTO_POPOVER_OFF } from '../../constants'
 import { findFootArea, findHostModal } from '@dsh-claude-style/engine/host'
 import { readPrefs } from '../../core/prefs'
@@ -405,17 +406,17 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     disarmAccountMenu()
     if (accountWidth !== 0) {
       accountWidth = 0
-      document.body.style.removeProperty('--dsh-claude-account-width')
+      writeBodyProperty('--dsh-claude-account-width', null)
     }
     if (footerWidth !== 0) {
       footerWidth = 0
-      document.body.style.removeProperty('--dsh-claude-account-footer-width')
+      writeBodyProperty('--dsh-claude-account-footer-width', null)
     }
     if (accountInsetLeft !== -1 || accountInsetRight !== -1) {
       accountInsetLeft = -1
       accountInsetRight = -1
-      document.body.style.removeProperty('--dsh-claude-account-inset-left')
-      document.body.style.removeProperty('--dsh-claude-account-inset-right')
+      writeBodyProperty('--dsh-claude-account-inset-left', null)
+      writeBodyProperty('--dsh-claude-account-inset-right', null)
     }
     drawer.drop()
     // The menu marker goes with the takeover: an open host menu must not
@@ -548,11 +549,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const rowWidth = Math.round(rowRect.width)
     if (rowWidth > 0 && rowWidth !== accountWidth) {
       accountWidth = rowWidth
-      document.body.style.setProperty('--dsh-claude-account-width', `${rowWidth}px`)
+      writeBodyProperty('--dsh-claude-account-width', `${rowWidth}px`)
     }
     if (measured.footerWidth > 0 && measured.footerWidth !== footerWidth) {
       footerWidth = measured.footerWidth
-      document.body.style.setProperty('--dsh-claude-account-footer-width', `${footerWidth}px`)
+      writeBodyProperty('--dsh-claude-account-footer-width', `${footerWidth}px`)
     }
     if (!synthetic || measured.footRect === null) return
     const footRect = measured.footRect
@@ -560,11 +561,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const right = Math.round(footRect.right - rowRect.right)
     if (left !== accountInsetLeft) {
       accountInsetLeft = left
-      document.body.style.setProperty('--dsh-claude-account-inset-left', `${left}px`)
+      writeBodyProperty('--dsh-claude-account-inset-left', `${left}px`)
     }
     if (right !== accountInsetRight) {
       accountInsetRight = right
-      document.body.style.setProperty('--dsh-claude-account-inset-right', `${right}px`)
+      writeBodyProperty('--dsh-claude-account-inset-right', `${right}px`)
     }
   }
 

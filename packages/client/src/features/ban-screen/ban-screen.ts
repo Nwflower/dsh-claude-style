@@ -1,3 +1,4 @@
+import { writeBodyProperty } from '@dsh-claude-style/engine/body-properties'
 import { BAN_LOCALE_ZH } from '../../constants'
 import { desktopBand } from '@dsh-claude-style/engine/desktop-band'
 import { getUsername } from '../../shared/identity'
@@ -70,7 +71,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   // (no other rule writes that token inline), so the new generation sweeps
   // them before it can open its own.
   removeStrayNodes(document, '.dsh-claude-ban', [])
-  document.body.style.removeProperty('--dsw-specific-sidebar-fill')
+  writeBodyProperty('--dsw-specific-sidebar-fill', null)
 
   /** Take the dismissed overlay off the page now, whatever is left of its exit. */
   function removeLeaving() {
@@ -133,7 +134,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (banRoot === null) return
     const canvas = getComputedStyle(banRoot).getPropertyValue('--dsh-ban-canvas').trim()
     if (canvas === '') return
-    document.body.style.setProperty('--dsw-specific-sidebar-fill', canvas)
+    writeBodyProperty('--dsw-specific-sidebar-fill', canvas)
     captionFillHeld = true
   }
 
@@ -141,7 +142,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function releaseCaptionFill() {
     if (!captionFillHeld) return
     captionFillHeld = false
-    document.body.style.removeProperty('--dsw-specific-sidebar-fill')
+    writeBodyProperty('--dsw-specific-sidebar-fill', null)
   }
 
   /** Whether `node` is one of the overlay's own dismiss controls. */

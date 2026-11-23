@@ -2,6 +2,7 @@ import type { SkinSeam } from '@dsh-claude-style/engine/skin'
 import type { PartsVocabulary } from '@dsh-claude-style/engine/parts'
 
 /** The vocabulary the specs hand the engine, the way a skin hands its own over (D73), so no spec leans on the skin's names. */
+export const STAMP_ATTR = 'data-test-skin'
 export const QUIET_ATTR = 'data-test-quiet'
 export const READER_HOLD_ATTR = 'data-test-reader-hold'
 /** Where a spec says which motion the reader asked for: `reduced` or anything else. */
@@ -11,6 +12,7 @@ export const MOTION_FULL = 'full'
 
 export const TEST_SKIN: SkinSeam = {
   packageName: 'dsh-test-skin',
+  stamp: STAMP_ATTR,
   quiet: QUIET_ATTR,
   readerHold: READER_HOLD_ATTR,
   motionReduced: () => document.body.getAttribute(MOTION_ATTR) === MOTION_REDUCED,

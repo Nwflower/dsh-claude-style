@@ -1,3 +1,4 @@
+import { writeBodyProperty } from '@dsh-claude-style/engine/body-properties'
 import { INTERFACE_FONT_SIZE_ATTR, INTERFACE_FONT_SIZE_MAX, INTERFACE_FONT_SIZE_MIN, INTERFACE_FONT_SIZE_VAR } from '../constants'
 
 /** The ordinary interface text's scale, clamped to the setting's range. */
@@ -16,6 +17,6 @@ export function interfaceFontSizePercent(stored: string) {
 export function projectInterfaceFontSize() {
   const stored = document.body.getAttribute(INTERFACE_FONT_SIZE_ATTR)
   const factor = stored === null ? 1 : interfaceFontSizeOf(stored)
-  if (factor === 1) document.body.style.removeProperty(INTERFACE_FONT_SIZE_VAR)
-  else document.body.style.setProperty(INTERFACE_FONT_SIZE_VAR, String(factor))
+  if (factor === 1) writeBodyProperty(INTERFACE_FONT_SIZE_VAR, null)
+  else writeBodyProperty(INTERFACE_FONT_SIZE_VAR, String(factor))
 }

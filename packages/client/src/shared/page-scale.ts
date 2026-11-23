@@ -1,3 +1,4 @@
+import { writeBodyProperty } from '@dsh-claude-style/engine/body-properties'
 import { installScaledLayer } from '@dsh-claude-style/engine/scaled-layer'
 import { installFrameColumns } from './page-scale-columns'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
@@ -50,13 +51,13 @@ export function installPageScale() {
     const width = pageViewport().width
     for (const mark of WIDTH_MARKS) body.toggleAttribute(mark.attr, width <= mark.width)
     if (pageZoomFactor() === 1) {
-      body.style.removeProperty(PAGE_HEIGHT)
-      body.style.removeProperty(PAGE_WIDTH)
+      writeBodyProperty(PAGE_HEIGHT, null)
+      writeBodyProperty(PAGE_WIDTH, null)
       return
     }
     const view = pageViewport()
-    body.style.setProperty(PAGE_HEIGHT, `${Math.round(view.height)}px`)
-    body.style.setProperty(PAGE_WIDTH, `${Math.round(view.width)}px`)
+    writeBodyProperty(PAGE_HEIGHT, `${Math.round(view.height)}px`)
+    writeBodyProperty(PAGE_WIDTH, `${Math.round(view.width)}px`)
   }
   let layer: ReturnType<typeof installScaledLayer> | null = null
   let columns: ReturnType<typeof installFrameColumns> | null = null
@@ -93,8 +94,8 @@ export function installPageScale() {
     stopScaleWatch()
     for (const mark of WIDTH_MARKS) body.removeAttribute(mark.attr)
     offPrefs()
-    body.style.removeProperty(PAGE_HEIGHT)
-    body.style.removeProperty(PAGE_WIDTH)
+    writeBodyProperty(PAGE_HEIGHT, null)
+    writeBodyProperty(PAGE_WIDTH, null)
     if (columns !== null) columns.stop()
     layer.stop()
   }

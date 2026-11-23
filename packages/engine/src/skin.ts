@@ -7,6 +7,8 @@
 export interface SkinSeam {
   /** The package the skin ships as: what a console line names it by. */
   packageName: string
+  /** The attribute on <body> whose presence says the skin owns the page. */
+  stamp: string
   /** Skin bookkeeping attribute whose mutations must not wake page subscribers. */
   quiet: string
   /** Marks reader-owned scrolling until the reader returns to the tail. */

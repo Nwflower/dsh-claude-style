@@ -1,3 +1,4 @@
+import { writeBodyProperty } from '@dsh-claude-style/engine/body-properties'
 import { BACKGROUND_OPACITY_ATTR, BACKGROUND_OPACITY_MAX, BACKGROUND_OPACITY_VAR, BRAND_ATTR, BRAND_DEEPSEEK, COMPOSER_ATTR, COMPOSER_GAP_ATTR, COMPOSER_GAP_THEME, CONTEXT_DISPLAY_ATTR, CONTEXT_NUMBERS_ATTR, EFFORT_ACCENT_ATTR, FOOTER_ATTR, INTERFACE_FONT_SIZE_ATTR, INTERFACE_FONT_SIZE_VAR, MASCOT_ATTR, MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MOTION_ATTR, MOTION_FULL, MOTION_REDUCED, ONGOING_INDICATOR_ATTR, ONGOING_SIDE_ATTR, PAGE_ZOOM_ATTR, PAGE_ZOOM_VAR, PACKAGE_NAME, PALETTE_ATTR, PALETTE_CARD_ATTR, SEARCH_STYLE_ATTR, SETTINGS_ENTRY_FALLBACK, SIDEBAR_BRAND_ATTR, SIDEBAR_LAYOUT_ATTR, STATS_POSITION_ATTR, STATUS_MOTION_ATTR, TYPEFACE_ATTR } from '../constants'
 import { backgroundOpacityOf, projectBackgroundOpacity } from '../shared/background-opacity'
 import { interfaceFontSizeOf, projectInterfaceFontSize } from '../shared/interface-font-size'
@@ -178,9 +179,9 @@ export function adoptPrefs(next: Prefs) {
 /** Take back every attribute adoptPrefs mirrors onto the document: the page goes back to the host (entry.ts). */
 export function clearPrefsAttributes() {
   for (const name of MIRROR_ATTRS) document.body.removeAttribute(name)
-  document.body.style.removeProperty(PAGE_ZOOM_VAR)
-  document.body.style.removeProperty(INTERFACE_FONT_SIZE_VAR)
-  document.body.style.removeProperty(BACKGROUND_OPACITY_VAR)
+  writeBodyProperty(PAGE_ZOOM_VAR, null)
+  writeBodyProperty(INTERFACE_FONT_SIZE_VAR, null)
+  writeBodyProperty(BACKGROUND_OPACITY_VAR, null)
 }
 
 /** Whether the operating system asks for reduced motion right now. */

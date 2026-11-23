@@ -1,3 +1,4 @@
+import { writeBodyProperty } from '@dsh-claude-style/engine/body-properties'
 import { BACKGROUND_OPACITY_ATTR, BACKGROUND_OPACITY_MAX, BACKGROUND_OPACITY_MIN, BACKGROUND_OPACITY_VAR } from '../constants'
 
 /** The body attribute is projected into the canvas custom property; the opaque default writes neither. */
@@ -16,6 +17,6 @@ export function backgroundOpacityPercent(stored: string) {
 export function projectBackgroundOpacity() {
   const stored = document.body.getAttribute(BACKGROUND_OPACITY_ATTR)
   const factor = stored === null ? 1 : backgroundOpacityOf(stored)
-  if (factor === 1) document.body.style.removeProperty(BACKGROUND_OPACITY_VAR)
-  else document.body.style.setProperty(BACKGROUND_OPACITY_VAR, String(factor))
+  if (factor === 1) writeBodyProperty(BACKGROUND_OPACITY_VAR, null)
+  else writeBodyProperty(BACKGROUND_OPACITY_VAR, String(factor))
 }

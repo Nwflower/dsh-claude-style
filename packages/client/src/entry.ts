@@ -33,6 +33,7 @@ import { BUILD_ID } from 'virtual:dsh-claude-style/generated'
 // anything installs, and before the module-scope sweep below reads any of it.
 adoptSkin({
   packageName: PACKAGE_NAME,
+  stamp: STYLE_STAMP_ATTR,
   quiet: QUIET_ATTR,
   readerHold: READER_HOLD_ATTR,
   motionReduced,
