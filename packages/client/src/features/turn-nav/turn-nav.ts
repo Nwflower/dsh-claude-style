@@ -15,8 +15,8 @@ import type { FeatureUi } from '../../core/feature'
 import type manifest from './turn-nav.manifest'
 
 /**
- * The conversation navigator: the turn rail at the conversation's right edge,
- * drawn by the skin at the pitch of the list it opens into.
+ * The conversation navigator: the turn rail at the conversation's top-left
+ * edge, drawn by the skin at the pitch of the list it opens into.
  *
  * The host draws its own rail (ui-chat's TurnNavigator, read through
  * turn-nav-host.ts): one short mark per turn, ten pixels apart, following
@@ -333,8 +333,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       row.setAttribute('aria-label', chat('chat.turnNavigation.jump', { turn: item.turn }))
       if (!item.loaded) row.setAttribute('data-unloaded', '')
       if (i === current) row.setAttribute('data-current', '')
-      row.appendChild(buildElement('span', 'dsh-claude-turn-nav-text', item.prompt !== '' ? item.prompt : chat('chat.turnNavigation.turn', { turn: item.turn })))
       row.appendChild(buildElement('span', 'dsh-claude-turn-nav-dash'))
+      row.appendChild(buildElement('span', 'dsh-claude-turn-nav-text', item.prompt !== '' ? item.prompt : chat('chat.turnNavigation.turn', { turn: item.turn })))
       rows.appendChild(row)
     }
     list.replaceChildren(rows)
@@ -343,8 +343,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /**
    * Lay the card over the rail row for mark: the list's box on the rail's
    * box and scrolled as far as the rail's track, each row's dash on its
-   * mark — a mark is drawn against the rail's right edge, a row's dash
-   * against the row's right padding inside the card's padding and border.
+   * mark — a mark is drawn against the rail's left edge, a row's dash
+   * against the row's left padding inside the card's padding and border.
    *
    * The card hangs in the rail's own slot, inside the conversation pane:
    * a pointer on it is a pointer on the pane, so everything the pane
@@ -363,12 +363,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const box = inPageBox(rail.getBoundingClientRect())
     const cardStyle = getComputedStyle(card)
     const row = list.firstElementChild
-    const rowInset = row === null ? 0 : parseFloat(getComputedStyle(row).paddingRight)
-    // Unrounded: the rail sits on a half pixel whenever the band's height is odd.
-    const right = `${frame.right - box.right - parseFloat(cardStyle.borderRightWidth) - parseFloat(cardStyle.paddingRight) - rowInset}px`
+    const rowInset = row === null ? 0 : parseFloat(getComputedStyle(row).paddingLeft)
+    const left = `${box.left - frame.left - parseFloat(cardStyle.borderLeftWidth) - parseFloat(cardStyle.paddingLeft) - rowInset}px`
     const top = `${box.top - frame.top - parseFloat(cardStyle.borderTopWidth) - parseFloat(cardStyle.paddingTop)}px`
     const height = `${box.height}px`
-    if (card.style.right !== right) card.style.right = right
+    if (card.style.left !== left) card.style.left = left
     if (card.style.top !== top) card.style.top = top
     if (list.style.height !== height) list.style.height = height
     if (list.scrollTop !== offset) list.scrollTop = offset
@@ -405,7 +404,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /**
    * The pointer's height over the rail's own lines is where the list stands,
-   * proportional between the ends' rests; left of the lines — the rows' text —
+   * proportional between the ends' rests; right of the lines — the rows' text —
    * the list stands still, so a row stays under the pointer to be read.
    */
   function onPointerMove(event: PointerEvent) {
@@ -421,7 +420,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       read() {
         // Raw viewport pixels on both sides: the ratio is the share whatever the page zoom is.
         const box = mountedRail().getBoundingClientRect()
-        if (box.height <= 0 || pointer.x < box.left) return
+        if (box.height <= 0 || pointer.x > box.right) return
         const span = box.height - 2 * TURN_NAV_STEER_INSET_PX
         if (span <= 0) return
         share = Math.min(Math.max((pointer.y - box.top - TURN_NAV_STEER_INSET_PX) / span, 0), 1)

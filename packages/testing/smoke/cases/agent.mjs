@@ -319,7 +319,7 @@ export default {
       long.rows === 20 && long.atTop === 0 && long.edgeTop === 0 && long.atBottom === longMost && long.edgeBottom === longMost &&
         long.mid === Math.round(longMost / 2) && long.midAgain === Math.round(longMost / 2) && long.quarter === Math.round(longMost / 4),
       JSON.stringify(long))
-    check('left of the lines the list stands still, and nothing stands between the wheel and the card\'s list',
+    check('right of the lines the list stands still, and nothing stands between the wheel and the card\'s list',
       long.frozen === long.quarter && long.wheelKept === false && long.wheelOverflow === 'auto' &&
         long.wheelOverscroll === 'contain' && long.pageMoved === 0,
       JSON.stringify(long))

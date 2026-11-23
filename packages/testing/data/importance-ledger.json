@@ -683,7 +683,7 @@
       "prop": "display",
       "verdict": "unreadable pseudo-element"
     },
-    "body[data-dsh-claude-style] .dsh-claude-turn-nav-row{flex:none;display:flex;align-items:center;gap:12px;width:100%;height:24px;padding:0 0 0 10px;border:none!;border-radius:6px;background:transparent;box-shadow:none;color:var(--dsw-alias-label-secondary, #70686a);font-family:var(--dsw-font-family);font-size:13px;font-weight:400;line-height:24px;text-align:left;cursor:pointer;transition:background-color var(--dsh-claude-timing-feedback),color var(--dsh-claude-timing-feedback)}|border": {
+    "body[data-dsh-claude-style] .dsh-claude-turn-nav-row{flex:none;display:flex;align-items:center;gap:12px;width:100%;height:24px;padding:0 10px 0 0;border:none!;border-radius:6px;background:transparent;box-shadow:none;color:var(--dsw-alias-label-secondary, #70686a);font-family:var(--dsw-font-family);font-size:13px;font-weight:400;line-height:24px;text-align:left;cursor:pointer;transition:background-color var(--dsh-claude-timing-feedback),color var(--dsh-claude-timing-feedback)}|border": {
       "selector": "body[data-dsh-claude-style] .dsh-claude-turn-nav-row",
       "prop": "border",
       "verdict": "needed",
