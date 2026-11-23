@@ -189,9 +189,9 @@ body[data-dsh-claude-style] [data-composer-stat] {
 /* The dock keeps the host's floor for the readings it expects even while the skin
    has taken them out of it: ui-conversation's InputBar reserves one 22px row plus
    a 4px pad under the card, so the projections landing never move the composer.
-   In the context position the numbers live in the popover and nothing stands in
-   the dock, which left that floor as a blank line under the card. */
-body[data-dsh-claude-style][data-dsh-claude-stats-position="context"] [data-dsh-claude-part~="composer-dock"] {
+   With the composer statistics bar off nothing stands in the dock, so that floor
+   collapses instead of leaving a blank line under the card (D112). */
+body[data-dsh-claude-style][data-dsh-claude-stats-position="off"] [data-dsh-claude-part~="composer-dock"] {
   min-height: 0;
   padding-top: 0;
 }
@@ -362,15 +362,8 @@ body[data-dsh-claude-style] .dsh-claude-inline-stats {
   white-space: nowrap;
   cursor: pointer;
 }
-/* Under the rail position the host's session panel carries the session's
-   numbers while it shows (D110), so the line is not painted then. It keeps its
-   box: the dock's floor and the line's own fit stay as they are, and the
-   composer does not move when the panel opens or closes. */
-body[data-dsh-claude-style][data-dsh-claude-stats-position="rail"][data-dsh-claude-session-panel] .dsh-claude-inline-stats {
-  visibility: hidden;
-}
 /* A figure holds its number and the host's own words after it
-   (features/context-stats/inline-stats.ts); a flex item trims the template's
+   (features/context-stats/inline-line.ts); a flex item trims the template's
    leading space, so this gap is the only space between a number and its unit. */
 body[data-dsh-claude-style] .dsh-claude-inline-seg,
 body[data-dsh-claude-style] .dsh-claude-inline-figure {
@@ -379,15 +372,14 @@ body[data-dsh-claude-style] .dsh-claude-inline-figure {
   gap: 3px;
   flex: none;
 }
-/* The widest compact footer swaps the total for the two directions in the
-   total's old place: the cost keeps the lead and the cache closes the line. */
-body[data-dsh-claude-style] .dsh-claude-inline-stats[data-dsh-claude-footer-detail="directions"] > .dsh-claude-inline-input-segment {
+/* Roomier rungs swap the folded total for both directions: cost leads and cache closes. */
+body[data-dsh-claude-style] .dsh-claude-inline-stats:is([data-dsh-claude-footer-detail="directions"], [data-dsh-claude-footer-detail="full"]) > .dsh-claude-inline-input-segment {
   order: 1;
 }
-body[data-dsh-claude-style] .dsh-claude-inline-stats[data-dsh-claude-footer-detail="directions"] > .dsh-claude-inline-output-segment {
+body[data-dsh-claude-style] .dsh-claude-inline-stats:is([data-dsh-claude-footer-detail="directions"], [data-dsh-claude-footer-detail="full"]) > .dsh-claude-inline-output-segment {
   order: 2;
 }
-body[data-dsh-claude-style] .dsh-claude-inline-stats[data-dsh-claude-footer-detail="directions"] > .dsh-claude-inline-cache-segment {
+body[data-dsh-claude-style] .dsh-claude-inline-stats:is([data-dsh-claude-footer-detail="directions"], [data-dsh-claude-footer-detail="full"]) > .dsh-claude-inline-cache-segment {
   order: 3;
 }
 /* A segment the session has no figure for yet, or one the ladder has given up:
@@ -424,26 +416,13 @@ body[data-dsh-claude-style] .dsh-claude-inline-cost {
    the cost there, so a switch's box stands where no pair of figures can show its
    slack, and the room the amount does not need is the line's leading edge
    instead of a gap between two figures (docs/STYLE.md). */
-body[data-dsh-claude-style][data-dsh-claude-stats-position="footer"] .dsh-claude-inline-cost {
+body[data-dsh-claude-style] [data-dsh-claude-footer-line="toolbar"] .dsh-claude-inline-cost {
   min-width: 7ch;
   justify-content: flex-end;
 }
 /* No figure for this session yet: the segment keeps its place with a dash. */
 body[data-dsh-claude-style] .dsh-claude-inline-cost[data-pending] {
   color: var(--dsw-alias-label-tertiary);
-}
-/* The ladder's third step: the meter keeps its ring and gives up the number
-   beside it (features/context-stats/inline-stats.ts). That number is the
-   trigger's height — the bare ring is shorter — and the trigger is the tallest
-   thing on the composer's bottom line, which the conversation above pins its
-   tail to: a trigger that loses its line here moves every message, so the step
-   gives up the number's width alone and the trigger keeps the one 20px line the
-   type above sets inside the host's own 1px padding. */
-body[data-dsh-claude-style] [data-dsh-claude-context-meter][data-dsh-claude-meter-tight] button {
-  min-height: 22px;
-}
-body[data-dsh-claude-style] [data-dsh-claude-context-meter][data-dsh-claude-meter-tight] button > span {
-  display: none;
 }
 
 /* ---------- the line's figures ---------- */

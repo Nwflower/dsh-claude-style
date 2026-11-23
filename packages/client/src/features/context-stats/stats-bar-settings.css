@@ -1,0 +1,244 @@
+/* ---------- Conversation statistics bar settings configurator (D112) ---------- */
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-config {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-card {
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px;
+  min-width: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-card > .dsh-claude-settings-card-label {
+  text-align: center;
+}
+
+/* Miniature composer stage inside each placement preview card. */
+body[data-dsh-claude-style] .dsh-claude-stats-bar-stage {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  min-height: 68px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  background: var(--dsw-alias-bg-base);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-input {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 6px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  background: var(--dsw-specific-input-major);
+  font-size: calc(10px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 16px;
+  color: var(--dsw-alias-label-caption);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-prompt {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-send {
+  flex: none;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: calc(10px * var(--dsh-claude-interface-font-scale, 1));
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 16px;
+  min-width: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-tools,
+body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-trailing {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 14px;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: var(--dsw-alias-interactive-bg-hover-solid, rgba(128, 128, 128, 0.12));
+  color: var(--dsw-alias-label-tertiary);
+  font-size: calc(9px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 14px;
+  white-space: nowrap;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-model {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: calc(9.5px * var(--dsh-claude-interface-font-scale, 1));
+  font-weight: 500;
+  line-height: 14px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-ring {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  corner-shape: round;
+  box-sizing: border-box;
+  border: 1.6px solid var(--dsh-claude-tone-green, #25a06b);
+}
+
+/* Live statistics strip inside the toolbar seat or on its own dock line below. */
+body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-seat,
+body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-dock {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-seat {
+  flex: 1 1 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-dock {
+  min-height: 16px;
+}
+
+body[data-dsh-claude-style] :is(.dsh-claude-stats-bar-sample-seat, .dsh-claude-stats-bar-sample-dock)[data-align="left"] {
+  justify-content: flex-start;
+}
+
+body[data-dsh-claude-style] :is(.dsh-claude-stats-bar-sample-seat, .dsh-claude-stats-bar-sample-dock)[data-align="center"] {
+  justify-content: center;
+}
+
+body[data-dsh-claude-style] :is(.dsh-claude-stats-bar-sample-seat, .dsh-claude-stats-bar-sample-dock)[data-align="right"] {
+  justify-content: flex-end;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-figures {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--dsw-alias-brand-primary, #d97757) 12%, transparent);
+  color: var(--dsw-alias-label-primary);
+  font-size: calc(9.5px * var(--dsh-claude-interface-font-scale, 1));
+  font-weight: 500;
+  line-height: 14px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-piece {
+  flex: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-cache {
+  flex: none;
+  color: var(--dsh-claude-tone-green, #25a06b);
+}
+
+/* Sub-controls under the preview cards: horizontal position and figure chips. */
+body[data-dsh-claude-style] .dsh-claude-stats-bar-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  min-width: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-metrics-field {
+  align-items: flex-start;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-field-label {
+  flex: none;
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 28px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-chips {
+  flex: 1 1 260px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-metric-chip {
+  appearance: none;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: calc(12.5px * var(--dsh-claude-interface-font-scale, 1));
+  font-weight: 500;
+  line-height: 18px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color var(--dsh-claude-timing-feedback),
+    background-color var(--dsh-claude-timing-feedback),
+    color var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-metric-chip:hover:not(:disabled) {
+  border-color: var(--dsw-alias-border-l2);
+  color: var(--dsw-alias-label-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-metric-chip[data-active] {
+  border-color: var(--dsw-alias-brand-primary, #d97757);
+  background: color-mix(in srgb, var(--dsw-alias-brand-primary, #d97757) 14%, var(--dsw-alias-bg-layer-1));
+  color: var(--dsw-alias-label-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-metric-chip[data-active]:disabled {
+  opacity: 0.85;
+  cursor: default;
+}
+
+body[data-dsh-claude-style] .dsh-claude-stats-bar-hint {
+  flex-basis: 100%;
+  text-align: right;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 18px;
+  color: var(--dsw-alias-state-business-primary);
+}

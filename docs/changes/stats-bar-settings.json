@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-23",
+  "group": "improvements",
+  "order": 30,
+  "external": true,
+  "zh": "重做「对话统计栏」设置面板并统一「随宽度同行」与「独立成行」两套底栏排布，合并水平停靠方向、六项会话级指标多选胶囊与实时微缩预览卡片，并让「Token 单位」同时作用于统计栏、上下文弹层与会话面板",
+  "en": "Redesign the conversation statistics bar settings with live miniature composer preview cards, unifying the toolbar-adaptive and dedicated-row placements across horizontal position, six multi-select metric chips, and shared token units across the bar, context popover, and session panel"
+}

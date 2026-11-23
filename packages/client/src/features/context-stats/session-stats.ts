@@ -5,7 +5,7 @@ import { sessionProjectionFaces } from '../../shared/session-projections'
 import { hostChatSeat } from '../../core/i18n'
 import { prefsFromForm, readPrefs, subscribePrefs } from '../../core/prefs'
 import { peerPresent } from '../../shared/peer-plugin'
-import { BILLING_OFF, CONTEXT_DISPLAY_PIE, CONTEXT_DISPLAY_RING_BAND, STATS_POSITION_CONTEXT } from '../../constants'
+import { BILLING_OFF, CONTEXT_DISPLAY_PIE, CONTEXT_DISPLAY_RING_BAND, STATS_POSITION_OFF } from '../../constants'
 import { createContextStatsBinding } from './stats-binding'
 import { createInlineStats } from './inline-stats'
 import { createStatsBlock } from './stats-block'
@@ -209,7 +209,7 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
   })
 
   const block = createStatsBlock(reading, chatText, currency)
-  const inline = createInlineStats(reading, chatText, findContextMeter, currency)
+  const inline = createInlineStats(reading, chatText, currency)
   const binding = createContextStatsBinding(() => ring()?.root() ?? null)
   /**
    * A session switch is one broadcast (D91): what the old transcript's meter,
@@ -312,17 +312,14 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     if (cancelNumbers !== null) cancelNumbers()
     cancelNumbers = null
     readingMemo = null
-    // Every position but the popover's writes the line: the footer rides the
-    // toolbar with it, and the rail position keeps it written while the rail
-    // stands, hidden by the stylesheet, so it is whole the moment the rail goes.
-    if (readPrefs().statsPosition === STATS_POSITION_CONTEXT) inline.clear()
+    if (readPrefs().statsPosition === STATS_POSITION_OFF) inline.clear()
     else inline.render()
     block.render()
     for (const listener of figureListeners) listener()
     // The two surfaces read the figures only where they stand — the popover
     // closed reads nothing at all — so the reading the session panel prints is
     // taken here, on every frame that moves it, and counts to the same place the
-    // line's figures count to (D110).
+    // line's figures count to (D112).
     figuresCount.to(reading())
   }
 

@@ -28,10 +28,10 @@
   // whalegirl case picks her, whose sheets it reads.
   if (CASE === 'crab-states') formValue.mascot = 'crab'
   if (CASE === 'whalegirl') formValue.mascot = 'whalegirl'
-  // The stats-inline case drives the line of their own, which is the shipped
-  // default; the two popover cases ask the numbers back into the panel.
+  // The stats-inline case drives the dedicated dock line; the two popover cases
+  // keep the composer statistics bar off, which is the shipped default.
   if (CASE === 'stats-inline') formValue.statsPosition = 'inline'
-  if (CASE === 'context-stats' || CASE === 'stats-compact') formValue.statsPosition = 'context'
+  if (CASE === 'context-stats' || CASE === 'stats-compact') formValue.statsPosition = 'off'
   // The switches-off case starts with every feature switch off.
   if (CASE === 'switches-off') {
     Object.assign(formValue, { permissionsControl: false, workspaceView: false, sidebarSearch: false, viewTabs: false, chatAnimations: false, composerScope: 'off' })

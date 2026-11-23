@@ -22,7 +22,7 @@ const readPosition = (page) => page.evaluate(() => {
   const card = document.querySelector('[data-composer-card]')
   const dock = card?.nextElementSibling ?? null
   const row = document.querySelector('[data-composer-stat]')
-  const meter = document.querySelector('[data-dsh-claude-context-meter]')
+  const meter = document.querySelector('[data-dsh-claude-meter-ring]')
   const line = document.querySelector('[data-dsh-claude-inline-stats]')
   const cache = line?.querySelector('[data-dsh-claude-ramp="cache"]') ?? null
   const cacheFigure = cache?.querySelector('.dsh-claude-digit-group') ?? null
@@ -57,15 +57,15 @@ const readPosition = (page) => page.evaluate(() => {
     reading: reading === null ? null : (reading.textContent ?? '').trim(),
     readingColor: reading === null ? null : getComputedStyle(reading).color,
     dockPosition: dock === null ? null : getComputedStyle(dock).position,
-    meterPosition: meter === null ? null : getComputedStyle(meter).position,
+    meterInRow: meter !== null && (card?.contains(meter) ?? false),
     blocks: document.querySelectorAll('.dsh-claude-context-stats').length,
   }
 })
 
 /**
  * Once the card's own width has held for two frames, how wide the line stands
- * against the card, how many of its figures show, and whether the meter gave up
- * its reading; null when the page stays busy past the bound.
+ * against the card and how many of its figures show; null when the page stays
+ * busy past the bound.
  *
  * Both boxes come from `getBoundingClientRect`, so a page drawn at a scale
  * compares like with like, and the reading waits for the card to stop moving:
@@ -80,14 +80,12 @@ const readFit = (page) => Promise.race([
     const tick = () => {
       const card = document.querySelector('[data-composer-card]')
       const line = document.querySelector('[data-dsh-claude-inline-stats]')
-      const meter = document.querySelector('[data-dsh-claude-context-meter]')
       const groups = [...(line?.querySelectorAll('.dsh-claude-digit-group') ?? [])]
       const width = card === null ? null : Math.round(card.getBoundingClientRect().width * 100) / 100
       const reading = {
         card: width,
         line: line === null ? null : Math.round(line.getBoundingClientRect().width * 100) / 100,
         figures: groups.filter((group) => group.getClientRects().length > 0).length,
-        tight: meter !== null && meter.hasAttribute('data-dsh-claude-meter-tight'),
       }
       if (width !== heldWidth) {
         heldWidth = width
@@ -105,27 +103,6 @@ const readFit = (page) => Promise.race([
   })),
   new Promise((resolve) => setTimeout(() => resolve(null), 5000)),
 ])
-
-/**
- * The row the numbers stand on, with and without the meter's reading: the
- * ladder's third step gives that reading up to win width, and the trigger's own
- * box is what the composer's bottom row is as tall as. The conversation above
- * pins its tail to that row, so a step that takes height with it moves every
- * message — once when the reading goes and once when it comes back.
- */
-const readMeterStep = (page) => page.evaluate(() => {
-  const card = document.querySelector('[data-composer-card]')
-  const dock = card?.nextElementSibling ?? null
-  const meter = document.querySelector('[data-dsh-claude-context-meter]')
-  if (dock === null || meter === null) return null
-  const height = () => Math.round(dock.getBoundingClientRect().height * 100) / 100
-  const wasTight = meter.hasAttribute('data-dsh-claude-meter-tight')
-  const withReading = height()
-  meter.setAttribute('data-dsh-claude-meter-tight', '')
-  const withoutReading = height()
-  if (!wasTight) meter.removeAttribute('data-dsh-claude-meter-tight')
-  return { wasTight, withReading, withoutReading }
-})
 
 /**
  * Press the line of numbers and read what its press does: the line is the
@@ -190,6 +167,9 @@ function statsPositionScenario({ check }) {
       '- id: ui-skin-claude-style',
       '  config:',
       '    statsPosition: inline',
+      '    statsFooterCounts: true',
+      '    statsFooterSpeed: true',
+      '    statsFooterCost: false',
       '    statsFooterTokenFormat: units',
     ],
     async assert({ page, session }) {
@@ -200,14 +180,12 @@ function statsPositionScenario({ check }) {
       ).catch(() => {})
       const state = await readPosition(page)
       const wide = await readFit(page)
-      const step = await readMeterStep(page)
       const linePanel = await readLinePanel(page)
       // A card narrower than the whole line: the line gives up steps until it
       // fits, and takes them back when the room returns. A ladder that never
       // stops holds the main thread, so each reading is bounded.
       await page.setViewportSize({ width: 390, height: 900 })
       const tight = await readFit(page)
-      const narrowStep = await readMeterStep(page)
       await page.setViewportSize({ width: 1280, height: 900 })
       const roomy = await readFit(page)
       return [
@@ -216,7 +194,7 @@ function statsPositionScenario({ check }) {
           state.lineShown && state.text !== '' && state.figures.length === 6 &&
             state.figures.every((figure) => /\d/.test(figure)) &&
             state.glyphs === 0 && state.rowDisplay === 'none' &&
-            state.dockPosition === 'static' && state.meterPosition === 'static',
+            state.dockPosition === 'static' && state.meterInRow,
           JSON.stringify(state)),
         check('the independent line follows the configured token units',
           state.figures.some((figure) => /\d(?:\.\d+)?[KMBT]/.test(figure)), JSON.stringify(state.figures)),
@@ -228,11 +206,7 @@ function statsPositionScenario({ check }) {
             state.pie && state.ringVisibility === 'hidden' &&
             state.pieImage !== null && state.pieImage.includes('data:image/svg+xml') && piePaints(state),
           JSON.stringify({ cache: state.cacheColor, percent: state.cacheTailColor, words: state.cacheWordsColor, pie: state.pie, ring: state.ringVisibility, reading: state.reading, image: state.pieImage })),
-        check('the popover keeps none of the numbers here', state.blocks === 0, JSON.stringify(state.blocks)),
-        check('giving up the meter\'s reading takes width alone: the row under the card keeps its height, so the conversation above never moves',
-          step !== null && step.withReading === step.withoutReading &&
-            narrowStep !== null && narrowStep.withReading === narrowStep.withoutReading,
-          JSON.stringify({ roomyCard: step, narrowCard: narrowStep })),
+        check('the popover mounts no block while closed', state.blocks === 0, JSON.stringify(state.blocks)),
         check('the figures stand apart by their own gap alone: no separator glyph between them',
           linePanel !== null && linePanel.separators === 0,
           JSON.stringify(linePanel === null ? null : linePanel.separators)),
@@ -247,7 +221,7 @@ function statsPositionScenario({ check }) {
           tight !== null && tight.line !== null && tight.line <= tight.card && wide !== null && tight.figures < wide.figures,
           JSON.stringify({ wide, tight })),
         check('the room coming back gives the whole line back',
-          roomy !== null && wide !== null && roomy.figures === wide.figures && !roomy.tight,
+          roomy !== null && wide !== null && roomy.figures === wide.figures,
           JSON.stringify(roomy)),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]

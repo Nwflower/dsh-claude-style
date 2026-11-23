@@ -42,8 +42,8 @@ export default {
     check('with the hover preference on, a press on the open panel\'s ring leaves the panel up',
       r.meterPanelAfterPress === true && r.meterExpandedAfterPress === 'true',
       JSON.stringify({ panel: r.meterPanelAfterPress, expanded: r.meterExpandedAfterPress }))
-    check('the rows carry the host\'s own formatting: compact durations, exact token counts, a cache-hit share',
-      same(r.context.values, ['1.2s', '0.4s', '0.8s', '105 tok/s', '90%', '1,000 tok', '9,000 tok', '105 tok']),
+    check('the rows carry the host\'s own formatting and the chosen token units: compact durations, unit token counts, a cache-hit share',
+      same(r.context.values, ['1.2s', '0.4s', '0.8s', '105 tok/s', '90%', '1.0K tok', '9.0K tok', '105 tok']),
       JSON.stringify(r.context.values))
     check('a projection frame rewrites the block while the popover is open',
       r.context.pushed === '1m1s', JSON.stringify(r.context.pushed))
@@ -116,11 +116,11 @@ export default {
   // meter each in their colour band, and the popover taking them back live.
   'stats-inline'(r) {
     basicChecks(r)
-    check('the line stands under the card, in the host\'s own placement, with the meter at its end',
+    check('the line stands under the card, in the host\'s own placement, with the meter ring in the composer row',
       r.statsInline.attr === 'inline' && r.statsInline.dockPosition === 'static' &&
-        r.statsInline.rowDisplay === 'none' && r.statsInline.meterPosition === 'static' &&
+        r.statsInline.rowDisplay === 'none' && r.statsInline.meterInRow === true &&
         r.statsInline.text !== null && r.statsInline.glyphs === 0,
-      JSON.stringify({ attr: r.statsInline.attr, dock: r.statsInline.dockPosition, row: r.statsInline.rowDisplay, meter: r.statsInline.meterPosition, glyphs: r.statsInline.glyphs }))
+      JSON.stringify({ attr: r.statsInline.attr, dock: r.statsInline.dockPosition, row: r.statsInline.rowDisplay, ring: r.statsInline.meterInRow, glyphs: r.statsInline.glyphs }))
     check('the figures are the host\'s own words around the host\'s own numbers',
       same(r.statsInline.figures, ['2', '374', '279', '777.3M', '7.3M', '99']) &&
         r.statsInline.text.indexOf('2 轮 374 步') === 0 &&
@@ -140,8 +140,8 @@ export default {
         r.statsInline.meterRamp !== null && r.statsInline.meterRamp.kind === 'context' && r.statsInline.meterRamp.span === 'high' &&
         r.statsInline.pie === true && r.statsInline.ringVisibility === 'hidden' && r.statsInline.pieTone === true,
       JSON.stringify({ cache: r.statsInline.cacheRamp, cacheWords: r.statsInline.cacheLabelColor, meter: r.statsInline.meterRamp, pie: r.statsInline.pie, ring: r.statsInline.ringVisibility, tone: r.statsInline.pieTone }))
-    check('asking the numbers back into the popover takes the line away, live',
-      r.statsInline.backAttr === 'context' && r.statsInline.backLine === 0,
+    check('switching the composer bar off takes the line away, live',
+      r.statsInline.backAttr === 'off' && r.statsInline.backLine === 0,
       JSON.stringify({ attr: r.statsInline.backAttr, line: r.statsInline.backLine }))
     check('the figures stand apart by the line\'s own gap: no separator glyph between them',
       r.statsInline.separators === 0, JSON.stringify(r.statsInline.separators))
@@ -154,12 +154,10 @@ export default {
     check('a card with room shows every figure',
       r.statsInline.roomy.counts === true && r.statsInline.roomy.cacheLabel === true &&
         r.statsInline.roomy.input === true && r.statsInline.roomy.output === true &&
-        r.statsInline.roomy.total === false && r.statsInline.roomy.meterTight === false &&
-        r.statsInline.roomy.meterNumber === true,
+        r.statsInline.roomy.total === false && r.statsInline.roomy.meterNumber === true,
       JSON.stringify(r.statsInline.roomy))
-    check('a card too narrow drops the cache words, the turns and steps and the meter\'s number, and merges the two token figures into one',
-      r.statsInline.tight.cacheLabel === false && r.statsInline.tight.counts === false &&
-        r.statsInline.tight.meterTight === true && r.statsInline.tight.meterNumber === false &&
+    check('a card too narrow drops the cache words and merges the two token figures into one',
+      r.statsInline.tight.cacheLabel === false &&
         r.statsInline.tight.input === false && r.statsInline.tight.output === false &&
         r.statsInline.tight.total === true && /^[\d,]+$/.test(r.statsInline.tight.totalText || ''),
       JSON.stringify(r.statsInline.tight))
@@ -248,6 +246,16 @@ export default {
     check('a hero slot anchor that draws a box still takes its place, so the card stays under the panel instead of the greeting',
       r.stackOrder !== undefined && bandPlaced(r.stackOrder.narrow) && bandPlaced(r.stackOrder.wide),
       JSON.stringify(r.stackOrder))
+    const anchored = (entry, hasRow) => entry !== undefined && entry !== null &&
+      entry.panelDisplay === 'flex' &&
+      Math.abs(entry.cardBottomGap) <= 2 &&
+      (hasRow ? entry.panelTop < entry.rowTop && entry.rowTop < entry.cardTop : entry.panelTop < entry.cardTop)
+    check('the studio card rests on the bottom edge of a full-height stack with or without a context row and across extra wrappers',
+      r.bottomAnchor !== undefined &&
+        anchored(r.bottomAnchor.standard, true) &&
+        anchored(r.bottomAnchor.noRow, false) &&
+        anchored(r.bottomAnchor.wrapped, true),
+      JSON.stringify(r.bottomAnchor))
     const cold = r.coldStart || {}
     check('the cold start screen carries the usage panel on the skin\'s own seat, given back once the dock arrives',
       cold.seat === true && cold.rendered === true && cold.seatAfterDock === false && cold.unmountedAfterDock === true,

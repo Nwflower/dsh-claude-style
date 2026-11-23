@@ -1,4 +1,4 @@
-import { CONTEXT_DISPLAY_PIE, CONTEXT_DISPLAY_RING_BAND, SLOT_NODE_ATTR, STATS_POSITION_CONTEXT, STATS_POSITION_FOOTER } from '../../constants'
+import { COMPOSER_ATTR, CONTEXT_DISPLAY_PIE, CONTEXT_DISPLAY_RING_BAND, SLOT_NODE_ATTR } from '../../constants'
 import { COMPOSER_VARIANT_ATTRIBUTE, DIALOG_TRIGGER_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { closestComposerCard, findModelSlotIn, findPrimaryModelSlot, observeComposerCards } from '@dsh-claude-style/engine/host'
@@ -296,12 +296,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   function syncRing() {
-    const position = readPrefs().statsPosition
-    // The popover position and the compact footer both carry the ring in the
-    // composer row, the footer's figures riding the toolbar beside it. Handing
-    // the reading back to the host's meter would strand it in the dock below
-    // while the figures stay above, so the footer's ring is not switchable.
-    if (position !== STATS_POSITION_CONTEXT && position !== STATS_POSITION_FOOTER) {
+    if (!document.body.hasAttribute(COMPOSER_ATTR)) {
       dropAll()
       return
     }

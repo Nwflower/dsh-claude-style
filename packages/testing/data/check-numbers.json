@@ -658,7 +658,7 @@
       "the figures are text a count rewrites in place, with no character carrying a span or an entrance of its own": [
         0
       ],
-      "the popover keeps none of the numbers here": [
+      "the popover mounts no block while closed": [
         0
       ],
       "the figures stand apart by their own gap alone: no separator glyph between them": [
@@ -1457,7 +1457,7 @@
         4,
         37
       ],
-      "the line stands under the card, in the host's own placement, with the meter at its end": [
+      "the line stands under the card, in the host's own placement, with the meter ring in the composer row": [
         0
       ],
       "the figures are the host's own words around the host's own numbers": [
@@ -1470,7 +1470,7 @@
       "a new reading counts to its value: part way through the count the figures have moved without having arrived, and they settle on the reading": [
         6
       ],
-      "asking the numbers back into the popover takes the line away, live": [
+      "switching the composer bar off takes the line away, live": [
         0
       ],
       "the figures stand apart by the line's own gap: no separator glyph between them": [

@@ -297,7 +297,7 @@ function statsOverlayScenario({ check }) {
     patch: [
       '- id: ui-skin-claude-style',
       '  config:',
-      '    statsPosition: context',
+      '    statsPosition: off',
     ],
     async assert({ page, session }) {
       await page.waitForFunction(

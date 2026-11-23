@@ -88,10 +88,10 @@ function steadyDrift(frames, key) {
   return biggest
 }
 
-function streamJitterScenario({ check }, statsPosition = 'context') {
+function streamJitterScenario({ check }, statsPosition = 'off') {
   return {
     script: 'paced',
-    ...(statsPosition === 'context' ? {} : { patch: [
+    ...(statsPosition === 'off' ? {} : { patch: [
       '- id: ui-skin-claude-style',
       '  config:',
       `    statsPosition: ${statsPosition}`,
@@ -132,7 +132,7 @@ function streamJitterScenario({ check }, statsPosition = 'context') {
         check('跟随期间消息列在向上走', rising.length > walked.length / 3, `${rising.length} of ${walked.length} moves are upward`),
         check('连续输出期间输入卡片不上下移动', cardDrift !== null && cardDrift <= COMPOSER_DRIFT_PX, `${statsPosition}: card drift ${cardDrift}px`),
         check('连续输出期间输入区与底栏不上下移动', seatDrift !== null && seatDrift <= COMPOSER_DRIFT_PX &&
-          (statsPosition === 'context' || (statsDrift !== null && statsDrift <= COMPOSER_DRIFT_PX)),
+          (statsPosition === 'off' || (statsDrift !== null && statsDrift <= COMPOSER_DRIFT_PX)),
         `${statsPosition}: seat drift ${seatDrift}px, stats drift ${statsDrift}px`),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]

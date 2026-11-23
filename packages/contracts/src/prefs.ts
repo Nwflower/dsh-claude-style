@@ -133,17 +133,18 @@ export const ONGOING_SIDES = [ONGOING_SIDE_LEFT, ONGOING_SIDE_RIGHT] as const
 export const CHAT_ANIMATIONS_OFF = 'off'
 
 /**
- * Where the session's numbers show: in the context popover the meter opens, on a
- * line of their own under the input card, or in the compact footer. The rail
- * position is the line of their own handed to the host's session panel: the
- * line stands while the panel does not show, and the panel's two tables carry
- * the numbers while it does (D110).
+ * Where the composer's live statistics bar stands (D112): off, seated in the
+ * toolbar when width permits and wrapping below otherwise (`footer`), or always
+ * on its own line below (`inline`). The context popover and the session panel
+ * carry the full session numbers in every mode.
  */
-export const STATS_POSITION_INLINE = 'inline'
-export const STATS_POSITION_CONTEXT = 'context'
+export const STATS_POSITION_OFF = 'off'
 export const STATS_POSITION_FOOTER = 'footer'
-export const STATS_POSITION_RAIL = 'rail'
-export const STATS_POSITIONS = [STATS_POSITION_INLINE, STATS_POSITION_CONTEXT, STATS_POSITION_FOOTER, STATS_POSITION_RAIL] as const
+export const STATS_POSITION_INLINE = 'inline'
+/** Legacy values from before D112: `context` meant no composer bar, `rail` meant own line. */
+export const STATS_POSITION_CONTEXT_LEGACY = 'context'
+export const STATS_POSITION_RAIL_LEGACY = 'rail'
+export const STATS_POSITIONS = [STATS_POSITION_OFF, STATS_POSITION_FOOTER, STATS_POSITION_INLINE] as const
 export const STATS_FOOTER_ALIGNS = ['left', 'center', 'right'] as const
 
 /** How the session's token figures read: grouped whole numbers, or K/M/B/T units with one decimal place. */
@@ -346,19 +347,28 @@ export const PREFS = {
   mascot: { type: 'choice', values: MASCOTS, default: MASCOT_BRAND },
   mascotScope: { type: 'choice', values: MASCOT_SCOPES, default: MASCOT_SCOPE_ALL },
   permissionsControl: { type: 'boolean', default: true },
-  statsPosition: { type: 'choice', values: STATS_POSITIONS, default: STATS_POSITION_CONTEXT },
+  statsPosition: {
+    type: 'choice',
+    values: STATS_POSITIONS,
+    default: STATS_POSITION_OFF,
+    legacy: {
+      [STATS_POSITION_CONTEXT_LEGACY]: STATS_POSITION_OFF,
+      [STATS_POSITION_RAIL_LEGACY]: STATS_POSITION_INLINE,
+    },
+  },
   /** The face the context meter is drawn with (CONTEXT_DISPLAYS). */
   contextDisplay: { type: 'choice', values: CONTEXT_DISPLAYS, default: CONTEXT_DISPLAY_PIE },
   /** Whether the percentage stands beside that face. */
   contextNumbers: { type: 'boolean', default: true },
   statsFooterAlign: { type: 'choice', values: STATS_FOOTER_ALIGNS, default: 'center' },
-  /** Compact-footer figures; speed and TTFT join the existing figures only when asked for. */
+  /** Session-level figures shown on the composer statistics bar across both placements (D112). */
+  statsFooterCounts: { type: 'boolean', default: false },
   statsFooterSpeed: { type: 'boolean', default: false },
   statsFooterTtft: { type: 'boolean', default: false },
   statsFooterCache: { type: 'boolean', default: true },
   statsFooterCost: { type: 'boolean', default: true },
   statsFooterTotal: { type: 'boolean', default: true },
-  /** How the statistics line and details rail write token figures. */
+  /** How the statistics bar, context popover and session panel write token figures (D112). */
   statsFooterTokenFormat: { type: 'choice', values: FOOTER_TOKEN_FORMATS, default: FOOTER_TOKEN_UNITS },
   /** Which official price table the session's cost follows, or off for no figure at all. */
   billingCurrency: { type: 'choice', values: BILLING_CHOICES, default: CURRENCY_CNY },
@@ -383,7 +393,7 @@ export const PREFS = {
   viewTabs: { type: 'boolean', default: true },
   hideToolbarOutsideConversation: { type: 'boolean', default: true },
   headerBand: { type: 'boolean', default: true },
-  /** Whether the skin's sections join the host's session panel (D110). */
+  /** Whether the skin's sections join the host's session panel (D112). */
   sessionPanel: { type: 'boolean', default: true },
   /** The legacy choice `off` means off. */
   chatAnimations: { type: 'boolean', default: true, legacy: { [CHAT_ANIMATIONS_OFF]: false } },

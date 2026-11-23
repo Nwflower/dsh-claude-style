@@ -80,18 +80,22 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
       t.expectThat.boxesApart(reading.line, reading.tools, `the ${name} footer leaves the left controls free`)
       t.expectThat.boxesApart(reading.line, reading.trailing, `the ${name} footer leaves the right controls free`)
     }
-    await t.prefs({ statsPosition: 'context' })
-    const context = await reading(t)
-    t.expectThat.equal([context.mode, context.line], [null, null], 'the popover position takes the figures back out of the toolbar')
-    t.expectThat.equal(context.ring, center.ring, 'and keeps the ring where the footer drew it')
-    t.expectThat.equal(context.meterHidden, true, 'the host meter stays unpainted behind the ring')
-    await t.prefs({ statsPosition: 'inline' })
-    const inline = await reading(t)
-    t.expectThat.equal(inline.mode, null, 'inline mode takes the footer placement off the line')
-    t.expectThat.equal(inline.detail, null, 'inline mode takes the footer detail mark off the line')
-    t.expectThat.equal(inline.segments > center.segments, true, 'inline mode restores the fuller statistics')
-    t.expectThat.equal(center.gap, inline.gap, 'the compact footer keeps the gap the line puts between its figures on its own line')
-    await t.prefs({ statsPosition: 'context' })
+    await t.prefs({ statsPosition: 'off' })
+    const offState = await reading(t)
+    t.expectThat.equal([offState.mode, offState.line], [null, null], 'turning the bar off takes the figures out of the toolbar')
+    t.expectThat.equal(offState.ring, center.ring, 'and keeps the ring where the footer drew it')
+    t.expectThat.equal(offState.meterHidden, true, 'the host meter stays unpainted behind the ring')
+    await t.prefs({ statsPosition: 'inline', statsFooterAlign: 'center' })
+    const inlineCenter = await reading(t)
+    t.expectThat.equal([inlineCenter.mode, inlineCenter.detail, inlineCenter.lineInDock], ['below', 'full', true], 'inline mode seats the unified bar on the dock line at full detail')
+    t.expectThat.equal(inlineCenter.cacheLabel > 0, true, 'the dedicated dock line restores the cache label')
+    t.expectThat.equal(center.gap, inlineCenter.gap, 'both placements share the same gap between figures')
+    await t.prefs({ statsFooterAlign: 'left' })
+    const inlineLeft = await reading(t)
+    await t.prefs({ statsFooterAlign: 'right' })
+    const inlineRight = await reading(t)
+    t.expectThat.equal(inlineLeft.line.left < inlineCenter.line.left && inlineCenter.line.left < inlineRight.line.left, true, 'horizontal position moves the dedicated dock line left to right too')
+    await t.prefs({ statsPosition: 'off', statsFooterAlign: 'center' })
   })
 
   test('one token unit choice reaches independent and compact statistics', async t => {
@@ -125,7 +129,7 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
       const fitted = await at(width)
       if (fitted.mode === 'toolbar' && !found.has(fitted.detail)) {
         found.set(fitted.detail, fitted)
-        for (const source of ['context', 'inline']) {
+        for (const source of ['off', 'inline']) {
           await t.prefs({ statsPosition: source })
           await t.prefs({ statsPosition: 'footer' })
           const switched = await reading(t)
@@ -152,20 +156,20 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     await seatStatsSession(t, { ...stats, ttftMs: 800, ttftSteps: 1 }, usage)
     await t.prefs({
       statsPosition: 'footer', motion: 'reduced',
-      statsFooterSpeed: true, statsFooterTtft: true, statsFooterCache: false,
+      statsFooterCounts: true, statsFooterSpeed: true, statsFooterTtft: true, statsFooterCache: false,
       statsFooterCost: false, statsFooterTotal: false,
     })
     const selected = await reading(t)
-    t.expectThat.equal(selected.segments, 2, 'only output speed and TTFT remain')
-    t.expectThat.equal(selected.text.includes('100 tok/s') && selected.text.includes('0.8s') && selected.text.includes('TTFT'), true, 'both figures use the session projection and host wording: ' + selected.text)
+    t.expectThat.equal(selected.segments, 3, 'turns/steps, output speed and TTFT stand together')
+    t.expectThat.equal(selected.text.includes('2') && selected.text.includes('20') && selected.text.includes('100 tok/s') && selected.text.includes('TTFT 0.8s'), true, 'all three figures render concisely from the session projection: ' + selected.text)
     t.expectThat.visible(selected.ring, 'the context ring stands with the footer whatever the figures show')
     t.expectThat.equal(selected.meterHidden, true, 'the host meter stays unpainted behind the ring')
     await t.prefs({
-      statsFooterSpeed: false, statsFooterTtft: false, statsFooterCache: true,
+      statsFooterCounts: false, statsFooterSpeed: false, statsFooterTtft: false, statsFooterCache: true,
       statsFooterCost: true, statsFooterTotal: true,
     })
     const restored = await reading(t)
-    t.expectThat.equal(restored.segments > 2, true, 'the original footer figures return independently')
+    t.expectThat.equal(restored.segments >= 3, true, 'the default figures return independently')
     t.expectThat.visible(restored.ring, 'the context ring keeps its place')
   })
 
@@ -208,6 +212,6 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
     }), [t.surface('stats.inline-line'), t.surface('stats.inline-probe'), t.host('composer.stat')])
     t.expectThat.equal([offCounts.line, offCounts.probe], [0, 0], 'the line and its measuring twin leave with the restyle, so nothing paints twice')
     t.expectThat.equal(offCounts.host > 0, true, 'the host draws its own statistics row again')
-    await t.prefs({ composerScope: 'all', statsPosition: 'context' })
+    await t.prefs({ composerScope: 'all', statsPosition: 'off' })
   })
 })

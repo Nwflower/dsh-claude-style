@@ -40,7 +40,7 @@
     "packages/testing/smoke/probe/prelude.js": 3,
     "packages/testing/smoke/probe/settle.js": 2,
     "packages/testing/smoke/probe/shell-band.js": 7,
-    "packages/testing/smoke/probe/shell-context.js": 31,
+    "packages/testing/smoke/probe/shell-context.js": 30,
     "packages/testing/smoke/probe/shell-pages.js": 14,
     "packages/testing/smoke/probe/shell-palette.js": 25,
     "packages/testing/smoke/probe/shell-startup.js": 5,
@@ -51,7 +51,7 @@
     "packages/testing/smoke/stand-in/account-menu.js": 1,
     "packages/testing/smoke/stand-in/context-panel.js": 4,
     "packages/testing/scenarios/stats-overlay.mjs": 1,
-    "packages/testing/scenarios/stats-position.mjs": 16,
+    "packages/testing/scenarios/stats-position.mjs": 10,
     "packages/testing/scenarios/wait-line.mjs": 5,
     "packages/testing/scenarios/wash-line.mjs": 5
   }

@@ -36,6 +36,7 @@ async function turnsWhileLanding(t) {
 
 export default spec({ page: 'stats-inline' }, ({ test }) => {
   test('a new reading is counted to from the figure on show, never backwards', async (t) => {
+    await t.prefs({ statsFooterCounts: true })
     await seatSession(t)
     const turns = await turnsWhileLanding(t)
     t.expectThat.equal(turns[0], 2, 'the line starts on the figure it showed')
@@ -45,7 +46,7 @@ export default spec({ page: 'stats-inline' }, ({ test }) => {
   })
 
   test('under reduced motion a new reading is written at once', async (t) => {
-    await t.prefs({ motion: 'reduced' })
+    await t.prefs({ motion: 'reduced', statsFooterCounts: true })
     await seatSession(t)
     const turns = await turnsWhileLanding(t)
     t.expectThat.equal(turns.filter((value) => value > 2 && value < 22), [], 'no figure between the two readings is ever shown')

@@ -169,6 +169,15 @@
     { "id": "permissions.control", "attribute": "data-dsh-claude-control", "feature": "permissions", "sees": "the host control a skin feature replaces, named by that feature: the access trigger carries `access` while the permission control stands" },
     { "id": "session-panel.foldable", "attribute": "data-dsh-claude-section-foldable", "feature": "session-panel", "sees": "a host session panel section whose head/body contract passed the probe and carries skin-side folding (D113)" },
     { "id": "session-panel.folded", "attribute": "data-dsh-claude-section-folded", "feature": "session-panel", "sees": "a host session panel section currently folded by the skin (D113)" },
-    { "id": "session-panel.fold-head", "attribute": "data-dsh-claude-fold-head", "feature": "session-panel", "sees": "the title row the skin marked as a fold toggle on a host session panel section (D113)" }
+    { "id": "session-panel.fold-head", "attribute": "data-dsh-claude-fold-head", "feature": "session-panel", "sees": "the title row the skin marked as a fold toggle on a host session panel section (D113)" },
+    { "id": "stats.settings-card", "selector": ".dsh-claude-stats-bar-card", "feature": "context-stats", "sees": "one layout preview card in the composer statistics bar configurator, showing either the toolbar seat or the dedicated dock row" },
+    { "id": "stats.settings-layout", "attribute": "data-stats-layout", "feature": "context-stats", "sees": "which composer statistics bar placement a preview card illustrates" },
+    { "id": "stats.settings-seat", "selector": ".dsh-claude-stats-bar-sample-seat", "feature": "context-stats", "sees": "the toolbar statistics seat inside the toolbar-layout preview card, following the chosen horizontal position" },
+    { "id": "stats.settings-dock", "selector": ".dsh-claude-stats-bar-sample-dock", "feature": "context-stats", "sees": "the dedicated dock statistics row inside the own-row preview card, following the chosen horizontal position" },
+    { "id": "stats.settings-align", "attribute": "data-align", "feature": "context-stats", "sees": "the horizontal position applied to the sample statistics bar inside a preview card" },
+    { "id": "stats.settings-figures", "selector": ".dsh-claude-stats-bar-sample-figures", "feature": "context-stats", "sees": "the live sample figures inside a statistics-bar preview card, reflecting enabled metrics, token units and currency" },
+    { "id": "stats.settings-chip", "selector": ".dsh-claude-stats-metric-chip", "feature": "context-stats", "sees": "one multi-select toggle chip for a session-aggregate figure on the composer statistics bar" },
+    { "id": "stats.settings-metric", "attribute": "data-metric", "feature": "context-stats", "sees": "the figure identifier on a multi-select metric chip in the composer statistics bar configurator" },
+    { "id": "stats.settings-hint", "selector": ".dsh-claude-stats-bar-hint", "feature": "context-stats", "sees": "the inline note under the metric chips when session cost is enabled while billing currency is off" }
   ]
 }
