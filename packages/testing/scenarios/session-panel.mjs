@@ -301,6 +301,11 @@ export function sessionPanelScenario({ check }) {
         await route.continue()
       })
       await page.reload()
+      // The host restores the open file preview into the right-hand seat after
+      // the reload, and the panel docks only until that restoration lands.
+      // Waiting for the preview keeps the toggle press off the moving layout;
+      // the panel then shows as an overlay the capture can read.
+      await page.waitForSelector('[data-sidebar-right-open]', { timeout: 20000 })
       await showPanel(page)
       await page.waitForSelector(section('claude-style-context'), { timeout: 20000 })
       notes.firstFrame = await page.evaluate(({ panel, sectionAttribute }) => {
