@@ -435,6 +435,8 @@ export interface HostUiSessionService {
     /** Main-view identity changes; absent where a host publishes none. */
     subscribe?(listener: () => void): () => void
   }
+  /** The live status table the host also publishes under `uiSession.sessionStatus`; present where that standalone service is not offered. */
+  sessionStatus?: HostSessionStatusService
 }
 
 /** ui-workspace's session menu slot props. */

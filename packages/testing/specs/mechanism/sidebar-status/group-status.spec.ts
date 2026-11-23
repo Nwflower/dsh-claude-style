@@ -196,18 +196,20 @@ test('resolves the standalone uiSession.sessionStatus service', () => {
   expect(setup.liveStatus.listeners.size).toBe(0)
 })
 
-test('createAttentionFeed accepts late uiSession.sessionStatus injection and cleans up its fiber', () => {
+test('createAttentionFeed waits on the uiSession service and reads the status table off it', () => {
   const setup = standaloneStatusSetup(false)
   const events: string[] = []
   const feed = createAttentionFeed(setup.ctx, (event) => { events.push(event) })
+  // The wait names the uiSession service, not the dotted status the desktop
+  // host never offers standalone; hostSessionStatus reads the property off it.
   expect(setup.fibers.map((item) => item.deps)).toEqual([
-    ['uiSession.sessionStatus', 'sessions'],
+    ['uiSession', 'sessions'],
   ])
 
   expect(() => setup.fibers[0].callback(setup.ctx)).not.toThrow()
   expect(events).toEqual([])
 
-  setup.services['uiSession.sessionStatus'] = setup.liveStatus
+  setup.services['uiSession'] = { sessionStatus: setup.liveStatus }
   setup.fibers[0].callback(setup.ctx)
   expect(events).toEqual([])
 

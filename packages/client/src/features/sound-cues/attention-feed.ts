@@ -10,7 +10,12 @@ import type { HostSessionListSnapshot, HostSessionStatusSnapshot, HostSnapshotSo
  *
  * The services can mount after this feature (the page boots it before the
  * shell finishes), so `ctx.inject` waits for both where the host offers it; a
- * host without the wait reads what stands now.
+ * host without the wait reads what stands now. The wait names `uiSession`,
+ * not the dotted `uiSession.sessionStatus`: the desktop host publishes the
+ * status table as a property of `uiSession`, and a dotted wait for a service
+ * it never offers waits forever, which is why system notifications stayed
+ * silent off a background task. `hostSessionStatus` resolves whichever form
+ * the host answers.
  */
 export function createAttentionFeed(ctx: HostContext, onEvent: (event: AttentionEvent, sessionId: string) => void) {
   let previous: Map<string, AttentionReading> | null = null
@@ -49,7 +54,7 @@ export function createAttentionFeed(ctx: HostContext, onEvent: (event: Attention
     read()
   }
 
-  const statusFiber = typeof ctx.inject === 'function' ? ctx.inject(['uiSession.sessionStatus', 'sessions'], bind) : null
+  const statusFiber = typeof ctx.inject === 'function' ? ctx.inject(['uiSession', 'sessions'], bind) : null
   if (statusFiber === null) bind(ctx)
 
   return {
