@@ -1,4 +1,4 @@
-import { CHAT_CHROME_GONE_AT, CHAT_CHROME_MIN_SCALE, CHAT_FLIGHT_MS, CHAT_HALO_GONE_AT, CHAT_MIN_REVERSE_DIVISOR, CHAT_MORPH_END, CHAT_SHAPE_SAMPLES, chatSendCornerRadius, chatSendMorphProgress, chatSendRiseProgress, chatSendShadowSpread, chatSendStepOpacity, chatSendTextLayer, chatSendTextWindows } from './send-shape'
+import { CHAT_CHROME_GONE_AT, CHAT_CHROME_MIN_SCALE, CHAT_FLIGHT_MS, CHAT_HALO_GONE_AT, CHAT_MIN_REVERSE_DIVISOR, CHAT_MORPH_END, CHAT_SHAPE_SAMPLES, CHAT_TEXT_PROPERTIES, chatSendCornerRadius, chatSendMorphProgress, chatSendRiseProgress, chatSendShadowSpread, chatSendStepOpacity, chatSendTextLayer, chatSendTextWindows } from './send-shape'
 import type { ShapeSample } from './send-shape'
 import { CHAT_SEND_GHOST_ATTR, CHAT_SEND_LINK_ATTR, chatSendGhostHost, chatSendOpaque, chatSendPixel } from './send-snapshot'
 import type { ComposerSnapshot } from './send-snapshot'
@@ -12,10 +12,46 @@ interface TextInsets {
   lineHeight: number
 }
 
+/**
+ * The width a self-sizing bubble settles at, read without disturbing the page.
+ *
+ * The row is still growing when the flight takes off, so its own box is narrower
+ * than the message it will hold; a copy laid out at the box width breaks a CJK
+ * line one character early. A copy carrying the bubble's own children and
+ * typesetting, laid out at `max-content`, reports the content width the row ends
+ * at; the box adds the bubble's own insets back.
+ *
+ * @param bubble - the destination bubble.
+ * @returns the settled border-box width, or 0 when it cannot be measured.
+ */
+export function maxContentWidthOf(bubble: HTMLElement) {
+  const style = window.getComputedStyle(bubble)
+  const probe = document.createElement('div')
+  probe.style.cssText = 'position:fixed;left:-100000px;top:0;visibility:hidden;'
+    + 'width:max-content;max-width:none;margin:0;border:0;padding:0;box-sizing:content-box'
+  for (const name of CHAT_TEXT_PROPERTIES) probe.style.setProperty(name, style.getPropertyValue(name))
+  for (const node of bubble.childNodes) probe.append(node.cloneNode(true))
+  document.body.append(probe)
+  const content = probe.getBoundingClientRect().width
+  probe.remove()
+  const across = chatSendPixel(style.paddingLeft) + chatSendPixel(style.paddingRight)
+    + chatSendPixel(style.borderLeftWidth) + chatSendPixel(style.borderRightWidth)
+  return content + across
+}
+
 /** Precompute one compositor timeline because the host replaces the echo before the real row arrives. */
 export function chatSendSamples(start: DOMRect, end: DOMRect, from: TextInsets, to: TextInsets, W0: number, H0: number, W1: number, H1: number, R0: number, R1: number, dx: number) {
   // Clamp the right edge to the destination if shape and displacement ever disagree.
-  const reach = end.right - start.left
+  //
+  // The destination here is `W1`, the width the row settles at, not `end.width`:
+  // the row is still growing when the flight takes off, so `end` is narrower than
+  // the row it lands on. Clamping to it would hold the landed shell short of the
+  // words laid out inside it, and the shell's own corner then reads tighter than
+  // the bubble's because the box is narrower than the message.
+  //
+  // `reach` is a distance from the take-off edge, matching `dx`, so `reach - dx`
+  // is the destination's own width at the end of the flight.
+  const reach = dx + W1
   const samples: ShapeSample[] = []
   for (let step = 0; step <= CHAT_SHAPE_SAMPLES; step += 1) {
     const u = step / CHAT_SHAPE_SAMPLES
@@ -50,7 +86,21 @@ export function startMorph(snapshot: ComposerSnapshot, bubble: HTMLElement, end:
   const style = window.getComputedStyle(bubble)
   const W0 = start.width
   const H0 = start.height
-  const W1 = end.width
+  // The width the row settles at, not the one it has while it grows.
+  //
+  // The flight takes off the moment the echo appears, and the row is still
+  // growing then: its box is narrower than the message it will hold. Laying the
+  // words out at that width breaks a CJK line one character early, and the reader
+  // sees the last glyph alone on a second line for the whole flight, then it
+  // returns to one line once the row has grown.
+  //
+  // A self-sizing bubble ends at its own max-content width, so that is the width
+  // to fly to. It is read from a probe rather than from the box, because the box
+  // is the value still growing. A capped bubble keeps the box it was given: it is
+  // clipped by design and its words are laid out at the cap.
+  const layoutWidth = bubble.clientWidth
+  const settledWidth = capped ? layoutWidth : maxContentWidthOf(bubble)
+  const W1 = settledWidth > 0 ? settledWidth : layoutWidth > 0 ? layoutWidth : end.width
   // Reread the growing row so the stand-in covers its full final height.
   const H1 = Math.max(end.height, inPagePixels(bubble.getBoundingClientRect().height))
   const R0 = snapshot.radius

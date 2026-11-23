@@ -31,11 +31,12 @@ export { CHAT_REVEAL_ACTIVE_LIMIT, CHAT_REVEAL_MS, createRevealState } from './f
 export type { RevealRun, RevealSnapshot, RevealState } from './features/chat-reveal/reveal-params'
 export { countProcessItems, createProcessSummary, PROCESS_SUMMARY_ATTR, PROCESS_SUMMARY_CLASS, PROCESS_SUMMARY_REPLACED_ATTR, summaryForm, summaryParts, summarySeparator, summaryText } from './features/chat-fold/process-summary'
 export {
-  CHAT_DRAFT_HANDOFF_AT, CHAT_FLIGHT_MS, CHAT_LANDING_MS, CHAT_MAX_TEXT_LAYERS, CHAT_MORPH_END, CHAT_RISE_DAMPING, CHAT_RISE_OMEGA, CHAT_SHAPE_SAMPLES,
+  CHAT_DRAFT_HANDOFF_AT, CHAT_FLIGHT_MS, CHAT_LANDING_MS, CHAT_MAX_TEXT_LAYERS, CHAT_MORPH_END, CHAT_RISE_DAMPING, CHAT_RISE_OMEGA, CHAT_SHAPE_SAMPLES, CHAT_TEXT_PROPERTIES,
   chatSendCornerRadius, chatSendMorphProgress, chatSendRiseProgress, chatSendShadowSpread, chatSendSpringProgress,
   chatSendStepOpacity, chatSendTextWindows,
 } from './features/chat-send/send-shape'
 export type { ShapeSample } from './features/chat-send/send-shape'
+export { chatSendSamples, maxContentWidthOf } from './features/chat-send/send-morph'
 export { chatSendOpaque } from './features/chat-send/send-snapshot'
 export { foreignRunningLineOwns } from './features/chat-wait/running-owner'
 export { WAIT_OVERTIME_MS, WORD_LOCK_MS, openTurn, overtimeMargin, waitStart, wordForPass } from './features/chat-wait/wait-state'

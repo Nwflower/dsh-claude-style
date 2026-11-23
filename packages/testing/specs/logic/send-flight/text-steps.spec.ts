@@ -37,6 +37,14 @@ function narrowing(from: number, to: number, height = 44): ShapeSample[] {
   })
 }
 
+/** A flight that holds the words at one content width, the way a settled row does. */
+function held(content: number, height = 44): ShapeSample[] {
+  return Array.from({ length: CHAT_SHAPE_SAMPLES + 1 }, (_, index) => {
+    const u = index / CHAT_SHAPE_SAMPLES
+    const m = chatSendMorphProgress(u)
+    return { u, m, width: content, visible: content, height, radius: 20, left: 0, top: 10, content, lineHeight: 24 }
+  })
+}
 /** How many lines the bubble's words take at one width, laid out on their own. */
 function linesAt(words: HTMLElement, width: number) {
   const probe = words.cloneNode(true) as HTMLElement
@@ -120,4 +128,48 @@ test('the shell never stands shorter than the row it lands on', () => {
   const grown = narrowing(620, 180, 120)
   chatSendTextWindows(long, getComputedStyle(long), grown, 24, 10, 120, 120)
   expect(grown.at(-1)!.height).toBeGreaterThan(120)
+})
+
+/**
+ * A short message keeps its last character on the first line while the stand-in is
+ * on screen.
+ *
+ * The flight takes off the moment the echo appears, and the row is still growing
+ * then: its box is narrower than the message it will hold. The samples are
+ * interpolated floats, so a step's content width lands on a fraction, and a CJK
+ * line whose advance sum sits within that fraction of the width breaks one
+ * character early. The reader sees the last glyph alone on a second line for the
+ * whole flight.
+ */
+test('a short message keeps one line at every width the flight lays it out at', () => {
+  const messages = ['这是一条测试消息', '界面显示有点问题', '麻烦看一下这里', '好的', '测试', '请确认这个改动', '这段文字应该保持在一行']
+  const broken: string[] = []
+  for (const text of messages) {
+    const words = bubble(text)
+    // The width the row settles at, and the widths the flight hands its text layers.
+    const settled = words.clientWidth
+    const windows = chatSendTextWindows(words, getComputedStyle(words), held(settled), 24, 10, 44, 44)
+    for (const window of windows) {
+      if (window.width <= 0) continue
+      const lines = linesAt(words, window.width)
+      if (lines > 1) broken.push(`${text}: ${lines} lines at ${window.width}`)
+    }
+  }
+  expect(broken).toEqual([])
+})
+
+test('the widths the flight lays the words out at are whole pixels', () => {
+  // A destination a fraction of a pixel under the settled width, the shape the
+  // interpolated samples take.
+  const broken: string[] = []
+  for (const text of ['这是一条测试消息', '请确认这个改动', '这段文字应该保持在一行']) {
+    const words = bubble(text)
+    const settled = words.clientWidth
+    const windows = chatSendTextWindows(words, getComputedStyle(words), held(settled - 0.335), 24, 10, 44, 44)
+    for (const window of windows) {
+      if (window.width <= 0) continue
+      if (!Number.isInteger(window.width)) broken.push(`${text}: ${window.width}`)
+    }
+  }
+  expect(broken).toEqual([])
 })
