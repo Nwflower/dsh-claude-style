@@ -139,6 +139,14 @@
     "zh": "{label}：{list}",
     "en": "{label}: {list}"
   },
+  "sectionItems": {
+    "zh": "{count} 项",
+    "en": "{count} items"
+  },
+  "sectionTurns": {
+    "zh": "{count} 回合",
+    "en": "{count} turns"
+  },
   "sessionStats": {
     "zh": "会话统计",
     "en": "Session stats"

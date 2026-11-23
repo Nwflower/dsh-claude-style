@@ -282,3 +282,7 @@ export const SIDEBAR_STATUS_ATTR = 'data-dsh-claude-row-status'
 export const SIDEBAR_RUNNING_TITLE_ATTR = 'data-dsh-claude-running-title'
 /** A closed workspace row whose sessions include a running one: the stylesheet draws the mark there. */
 export const WORKSPACE_RUNNING_ATTR = 'data-dsh-claude-workspace-running'
+/** Marks on host session panel sections while the skin's section folding is active (D113). */
+export const SESSION_PANEL_FOLDABLE_ATTR = 'data-dsh-claude-section-foldable'
+export const SESSION_PANEL_FOLDED_ATTR = 'data-dsh-claude-section-folded'
+export const SESSION_PANEL_FOLD_HEAD_ATTR = 'data-dsh-claude-fold-head'

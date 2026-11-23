@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * session-panel.mjs — the skin's sections in the host's session panel on the
- * real host (D110, D92). Registered in the lane's scenario table
+ * real host (D112, D92). Registered in the lane's scenario table
  * (packages/testing/scenarios.mjs). The page readings it judges with live in
  * session-panel-read.mjs beside it.
  *
@@ -71,7 +71,7 @@ export function sessionPanelScenario({ check }) {
      * print the same live reading the composer's line prints — the host's settled
      * projections with the streaming text added — counted to each new reading the
      * way the line counts, so a count moves between the sections' own asks and
-     * moves a little at a time rather than landing in one step (D110).
+     * moves a little at a time rather than landing in one step (D112).
      */
     async duringTurn(context) {
       const { page } = context
@@ -279,7 +279,7 @@ export function sessionPanelScenario({ check }) {
       notes.latestRound = await readPanel(page)
       // The first frame stands context and both figures sections, with what the
       // page knows written and the rest under placeholders, while the route's
-      // fold is still on its way. Holding the ask makes that frame readable (D110).
+      // fold is still on its way. Holding the ask makes that frame readable (D112).
       const held = '**/dsh-claude-style/session-panel**'
       await page.route(held, async (route) => {
         await new Promise(resolve => setTimeout(resolve, 3000))

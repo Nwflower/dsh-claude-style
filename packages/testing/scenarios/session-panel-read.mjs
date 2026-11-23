@@ -1,6 +1,6 @@
 /**
  * session-panel-read.mjs — what the session panel's scenario reads from the page
- * (D92, D110): the host panel's sections and the skin's place among them, the
+ * (D92, D112): the host panel's sections and the skin's place among them, the
  * Environment rows, the bare section titles, the context bar, the
  * header's preset and work chips, and the captures taken of the panel. The
  * scenario beside this file sends the turns and judges what these readings
@@ -120,7 +120,7 @@ const readContextBar = (page) => page.evaluate(({ attribute, reduced }) => {
 /** The header's preset label, the words the Environment section repeats. */
 const readPreset = (page) => page.evaluate((attribute) => (document.querySelector(`[${attribute}~="header-label"]`)?.textContent ?? '').trim(), PART)
 
-/** Whether the header's preset label is drawn: it steps aside while the panel carries its words (D110). */
+/** Whether the header's preset label is drawn: it steps aside while the panel carries its words (D112). */
 const presetLabelDrawn = (page) => page.evaluate((attribute) => {
   const label = document.querySelector(`[${attribute}~="header-label"]`)
   return label === null ? null : getComputedStyle(label).visibility !== 'hidden'

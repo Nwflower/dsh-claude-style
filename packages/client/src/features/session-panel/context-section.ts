@@ -13,7 +13,7 @@ import type { CompactionFailure } from '@dsh-claude-style/contracts/compaction'
 const h = React.createElement
 
 /** The headline occupancy; detailed rows keep one decimal of the window. */
-function sharePercent(value: number, whole: number) {
+export function sharePercent(value: number, whole: number) {
   if (whole <= 0) return '0'
   const percent = Math.max(0, Math.min(100, value / whole * 100))
   // A reading just under 100% keeps its decimal: it is not a full window.
@@ -22,14 +22,14 @@ function sharePercent(value: number, whole: number) {
 }
 
 /** The overview of one session: the provider's occupancy, else the route's fold. */
-function useOverview(sessionId: string) {
+export function useOverview(sessionId: string) {
   const { value, failed } = usePanelReading(sessionId)
   const occupancy = useLiveOccupancy(sessionId)
   return { context: value?.context ?? null, answered: value !== null, failed, overview: contextOverview(occupancy, value?.context ?? null) }
 }
 
 /**
- * The context window's occupancy, its composition, and the room left (D110).
+ * The context window's occupancy, its composition, and the room left (D112).
  *
  * The overview is the provider's own reading, so it stands on the frame the
  * section mounts; the composition is the host's fold, and while that has not
@@ -146,7 +146,7 @@ const PENDING_LEGEND_ROWS = 6
 
 /**
  * The legend before the host's fold answers: rows of the legend's own shape,
- * each a swatch and its three readings under placeholders (D110).
+ * each a swatch and its three readings under placeholders (D112).
  */
 function pendingLegend() {
   return h('dl', { className: 'dsh-claude-panel-legend', 'aria-hidden': true },

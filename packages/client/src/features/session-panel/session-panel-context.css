@@ -1,4 +1,4 @@
-/* The session panel's context section (D110): the occupancy head, the bar of its
+/* The session panel's context section (D112): the occupancy head, the bar of its
    parts, the legend and the compaction offer under it (D100). The inset and type
    it reads at are session-panel.css's. Context categories share their colour
    between the bar and legend (D9). */
@@ -211,4 +211,23 @@ body[data-dsh-claude-style] .dsh-claude-panel-compact-action:hover:not(:disabled
 body[data-dsh-claude-style] .dsh-claude-panel-compact > .dsh-claude-panel-note {
   flex-basis: 100%;
   color: var(--dsw-alias-state-error-primary);
+}
+
+/* The miniature occupancy bar shown beside the Context title while the section is folded (D113). */
+body[data-dsh-claude-style] .dsh-claude-panel-context-mini {
+  display: inline-flex;
+  flex: none;
+  box-sizing: border-box;
+  width: 24px;
+  height: 8px;
+  padding: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--dsw-alias-border-l1);
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-context-mini > span {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--dsh-claude-context-messages);
 }

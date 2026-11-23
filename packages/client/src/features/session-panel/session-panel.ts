@@ -1,5 +1,5 @@
 /**
- * The session overview inside the host's session panel (D110).
+ * The session overview inside the host's session panel (D112).
  *
  * The host owns the panel — where it docks, when it opens, its toggle and its
  * order — and the skin hands it four sections and two Environment rows. The
@@ -22,19 +22,27 @@ import { ContextSection } from './context-section'
 import { StatsSection, TokensSection } from './figures-sections'
 import { OutputsSection } from './outputs-section'
 import { ComputerRow, PresetRow } from './environment-rows'
+import { ContextReading, OutputsReading, StatsReading, TokensReading } from './section-readings'
+import { installSectionFold } from './section-fold'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './session-panel.manifest'
 
-/** The panel's section list and the Environment section's rows. */
+/** The panel's section list, trailing section readings and Environment section's rows. */
 const SECTION_SLOT = 'conversation.session.panel.section'
+const SECTION_ACTIONS_SLOT = 'conversation.session.panel.section.actions'
 const ENVIRONMENT_ROW_SLOT = 'conversation.session.panel.environment.row'
 
 /**
  * One section. The id is also the key the host stores the reader's section
- * order under, so it never changes once shipped (D110).
+ * order under, so it never changes once shipped (D112).
  */
 function section(id: string, order: number, title: CopyKey, component: unknown): SlotEntry {
   return { options: { name: SECTION_SLOT, id, order, label() { return copy(title) } }, component }
+}
+
+/** One section's trailing summary reading, shown while that section is folded (D113). */
+function reading(key: string, component: unknown): SlotEntry {
+  return { options: { name: SECTION_ACTIONS_SLOT, key }, component }
 }
 
 /**
@@ -49,6 +57,10 @@ const ENTRIES: readonly SlotEntry[] = [
   section('claude-style-stats', 20, 'sessionStats', StatsSection),
   section('claude-style-tokens', 30, 'tokenUsage', TokensSection),
   section('claude-style-outputs', 40, 'outputs', OutputsSection),
+  reading('claude-style-context', ContextReading),
+  reading('claude-style-stats', StatsReading),
+  reading('claude-style-tokens', TokensReading),
+  reading('claude-style-outputs', OutputsReading),
   { options: { name: ENVIRONMENT_ROW_SLOT, id: 'claude-style-computer', order: -10 }, component: ComputerRow },
   { options: { name: ENVIRONMENT_ROW_SLOT, id: 'claude-style-preset', order: 50 }, component: PresetRow },
 ]
@@ -60,9 +72,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   // arrives or leaves hands the tables back to the route's folded numbers.
   setPanelUi(ui)
   const fiber = registerSlotEntries(ctx, ENTRIES, 'dsh-claude-style: session panel sections')
+  const stopFold = installSectionFold()
   // The panel element stands only while the panel shows: the body carries that
-  // as the skin's own mark, so the header's preset label, its work chips and the
-  // composer's statistics line step aside with one attribute (D110).
+  // as the skin's own mark, so the header's preset label and its work chips step
+  // aside with one attribute (D112).
   function markShown() {
     if (panels.all().length > 0) setAttributeIfChanged(document.body, SESSION_PANEL_ATTR, '')
     else document.body.removeAttribute(SESSION_PANEL_ATTR)
@@ -70,6 +83,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const panels = observeMatches<HTMLElement>(SESSION_PANEL_SELECTOR, markShown)
   markShown()
   return () => {
+    stopFold()
     panels.release()
     document.body.removeAttribute(SESSION_PANEL_ATTR)
     clearPanelContext(ctx)

@@ -569,7 +569,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
         const params = new URL(req.url ?? '/', 'http://local').searchParams
         // `?live=1` asks past the kept answer: the page wakes its reading on every
         // figure the host lands, and a cache hit would hand it the numbers the
-        // wake was meant to replace (D110).
+        // wake was meant to replace (D112).
         sendPayload(res, sessionPanel.get(sessionId, readBillingRows(params), params.get('live') === '1').then(value => ({ value })))
       },
     })

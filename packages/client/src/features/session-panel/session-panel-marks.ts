@@ -3,7 +3,7 @@ import * as React from 'react'
 const h = React.createElement
 
 /**
- * The marks the skin's panel rows lead with (D110): one set, drawn by the skin so
+ * The marks the skin's panel rows lead with (D112): one set, drawn by the skin so
  * every one of its rows carries the same ink and weight in the host panel's 16px
  * icon column.
  *

@@ -21,7 +21,7 @@ function outputMark(kind: PanelOutput['kind']) {
 }
 
 /**
- * The files the session presented or wrote in its latest turn (D110).
+ * The files the session presented or wrote in its latest turn (D112).
  *
  * A row names the file and the folder it lies in; its hover card carries the
  * whole path. Writing is what nearly every row would say, so only a file the

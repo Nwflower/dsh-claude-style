@@ -679,7 +679,7 @@ export function hostUiWorkspace(lookup: HostServiceLookup | null | undefined): H
   return lookup?.get('uiWorkspace')
 }
 
-/** Open a file in the host's preview through its canonical resource address (D3, D110). */
+/** Open a file in the host's preview through its canonical resource address (D3, D112). */
 export function openHostFile(lookup: HostServiceLookup, sessionId: string, directory: string | undefined, path: string): void {
   const sidebar = lookup.get('sidebarRight') as { openResource(address: string): unknown } | undefined
   if (typeof sidebar?.openResource !== 'function') throw new Error('the host has no file preview controller')

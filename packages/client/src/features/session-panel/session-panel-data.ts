@@ -37,7 +37,7 @@ function occupancyFrom(face: HostSnapshotSource<unknown> | undefined) {
 }
 
 /**
- * Follow one session's occupancy (D110).
+ * Follow one session's occupancy (D112).
  *
  * The context section states its overview on the frame it mounts: the
  * provider's occupancy is a projection frame, not the host route's fold, so the
@@ -76,7 +76,7 @@ const NO_STATE: PanelReadingState = { session: '', reading: EMPTY_READING }
 const sources = new Map<string, ReadingSource>()
 
 /**
- * Start one session's poll loop (D110).
+ * Start one session's poll loop (D112).
  *
  * One ask is in flight at a time. A newer ask supersedes the one in flight, and
  * only that newer ask may clear the controller or schedule the next poll: the
@@ -125,7 +125,7 @@ function openSource(sessionId: string): ReadingSource {
   // The host lands its figures as projection frames (D40), and a streaming turn
   // moves them every few hundred milliseconds. The source asks again on those
   // frames — past the host's kept answer — so the context and outputs move with
-  // the composer's readout instead of one poll behind it (D110).
+  // the composer's readout instead of one poll behind it (D112).
   const throttle = createWakeThrottle({
     minMs: WAKE_MIN_MS,
     now: () => Date.now(),
@@ -156,7 +156,7 @@ function openSource(sessionId: string): ReadingSource {
 }
 
 /**
- * Follow one session's folded overview (D110).
+ * Follow one session's folded overview (D112).
  *
  * The context, figures and outputs sections each mount on their own in the
  * host's panel; they read one source per session, opened by the first section

@@ -355,6 +355,9 @@ export const BOTTOM_PANEL_SELECTOR = '[data-dsh-bottom-panel]'
  * its value names which.
  */
 export const SESSION_PANEL_SELECTOR = '[data-session-panel]'
+/** One section of the host's session panel, valued with the section's registration id (D113). */
+export const SESSION_PANEL_SECTION_ATTRIBUTE = 'data-session-panel-section'
+export const SESSION_PANEL_SECTION_SELECTOR = `[${SESSION_PANEL_SECTION_ATTRIBUTE}]`
 /** The right panel publishes its expanded state before the frame starts its width transition. */
 export const RIGHTBAR_OPEN_ATTRIBUTE = 'data-sidebar-right-open'
 /** The panel chrome strip's own collapse control; present only while the panel is open. */

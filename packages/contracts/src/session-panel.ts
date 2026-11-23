@@ -1,5 +1,5 @@
 /**
- * The data of the skin's sections in the host's session panel (D110): one answer
+ * The data of the skin's sections in the host's session panel (D112): one answer
  * describes a session's working directory, context, outputs and figures, folded on the
  * host from its own projections, session log and services. The browser half
  * renders each section from it and leaves out the ones with nothing to show.
@@ -24,7 +24,7 @@ export interface PanelCompaction {
 }
 
 /**
- * The source a context part is attributed to (D110, D104). The fold publishes these granular
+ * The source a context part is attributed to (D112, D104). The fold publishes these granular
  * kinds; the legend merges `tools`, `mcp` and `skills` into one capability row whose label
  * names whichever of the three are present. `conversation` is the user's and assistant's text
  * bodies; `reasoning` is the assistant's reasoning residual; `attachment` is files and pictures

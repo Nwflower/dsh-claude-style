@@ -627,7 +627,7 @@ const SCENARIOS = {
   dsBot: dsBotScenario({ check }),
   /**
    * The skin's sections in the host's session panel (packages/testing/scenarios/session-panel.mjs,
-   * D110): their place among the host's sections, the Environment rows, the
+   * D112): their place among the host's sections, the Environment rows, the
    * outputs fold, the host toggle, and the view switch on the title's line.
    */
   sessionPanel: sessionPanelScenario({ check }),

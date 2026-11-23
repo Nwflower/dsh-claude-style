@@ -1,4 +1,4 @@
-/* The skin's sections inside the host's session panel (D110). The panel lays
+/* The skin's sections inside the host's session panel (D112). The panel lays
    out its sections, titles and rows (`data-session-panel-row` and its parts);
    these rules cover the docked card stack, the bar-less scroll, and what the
    panel has no part for: a row's inline detail and state word, the figures
@@ -7,7 +7,7 @@
    the skin's own body mark so a page without the skin never sees it. */
 
 /* Docked beside the transcript, the panel is a stack of cards, one per section,
-   standing on the chat's own canvas (D110). The overlay keeps the host's single
+   standing on the chat's own canvas (D112). The overlay keeps the host's single
    card: it floats over the transcript, and gaps between cards would let the
    text under it show through. */
 body[data-dsh-claude-style] [data-session-panel="docked"] {
@@ -20,7 +20,7 @@ body[data-dsh-claude-style] [data-session-panel="docked"] {
   box-shadow: none;
 }
 
-/* The panel scrolls without a bar, docked or as an overlay (D110): a bar at its
+/* The panel scrolls without a bar, docked or as an overlay (D112): a bar at its
    end edge reads as a second border beside the cards' own, and the panel is
    short enough that the wheel finds its end. The host reserves the bar's gutter
    and a transparent end border to hold it off the edge; both go with the bar,
@@ -61,6 +61,71 @@ body[data-dsh-claude-style] [data-session-panel] [data-session-panel-section] h2
   font: var(--dsw-font-xxs-12);
   font-weight: 500;
   letter-spacing: normal;
+}
+
+/* Skin-side section folding while the host's two-child section contract holds
+   (D113). The chevron is painted via `h2::after` so the skin inserts no nodes
+   into the host's React tree; folded sections hide their body wrapper while
+   leaving `[data-slot]` populated so the host's empty-section rule never hides
+   the card. */
+body[data-dsh-claude-style] [data-session-panel] [data-session-panel-section][data-dsh-claude-section-foldable] > [data-dsh-claude-fold-head] {
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+body[data-dsh-claude-style] [data-session-panel] [data-session-panel-section][data-dsh-claude-section-foldable] > [data-dsh-claude-fold-head]:focus-visible {
+  outline: 1.5px solid var(--dsw-focus-ring-color, currentColor);
+  outline-offset: 2px;
+}
+
+body[data-dsh-claude-style] [data-session-panel] [data-session-panel-section][data-dsh-claude-section-foldable] > [data-dsh-claude-fold-head] > h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+body[data-dsh-claude-style] [data-session-panel] [data-session-panel-section][data-dsh-claude-section-foldable] > [data-dsh-claude-fold-head] > h2::after {
+  content: '';
+  display: inline-block;
+  flex: none;
+  width: 12px;
+  height: 12px;
+  background-color: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%23000' stroke-width='1.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 2.5 8 6 4.5 9.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%23000' stroke-width='1.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 2.5 8 6 4.5 9.5'/%3E%3C/svg%3E") center / contain no-repeat;
+  transition: opacity var(--dsh-claude-duration-feedback) var(--dsh-claude-ease-out), transform var(--dsh-claude-duration-feedback) var(--dsh-claude-ease-out);
+}
+
+body[data-dsh-claude-style] [data-session-panel] [data-session-panel-section][data-dsh-claude-section-foldable]:not([data-dsh-claude-section-folded]) > [data-dsh-claude-fold-head] > h2::after {
+  opacity: 0;
+  transform: rotate(90deg);
+}
+
+body[data-dsh-claude-style] [data-session-panel] [data-session-panel-section][data-dsh-claude-section-foldable]:not([data-dsh-claude-section-folded]) > [data-dsh-claude-fold-head]:hover > h2::after,
+body[data-dsh-claude-style] [data-session-panel] [data-session-panel-section][data-dsh-claude-section-foldable]:not([data-dsh-claude-section-folded]) > [data-dsh-claude-fold-head]:focus-visible > h2::after {
+  opacity: 1;
+}
+
+body[data-dsh-claude-style] [data-session-panel] [data-session-panel-section][data-dsh-claude-section-folded] > div:last-child {
+  display: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-section-reading {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--dsw-alias-label-secondary, #5c5c5c);
+  font: var(--dsw-font-xxs-12);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-dsh-claude-style] [data-session-panel] [data-session-panel-section][data-dsh-claude-section-folded] .dsh-claude-panel-section-reading {
+  display: inline-flex;
 }
 
 /* The panel's reading type for what is no row: the empty-section note, the
@@ -112,7 +177,7 @@ body[data-dsh-claude-style] .dsh-claude-panel-chip {
   white-space: nowrap;
 }
 
-/* A placeholder where a reading will be written (D110): the stand-in ink the
+/* A placeholder where a reading will be written (D112): the stand-in ink the
    composer's placeholders use, breathing on the skin's shared pulse, with the
    count the animation choice sets (theme/chrome.css, D40). A bar stands one
    line's words high in the middle of that line, so the row keeps the height the
@@ -170,14 +235,14 @@ body[data-dsh-claude-style] .dsh-claude-panel-stat dd {
 
 /* The host's own background-work chips beside the title step aside while the
    session panel shows: the same work is the panel's subagents and background
-   jobs sections (D110). The subagent catalog's own root is the entry and leaves
+   jobs sections (D112). The subagent catalog's own root is the entry and leaves
    with its trigger; the jobs count keeps the same treatment. */
 body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] :is([data-subagent-action], button[aria-haspopup="tree"], button[aria-expanded]:not([aria-haspopup])) {
   display: none;
 }
 
 /* The preset's words stand in the panel's Environment section while the panel
-   shows (D110). The header band holds the label's `display` over the host's
+   shows (D112). The header band holds the label's `display` over the host's
    container query, so the label leaves the row by position and visibility. */
 body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] [data-dsh-claude-part~="header-label"] {
   position: absolute;

@@ -1,5 +1,5 @@
 /**
- * Following the statistics feature's live reading from the panel sections (D110).
+ * Following the statistics feature's live reading from the panel sections (D112).
  *
  * The figures the panel's two tables print are the ones the composer's line
  * prints, so the tables subscribe to the same entry instead of asking the host
