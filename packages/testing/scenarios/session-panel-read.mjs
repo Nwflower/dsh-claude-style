@@ -1,7 +1,7 @@
 /**
  * session-panel-read.mjs — what the session panel's scenario reads from the page
- * (D92, D112): the host panel's sections and the skin's place among them, the
- * Environment rows, the bare section titles, the context bar, the
+ * (D92, D112, D113): the host panel's sections and the skin's place among them,
+ * the Environment rows, the section titles with their folded summaries, the context bar, the
  * header's preset and work chips, and the captures taken of the panel. The
  * scenario beside this file sends the turns and judges what these readings
  * bring back.
@@ -19,6 +19,11 @@ const MOTION = surfaceTable.surface.find((entry) => entry.id === 'skin.motion')?
 if (MOTION === undefined) throw new Error('session-panel: skin.motion names no attribute')
 /** The value the mark carries while the animation choice holds still (D40). */
 const MOTION_REDUCED = 'reduced'
+/** The skin's section-fold marks, read from the same table (D113, D92). */
+const FOLDED = surfaceTable.surface.find((entry) => entry.id === 'session-panel.folded')?.attribute
+if (FOLDED === undefined) throw new Error('session-panel: session-panel.folded names no attribute')
+const FOLD_HEAD = surfaceTable.surface.find((entry) => entry.id === 'session-panel.fold-head')?.attribute
+if (FOLD_HEAD === undefined) throw new Error('session-panel: session-panel.fold-head names no attribute')
 
 /** The host panel's own marks: a section by its id, its rows, its toggle and the hover card's details. */
 const SECTION = 'data-session-panel-section'
@@ -63,17 +68,32 @@ async function pressToggle(page) {
 }
 
 /** The panel's sections in display order, what each skin section holds and what stands beside its title. */
-const readPanel = (page) => page.evaluate(({ panel, sectionAttribute, row, skin }) => {
+const readPanel = (page) => page.evaluate(({ panel, sectionAttribute, row, skin, foldedAttribute }) => {
   const root = document.querySelector(panel)
   if (root === null) return { shown: false }
   const shown = [...root.querySelectorAll(`[${sectionAttribute}]`)].filter((node) => node.checkVisibility())
   const byId = (id) => root.querySelector(`[${sectionAttribute}="${id}"]`)
   const rowTitles = (node) => [...(node?.querySelectorAll(row) ?? [])].map((item) => (item.textContent ?? '').replace(/\s+/g, ' ').trim())
-  // The title row holds the heading alone: anything after it stands beside the title.
+  // What stands beside the title is what the page shows there: a folded
+  // section's summary reading, which the stylesheet hides while the section
+  // stands expanded (D113). Hidden text is not a reading. The host's slot
+  // wrapper draws display:contents, which checkVisibility() answers false for
+  // even while its children render, so the walk reads computed styles instead.
   const besideTitle = (node) => {
     const head = node?.firstElementChild ?? null
-    const title = head?.querySelector('h2')?.textContent ?? ''
-    return (head?.textContent ?? '').replace(title, '').replace(/\s+/g, ' ').trim()
+    if (head === null) return ''
+    const parts = []
+    const walk = (element) => {
+      for (const child of element.children) {
+        if (child.tagName === 'H2') continue
+        const style = getComputedStyle(child)
+        if (style.display === 'none' || style.visibility === 'hidden') continue
+        if (child.children.length === 0) parts.push(child.textContent ?? '')
+        else walk(child)
+      }
+    }
+    walk(head)
+    return parts.join(' ').replace(/\s+/g, ' ').trim()
   }
   return {
     shown: true,
@@ -85,10 +105,11 @@ const readPanel = (page) => page.evaluate(({ panel, sectionAttribute, row, skin 
     stats: [...root.querySelectorAll('.dsh-claude-panel-stat')].map((node) => (node.textContent ?? '').replace(/\s+/g, ' ').trim()),
     outputs: rowTitles(byId(skin[3])),
     besideTitles: Object.fromEntries(skin.map((id) => [id, besideTitle(byId(id))])),
+    folded: Object.fromEntries(skin.map((id) => [id, byId(id)?.hasAttribute(foldedAttribute) === true])),
     // A drawn bar takes width from the box; a panel that scrolls without one takes none.
     scrollbar: root.offsetWidth - root.clientWidth,
   }
-}, { panel: SESSION_PANEL_SELECTOR, sectionAttribute: SECTION, row: ROW, skin: SKIN_SECTIONS })
+}, { panel: SESSION_PANEL_SELECTOR, sectionAttribute: SECTION, row: ROW, skin: SKIN_SECTIONS, foldedAttribute: FOLDED })
 
 /**
  * The context bar's cover and parts, read under the choice standing and again
@@ -151,6 +172,6 @@ const readOutputFold = (page) => page.evaluate(({ outputs, row }) => {
 const readDetailsCard = (page) => page.evaluate((selector) => document.querySelector(selector)?.textContent ?? null, DETAILS)
 
 export {
-  PART, ROW, SKIN_SECTIONS, section, capturePanel, words, anyOf, panelShown, showPanel, pressToggle, readPanel,
+  PART, ROW, SKIN_SECTIONS, FOLDED, FOLD_HEAD, section, capturePanel, words, anyOf, panelShown, showPanel, pressToggle, readPanel,
   readContextBar, readPreset, presetLabelDrawn, readHeaderActions, readOutputFold, readDetailsCard,
 }

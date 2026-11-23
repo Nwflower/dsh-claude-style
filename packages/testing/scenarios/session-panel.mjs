@@ -6,8 +6,8 @@
  * session-panel-read.mjs beside it.
  *
  * The scenario sends one turn that writes seven files, reads where the skin's
- * sections stand among the host's, the Environment rows it adds, the bare titles
- * and the figures, folds the outputs list with the host's own
+ * sections stand among the host's, the Environment rows it adds, the section
+ * folds and their summaries, the figures, folds the outputs list with the host's own
  * control, then closes the panel through the host's toggle and opens it again.
  * A second turn replaces the outputs. Around the panel it walks the header the
  * panel shares the conversation with: the view tabs, the toolbar's visibility
@@ -19,7 +19,7 @@ import { MARKS } from '../lane.mjs'
 import { sendPrompt, waitForTurn } from '../prompt.mjs'
 import { sanitizePage } from '../../../scripts/shared/privacy.mjs'
 import {
-  PART, ROW, SKIN_SECTIONS, section, capturePanel, words, anyOf, panelShown, showPanel, pressToggle, readPanel,
+  PART, ROW, SKIN_SECTIONS, FOLDED, FOLD_HEAD, section, capturePanel, words, anyOf, panelShown, showPanel, pressToggle, readPanel,
   readContextBar, readPreset, presetLabelDrawn, readHeaderActions, readOutputFold, readDetailsCard,
 } from './session-panel-read.mjs'
 
@@ -128,6 +128,21 @@ export function sessionPanelScenario({ check }) {
       notes.preset = await readPreset(page)
       notes.presetLabel = { shown: await presetLabelDrawn(page) }
       notes.panel = await readPanel(page)
+      // The skin folds a section through its title row: a press folds the
+      // context section and its summary stands beside the title, a second
+      // press gives the body back (D113). The press leaves the pointer on the
+      // title row, where the host hides the trailing seat for its drag handle;
+      // the resting reading is taken with the pointer away. The section stands
+      // expanded again for the reads that follow.
+      const contextHead = page.locator(`${section('claude-style-context')} [${FOLD_HEAD}] h2`)
+      await contextHead.click()
+      await page.waitForSelector(`${section('claude-style-context')}[${FOLDED}]`, { timeout: 5000 })
+      await page.mouse.move(0, 0)
+      notes.sectionFold = { folded: await readPanel(page) }
+      await contextHead.click()
+      await page.waitForSelector(`${section('claude-style-context')}:not([${FOLDED}])`, { timeout: 5000 })
+      await page.mouse.move(0, 0)
+      notes.sectionFold.restored = await readPanel(page)
       notes.contextBar = await readContextBar(page)
       notes.headerActions = await readHeaderActions(page)
       // The outputs fold behind the host's own control: five rows, then the control.
@@ -315,9 +330,17 @@ export function sessionPanelScenario({ check }) {
         check('the header\'s preset label steps aside while the panel shows and returns when it closes',
           notes.presetLabel?.shown === false && notes.closed?.preset === true,
           JSON.stringify({ shown: notes.presetLabel ?? null, closed: notes.closed ?? null })),
-        check('the sections cannot fold, so nothing stands beside their titles',
-          SKIN_SECTIONS.every((id) => (panel.besideTitles?.[id] ?? null) === ''),
-          JSON.stringify(panel.besideTitles ?? null)),
+        check('the skin folds the sections: a folded one carries its summary beside the title, an expanded one carries nothing',
+          SKIN_SECTIONS.every((id) => ((panel.besideTitles?.[id] ?? '') !== '') === (panel.folded?.[id] === true)) &&
+            SKIN_SECTIONS.some((id) => panel.folded?.[id] === true) &&
+            SKIN_SECTIONS.some((id) => panel.folded?.[id] !== true),
+          JSON.stringify({ besideTitles: panel.besideTitles ?? null, folded: panel.folded ?? null })),
+        check('a press on the title folds the context section and a second press gives the body back',
+          notes.sectionFold?.folded?.folded?.['claude-style-context'] === true &&
+            (notes.sectionFold?.folded?.besideTitles?.['claude-style-context'] ?? '') !== '' &&
+            notes.sectionFold?.restored?.folded?.['claude-style-context'] === false &&
+            (notes.sectionFold?.restored?.besideTitles?.['claude-style-context'] ?? '') === '',
+          JSON.stringify({ folded: notes.sectionFold?.folded?.besideTitles ?? null, restored: notes.sectionFold?.restored?.besideTitles ?? null })),
         check('the panel scrolls without a bar', panel.scrollbar === 0, JSON.stringify({ scrollbar: panel.scrollbar })),
         check('the context section arrives with the turn', (panel.context ?? []).length >= 2 && (panel.legend ?? []).length > 0, JSON.stringify(panel.context ?? null)),
         check('the Reduced choice leaves the context bar\'s parts uncovered: the cover collapses and the parts keep the widths of the other choice',
