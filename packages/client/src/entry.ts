@@ -1,4 +1,4 @@
-import { ACCOUNT_MENU_ATTR, HANDOFF_ATTR, HERO_MENU_ATTR, HOLDS_ATTR, MORE_MENU_ATTR, PACKAGE_NAME, PART_ATTR, QUIET_ATTR, READER_HOLD_ATTR } from './constants'
+import { ACCOUNT_MENU_ATTR, HANDOFF_ATTR, HERO_MENU_ATTR, HOLDS_ATTR, MORE_MENU_ATTR, PACKAGE_NAME, PART_ATTR, QUIET_ATTR, READER_HOLD_ATTR, STYLE_STAMP_ATTR } from './constants'
 import { closeHostSeats } from '@dsh-claude-style/engine/host'
 import { installParts } from '@dsh-claude-style/engine/parts'
 import { installPageScale } from './shared/page-scale'
@@ -138,7 +138,7 @@ export function apply(ctx: HostContext) {
     // Each body attribute goes with whoever writes it: a feature's own with
     // its teardown above, the preference mirror's here, the stamps last.
     clearPrefsAttributes()
-    body.removeAttribute('data-dsh-claude-style')
+    body.removeAttribute(STYLE_STAMP_ATTR)
     body.removeAttribute(HANDOFF_ATTR)
     // The visibility mark is the sheet's to read, so it goes before the sheet does.
     if (stopVisibility !== null) {
@@ -376,7 +376,7 @@ export function apply(ctx: HostContext) {
   function own() {
     // The value is the build id (scripts/build/build.mjs): the stylesheet keys on
     // the attribute alone, and a live page reads which lib/client.js it runs.
-    body.setAttribute('data-dsh-claude-style', BUILD_ID)
+    body.setAttribute(STYLE_STAMP_ATTR, BUILD_ID)
     // The handoff marker rides the live stamp: its presence is what lets the
     // skin center offer this theme as a selectable look (D74).
     body.setAttribute(HANDOFF_ATTR, BUILD_ID)

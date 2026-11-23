@@ -1,6 +1,7 @@
 import { DARK_THEME_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
+import { STYLE_STAMP_ATTR } from '../../constants'
 import { motionMs } from '../../shared/motion'
 
 /**
@@ -86,7 +87,7 @@ export function installThemeFlip() {
   function onThemeFlip() {
     // A skin arriving in the same task as this flip has already taken the
     // page: its transitions are not this one's to cancel (D74).
-    if (!body.hasAttribute('data-dsh-claude-style')) return
+    if (!body.hasAttribute(STYLE_STAMP_ATTR)) return
     setFlag(true)
     // Force the flip's style recalc right now — inside this microtask,
     // before any paint — so every transition it would start has started.
