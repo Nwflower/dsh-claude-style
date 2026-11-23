@@ -31,7 +31,7 @@ Claude 与 DeepSeek 品牌在插件设置里切换，亮暗跟随系统。外观
   </tr>
 </table>
 
-> 编程首页（上），对话界面（下）；浅色在左，深色在右。
+> 编程首页（上），对话界面（下）；亮色在左，暗色在右。
 
 ### DeepSeek
 
@@ -62,14 +62,6 @@ Claude 与 DeepSeek 品牌在插件设置里切换，亮暗跟随系统。外观
     <td align="center" width="25%"><img src="./docs/gifs/sleeping.gif" width="120" alt="睡着" /><br />睡着</td>
   </tr>
 </table>
-
-## 消息回退与版本历史
-
-撤回、编辑、重跑和删除此轮会弹出确认窗口，列出将退出当前时间线的轮次和可恢复的文件。确认后，对话从原消息位置继续，侧边栏仍呈现同一条逻辑对话；原会话和之后的版本进入宿主归档，也可通过消息操作行的“版本历史”取消归档并打开。继承分隔行和 fork 产生的收尾行不会出现在这条连续时间线中。
-
-插件为每轮记录工作区检查点，可同时恢复代码改动。安装插件之前或检查点不完整的历史只回退消息，确认窗口会明确说明。Git 提交、外部服务变更以及命令产生的其他副作用不会自动撤销。
-
-同时装有 [dsh-rewind](https://github.com/SiriLee/dsh-rewind) 时，撤回、编辑、重跑和删除由它提供，本插件的这四个按钮不再出现，也不再为新的轮次记录检查点；已有的版本历史仍可从消息操作行打开，设置页的“消息操作行”下会写明这一点。卸下 dsh-rewind 后，四个按钮与检查点记录随即恢复，期间的轮次只能回退消息。
 
 ## 安装
 
@@ -106,9 +98,9 @@ dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub 发布
 
 ## 许可
 
-除特别说明，本仓库以 MIT 授权。
+除特别说明，本仓库以 MIT 授权（见 [LICENSE](LICENSE)）。
 
-钠（Sodium）渲染引擎以 [PolyForm Shield 1.0.0](packages/client/src/features/sodium/LICENSE) 授权。
+钠（Sodium）渲染引擎以 [PolyForm Shield 1.0.0](packages/client/src/features/sodium/LICENSE) 授权。第三方代码与资源许可见 [THIRD_PARTY_NOTICES.md](docs/THIRD_PARTY_NOTICES.md)。
 
 ## 鸣谢
 
