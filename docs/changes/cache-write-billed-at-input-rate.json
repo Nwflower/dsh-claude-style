@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-23",
+  "group": "fixes",
+  "order": 10,
+  "external": true,
+  "zh": "会话费用把缓存写入 token 按缓存命中（读取）价计费，结果偏低；官方页面只列出输入未命中、缓存命中与输出三档，缓存写入没有单列价格，现改为按输入（未命中）价计费，缓存写入不再低于普通输入",
+  "en": "Session cost priced cache-write tokens at the cache-hit (read) rate, coming out too low; the official page lists only input cache-miss, cache-hit and output with no separate write price, so a write now bills at the input (cache-miss) rate and is never cheaper than uncached input"
+}
