@@ -1,12 +1,13 @@
 /**
- * Following the statistics feature's live reading from the rail (D106).
+ * Following the statistics feature's live reading from the panel sections (D110).
  *
- * The figures the rail's two tables print are the ones the composer's line
- * prints, so the rail subscribes to the same entry instead of asking the host
+ * The figures the panel's two tables print are the ones the composer's line
+ * prints, so the tables subscribe to the same entry instead of asking the host
  * route for a second, settled copy (session-panel-figures.ts makes the rows).
  * The feature is installed from a chunk of its own and can be switched off, so
- * its handle comes and goes under the rail: the body's mark says when it lands,
- * and a handle that leaves hands the rail back to the route's folded numbers.
+ * its handle comes and goes under the tables: the body's mark says when it
+ * lands, and a handle that leaves hands the tables back to the route's folded
+ * numbers.
  */
 import * as React from 'react'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
@@ -42,7 +43,7 @@ function figuresOf(sessionId: string): SessionFigures | null {
 
 /**
  * Follow the live reading of one session.
- * @param sessionId - the session the rail shows.
+ * @param sessionId - the session the panel shows.
  * @returns the reading, or null while this session has none published.
  */
 export function useLiveFigures(sessionId: string): SessionFigures | null {
@@ -62,9 +63,9 @@ export function useLiveFigures(sessionId: string): SessionFigures | null {
     }
     attach()
     // The statistics feature is installed from a chunk of its own and can be
-    // switched off under the rail (D76): its install stamps the body, and that
-    // mark is what says the handle arrived or left. Without a handle the rail
-    // prints the route's folded figures again (session-panel-figures.ts).
+    // switched off under the tables (D76): its install stamps the body, and that
+    // mark is what says the handle arrived or left. Without a handle the tables
+    // print the route's folded figures again (session-panel-figures.ts).
     const stopMark = subscribeMutations(document.body, { attributes: true, attributeFilter: [SESSION_STATS_ATTR] }, () => {
       detach()
       attach()

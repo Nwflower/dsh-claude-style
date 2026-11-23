@@ -1,12 +1,12 @@
 /**
- * The rail's two figures tables read the same live reading the composer's line
- * below the input prints (D106).
+ * The panel's two figures tables read the same live reading the composer's line
+ * below the input prints (D110).
  *
  * The host settles its usage one step at a time, so a table fed from the route's
  * fold would stand still through a whole answer and jump when the step ends; the
  * line moves because the statistics feature adds the text streaming on the page
  * to that fold (features/context-stats/stream-estimate.ts). Printing the same
- * entry makes the rail's numbers one figure with the line's, measured once.
+ * entry makes the panel's numbers one figure with the line's, measured once.
  */
 import { figuresCostText } from './stats-cost'
 import type { PanelStats } from '@dsh-claude-style/contracts/session-panel'
@@ -22,8 +22,8 @@ export interface PanelFigures {
 /**
  * The tables' rows from the live reading, keeping the route's folded numbers
  * wherever the reading has not answered yet: a projection that has said nothing
- * is not a zero, so the rail shows the host's settled figure until it speaks.
- * @param figures - the live reading for the session the rail shows.
+ * is not a zero, so the panel shows the host's settled figure until it speaks.
+ * @param figures - the live reading for the session the panel shows.
  * @param settled - the route's folded figures, or null while it has none.
  */
 export function panelFiguresOf(figures: SessionFigures, settled: PanelStats | null): PanelFigures {

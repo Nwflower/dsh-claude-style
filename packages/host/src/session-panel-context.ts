@@ -1,4 +1,4 @@
-/** The context window's composition, folded from the session log's own surface (D106, D104).
+/** The context window's composition, folded from the session log's own surface (D110, D104).
  *
  * Every part is priced from the content the host sends — the retained messages, the
  * request header's tool definitions, the system prompt — by the shared estimator in
@@ -22,7 +22,7 @@
  */
 import type { PanelContext, PanelContextKind, PanelContextPart, PanelContextProjections } from '@dsh-claude-style/contracts/session-panel'
 import { messageBlockParts, toolSchemaTokens } from '@dsh-claude-style/contracts/tokens'
-import type { PanelEvent } from './session-panel-log.js'
+import type { PanelEvent } from './session-panel-event.js'
 
 /** The kinds a retained message contributes to; tools and mcp come from the request header. */
 type MessageKind = Exclude<PanelContextKind, 'tools' | 'mcp'>
@@ -206,7 +206,7 @@ export function foldPanelContext(state: PanelContextState, events: readonly Pane
  * Publish the composition against the provider's own occupancy reading.
  *
  * The occupancy and the window are the provider's figures; the parts are this fold's
- * prices, which the browser half divides into the occupancy in proportion (D106).
+ * prices, which the browser half divides into the occupancy in proportion (D110).
  *
  * @param projections - the host's projection values for the session.
  * @param state - the folded context composition.

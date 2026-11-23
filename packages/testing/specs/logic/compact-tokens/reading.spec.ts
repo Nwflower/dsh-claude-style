@@ -1,5 +1,5 @@
 /**
- * The token counts the details rail, the usage panel and the turn status line
+ * The token counts the session panel, the usage panel and the turn status line
  * print: the unit follows the count's own magnitude, one decimal at most, and
  * a k reading never grows into a thousand k — the window's own figures stay
  * apart from the room left under it. The compact footer's figures instead keep

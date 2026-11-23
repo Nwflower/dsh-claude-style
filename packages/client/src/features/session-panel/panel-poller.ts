@@ -1,6 +1,6 @@
 /**
- * The rail's poll loop, kept apart from React so its ordering can be tested
- * (D106). One ask is in flight at a time; a newer ask supersedes the one in
+ * The panel reading's poll loop, kept apart from React so its ordering can be tested
+ * (D110). One ask is in flight at a time; a newer ask supersedes the one in
  * flight, and only that newer ask may deliver its answer, clear the controller
  * or schedule the next poll. A superseded ask stops at every step, so an older
  * answer cannot overwrite a newer one and a visibility flip that wakes the loop
@@ -14,7 +14,7 @@ export interface PanelPollerDeps {
   /** The address to ask; read per ask, since the reader's price table travels with it. */
   url(): string
   fetch(url: string, signal: AbortSignal): Promise<PanelCommonAnswer>
-  /** Whether the page cannot show the answer right now: it is hidden, or the rail is on its way out. */
+  /** Whether the page cannot show the answer right now: it is hidden. */
   hidden(): boolean
   setTimeout(run: () => void, ms: number): number
   clearTimeout(id: number): void

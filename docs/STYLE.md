@@ -336,91 +336,58 @@ out of reach. The stack scrolls: the first entry's top margin and the last
 entry's bottom margin take the free space while the stack fits, and fall to
 zero once it does not, so the list starts at the top and scrolls to its end.
 
-**The conversation details rail.** The rail is the skin's own fixed column
-against the conversation column's right edge: 320px wide, a 16px left inset
-and one scroll inside, opened and retreated by the column's width (a 1360px window with an 860px column to open, 1180px or a 760px column to
-Retreat) and squeezing the chat while it stands. It reads the conversation
-column's own canvas (`--dsh-claude-canvas`), so the rail and the chat stand on
-one ground; the hairline between them is the only division and wears
-`--dsw-alias-border-l1`, the same edge as the sidebar's split. It starts under the conversation
-header: the header keeps the column's whole width, so its title and controls
-stand above the rail, and the body under it gives the rail its 320px. Its floor
-is the conversation column's own, or the bottom panel's top edge while that
-panel floats over the column's lower edge, so the rail never stands over it. The
-conversation header's details button opens and closes the rail. A column longer
-than the rail scrolls inside it with no scrollbar: a bar in the rail's last 10px
-would read as a second border beside the one between the column and the chat.
+**The session panel sections.** The host's session panel owns the column
+beside the transcript: where it docks, when it shows as an overlay, its toggle,
+its section titles, its drag order and its row layout. Docked, the skin draws
+it as a stack of cards on the chat's canvas, one per section: the panel itself
+takes no fill and no shadow, and each section takes the layer-1 fill, the large
+radius and a 0.5px `--dsw-alias-border-l2` hairline on every side, 8px inside
+and an even gap between cards. That hairline is the host's own section divider,
+so where the host draws it on a card's top edge it is the card's edge. The
+overlay keeps the host's single card, since gaps over the transcript would let
+its text through. The panel scrolls with no bar, docked or as an overlay: a
+bar outside the cards would read as a second edge, so the host's reserved
+gutter and its transparent end border go with it, and the overlay's end inset
+returns to the 8px of its start. Section titles keep the panel's 12px UI type,
+never the serif heading face, and carry nothing beside them: the panel's
+sections do not fold, so a summary figure there would repeat the open section's
+own numbers. The skin adds four sections after the host's Environment —
+Context, Session stats, Token usage and Outputs — and two Environment rows:
+this computer before the host's working folder row, and the preset after the
+host's checkout, local changes and connection rows, with the preset's
+description in its hover card. While the panel shows, the header's
+own preset label steps aside, and it returns when the panel closes.
 
-The rail and the chat share one edge, and it travels. The rail's width grows out
-of the edge and gives it back over the same 300ms and the same curve the host
-animates its own columns with, while the chat body's outer margin does the same,
-so the two edges are one edge at every frame instead of the chat moving and the
-rail appearing after it. The rail is the clip: the body inside stands pinned to its
-right edge and holds still, and the width only uncovers or covers it. A rail on
-its way out keeps its words, stops reading the host and leaves the page once the
-width is back; a press that calls it in mid-exit turns the transition around
-where it stands. A reader who asked for no motion gets the rail and the chat in
-their new places at once.
+A skin row uses the panel's own row marks (`data-session-panel-row` with its
+`icon`, `content` and `trailing` parts), so its height, type, ink, hover plate
+and focus ring are the panel's. The skin keeps only what the panel has no part
+for: a row's detail after a middle dot on the same line, in the tertiary ink; a
+trailing state as words in the secondary ink at 12px. What a row's line cannot
+say stands in the panel's hover card, built by its details factory: an output's
+full path and a preset's description.
+A list longer than six rows shows five and the panel's own fold control.
 
-The column reads at one size and one weight on one rhythm. Every row, legend line
-and figure is 13/20 on a 24px pitch, and a row with a mark is 28px tall around a
-16px mark. A CJK glyph fills its em box where a Latin lowercase letter fills half
-of it, so a size that reads light in Latin reads a step heavier in Chinese; the
-column takes the smaller size and tells its levels apart by ink and by its own
-division lines. A section heading is 13/20 in the regular weight and stands on a
-hairline of its own; the primary ink goes to headings, row titles, the occupancy
-figure, the share column and a figure's value. Labels take the secondary ink; a
-row's detail, the token column and the room left take the tertiary one. The small
-size, 11.5/16, is kept for a row's trailing state, the file-list fold control,
-the legend's caption and the compact request, which stands at the reading line's
-own height beside the distance's words. Sections use 16px vertical insets and a hairline on their
-top edge, and lengths stay on the 4px grid.
+Blocks that are no row — the context head, bar and legend, the compact request,
+and the figures tables — stand on the rows' 6px inset at 13/20. Labels take the
+secondary ink; a figure's value, the occupancy and the share column the primary
+one; the token column and the room left the tertiary one. Both figures tables
+stand open.
 
-Each section is an independent native disclosure with keyboard activation and a
-chevron beside its heading. Folding keeps its children mounted and its choice
-survives data refreshes. Environment, Context and the three lists start open;
-Session stats and Token usage are tables of figures and start folded. The closed
-heading shows a directory name, a context percentage and miniature meter, the
-output speed, the cost or an item count. A folded section stands on its heading's
-own line with the same 16px insets an open one has, so the heading does not move
-when it folds, and keeps the hairline above it like any other section. The chevron belongs to a folded section; on an open one it waits
-out of sight and returns under the pointer or on keyboard focus, leaving the
-heading clean at rest. A heading paints nothing under the pointer: it is the
-column's own division line, not a row of the list.
+Before the host's fold answers, Context, Session stats and Token usage stand
+with what the page knows written — the occupancy and any figure the live
+reading holds — and the rest under placeholders: 12px bars of the stand-in ink
+at 4px corners, in the middle of a row of the final height, breathing on the
+shared pulse. Outputs waits
+for the answer; a section that renders nothing is hidden by the panel itself.
 
-Before the host's fold answers, Environment, Context, Session stats and Token
-usage stand together. What the page knows is written: this computer, the preset,
-the occupancy and any figure the live reading holds. The directory, the branch,
-the context legend and figures not yet read keep their rows under placeholders:
-12px bars of the stand-in ink at 4px corners, in the middle of a row of the
-final height, breathing on the shared pulse. Outputs, Changes and the work
-sections wait for the answer, since a placeholder that turned out empty would
-pull every section under it up.
-
-A row is one line: a mark, a title, its detail after a middle dot, and a
-trailing state. The title gives way before the detail, which keeps its own width
-up to its share of the line. What the line cannot say stands in the host's own
-tooltip bubble, under the pointer or on keyboard focus: an output's full path, a
-job's progress, and the whole title where the row cut it short. A row that says
-everything in its own words raises no bubble. The bubble hangs on the body, so
-the rail's own scrolling never cuts it, and a long path wraps inside it. A row's
-hover plate stands 8px clear of its words on both sides. The trailing
-state is words in the state's ink, without an outline. The environment section
-starts at the top: a computer mark, a folder name with its parent path in the
-separator the reader's system writes (`D:\DSH` on Windows), a separate branch
-row, and the preset as its last row, with the preset's description as its hint.
-
-Every mark in the rail comes from one set the rail draws itself
-(`session-panel-marks.ts`); host glyphs are not mixed in. A mark stands on a
-16-unit grid drawn at 16px, so its stroke is 1.25px wherever it appears, with
-round caps and joins and the figure filling 1.5–14.5 of the box; the heading
-chevron keeps the same pixel stroke on its own 12-unit grid. Marks wear the
-row title's ink, at two thirds of it in Outputs and Subagents, where the figure
-names the row's kind and the words carry what the reader came for. One meaning
-has one figure: a branch and a change request,
-a preset and a subagent each have their own. A checkout already named by the working
-directory contributes only its branch. While the rail stands the header's own
-preset label steps aside, and it returns when the rail closes or retreats.
+Every mark on a skin row comes from one set the skin draws
+(`session-panel-marks.ts`): a 16-unit grid drawn at 16px, so its stroke is
+1.25px wherever it appears, with round caps and joins and the figure filling
+1.5–14.5 of the box. Marks wear the row title's ink, at two thirds of it in
+Outputs, where the figure names the row's kind. An output row names the file
+and the folder it lies in, and only a file the model presented carries a state
+word; its mark is a single-stroke sheet, with a picture frame for an image, so
+a coloured file-type badge never competes with the legend.
 
 The context bar is 4px tall, each part ending on a 2px cut in the panel's fill,
 and a legend swatch is a 10px square. Messages are blue, system tools orange,
@@ -431,25 +398,9 @@ heuristic estimates proportionally calibrated to provider occupancy: the bar,
 token column and percentage column share that allocation, with percentages
 measured against the whole window. The figures carry no estimate mark; one
 caption under the legend says the parts are estimates and its tooltip explains
-the calibration. Free space is the window less occupancy.
-
-Outputs cover the latest human-prompted round. Tool results, background notices
-and automatic continuations keep that round. Processes include every command
-invocation across the session, with foreground waiting and background execution
-identified from the creating invocation and its result. Subagents list every
-child the session started, a running one above the finished count it settles
-behind. Tasks, team boards and bound change requests remain session-wide.
-
-A list shows two rows; the rest fold behind a quiet full-width control that
-names the count left, which keeps a long list from pushing the sections under it
-out of the column. Processes, Tasks, Subagents and Team each have their own section
-with a regular-weight title. Running work stays visible; settled records share a
-single “N finished” disclosure. Command rows use a terminal mark, a name, and a
-separate right-aligned duration beside their execution mode and stop control.
-An output row names the file and the folder it lies in, and only a
-file the model presented carries a state word. Its mark is a single-stroke sheet
-in the row's own ink, with a picture frame for an image, so a coloured file-type
-badge never competes with the legend.
+the calibration. Free space is the window less occupancy. Outputs cover the
+latest human-prompted round; tool results, background notices and automatic
+continuations keep that round.
 
 The conversation view switch keeps the host's text tabs and selection. The
 label's text colour brightens on hover or keyboard focus. The shared underline
@@ -460,13 +411,13 @@ returns the line to the selected label. Selection updates the resting position
 without starting an animation. Reduced motion moves the line immediately.
 The tabs and their overflow menu sit before the right-hand tools in the
 conversation header, including the Windows caption when it has room. A narrow
-header keeps them right-aligned on the next line. The details rail leaves the
-header's width intact. The host's bottom border separates the header from the
-conversation and takes the same colour as the column dividers.
+header keeps them right-aligned on the next line. The host's bottom border
+separates the header from the conversation and takes the same colour as the
+column dividers.
 
 The title area and the session's more-actions trigger stay visible. The view
 tabs, their overflow menu and the right-hand tools fade in while the pointer is
-over the header, the main content, the sidebar or the details rail, including the
+over the header, the main content with the session panel inside it, or the sidebar, including the
 composer and the Windows caption space above the conversation. The caption carries
 the sidebar's collapse control, so those columns keep the header buttons up. The
 tools fade out over the host right panel and keep their place in the header.
@@ -513,9 +464,9 @@ runs, and its tokens stay in the session's own figures.
   fill it sits on rather than as a contour whose colour has to be re-picked per
   surface. The light rungs stay the warm opaque ladder.
 - Layout dividers: 0.5px in `--dsw-alias-border-l1` below the conversation header
-  and where the sidebar and details rail meet the conversation.
+  and where the sidebar meets the conversation.
 - Content dividers: 0.5px in `--dsh-claude-divider`, a rung below the lightest
-  border, for details sections, menu groups, settings rows, foot areas and the
+  border, for menu groups, settings rows, foot areas and the
   transcript's `hr`. Cards, fields and popovers use a 1px outline in l1.
 - Spacing: 4 px rhythm.
 - Bottom edge: the transcript never fades behind the composer by shadow. The
@@ -590,7 +541,6 @@ edit the JSON, not the table.
 | `--dsh-claude-duration-count` | `220ms` | a session number counting to its new reading |
 | `--dsh-claude-duration-slide` | `240ms` | the segmented controls' sliding highlight, a sidebar icon's quarter turn, the wording box taking the width of the words arriving, and streamed content sliding up from the bottom edge |
 | `--dsh-claude-duration-fade` | `300ms` | a slow cross-fade: the theme flip, the reasoning knob's glow, a placeholder handing its place to what it stood for |
-| `--dsh-claude-duration-column` | `300ms` | a column taking or giving up width beside the chat: the conversation's details rail opening or closing, and the chat's own inset following it |
 | `--dsh-claude-duration-bounce` | `350ms` | a switch's knob travelling across with its double bounce |
 | `--dsh-claude-duration-tab-underline` | `280ms` | the conversation tab underline stretching and settling under the next label |
 | `--dsh-claude-duration-flight` | `400ms` | the sent message flying from the composer to its row |
@@ -631,7 +581,6 @@ edit the JSON, not the table.
 | `--dsh-claude-ease-tab-leading-edge` | `cubic-bezier(0.2, 0, 0.32, 1.28)` | the leading edge of the tab underline stretching just past the new label before settling |
 | `--dsh-claude-ease-tab-trailing-edge` | `cubic-bezier(0.52, 0, 0.72, 1)` | the trailing edge of the tab underline accelerating later and easing to a stop as it catches the leading edge |
 | `--dsh-claude-ease-roll` | `cubic-bezier(0.4, 0, 0.2, 1)` | digits rolling over: the file rows' tail and the process group header's counts |
-| `--dsh-claude-ease-column` | `cubic-bezier(0.4, 0, 0.2, 1)` | a column taking or giving up width beside the chat, and the chat's inset following it |
 | `--dsh-claude-ease-spring` | `cubic-bezier(0.34, 1.45, 0.64, 1)` | a small overshoot as something lands: the overtime badge popping in, a switch's knob bouncing past its end |
 | `--dsh-claude-ease-recoil` | `cubic-bezier(0.34, 3.85, 0.64, 1)` | a lifted colour disc springing back into its row once the pointer leaves, overshooting well past its place before it rests |
 | `--dsh-claude-ease-settle` | `cubic-bezier(0.22, 1, 0.36, 1)` | a surface or a page settling into place out of its anchor: menus and dialogs opening and closing, a settings page sliding, the overtime badge sliding onto its line, the greeting's lines rising, a hint travelling between colour discs, a colour disc lifting |
@@ -673,7 +622,6 @@ edit the JSON, not the table.
 |---|---|---|
 | `--dsh-claude-layer-control` | `10` | a control kept over the composer card's own stacked rows: the send and stop buttons, the reasoning picker's trigger |
 | `--dsh-claude-layer-picker` | `20` | a picker that hangs its card from inside the composer: the permission picker, whose card has to stand over the controls beside it |
-| `--dsh-claude-layer-rail` | `24` | the conversation's details column: over the chat and the composer, under the host's own floating panels and under the header row, which hangs its menus in a layer of its own |
 | `--dsh-claude-layer-chrome` | `30` | the window's title row the skin draws into: the title, view tabs and actions over the host's own header |
 | `--dsh-claude-layer-peek` | `40` | the sidebar opened over the page while the pointer rests on its toggle: over the main window's title row and its own controls, under the floating cards and menus its rows open |
 | `--dsh-claude-layer-float` | `99999` | a floating card or menu over everything the host draws: the popover cards, the hero menu |

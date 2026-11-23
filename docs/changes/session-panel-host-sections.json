@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-22",
+  "group": "improvements",
+  "order": 10,
+  "external": true,
+  "zh": "对话详情栏并入宿主的会话面板，上下文、会话统计、Token 用量与产出成为面板里的节，停靠时每节一张卡片、不显示滚动条，环境一节补上本机与预设行；分支、进程、子智能体、团队与变更改由宿主面板自己的行与节展示",
+  "en": "Move the conversation details rail into the host's session panel, with Context, Session stats, Token usage and Outputs as its sections, one card per section and no scrollbar while docked, and this computer and the preset added to its Environment section, while the branch, processes, subagents, the team and change requests are shown by the panel's own rows and sections"
+}

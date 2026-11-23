@@ -626,9 +626,9 @@ const SCENARIOS = {
   /** The Chat / Code switch beside ds-bot's published browser half (packages/testing/scenarios/ds-bot.mjs, D74). */
   dsBot: dsBotScenario({ check }),
   /**
-   * The session overview in the right column (packages/testing/scenarios/session-panel.mjs,
-   * D106): its five sections on a blank and a worked session, the two-row folding,
-   * the view switch on the title's line, and the column's opening width.
+   * The skin's sections in the host's session panel (packages/testing/scenarios/session-panel.mjs,
+   * D110): their place among the host's sections, the Environment rows, the
+   * outputs fold, the host toggle, and the view switch on the title's line.
    */
   sessionPanel: sessionPanelScenario({ check }),
   /** Both palettes captured to the run's out directory and swept for personal data. */

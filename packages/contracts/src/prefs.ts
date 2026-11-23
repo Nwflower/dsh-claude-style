@@ -135,9 +135,9 @@ export const CHAT_ANIMATIONS_OFF = 'off'
 /**
  * Where the session's numbers show: in the context popover the meter opens, on a
  * line of their own under the input card, or in the compact footer. The rail
- * position is the line of their own handed to the conversation's details rail:
- * the line stands wherever the rail does not, and the rail carries the numbers
- * while it does (D106).
+ * position is the line of their own handed to the host's session panel: the
+ * line stands while the panel does not show, and the panel's two tables carry
+ * the numbers while it does (D110).
  */
 export const STATS_POSITION_INLINE = 'inline'
 export const STATS_POSITION_CONTEXT = 'context'
@@ -383,7 +383,7 @@ export const PREFS = {
   viewTabs: { type: 'boolean', default: true },
   hideToolbarOutsideConversation: { type: 'boolean', default: true },
   headerBand: { type: 'boolean', default: true },
-  /** Whether the conversation offers its own session details rail (D106). */
+  /** Whether the skin's sections join the host's session panel (D110). */
   sessionPanel: { type: 'boolean', default: true },
   /** The legacy choice `off` means off. */
   chatAnimations: { type: 'boolean', default: true, legacy: { [CHAT_ANIMATIONS_OFF]: false } },

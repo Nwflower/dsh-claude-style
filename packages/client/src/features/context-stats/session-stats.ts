@@ -320,9 +320,9 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     block.render()
     for (const listener of figureListeners) listener()
     // The two surfaces read the figures only where they stand — the popover
-    // closed reads nothing at all — so the reading the rail prints is taken here,
-    // on every frame that moves it, and counts to the same place the line's
-    // figures count to (D106).
+    // closed reads nothing at all — so the reading the session panel prints is
+    // taken here, on every frame that moves it, and counts to the same place the
+    // line's figures count to (D110).
     figuresCount.to(reading())
   }
 

@@ -1,5 +1,5 @@
 /**
- * The rail's poll loop under a session switch and a visibility flip: one ask in
+ * The panel reading's poll loop under a session switch and a visibility flip: one ask in
  * flight, the newer ask supersedes the older, and only the ask still in flight
  * may deliver its answer, clear the controller or schedule the next poll.
  *

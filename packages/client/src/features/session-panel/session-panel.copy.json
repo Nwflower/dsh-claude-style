@@ -1,31 +1,15 @@
 {
   "sessionPanelTitle": {
-    "zh": "对话详情",
-    "en": "Details"
+    "zh": "会话面板详情",
+    "en": "Session panel details"
   },
   "sessionPanelDesc": {
-    "zh": "对话页右侧；窗口足够宽时出现。",
-    "en": "The right of a conversation, once the window is wide enough."
-  },
-  "environment": {
-    "zh": "环境",
-    "en": "Environment"
+    "zh": "会话面板里的上下文、会话统计、Token 用量与产出各节，以及环境一节的本机、分支与预设行。",
+    "en": "The context, session stats, token usage and outputs sections of the session panel, and the computer, branch and preset rows of its environment section."
   },
   "thisComputer": {
     "zh": "本机",
     "en": "This computer"
-  },
-  "repository": {
-    "zh": "仓库",
-    "en": "Repository"
-  },
-  "worktree": {
-    "zh": "工作树",
-    "en": "Worktree"
-  },
-  "detachedHead": {
-    "zh": "分离的 HEAD",
-    "en": "Detached HEAD"
   },
   "context": {
     "zh": "上下文",
@@ -123,70 +107,6 @@
     "zh": "已展示",
     "en": "Presented"
   },
-  "changes": {
-    "zh": "变更",
-    "en": "Changes"
-  },
-  "draft": {
-    "zh": "草稿",
-    "en": "Draft"
-  },
-  "merged": {
-    "zh": "已合并",
-    "en": "Merged"
-  },
-  "closed": {
-    "zh": "已关闭",
-    "en": "Closed"
-  },
-  "openState": {
-    "zh": "开放中",
-    "en": "Open"
-  },
-  "checksFailing": {
-    "zh": "{count} 项检查失败",
-    "en": "{count} failing"
-  },
-  "checksPending": {
-    "zh": "检查运行中",
-    "en": "Checks running"
-  },
-  "checksPassing": {
-    "zh": "检查通过",
-    "en": "Checks passing"
-  },
-  "background": {
-    "zh": "后台任务",
-    "en": "Background tasks"
-  },
-  "jobs": {
-    "zh": "进程",
-    "en": "Processes"
-  },
-  "processForeground": {
-    "zh": "前台",
-    "en": "Foreground"
-  },
-  "processBackground": {
-    "zh": "后台",
-    "en": "Background"
-  },
-  "finishedCount": {
-    "zh": "{count} 项已结束",
-    "en": "{count} finished"
-  },
-  "subagents": {
-    "zh": "子智能体",
-    "en": "Subagents"
-  },
-  "team": {
-    "zh": "团队",
-    "en": "Team"
-  },
-  "tasks": {
-    "zh": "任务",
-    "en": "Tasks"
-  },
   "running": {
     "zh": "运行中",
     "en": "Running"
@@ -195,45 +115,17 @@
     "zh": "空闲",
     "en": "Idle"
   },
-  "finished": {
-    "zh": "已结束",
-    "en": "Finished"
-  },
-  "stopping": {
-    "zh": "正在停止",
-    "en": "Stopping"
-  },
   "failed": {
     "zh": "失败",
     "en": "Failed"
-  },
-  "stopJob": {
-    "zh": "停止任务 {label}",
-    "en": "Stop job {label}"
-  },
-  "confirmStop": {
-    "zh": "确认停止",
-    "en": "Confirm stop"
-  },
-  "stopFailed": {
-    "zh": "停止失败，请重试",
-    "en": "Could not stop the job. Retry"
   },
   "noContext": {
     "zh": "还没有上下文读数",
     "en": "No context reading yet"
   },
-  "loading": {
-    "zh": "正在读取会话",
-    "en": "Reading the session"
-  },
   "unavailable": {
     "zh": "会话总览暂不可用",
     "en": "The session overview is unavailable"
-  },
-  "noOutput": {
-    "zh": "没有留存的输出",
-    "en": "No retained output"
   },
   "showMore": {
     "zh": "再显示 {count} 项",
@@ -243,21 +135,9 @@
     "zh": "收起",
     "en": "Show less"
   },
-  "detailsTitle": {
-    "zh": "对话详情",
-    "en": "Details"
-  },
-  "sectionItems": {
-    "zh": "{count} 项",
-    "en": "{count} items"
-  },
-  "sectionTurns": {
-    "zh": "{count} 回合",
-    "en": "{count} turns"
-  },
-  "preset": {
-    "zh": "预设",
-    "en": "Preset"
+  "foldName": {
+    "zh": "{label}：{list}",
+    "en": "{label}: {list}"
   },
   "sessionStats": {
     "zh": "会话统计",
@@ -314,9 +194,5 @@
   "statsSteps": {
     "zh": "步骤",
     "en": "Steps"
-  },
-  "detailsToggle": {
-    "zh": "会话详情",
-    "en": "Details"
   }
 }

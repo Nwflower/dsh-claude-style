@@ -1,12 +1,12 @@
 /**
- * The panel's way back into the host (D106): it opens a produced file in the
- * host's own preview and a subagent or Team member's session in the
- * conversation view.
+ * The panel sections' way back into the host (D110): the projections their
+ * readings follow, and the host's own preview a produced file opens in.
  *
- * The install hands its host context over for the lifetime of the rail's React
- * root. Row actions read the host through this one place; teardown releases it.
+ * The install hands its host context over for the lifetime of its slot
+ * registrations. Sections read the host through this one place; teardown
+ * releases it.
  */
-import { hostJobs, hostRemoteSubagents, hostUiWorkspace, openHostFile } from '@dsh-claude-style/engine/host'
+import { openHostFile } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 
 /** The host context this generation runs on, for the seats behind the panel's rows. */
@@ -28,31 +28,8 @@ export function panelHost(): HostContext | null {
   return host
 }
 
-/** Request human cancellation through the same owner-fenced service as the host's job list (D106). */
-export async function stopPanelJob(sessionId: string, jobId: string) {
-  const jobs = hostJobs(host)
-  if (typeof jobs?.kill !== 'function') throw new Error('the host jobs controller is unavailable')
-  const answer = await jobs.kill(sessionId, jobId)
-  if (answer.ok !== true) throw new Error('the host refused to stop the job')
-}
-
-/** Interrupt a continuable child's active turn under the current parent's authority (D106). */
-export async function stopPanelSubagent(parentSessionId: string, childSessionId: string) {
-  const subagents = hostRemoteSubagents(host)
-  if (typeof subagents?.interruptByParent !== 'function') throw new Error('the host subagent controller is unavailable')
-  const answer = await subagents.interruptByParent(childSessionId, parentSessionId, 'continuable')
-  if (answer.ok !== true) throw new Error('the host refused to stop the subagent')
-}
-
-/** Open one subagent or Team member session in the conversation view. */
-export function openPanelSession(sessionId: string) {
-  if (host === null) return
-  const workspace = hostUiWorkspace(host)
-  if (typeof workspace?.openSession === 'function') workspace.openSession(sessionId)
-}
-
 /** Open one produced file in the host's own preview page. */
 export function openPanelFile(sessionId: string, directory: string | undefined, path: string) {
-  if (host === null) throw new Error('the session details rail is not installed')
+  if (host === null) throw new Error('the session panel sections are not installed')
   openHostFile(host, sessionId, directory, path)
 }

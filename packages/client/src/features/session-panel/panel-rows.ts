@@ -1,112 +1,125 @@
 import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
-import { QUIET_ATTR } from '../../constants'
-import { tooltipAnchor } from '../../shared/host-tooltip'
 import { copy } from './copy'
-import { ChevronMark } from './session-panel-marks'
 
 const h = React.createElement
 
-/** Each section owns a native disclosure (D106): its children stay mounted so
- * folding preserves list expansion and an opened job's output. An unchanged
- * `open` prop lets the browser keep the reader's choice across data refreshes.
- * A `folded` section starts closed, with its reading beside the heading. The
- * reading is quiet (QUIET_ATTR, D40): the figures' count rewrites it every
- * frame it travels, and no page-wide pass reads it.
- */
-export function Section({ title, summary, folded, children, kind }: { title: string, summary?: React.ReactNode, folded?: boolean, children?: React.ReactNode, kind?: string | readonly string[] }) {
-  const kinds = typeof kind === 'string' ? [kind] : kind ?? []
-  return h('details', { className: ['dsh-claude-panel-section', ...kinds].filter(Boolean).join(' '), open: folded !== true },
-    h('summary', { className: 'dsh-claude-panel-section-toggle' },
-      h('h2', { className: 'dsh-claude-panel-heading' },
-        h('span', { className: 'dsh-claude-panel-section-title' }, title),
-        h('span', { className: 'dsh-claude-panel-section-chevron', 'aria-hidden': true },
-          h(ChevronMark)),
-        summary === undefined ? null : h('span', { className: 'dsh-claude-panel-section-reading', [QUIET_ATTR]: '' }, summary))),
-    h('div', { className: 'dsh-claude-panel-section-content' }, children))
+/** What the host's panel factories take: the hover card's details and the list's fold control (D110). */
+export interface PanelDetails {
+  title?: string
+  lines?: readonly string[]
 }
 
-/** How many rows a section or a background category shows before folding the rest behind its own control. */
-const FOLD_LIMIT = 2
+/** The fold control's state, as `conversation.session.panel.fold` takes it. */
+interface PanelFold {
+  expanded: boolean
+  label: string
+  name: string
+  onToggle(): void
+}
+
+/** Renders one of the host panel's component factories by name. */
+export type RenderFactorySlot = (name: string, props: object) => React.ReactNode
 
 /**
- * One section's rows, folded after two while the reader has not asked for the
- * rest: the panel is a summary, and a long list would push every section after
- * it out of the column. A row opened in place (a job's output) folds with the
- * rows it belongs to.
+ * The props every entry the skin hands to the host's session panel receives:
+ * the session the panel shows and the renderer of the panel's own factories.
  */
-export function FoldedList({ rows }: { rows: readonly React.ReactNode[] }) {
-  const [expanded, setExpanded] = React.useState(false)
-  if (rows.length <= FOLD_LIMIT) return h('div', { className: 'dsh-claude-panel-list' }, rows)
-  return h('div', { className: 'dsh-claude-panel-list' },
-    expanded ? rows : rows.slice(0, FOLD_LIMIT),
-    h('button', {
-      type: 'button',
-      className: 'dsh-claude-panel-more',
-      'aria-expanded': expanded,
-      onClick() { setExpanded(!expanded) },
-    }, expanded ? copy('showLess') : copy('showMore', { count: rows.length - FOLD_LIMIT })))
+export interface PanelSlotProps {
+  sessionId?: unknown
+  renderFactorySlot?: RenderFactorySlot
+}
+
+/** What an entry's body works from: the session the panel shows and the panel's factories. */
+export interface PanelEntryProps {
+  sessionId: string
+  factories: RenderFactorySlot
 }
 
 /**
- * One row on one line: a mark, a title with its detail after it, and a trailing
- * side. What the line cannot say — an output's full path, a job's progress, a
- * title it cut short — stands in the host's own tooltip bubble on hover and on
- * keyboard focus, portaled to the body so the scrolling rail never cuts it.
+ * The component the skin hands one of the panel's slots (D110): it renders
+ * nothing until the host names a session, and then its body for that session.
+ * The factory renderer is read when a row asks for it; a panel that handed none
+ * is a host this skin does not serve, and the row that asked says so.
  */
-export function Row(props: { mark?: React.ReactNode, title: string, detail?: string, hint?: string, kind?: string, side?: React.ReactNode, href?: string, onClick?: () => void, expanded?: boolean }) {
+export function panelEntry(Body: React.FunctionComponent<PanelEntryProps>) {
+  return function PanelEntry(props: PanelSlotProps) {
+    const sessionId = typeof props.sessionId === 'string' && props.sessionId !== '' ? props.sessionId : null
+    if (sessionId === null) return null
+    const factories: RenderFactorySlot = (name, factoryProps) => {
+      const render = props.renderFactorySlot
+      if (typeof render !== 'function') throw new Error('the host session panel handed no component factory renderer')
+      return render(name, factoryProps)
+    }
+    return h(Body, { sessionId, factories })
+  }
+}
+
+/**
+ * One row in the host panel's shared row markup (D110): the host lays out
+ * `data-session-panel-row` and its `data-row-part` children, so a skin row
+ * stands in the icon, text and trailing columns every other section uses. The
+ * row's words are one line — the title, then its detail in the quiet ink — and
+ * what the line cannot say goes into the host's hover card, built by the
+ * panel's own details factory.
+ */
+export function Row(props: { mark?: React.ReactNode, title: string, detail?: string, side?: React.ReactNode, card?: React.ReactNode, kind?: string, onClick?: () => void }) {
   const detail = props.detail === undefined || props.detail === '' ? null : props.detail
-  const content = [
-    props.mark === undefined ? null : h('span', { key: 'mark', className: 'dsh-claude-panel-mark', 'aria-hidden': true }, props.mark),
-    h('span', { key: 'main', className: 'dsh-claude-panel-main' },
+  const parts = [
+    props.mark === undefined ? null : h('span', { key: 'icon', 'data-row-part': 'icon', 'aria-hidden': true }, props.mark),
+    h('span', { key: 'content', 'data-row-part': 'content' },
       h('span', { className: 'dsh-claude-panel-title' }, props.title),
       detail === null ? null : h('span', { className: 'dsh-claude-panel-detail' }, detail)),
-    props.side === undefined ? null : h('span', { key: 'side', className: 'dsh-claude-panel-side' }, props.side),
   ]
-  const rowClass = props.kind === undefined ? 'dsh-claude-panel-row' : `dsh-claude-panel-row ${props.kind}`
-  const row = props.href !== undefined
-    ? h('a', { className: `${rowClass} is-link`, href: props.href, target: '_blank', rel: 'noreferrer' }, content)
-    : props.onClick !== undefined
-      ? h('button', {
-        type: 'button',
-        className: `${rowClass} is-button`,
-        onClick: props.onClick,
-        ...(props.expanded === undefined ? {} : { 'aria-expanded': props.expanded }),
-      }, content)
-      : h('div', { className: rowClass }, content)
-  // A row whose reading carries more than its own words — a full path, a job's
-  // progress — says it on any hover; a row whose line already says all of it
-  // raises the bubble only where the line cut a word off.
-  const line = detail === null ? props.title : `${props.title} · ${detail}`
-  const hint = props.hint === undefined || props.hint === '' ? null : props.hint
-  const reading = hint ?? line
-  return h(primitives.Tooltip, {
-    label: reading,
-    side: 'bottom',
-    portal: true,
-    onlyWhenClipped: reading === line,
-    children: tooltipAnchor(row),
-  })
+  const body = props.onClick === undefined
+    ? h('span', { 'data-row-part': 'body' }, parts)
+    : h('button', { type: 'button', 'data-row-part': 'body', onClick: props.onClick }, parts)
+  const row = h('div', { 'data-session-panel-row': '', className: props.kind },
+    body,
+    props.side === undefined ? null : h('span', { 'data-row-part': 'trailing' }, props.side))
+  if (props.card === undefined) return row
+  return h(primitives.HoverCard, { grouped: true, anchor: row, content: props.card })
+}
+
+/** How many rows a list shows before the host's fold control (the panel's own limit). */
+const FOLD_LIMIT = 5
+
+/**
+ * A list folded the way the host panel folds its own (D110): the first five
+ * rows, then the panel's fold control as the last row. The list folds only when
+ * that holds back two rows or more, since the control takes a row itself; the
+ * rows arrive newest first, so the ones held back are the least current.
+ */
+export function FoldedList({ rows, list, factories }: { rows: readonly React.ReactNode[], list: string, factories: RenderFactorySlot }) {
+  const [expanded, setExpanded] = React.useState(false)
+  if (rows.length <= FOLD_LIMIT + 1) return h(primitives.HoverCardGroup, null, rows)
+  const label = expanded ? copy('showLess') : copy('showMore', { count: rows.length - FOLD_LIMIT })
+  const fold: PanelFold = {
+    expanded,
+    label,
+    name: copy('foldName', { label, list }),
+    onToggle() { setExpanded(!expanded) },
+  }
+  return h(primitives.HoverCardGroup, null,
+    expanded ? rows : rows.slice(0, FOLD_LIMIT),
+    factories('conversation.session.panel.fold', fold))
+}
+
+/** The hover card's content for one row, through the host panel's details factory. */
+export function detailsCard(factories: RenderFactorySlot, details: PanelDetails) {
+  return factories('conversation.session.panel.details', details)
 }
 
 /**
  * A placeholder bar where a reading will be written once the host's fold
- * answers (D106): one line's height, so the row it stands in keeps the height
+ * answers (D110): one line's height, so the row it stands in keeps the height
  * the written row will have.
  */
 export function Skeleton({ width }: { width: string }) {
   return h('span', { className: 'dsh-claude-panel-skeleton', style: { width } })
 }
 
-/** A row whose words have not been answered yet: its own mark, and a placeholder where the title will stand. */
-export function PendingRow({ mark, width }: { mark: React.ReactNode, width: string }) {
-  return h('div', { className: 'dsh-claude-panel-row', 'aria-hidden': true },
-    h('span', { className: 'dsh-claude-panel-mark' }, mark),
-    h('span', { className: 'dsh-claude-panel-main' }, h(Skeleton, { width })))
-}
-
 /** One trailing state word. */
-export function Chip({ text, tone }: { text: string, tone?: 'success' | 'failure' | 'pending' }) {
-  return h('span', { className: tone === undefined ? 'dsh-claude-panel-chip' : `dsh-claude-panel-chip is-${tone}` }, text)
+export function Chip({ text }: { text: string }) {
+  return h('span', { className: 'dsh-claude-panel-chip' }, text)
 }
-

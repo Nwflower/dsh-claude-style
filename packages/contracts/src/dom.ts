@@ -342,6 +342,12 @@ export const RIGHTBAR_COLUMN_SELECTOR = '[data-rightbar-col]'
  * a column, so it takes the floor from every column standing above it.
  */
 export const BOTTOM_PANEL_SELECTOR = '[data-dsh-bottom-panel]'
+/**
+ * The host's session panel beside the transcript (`dsh-client-ui-session-panel`):
+ * the element stands only while the panel shows, docked or as an overlay, and
+ * its value names which.
+ */
+export const SESSION_PANEL_SELECTOR = '[data-session-panel]'
 /** The right panel publishes its expanded state before the frame starts its width transition. */
 export const RIGHTBAR_OPEN_ATTRIBUTE = 'data-sidebar-right-open'
 /** The panel chrome strip's own collapse control; present only while the panel is open. */

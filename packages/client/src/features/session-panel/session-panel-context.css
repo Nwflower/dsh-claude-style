@@ -1,7 +1,7 @@
-/* The details rail's context section (D106): the occupancy head, the bar of its
-   parts, the legend and the compaction offer under it (D100). The rows, sections
-   and type it reads at are session-panel.css's. Context categories share their
-   colour between the bar and legend (D9). */
+/* The session panel's context section (D110): the occupancy head, the bar of its
+   parts, the legend and the compaction offer under it (D100). The inset and type
+   it reads at are session-panel.css's. Context categories share their colour
+   between the bar and legend (D9). */
 
 body[data-dsh-claude-style] .dsh-claude-panel-context-head {
   display: flex;
@@ -13,7 +13,7 @@ body[data-dsh-claude-style] .dsh-claude-panel-context-head {
 }
 
 /* The occupancy is the section's one headline figure and takes the primary ink;
-   the weight stays the section titles' alone (D106). */
+   the weight stays the section titles' alone. */
 body[data-dsh-claude-style] .dsh-claude-panel-percent {
   color: var(--dsw-alias-label-primary, #161616);
 }
@@ -34,7 +34,7 @@ body[data-dsh-claude-style] .dsh-claude-panel-bar {
 }
 
 /* The track's ink stands over the parts and collapses toward the right edge,
-   uncovering the composition left to right in one sweep (D106). */
+   uncovering the composition left to right in one sweep. */
 body[data-dsh-claude-style] .dsh-claude-panel-bar::after {
   content: '';
   position: absolute;
@@ -52,9 +52,9 @@ body[data-dsh-claude-style] .dsh-claude-panel-segment {
   flex: none;
   height: 100%;
   min-width: 0;
-  /* Each part ends on a 2px cut in the panel's own fill, so neighbouring parts
-     read as separate pieces the way Claude's bar draws them. */
-  box-shadow: inset -2px 0 var(--dsh-claude-canvas);
+  /* Each part ends on a 2px cut in the host panel's own fill, so neighbouring
+     parts read as separate pieces the way Claude's bar draws them. */
+  box-shadow: inset -2px 0 var(--dsw-alias-bg-layer-1);
   transition: width var(--dsh-claude-duration-reveal) var(--dsh-claude-ease-out);
 }
 

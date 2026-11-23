@@ -1,7 +1,7 @@
 /**
  * @capability header-visibility
  * @features header-visibility, view-tabs
- * @risk The session menu leaves the title, the toolbar hides over the sidebar or details rail that carry the caption's collapse control, or the native view tabs disappear with the tools while right alignment is disabled.
+ * @risk The session menu leaves the title, the toolbar hides over the sidebar that carries the caption's collapse control or over the host's session panel inside the conversation, or the native view tabs disappear with the tools while right alignment is disabled.
  */
 import { HEADER_PARTS } from '@dsh-claude-style/engine/parts-table'
 import { host, spec, surface } from '../../fixtures/behaviour.mjs'
@@ -18,7 +18,7 @@ const TABLIST = host.attributes('header.conversation-tabs')
 const SIDEBAR_SLOT = host.attributes('shell.sidebar-slot')
 const RIGHTBAR = host('shell.rightbar-column')
 const RIGHTBAR_ATTRS = host.attributes('shell.rightbar-column')
-const RAIL_CLASS = surface('sessionPanel.rail').slice(1)
+const SESSION_PANEL = host.attributes('conversation.session-panel')
 const CLASSES = {
   header: partClass(HEADER_PARTS, 'conversation-header'),
   title: partClass(HEADER_PARTS, 'header-title'),
@@ -29,7 +29,7 @@ const CLASSES = {
 }
 
 async function mount(t) {
-  await t.page.evaluate(({ phase, windows, main, headerSlot, content, tablist, classes, rootClass, sidebarSlot, rightbarAttrs, railClass }) => {
+  await t.page.evaluate(({ phase, windows, main, headerSlot, content, tablist, classes, rootClass, sidebarSlot, rightbarAttrs, sessionPanel }) => {
     document.documentElement.setAttribute(windows, '')
     const captionHeight = 40
     const windowButtons = 140
@@ -83,16 +83,17 @@ async function mount(t) {
     utilities.append(utilitySlot, sessionMenu)
     const chat = box('section', content, 'flex:1;position:relative')
     chat.setAttribute('aria-label', 'Conversation')
-    const rail = box('aside', [['class', railClass]], `position:absolute;inset:${captionHeight + headerHeight}px 16% 0 auto;width:20%;background:white`)
-    rail.setAttribute('aria-label', 'Details')
+    const panel = box('aside', sessionPanel, 'position:absolute;inset:12px 8px auto auto;width:30%;height:50%;background:white')
+    panel.setAttribute('aria-label', 'Session panel')
+    chat.append(panel)
     const rightbar = box('div', [...rightbarAttrs, ['aria-label', 'Host right panel']], 'position:absolute;inset:0 0 0 auto;width:16%;background:white')
     header.append(title, ...controls)
     slot.append(header)
     frame.append(slot, chat)
     outlet.append(frame)
-    shell.append(sidebarSlotEl, outlet, rail, rightbar)
+    shell.append(sidebarSlotEl, outlet, rightbar)
     document.body.prepend(shell)
-  }, { phase: PHASE, windows: WINDOWS, main: MAIN, headerSlot: HEADER_SLOT, content: CONTENT, tablist: TABLIST, classes: CLASSES, rootClass: localClass('root'), sidebarSlot: SIDEBAR_SLOT, rightbarAttrs: RIGHTBAR_ATTRS, railClass: RAIL_CLASS })
+  }, { phase: PHASE, windows: WINDOWS, main: MAIN, headerSlot: HEADER_SLOT, content: CONTENT, tablist: TABLIST, classes: CLASSES, rootClass: localClass('root'), sidebarSlot: SIDEBAR_SLOT, rightbarAttrs: RIGHTBAR_ATTRS, sessionPanel: SESSION_PANEL })
 }
 
 export default spec({ page: 'desktop' }, ({ test }) => {
@@ -103,7 +104,7 @@ export default spec({ page: 'desktop' }, ({ test }) => {
     const header = page.locator(`[${MARK}]`)
     const chat = page.getByRole('region', { name: 'Conversation' })
     const sidebar = page.getByRole('button', { name: 'Sessions', exact: true })
-    const rail = page.getByRole('complementary', { name: 'Details' })
+    const sessionPanel = page.getByRole('complementary', { name: 'Session panel' })
     const rightbar = page.locator(RIGHTBAR)
     const title = header.getByText('Session title', { exact: true })
     const tab = header.getByRole('button', { name: 'View tab' })
@@ -154,10 +155,11 @@ export default spec({ page: 'desktop' }, ({ test }) => {
 
     await chat.hover({ position: { x: chatBox.width / 4, y: chatBox.height / 2 } })
     t.expectThat.equal(await visibility(), shown, 'the conversation shows the controls')
-    // The caption carries the sidebar's collapse control, so the sidebar and the
-    // details rail keep the header buttons up; only the host right panel hides them.
-    await rail.hover()
-    t.expectThat.equal(await visibility(), shown, 'the details rail keeps the controls up')
+    // The caption carries the sidebar's collapse control, so the sidebar keeps the
+    // header buttons up, as does the host's session panel inside the conversation;
+    // only the host right panel hides them.
+    await sessionPanel.hover()
+    t.expectThat.equal(await visibility(), shown, 'the session panel keeps the controls up')
     await sidebar.hover()
     t.expectThat.equal(await visibility(), shown, 'the sidebar keeps the controls up')
     await rightbar.hover()

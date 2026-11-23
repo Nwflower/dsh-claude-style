@@ -1,4 +1,4 @@
-/** Latest human-input round filtering through the built host route (D106). */
+/** Latest human-input round filtering through the built host route (D110). */
 import { check } from './shared.mjs'
 
 export async function hostPanelRound({ mod, fakeHost, request, browser, scratchHome }) {
@@ -37,19 +37,8 @@ export async function hostPanelRound({ mod, fakeHost, request, browser, scratchH
   ]
   const numbered = [...initial, ...afterInput].map((event, seq) => ({ ...event, seq }))
   const incremental = numbered.slice(0, initial.length)
-  const catalogRows = ['stale-child', 'reused-child', 'running-child', 'ui-resumed-child', 'latest-child']
-    .map(id => ({ id, createdAt: id === 'latest-child' ? 220 : 110, mode: 'continuable', label: id }))
-  const projections = {
-    incremental: { subagentCatalog: catalogRows.slice(0, -1) },
-    restored: { subagentCatalog: catalogRows },
-  }
-  const events = { incremental, restored: numbered }
-  for (const child of catalogRows) {
-    projections[child.id] = { subagentTiming: child.id === 'running-child'
-      ? { active: { since: 150 }, settledMs: 0 } : { settledMs: 100, lastTurnCompleted: true } }
-    events[child.id] = [{ type: 'turn/start', seq: 0, time: child.id === 'ui-resumed-child' ? 230 : child.createdAt, data: { turn: 1 } }]
-  }
-  const host = fakeHost(mod, { fenced: true, home: scratchHome, events, projections })
+  // Job and subagent events stay in the stream: the round fold reads past them.
+  const host = fakeHost(mod, { fenced: true, home: scratchHome, events: { incremental, restored: numbered }, projections: {} })
   const read = async id => {
     const answer = await request(host, `/dsh-claude-style/session-panel?id=${id}&live=1`, 'GET', '', browser)
     const body = JSON.parse(answer.body)
@@ -58,12 +47,7 @@ export async function hostPanelRound({ mod, fakeHost, request, browser, scratchH
   }
   const empty = await read('incremental')
   check('a new human input clears old outputs before a new delivery', empty.outputs.length === 0, JSON.stringify(empty.outputs))
-  check('command history spans human inputs while running commands remain actionable',
-    empty.background.jobs.map(job => job.id).sort().join() === 'old-finished,old-running', JSON.stringify(empty.background.jobs))
-  check('every catalogued child keeps its row, settled ones included',
-    empty.background.subagents.map(child => child.id).sort().join() === 'reused-child,running-child,stale-child,ui-resumed-child', JSON.stringify(empty.background.subagents))
   incremental.push(...numbered.slice(initial.length))
-  projections.incremental.subagentCatalog = catalogRows
   const advanced = await read('incremental')
   const restored = await read('restored')
   check('incremental polling and a restored log answer identical latest-round rows',
@@ -74,12 +58,4 @@ export async function hostPanelRound({ mod, fakeHost, request, browser, scratchH
     advanced.outputs[0]?.origin === 'presented', JSON.stringify(advanced.outputs))
   check('late old-round writes and presentations stay out of the new round',
     !advanced.outputs.some(output => /late/.test(output.path)), JSON.stringify(advanced.outputs))
-  check('a child started later joins the session list rather than a round',
-    advanced.background.subagents.map(child => child.id).sort().join() === 'latest-child,reused-child,running-child,stale-child,ui-resumed-child', JSON.stringify(advanced.background.subagents))
-  check('current and earlier commands remain in the session history',
-    advanced.background.jobs.map(job => job.id).sort().join() === 'late-nested,new-finished,old-finished,old-running', JSON.stringify(advanced.background.jobs))
-  incremental.push({ ...settled('old-running'), seq: numbered.length })
-  const finished = await read('incremental')
-  check('an older running command becomes a settled history entry',
-    finished.background.jobs.find(job => job.id === 'old-running')?.status === 'completed', JSON.stringify(finished.background.jobs))
 }

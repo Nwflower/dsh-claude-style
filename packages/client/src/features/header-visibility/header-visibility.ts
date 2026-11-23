@@ -4,7 +4,7 @@ import {
 import { observeSize } from '@dsh-claude-style/engine/bus'
 import { desktopBand } from '@dsh-claude-style/engine/desktop-band'
 import { createStamp, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
-import { cacheFirstMatch, conversationHeaderMore, conversationHeaderTitle, conversationHeaderTools, findMainConversationFrame, findSidebarRoot } from '@dsh-claude-style/engine/host'
+import { conversationHeaderMore, conversationHeaderTitle, conversationHeaderTools, findMainConversationFrame, findSidebarRoot } from '@dsh-claude-style/engine/host'
 import { readPrefs } from '../../core/prefs'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { FeatureUi } from '../../core/feature'
@@ -16,9 +16,6 @@ interface PointerPosition {
 }
 
 const UTILITY_ATTR = 'data-dsh-header-utility-fade'
-/** The skin's own details rail beside the conversation (features/session-panel). */
-const DETAILS_RAIL_SELECTOR = '.dsh-claude-details'
-const detailsRail = cacheFirstMatch<HTMLElement>(DETAILS_RAIL_SELECTOR)
 
 /** Fade the first painted branches beside the menu. Opacity on a shared
  * ancestor would also hide the fixed menu, and host slots can be display: contents (D43). */
@@ -68,20 +65,21 @@ export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       caption = { left: frameBox.left, right: Math.min(frameBox.right, window.innerWidth - band.controls.size), bottom: band.height }
     }
     return { header, content, caption, menu, title, utilityPaint, frameToWatch: caption === null ? null : frame,
-      sidebar: findSidebarRoot(), rail: detailsRail() }
+      sidebar: findSidebarRoot() }
   }
 
   function measure() {
     reading = readRegions()
   }
 
-  /** The toolbar stays up over the conversation, the sidebar and the details
-   * rail: the caption carries the sidebar's own collapse control, so hovering
-   * those columns keeps the header buttons reachable (D43). */
+  /** The toolbar stays up over the conversation, whose content holds the host's
+   * session panel, and over the sidebar: the caption carries the sidebar's own
+   * collapse control, so hovering those columns keeps the header buttons
+   * reachable (D43). */
   function keepsToolbar(target: EventTarget | null) {
     if (!(target instanceof Node) || reading === null) return false
     return reading.header.contains(target) || reading.content?.contains(target) === true
-      || reading.sidebar?.contains(target) === true || reading.rail?.contains(target) === true
+      || reading.sidebar?.contains(target) === true
   }
 
   function write(inside: boolean) {
@@ -114,7 +112,7 @@ export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       stopSize = frame === null ? null : observeSize(frame, schedule)
     }
     write(reading?.header.matches(':hover') === true || reading?.content?.matches(':hover') === true
-      || reading?.sidebar?.matches(':hover') === true || reading?.rail?.matches(':hover') === true)
+      || reading?.sidebar?.matches(':hover') === true)
   }
 
   function onPointer(event: PointerEvent) {

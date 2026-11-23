@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { SESSION_PANEL_PATH } from '@dsh-claude-style/contracts/routes'
-import type { PanelJobAnswer, SessionPanelAnswer, SessionPanelValue } from '@dsh-claude-style/contracts/session-panel'
+import type { SessionPanelAnswer } from '@dsh-claude-style/contracts/session-panel'
 import { billingQuery } from '../../shared/billing'
 import { sessionProjectionFaces } from '../../shared/session-projections'
 import { createPanelPoller } from './panel-poller'
@@ -11,12 +11,12 @@ import type { PanelReading, PanelReadingState } from './reading-state'
 import type { ContextOccupancy } from './context-rows'
 import type { HostContextPressureProjection, HostSnapshotSource } from '@dsh-claude-style/contracts/services'
 
-/** The reading shape the body consumes; its rules live in reading-state.ts. */
+/** The reading shape the sections consume; its rules live in reading-state.ts. */
 export type { PanelReading } from './reading-state'
 
-/** How often an open panel asks the host again; the host keeps its own answer for about a second. */
+/** How often a mounted section asks the host again; the host keeps its own answer for about a second. */
 const POLL_MS = 2500
-/** The projections whose frames refresh the rail: the session's figures and its token buckets. */
+/** The projections whose frames refresh the reading: the session's figures and its token buckets. */
 const WAKE_KEYS = ['sessionStats', 'tokenUsage'] as const
 /** The closest two asks from those frames, so one streaming turn is not one ask per frame. */
 const WAKE_MIN_MS = 400
@@ -37,13 +37,13 @@ function occupancyFrom(face: HostSnapshotSource<unknown> | undefined) {
 }
 
 /**
- * Follow one session's occupancy (D106).
+ * Follow one session's occupancy (D110).
  *
- * The context section states its overview on the frame the rail mounts: the
+ * The context section states its overview on the frame it mounts: the
  * provider's occupancy is a projection frame, not the host route's fold, so the
- * rail does not wait for that fold to say how full the window is. The breakdown
- * under the overview is the fold's, and takes its place when it answers.
- * @param sessionId - the session the rail shows.
+ * section does not wait for that fold to say how full the window is. The
+ * breakdown under the overview is the fold's, and takes its place when it answers.
+ * @param sessionId - the session the panel shows.
  * @returns the occupancy, or null while the projection names no window.
  */
 export function useLiveOccupancy(sessionId: string): ContextOccupancy | null {
@@ -62,147 +62,125 @@ export function useLiveOccupancy(sessionId: string): ContextOccupancy | null {
   return occupancy
 }
 
+/** One session's reading, shared by every section of the panel that shows it. */
+interface ReadingSource {
+  state: PanelReadingState
+  listeners: Set<() => void>
+  stop(): void
+}
+
+/** The state before a session's first answer. */
+const NO_STATE: PanelReadingState = { session: '', reading: EMPTY_READING }
+
+/** The live sources, one per session that has a mounted section. */
+const sources = new Map<string, ReadingSource>()
+
 /**
- * Follow one session's overview panel (D106).
- *
- * The rail mounts this body for the session it shows; a session switch replaces
- * the body and restarts this hook. The reading is kept with the session that
- * answered it, so a frame between the two never draws the previous session's
- * rows, and a failed first ask shows its failure rather than the old answer.
+ * Start one session's poll loop (D110).
  *
  * One ask is in flight at a time. A newer ask supersedes the one in flight, and
  * only that newer ask may clear the controller or schedule the next poll: the
  * superseded promise sees a newer generation and stops at every step, so an
  * older answer cannot overwrite a newer one and one visibility flip cannot
- * leave two timers running. The page's hidden state pauses the asks, and so does
- * a rail that has left the page and is only giving its width back: it keeps the
- * words it was showing and asks the host nothing more (D106).
- * @param sessionId - the session the rail shows.
- * @param active - whether the rail still stands; a rail on its way out reads nothing more.
- * @returns the last answer for that session, or the failed flag while nothing arrived.
+ * leave two timers running. The page's hidden state pauses the asks. The
+ * reading is kept with the session that answered it, so a failed first ask
+ * shows its failure rather than another session's answer.
  */
-export function usePanelReading(sessionId: string, active: boolean): PanelReading {
-  const [state, setState] = React.useState<PanelReadingState>({ session: '', reading: EMPTY_READING })
-  /** Whether an ask is still the reader's: updated on every render, read by the loop. */
-  const asking = React.useRef(active)
-  asking.current = active
-
-  React.useEffect(() => {
-    if (sessionId === '') return undefined
-    setState({ session: sessionId, reading: EMPTY_READING })
-    /** The last answer's text for this session, compared before it reaches React. */
-    let shown = ''
-    /** Whether the next ask must pass the host's kept answer. */
-    let liveNext = false
-    const fail = () => setState(previous => previous.session === sessionId ? failedReading(previous) : { session: sessionId, reading: { value: null, failed: true } })
-    const poller = createPanelPoller({
-      url: () => {
-        const live = liveNext ? '&live=1' : ''
-        liveNext = false
-        return `${SESSION_PANEL_PATH}?id=${encodeURIComponent(sessionId)}${billingQuery()}${live}`
-      },
-      async fetch(url, signal) {
-        const response = await fetch(url, { credentials: 'same-origin', headers: { accept: 'application/json' }, signal })
-        if (!response.ok) throw new Error(`HTTP ${response.status}`)
-        return await response.json() as SessionPanelAnswer
-      },
-      hidden: () => document.hidden || !asking.current,
-      setTimeout: (run, ms) => window.setTimeout(run, ms),
-      clearTimeout: id => window.clearTimeout(id),
-      answer(answer, failed) {
-        if (failed || answer?.ok !== true || answer.value === undefined) {
-          fail()
-          return
-        }
-        const text = JSON.stringify(answer.value)
-        if (text === shown) return
-        shown = text
-        setState(answeredReading(sessionId, answer.value))
-      },
-      pollMs: POLL_MS,
-    })
-    poller.start()
-    // The host lands its figures as projection frames (D40), and a streaming turn
-    // moves them every few hundred milliseconds. The rail asks again on those
-    // frames — past the host's kept answer — so its numbers move with the
-    // composer's readout instead of one poll behind it (D106).
-    const throttle = createWakeThrottle({
-      minMs: WAKE_MIN_MS,
-      now: () => Date.now(),
-      setTimeout: (run, ms) => window.setTimeout(run, ms),
-      clearTimeout: id => window.clearTimeout(id),
-      wake() {
-        liveNext = true
-        poller.wake()
-      },
-    })
-    const faces = sessionProjectionFaces(panelHost(), sessionId, WAKE_KEYS)
-    const stops: (() => void)[] = []
-    if (faces !== null) {
-      for (const key of WAKE_KEYS) {
-        const face = faces[key]
-        if (typeof face?.subscribe === 'function') stops.push(face.subscribe(() => throttle.soon()))
+function openSource(sessionId: string): ReadingSource {
+  /** The last answer's text for this session, compared before it reaches React. */
+  let shown = ''
+  /** Whether the next ask must pass the host's kept answer. */
+  let liveNext = false
+  const source: ReadingSource = { state: { session: sessionId, reading: EMPTY_READING }, listeners: new Set(), stop() {} }
+  const publish = (next: PanelReadingState) => {
+    source.state = next
+    for (const listener of source.listeners) listener()
+  }
+  const poller = createPanelPoller({
+    url: () => {
+      const live = liveNext ? '&live=1' : ''
+      liveNext = false
+      return `${SESSION_PANEL_PATH}?id=${encodeURIComponent(sessionId)}${billingQuery()}${live}`
+    },
+    async fetch(url, signal) {
+      const response = await fetch(url, { credentials: 'same-origin', headers: { accept: 'application/json' }, signal })
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      return await response.json() as SessionPanelAnswer
+    },
+    hidden: () => document.hidden,
+    setTimeout: (run, ms) => window.setTimeout(run, ms),
+    clearTimeout: id => window.clearTimeout(id),
+    answer(answer, failed) {
+      if (failed || answer?.ok !== true || answer.value === undefined) {
+        publish(failedReading(source.state))
+        return
       }
+      const text = JSON.stringify(answer.value)
+      if (text === shown) return
+      shown = text
+      publish(answeredReading(sessionId, answer.value))
+    },
+    pollMs: POLL_MS,
+  })
+  // The host lands its figures as projection frames (D40), and a streaming turn
+  // moves them every few hundred milliseconds. The source asks again on those
+  // frames — past the host's kept answer — so the context and outputs move with
+  // the composer's readout instead of one poll behind it (D110).
+  const throttle = createWakeThrottle({
+    minMs: WAKE_MIN_MS,
+    now: () => Date.now(),
+    setTimeout: (run, ms) => window.setTimeout(run, ms),
+    clearTimeout: id => window.clearTimeout(id),
+    wake() {
+      liveNext = true
+      poller.wake()
+    },
+  })
+  const faces = sessionProjectionFaces(panelHost(), sessionId, WAKE_KEYS)
+  const stops: (() => void)[] = []
+  if (faces !== null) {
+    for (const key of WAKE_KEYS) {
+      const face = faces[key]
+      if (typeof face?.subscribe === 'function') stops.push(face.subscribe(() => throttle.soon()))
     }
-    document.addEventListener('visibilitychange', poller.wake)
-    return () => {
-      poller.stop()
-      throttle.stop()
-      for (const stop of stops) stop()
-      document.removeEventListener('visibilitychange', poller.wake)
-    }
-  }, [sessionId])
-
-  return readingFor(sessionId, state)
-}
-
-/** What one expanded job row shows: the job's retained output, or why there is none. */
-export interface JobOutputReading {
-  text: string | null
-  failed: boolean
-  loading: boolean
+  }
+  document.addEventListener('visibilitychange', poller.wake)
+  source.stop = () => {
+    poller.stop()
+    throttle.stop()
+    for (const stop of stops) stop()
+    document.removeEventListener('visibilitychange', poller.wake)
+  }
+  poller.start()
+  return source
 }
 
 /**
- * Read one background job's retained output while its row is expanded.
+ * Follow one session's folded overview (D110).
  *
- * The read happens once per expansion and never polls: the panel's own job list
- * already carries the live status, and output arrives through the host's
- * registry read only when the reader asked to see it.
- * @param sessionId - the session that owns the job.
- * @param jobId - the job whose output is shown.
- * @returns the text, the failure flag, and whether the read is still in flight.
+ * The context, figures and outputs sections each mount on their own in the
+ * host's panel; they read one source per session, opened by the first section
+ * that mounts and closed with the last one, so the host is asked once per poll
+ * whatever the number of sections standing.
+ * @param sessionId - the session the panel shows.
+ * @returns the last answer for that session, or the failed flag while nothing arrived.
  */
-export function useJobOutput(sessionId: string, jobId: string): JobOutputReading {
-  const [reading, setReading] = React.useState<JobOutputReading>({ text: null, failed: false, loading: true })
-
-  React.useEffect(() => {
-    if (sessionId === '' || jobId === '') return undefined
-    let stopped = false
-    const controller = new AbortController()
-    setReading({ text: null, failed: false, loading: true })
-    fetch(`${SESSION_PANEL_PATH}?id=${encodeURIComponent(sessionId)}&job=${encodeURIComponent(jobId)}`, {
-      credentials: 'same-origin',
-      headers: { accept: 'application/json' },
-      signal: controller.signal,
-    })
-      .then(response => (response.ok ? response.json() as Promise<PanelJobAnswer> : Promise.reject(new Error(`HTTP ${response.status}`))))
-      .then((answer) => {
-        if (stopped) return
-        if (answer.ok !== true) {
-          setReading({ text: null, failed: true, loading: false })
-          return
-        }
-        setReading({ text: answer.value?.text ?? '', failed: false, loading: false })
-      }, (error: unknown) => {
-        if (stopped || (error as { name?: string } | null)?.name === 'AbortError') return
-        setReading({ text: null, failed: true, loading: false })
-      })
-    return () => {
-      stopped = true
-      controller.abort()
+export function usePanelReading(sessionId: string): PanelReading {
+  const subscribe = React.useCallback((listener: () => void) => {
+    let source = sources.get(sessionId)
+    if (source === undefined) {
+      source = openSource(sessionId)
+      sources.set(sessionId, source)
     }
-  }, [sessionId, jobId])
-
-  return reading
+    source.listeners.add(listener)
+    const owned = source
+    return () => {
+      owned.listeners.delete(listener)
+      if (owned.listeners.size > 0 || sources.get(sessionId) !== owned) return
+      owned.stop()
+      sources.delete(sessionId)
+    }
+  }, [sessionId])
+  const state = React.useSyncExternalStore(subscribe, () => sources.get(sessionId)?.state ?? NO_STATE)
+  return readingFor(sessionId, state)
 }

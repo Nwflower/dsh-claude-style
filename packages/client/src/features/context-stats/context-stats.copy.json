@@ -56,8 +56,8 @@
     "en": "Compact footer"
   },
   "statsPositionRail": {
-    "zh": "跟随详情栏",
-    "en": "Follow the details rail"
+    "zh": "跟随会话面板",
+    "en": "Follow the session panel"
   },
   "statsFooterAlignTitle": {
     "zh": "底栏统计位置",

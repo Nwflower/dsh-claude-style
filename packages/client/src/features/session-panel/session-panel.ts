@@ -1,50 +1,77 @@
 /**
- * The conversation's details rail (D106): the session overview beside the chat.
+ * The session overview inside the host's session panel (D110).
  *
- * The rail is the skin's own column rather than a page in the host's right
- * sidebar. The install mounts it once into a container of its own on the body;
- * the component places itself against the conversation column's edge and opens
- * and retreats with that column's width. The data comes from the host half's own
- * route (packages/host/src/session-panel.ts); this module holds the wiring
- * between that seat and the component.
+ * The host owns the panel — where it docks, when it opens, its toggle and its
+ * order — and the skin hands it four sections and two Environment rows. The
+ * data comes from the host half's own route
+ * (packages/host/src/session-panel.ts) and the statistics feature's live
+ * reading; this module holds the registrations and the page mark the header and
+ * the composer's statistics line follow while the panel shows.
  */
-import * as React from 'react'
-import { createRoot } from 'react-dom/client'
-import { SessionPanelRail } from './session-panel-rail'
-import { SessionPanelButton } from './session-panel-button'
-import { copy } from './copy'
+import { SESSION_PANEL_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { observeMatches } from '@dsh-claude-style/engine/bus'
 import { registerSlotEntries } from '@dsh-claude-style/engine/host'
+import type { HostContext, SlotEntry } from '@dsh-claude-style/engine/host'
+import { setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
+import { SESSION_PANEL_ATTR } from '../../constants'
+import { copy } from './copy'
+import type { CopyKey } from './copy'
 import { clearPanelContext, setPanelContext } from './session-panel-host'
 import { clearPanelUi, setPanelUi } from './session-panel-live'
+import { ContextSection } from './context-section'
+import { StatsSection, TokensSection } from './figures-sections'
+import { OutputsSection } from './outputs-section'
+import { ComputerRow, PresetRow } from './environment-rows'
 import type { FeatureUi } from '../../core/feature'
-import type { HostContext } from '@dsh-claude-style/engine/host'
 import type manifest from './session-panel.manifest'
+
+/** The panel's section list and the Environment section's rows. */
+const SECTION_SLOT = 'conversation.session.panel.section'
+const ENVIRONMENT_ROW_SLOT = 'conversation.session.panel.environment.row'
+
+/**
+ * One section. The id is also the key the host stores the reader's section
+ * order under, so it never changes once shipped (D110).
+ */
+function section(id: string, order: number, title: CopyKey, component: unknown): SlotEntry {
+  return { options: { name: SECTION_SLOT, id, order, label() { return copy(title) } }, component }
+}
+
+/**
+ * The entries in the panel's order: Environment is the host's (0) and change
+ * requests the first of its own after it (100); the skin's sections stand
+ * between them. In Environment the host's working folder row is `order: 0` and
+ * its forge rows — the checkout, local changes and the connection — run from 20
+ * to 40, so the machine comes before them all and the preset closes the section.
+ */
+const ENTRIES: readonly SlotEntry[] = [
+  section('claude-style-context', 10, 'context', ContextSection),
+  section('claude-style-stats', 20, 'sessionStats', StatsSection),
+  section('claude-style-tokens', 30, 'tokenUsage', TokensSection),
+  section('claude-style-outputs', 40, 'outputs', OutputsSection),
+  { options: { name: ENVIRONMENT_ROW_SLOT, id: 'claude-style-computer', order: -10 }, component: ComputerRow },
+  { options: { name: ENVIRONMENT_ROW_SLOT, id: 'claude-style-preset', order: 50 }, component: PresetRow },
+]
 
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   setPanelContext(ctx)
   // The figures' live reading belongs to the statistics feature, installed under
-  // its own switch: the registry is held for the rail's lifetime, and a handle
-  // that arrives or leaves hands the rail back to the route's folded numbers.
+  // its own switch: the registry is held for this generation, and a handle that
+  // arrives or leaves hands the tables back to the route's folded numbers.
   setPanelUi(ui)
-  // The header's control joins the conversation's utilities; a host without
-  // that seat keeps the rail's own close control.
-  const fiber = registerSlotEntries(ctx, [{
-    options: {
-      name: 'conversation.session.header.utilities',
-      id: 'claude-style-session-panel',
-      order: 85,
-      label() { return copy('detailsToggle') },
-    },
-    component: SessionPanelButton,
-  }], 'dsh-claude-style: details control')
-  const container = document.createElement('div')
-  container.className = 'dsh-claude-details-root'
-  document.body.append(container)
-  const root = createRoot(container)
-  root.render(React.createElement(SessionPanelRail))
+  const fiber = registerSlotEntries(ctx, ENTRIES, 'dsh-claude-style: session panel sections')
+  // The panel element stands only while the panel shows: the body carries that
+  // as the skin's own mark, so the header's preset label, its work chips and the
+  // composer's statistics line step aside with one attribute (D110).
+  function markShown() {
+    if (panels.all().length > 0) setAttributeIfChanged(document.body, SESSION_PANEL_ATTR, '')
+    else document.body.removeAttribute(SESSION_PANEL_ATTR)
+  }
+  const panels = observeMatches<HTMLElement>(SESSION_PANEL_SELECTOR, markShown)
+  markShown()
   return () => {
-    root.unmount()
-    container.remove()
+    panels.release()
+    document.body.removeAttribute(SESSION_PANEL_ATTR)
     clearPanelContext(ctx)
     clearPanelUi(ui)
     if (fiber !== null && fiber !== undefined && typeof fiber.dispose === 'function') fiber.dispose()

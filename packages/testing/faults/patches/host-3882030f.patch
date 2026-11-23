@@ -7,9 +7,9 @@ diff --git a/packages/host/src/routes.ts b/packages/host/src/routes.ts
   */
 -const SESSION_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/
 +const SESSION_ID_RE = /^[A-Za-z0-9._\-:@]{1,200}$/
- 
- /** A background job id the panel may read output for: the registry's own `<kind>-<hex>` shape. */
- const JOB_ID_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{1,80}$/
+
+ /**
+  * Whether the host holds this session open right now.
 @@ -211,7 +211,9 @@ async function deleteSession(ctx: DshContext, req: DshRequest, res: DshResponse,
      sendJson(res, 400, { ok: false, error: 'invalid session id' })
      return

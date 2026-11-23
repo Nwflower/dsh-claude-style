@@ -1,6 +1,6 @@
-/** When the rail offers the compact control, and what one press sends (D100).
+/** When the context section offers the compact control, and what one press sends (D100).
  *
- * The host states where automatic compaction fires; the rail offers the manual
+ * The host states where automatic compaction fires; the section offers the manual
  * request while the session stands close to that point, and hides it again once a
  * compaction (manual or automatic) has moved the session away. The offer is decided
  * here, apart from the section that draws it, so a spec can pin the distance.
@@ -17,7 +17,7 @@ import type { ContextOverview } from './context-rows'
  */
 export const COMPACT_OFFER_SHARE = 0.2
 
-/** What the rail offers: how far the session stands from automatic compaction. */
+/** What the section offers: how far the session stands from automatic compaction. */
 export interface CompactOffer {
   /** Tokens left before automatic compaction runs; negative once the session passed it. */
   remaining: number
@@ -43,7 +43,7 @@ export function compactOffer(context: PanelContext | null, overview: ContextOver
 /**
  * Ask the host to compact one session's history.
  *
- * @param sessionId - the session the rail shows.
+ * @param sessionId - the session the panel shows.
  * @returns the host's answer: what the summary replaced, or the class of failure.
  */
 export async function requestCompaction(sessionId: string): Promise<PanelCompactAnswer> {

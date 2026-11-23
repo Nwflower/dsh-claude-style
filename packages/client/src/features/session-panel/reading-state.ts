@@ -1,15 +1,15 @@
 /**
- * The reading the details rail shows, scoped to the session it belongs to (D106).
+ * The reading the panel sections show, scoped to the session it belongs to (D110).
  *
- * A session switch replaces the rail's body and restarts its polling; the
- * reading is kept with the session id that answered it, so a frame between the
- * two never draws the previous session's directory, outputs or tasks under the
- * new session's title, and a failed first ask shows its failure instead of the
- * old answer.
+ * A session switch remounts the sections and opens the new session's reading;
+ * the reading is kept with the session id that answered it, so a frame between
+ * the two never draws the previous session's context or outputs under the new
+ * session's title, and a failed first ask shows its failure instead of the old
+ * answer.
  */
 import type { SessionPanelValue } from '@dsh-claude-style/contracts/session-panel'
 
-/** What one open rail knows: the host's last folded answer, and whether the last ask failed. */
+/** What one session's reading knows: the host's last folded answer, and whether the last ask failed. */
 export interface PanelReading {
   value: SessionPanelValue | null
   failed: boolean
@@ -27,7 +27,7 @@ export interface PanelReadingState {
 /**
  * The reading for one session: the kept one when it belongs to that session,
  * the empty one otherwise.
- * @param sessionId - the session the rail shows now.
+ * @param sessionId - the session the panel shows now.
  * @param state - the last kept reading and its session.
  */
 export function readingFor(sessionId: string, state: PanelReadingState): PanelReading {

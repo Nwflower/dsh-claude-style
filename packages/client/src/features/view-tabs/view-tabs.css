@@ -13,8 +13,7 @@ body[data-dsh-claude-style] [data-dsh-view-tabs] {
 }
 
 /* The inline seat follows the title row and leaves its width available to the
-   host's overflow calculation. The title cluster gives the tabs their room.
-   The header's width stays the same as the details rail opens (D106). */
+   host's overflow calculation. The title cluster gives the tabs their room. */
 body[data-dsh-claude-style] [data-dsh-view-tabs-taken="inline"]:not([data-dsh-header-band])[data-dsh-claude-holds~="view-tabs"],
 body[data-dsh-claude-style] [data-dsh-header-band~="tabs"][data-dsh-claude-holds~="view-tabs"] {
   min-height: 0;

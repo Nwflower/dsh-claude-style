@@ -132,9 +132,6 @@ const SOUND_BODY_MAX = 1024
  */
 const SESSION_ID_RE = /^[A-Za-z0-9._\-:@]{1,200}$/
 
-/** A background job id the panel may read output for: the registry's own `<kind>-<hex>` shape. */
-const JOB_ID_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{1,80}$/
-
 /**
  * Whether the host holds this session open right now.
  *
@@ -569,21 +566,10 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
         // fence as the figures and never accepts a path outside one id.
         const sessionId = guardedSessionId(req, res, peer)
         if (sessionId === null) return
-        // `?job=` asks for one job's retained output instead of the fold: the
-        // panel expands a row on demand and never carries output it is not showing.
         const params = new URL(req.url ?? '/', 'http://local').searchParams
-        const jobId = (params.get('job') ?? '').trim()
-        if (jobId !== '') {
-          if (!JOB_ID_RE.test(jobId)) {
-            sendJson(res, 400, { ok: false, error: 'invalid job id' })
-            return
-          }
-          sendPayload(res, Promise.resolve({ value: sessionPanel.jobOutput(sessionId, jobId) }))
-          return
-        }
-        // `?live=1` asks past the kept answer: the page wakes the rail on every
+        // `?live=1` asks past the kept answer: the page wakes its reading on every
         // figure the host lands, and a cache hit would hand it the numbers the
-        // wake was meant to replace (D106).
+        // wake was meant to replace (D110).
         sendPayload(res, sessionPanel.get(sessionId, readBillingRows(params), params.get('live') === '1').then(value => ({ value })))
       },
     })

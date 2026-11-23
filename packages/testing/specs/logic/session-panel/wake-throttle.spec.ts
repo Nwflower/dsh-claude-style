@@ -1,9 +1,9 @@
 /**
- * The rail's frame wakes stay one ask per window (D106).
+ * The panel reading's frame wakes stay one ask per window (D110).
  * @capability session-panel
  * @features session-panel
  * @risk A streaming turn's figure frames wake one ask each, drop the signal that
- *   arrived inside the window, or leave a timer asking after the rail is gone.
+ *   arrived inside the window, or leave a timer asking after the last section is gone.
  */
 import { expect, test } from 'vitest'
 import { createWakeThrottle } from '@dsh-claude-style/client/pure'

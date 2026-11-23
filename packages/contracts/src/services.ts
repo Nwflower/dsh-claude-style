@@ -9,17 +9,6 @@ export interface HostSnapshotSource<Snapshot> {
   subscribe(listener: () => void): () => void
 }
 
-/** The client's shared jobs controller, as the host's own job list calls it (D106). */
-export interface HostJobsService {
-  /** Human cancellation; the host checks the session owner and records the user's reason. */
-  kill(sessionId: string, jobId: string): Promise<{ ok: boolean }>
-}
-
-/** Parent-authorized cancellation of a continuable child's active turn (D106). */
-export interface HostSubagentsRemote {
-  interruptByParent(childSessionId: string, parentSessionId: string, mode: 'continuable'): Promise<{ ok: boolean }>
-}
-
 /** The Agent Teams remote: it saves one session's team selection and answers with the host's outcome. */
 export interface HostAgentTeamsRemote {
   setEnabled(sessionId: string, enabled: boolean): Promise<{ ok: true } | { ok: false, error: { message: string } }>

@@ -1,7 +1,7 @@
 /**
- * One ask per window, while something else keeps signalling (D106).
+ * One ask per window, while something else keeps signalling (D110).
  *
- * The rail refreshes on the host's own figure frames, and a streaming turn lands
+ * The panel reading refreshes on the host's own figure frames, and a streaming turn lands
  * one every few hundred milliseconds; the window keeps those signals from
  * becoming one answer each. A signal inside the window is not dropped: it holds
  * one timer for the rest of it, and that timer asks once when the window ends.

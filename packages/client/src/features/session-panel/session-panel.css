@@ -1,174 +1,118 @@
-/* The conversation's details rail and its sections (D106). The rail is the
-   skin's own fixed column beside the chat, and the body inside keeps the
-   column's own fill, inset and scroll (STYLE.md); every rule is scoped by the
-   skin's own body mark so a page without the skin never sees it. The whole
-   column reads at one size and one weight on one 24px row rhythm: a heading
-   stands on its own hairline and the room above it, a secondary reading on its
-   ink, and only a trailing state, a category label, the fold control and a
-   caption take the small size. Lengths stay on the 4px grid. */
+/* The skin's sections inside the host's session panel (D110). The panel lays
+   out its sections, titles and rows (`data-session-panel-row` and its parts);
+   these rules cover the docked card stack, the bar-less scroll, and what the
+   panel has no part for: a row's inline detail and state word, the figures
+   tables, the placeholders and the note. Blocks that are no row stand on the rows' own 6px
+   inset, so their words start where a row's icon does. Every rule is scoped by
+   the skin's own body mark so a page without the skin never sees it. */
 
-body[data-dsh-claude-style] .dsh-claude-panel {
-  box-sizing: border-box;
+/* Docked beside the transcript, the panel is a stack of cards, one per section,
+   standing on the chat's own canvas (D110). The overlay keeps the host's single
+   card: it floats over the transcript, and gaps between cards would let the
+   text under it show through. */
+body[data-dsh-claude-style] [data-session-panel="docked"] {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 16px 12px 32px 16px;
-  color: var(--dsw-alias-label-primary, #161616);
-  font-family: var(--dsw-font-family);
-  /* The column scrolls without a bar: a scrollbar in the rail's last 10px reads
-     as a second border beside the one that separates it from the chat, and the
-     column is short enough that the wheel finds its end (D106). */
-  scrollbar-width: none;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel::-webkit-scrollbar {
-  display: none;
-}
-
-/* The hairline belongs to a section's top edge, so every section keeps its own
-   line whatever its neighbours do, and the column's divider never depends on a
-   page reading of what the next section holds (D106). Folded and open sections
-   keep the same insets, so a heading stands where it stood across its own fold
-   and the line the reader pressed stays under the pointer (D106). */
-body[data-dsh-claude-style] .dsh-claude-panel-section {
-  display: block;
-  min-width: 0;
-  flex: none;
-  padding: 16px 0;
-  border-top: 0.5px solid var(--dsh-claude-divider);
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-section:first-child {
-  padding-top: 0;
-  border-top: 0;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-heading {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  margin: 0;
-  padding: 0;
-  color: var(--dsw-alias-label-primary, #161616);
-  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
-  /* The rows under a heading read at the heading's own size and weight, so the
-     heading is told apart by its own line, its hairline and the space above
-     it; the browser's bold on a heading element is what this rule takes back. */
-  font-weight: 400;
-  /* The rail's section titles use UI type; the page's display headings use
-     the serif family and tighter tracking (D9, D97, D106). */
-  font-family: var(--dsw-font-family);
-  letter-spacing: normal;
-  line-height: 20px;
-}
-
-/* Native disclosures keep keyboard activation and expose their open state;
-   only the compact reading disappears while the content stands open (D106). A
-   heading paints nothing under the pointer: it is the column's own division
-   line, not a row of the list. */
-body[data-dsh-claude-style] .dsh-claude-panel-section-toggle {
-  display: block;
-  list-style: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-section-toggle::-webkit-details-marker {
-  display: none;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-section-toggle:focus-visible {
-  outline: 1.5px solid var(--dsw-focus-ring-color, currentColor);
-  outline-offset: 3px;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-section-title {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-section-chevron {
-  display: inline-flex;
-  flex: none;
-  color: var(--dsw-alias-label-secondary);
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-section-reading {
-  display: inline-flex;
-  align-items: center;
   gap: 8px;
-  max-width: 55%;
-  min-width: 0;
-  margin-left: auto;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* The panel scrolls without a bar, docked or as an overlay (D110): a bar at its
+   end edge reads as a second border beside the cards' own, and the panel is
+   short enough that the wheel finds its end. The host reserves the bar's gutter
+   and a transparent end border to hold it off the edge; both go with the bar,
+   and the overlay's end inset comes back to the 8px its start keeps. */
+body[data-dsh-claude-style] [data-session-panel] {
+  scrollbar-width: none;
+  scrollbar-gutter: auto;
+  border-right: 0;
+}
+
+body[data-dsh-claude-style] [data-session-panel]::-webkit-scrollbar {
+  display: none;
+}
+
+body[data-dsh-claude-style] [data-session-panel="overlay"] {
+  padding-right: 8px;
+}
+
+/* Each card wears the hairline the host draws between its sections, on every
+   side: the host's own divider still lands on a card's top edge, and there it
+   is the card's border rather than a second line. The top inset is the one the
+   host gives every section after the first, so every card opens the same way;
+   the host's 2px above those sections adds to every gap alike, so every gap
+   between two cards is the same. */
+body[data-dsh-claude-style] [data-session-panel="docked"] [data-session-panel-section] {
+  flex: none;
+  padding: 8px 6px;
+  border: 0.5px solid var(--dsw-alias-border-l2);
+  border-radius: var(--dsw-radius-lg);
+  background: var(--dsw-alias-bg-layer-1);
+}
+
+/* A section title is the panel's own UI label, not a display heading: the
+   skin's heading face (theme/typography.css) would set a Latin title such as
+   "Token" in the serif while its Chinese stays sans. The panel's own type comes
+   back for every section, the host's and the skin's alike. */
+body[data-dsh-claude-style] [data-session-panel] [data-session-panel-section] h2 {
+  font: var(--dsw-font-xxs-12);
+  font-weight: 500;
+  letter-spacing: normal;
+}
+
+/* The panel's reading type for what is no row: the empty-section note, the
+   context head and legend, the compaction offer and the figures. */
+body[data-dsh-claude-style] .dsh-claude-panel-note,
+body[data-dsh-claude-style] .dsh-claude-panel-context,
+body[data-dsh-claude-style] .dsh-claude-panel-stats {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 6px;
+  font: var(--dsw-font-xs-13);
+  line-height: 20px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-panel-note {
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+}
+
+/* A row's words: its title, then its detail in the quiet ink on the same
+   line. The title gives way first, so a detail keeps its own width up to its
+   share of the line and a long name never pushes the detail off the row. */
+body[data-dsh-claude-style] [data-session-panel-row] .dsh-claude-panel-title {
+  color: var(--dsw-alias-label-primary, #161616);
+}
+
+body[data-dsh-claude-style] [data-session-panel-row] .dsh-claude-panel-detail {
+  margin-left: 4px;
+  color: var(--dsw-alias-label-tertiary, #8a8a8a);
+}
+
+body[data-dsh-claude-style] [data-session-panel-row] .dsh-claude-panel-detail::before {
+  content: '· ';
+}
+
+/* The output rows lead with a quieter mark: the figure names the row's kind,
+   and the reader comes for the words beside it. */
+body[data-dsh-claude-style] .dsh-claude-panel-quiet-mark [data-row-part="icon"] {
+  opacity: 0.65;
+}
+
+/* A row's trailing state is words in the secondary ink, at the size of the
+   panel's section counts. */
+body[data-dsh-claude-style] .dsh-claude-panel-chip {
+  max-width: 150px;
   overflow: hidden;
-  color: var(--dsw-alias-label-secondary);
-  font-weight: 400;
+  color: var(--dsw-alias-label-secondary, #5c5c5c);
+  font: var(--dsw-font-xxs-12);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-body[data-dsh-claude-style] .dsh-claude-panel-section[open] .dsh-claude-panel-section-reading {
-  display: none;
-}
-
-/* A section standing open says nothing with its chevron: it waits out of sight
-   and comes back under the pointer or on keyboard focus, while a folded section
-   keeps it always, because folding is what the reader is being offered (D106).
-   Only the ink leaves, so the heading keeps its width. */
-body[data-dsh-claude-style] .dsh-claude-panel-section[open] .dsh-claude-panel-section-chevron {
-  opacity: 0;
-  transform: rotate(90deg);
-  transition: opacity var(--dsh-claude-timing-feedback);
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-section[open] .dsh-claude-panel-section-toggle:hover .dsh-claude-panel-section-chevron,
-body[data-dsh-claude-style] .dsh-claude-panel-section[open] .dsh-claude-panel-section-toggle:focus-visible .dsh-claude-panel-section-chevron {
-  opacity: 1;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-section-content {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  padding-top: 8px;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-context-mini {
-  display: inline-flex;
-  flex: none;
-  box-sizing: border-box;
-  width: 24px;
-  height: 8px;
-  padding: 2px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: var(--dsw-alias-border-l1);
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-context-mini > span {
-  height: 100%;
-  border-radius: inherit;
-  background: var(--dsh-claude-context-messages);
-}
-
-/* The panel's reading type: a row's words, the empty-section note, the context
-   head and legend, and the figures share one size and line. */
-body[data-dsh-claude-style] .dsh-claude-panel-main,
-body[data-dsh-claude-style] .dsh-claude-panel-note,
-body[data-dsh-claude-style] .dsh-claude-panel-context-head,
-body[data-dsh-claude-style] .dsh-claude-panel-legend-row,
-body[data-dsh-claude-style] .dsh-claude-panel-compact,
-body[data-dsh-claude-style] .dsh-claude-panel-stats {
-  margin: 0;
-  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 20px;
-}
-
-/* A placeholder where a reading will be written (D106): the stand-in ink the
+/* A placeholder where a reading will be written (D110): the stand-in ink the
    composer's placeholders use, breathing on the skin's shared pulse, with the
    count the animation choice sets (theme/chrome.css, D40). A bar stands one
    line's words high in the middle of that line, so the row keeps the height the
@@ -193,374 +137,8 @@ body[data-dsh-claude-style] dd > .dsh-claude-panel-skeleton {
   margin-left: auto;
 }
 
-body[data-dsh-claude-style] .dsh-claude-panel-note {
-  padding: 2px 0 0;
-  color: var(--dsw-alias-label-tertiary, #8a8a8a);
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-row {
-  display: flex;
-  box-sizing: border-box;
-  align-items: center;
-  gap: 8px;
-  /* The plate under the pointer stands 8px clear of the words on both sides,
-     so the row's box reaches that far into the panel's own inset. */
-  width: calc(100% + 16px);
-  min-width: 0;
-  margin: 0 -8px;
-  min-height: 28px;
-  padding: 4px 8px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  text-align: start;
-  text-decoration: none;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-row.is-link,
-body[data-dsh-claude-style] .dsh-claude-panel-row.is-button {
-  cursor: pointer;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-row.is-link:hover,
-body[data-dsh-claude-style] .dsh-claude-panel-row.is-button:hover {
-  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.06));
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-row.is-link:focus-visible,
-body[data-dsh-claude-style] .dsh-claude-panel-row.is-button:focus-visible {
-  outline: var(--dsw-focus-ring-color, currentColor) solid 1.5px;
-  outline-offset: -1.5px;
-}
-
-/* Output disclosure and cancellation are separate focus targets (D106). */
-body[data-dsh-claude-style] .dsh-claude-panel-job-line {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin: 0 -8px;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-job-line > .dsh-claude-panel-row {
-  flex: 1;
-  width: auto;
-  margin: 0;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-job-control {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: 4px;
-  max-width: 55%;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-job-stop {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  min-width: 28px;
-  min-height: 28px;
-  padding: 0 4px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--dsw-alias-label-secondary);
-  font: inherit;
-  font-size: calc(11.5px * var(--dsh-claude-interface-font-scale, 1));
-  cursor: pointer;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-job-stop:hover:enabled {
-  background: var(--dsh-claude-hover-bg);
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-job-stop:focus-visible {
-  outline: var(--dsw-focus-ring-color) solid 1.5px;
-  outline-offset: -1.5px;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-job-stop:disabled {
-  color: var(--dsw-alias-label-tertiary);
-  cursor: default;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-job-error {
-  color: var(--dsw-alias-state-error-primary);
-  font-size: calc(11.5px * var(--dsh-claude-interface-font-scale, 1));
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-mark {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  /* A row's mark wears its title's ink, as Claude's rail draws them; the one
-     set of marks (session-panel-marks.ts) keeps them at one weight. */
-  color: var(--dsw-alias-label-primary, #161616);
-}
-
-/* The Outputs and Subagents sections lead with a quieter mark: the figure names
-   the row's kind, and the reader comes for the words beside it. */
-body[data-dsh-claude-style] .dsh-claude-panel-quiet-marks .dsh-claude-panel-mark {
-  opacity: 0.65;
-}
-
-/* A row is one line: its title, then its detail in the quiet ink. The title
-   gives way first, so a detail keeps its own width up to its share of the line
-   and a long name never pushes the detail off the row. */
-body[data-dsh-claude-style] .dsh-claude-panel-main {
-  display: flex;
-  flex: 1 1 auto;
-  align-items: baseline;
-  gap: 4px;
-  min-width: 0;
-  overflow: hidden;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-title {
-  flex: 0 1 auto;
-  min-width: 0;
-  color: var(--dsw-alias-label-primary, #161616);
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-detail {
-  flex: none;
-  max-width: 45%;
-  color: var(--dsw-alias-label-tertiary, #8a8a8a);
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-detail::before {
-  content: '· ';
-}
-
-/* One line each, cut with the same ellipsis: a row's title and detail, a
-   trailing state and a figure's own label. */
-body[data-dsh-claude-style] .dsh-claude-panel-title,
-body[data-dsh-claude-style] .dsh-claude-panel-detail,
-body[data-dsh-claude-style] .dsh-claude-panel-chip,
-body[data-dsh-claude-style] .dsh-claude-panel-stat dt {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-side {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: 8px;
-  max-width: 52%;
-}
-
-/* A row's trailing state is words in the state's ink: an outline around each
-   one would draw a second column of boxes down the list. */
-body[data-dsh-claude-style] .dsh-claude-panel-chip {
-  max-width: 150px;
-  color: var(--dsw-alias-label-secondary, #5c5c5c);
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-chip.is-success {
-  color: var(--dsw-alias-state-success-primary, #1a7f37);
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-chip.is-failure {
-  color: var(--dsw-alias-state-error-primary, #cf222e);
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-chip.is-pending {
-  color: var(--dsw-alias-label-primary, #161616);
-}
-
-/* The header control wears the host's ghost button; only its box is the
-   header's own, a 28px square like the utilities beside it. The pressed state
-   is the mark the host puts on its panel box while the overview is in front. */
-body[data-dsh-claude-style] .dsh-claude-session-panel-button {
-  box-sizing: border-box;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  /* The caption row's controls share one plate: 28px square at an 8px radius
-     (header-band.css). */
-  border-radius: 8px;
-  color: var(--dsw-alias-label-secondary, #5c5c5c);
-  -webkit-app-region: no-drag;
-}
-
-body[data-dsh-claude-style] .dsh-claude-session-panel-button:hover,
-body[data-dsh-claude-style] .dsh-claude-session-panel-button:focus-visible {
-  color: var(--dsw-alias-label-primary, #161616);
-}
-
-body[data-dsh-claude-style] .dsh-claude-session-panel-button[aria-pressed="true"] {
-  color: var(--dsw-alias-label-primary, #161616);
-  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
-}
-
-/* One job's retained output, under the row the reader opened. */
-body[data-dsh-claude-style] .dsh-claude-panel-job-output {
-  box-sizing: border-box;
-  max-height: 220px;
-  /* Under the row's words: past the mark and its gap. */
-  margin: 0 0 4px 24px;
-  padding: 8px 10px;
-  overflow: auto;
-  border-radius: 8px;
-  background: var(--dsw-alias-bg-layer-2, rgba(0, 0, 0, 0.03));
-  color: var(--dsw-alias-label-secondary, #5c5c5c);
-  font-family: var(--dsw-font-mono, ui-monospace, monospace);
-  font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 16px;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-/* The host's own background-work chips beside the title step aside while the
-   details rail stands: the same work is the panel's Background tasks section,
-   where a row opens the child session or the job's output (D106). The subagent
-   catalog's own root is the entry and leaves with its trigger; the jobs count
-   keeps the same treatment. */
-body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] :is([data-subagent-action], button[aria-haspopup="tree"], button[aria-expanded]:not([aria-haspopup])) {
-  display: none;
-}
-
-/* The preset's words stand in the rail's Environment section while the rail is
-   up (D106). The header band holds the label's `display` over the host's
-   container query, so the label leaves the row by position and visibility. */
-body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] [data-dsh-claude-part~="header-label"] {
-  position: absolute;
-  visibility: hidden;
-}
-
-/* The control that unfolds a section's rows past the second, on the rows' own
-   box so its words start where theirs do. */
-body[data-dsh-claude-style] .dsh-claude-panel-more {
-  box-sizing: border-box;
-  width: calc(100% + 16px);
-  margin: 0 -8px;
-  padding: 4px 8px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--dsw-alias-label-tertiary, #8a8a8a);
-  font: inherit;
-  text-align: start;
-  cursor: pointer;
-}
-
-body[data-dsh-claude-style] .dsh-claude-panel-more:hover,
-body[data-dsh-claude-style] .dsh-claude-panel-more:focus-visible {
-  color: var(--dsw-alias-label-primary, #161616);
-  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.06));
-}
-
-/* The panel's small type: a row's trailing state, the fold
-   control and a caption. It follows the rules that take the row's font whole,
-   so its size is the one that stands. */
-body[data-dsh-claude-style] .dsh-claude-panel-chip,
-body[data-dsh-claude-style] .dsh-claude-panel-more {
-  font-size: calc(11.5px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 16px;
-}
-
-/* The conversation's details rail (D106): the skin's own column beside the chat,
-   placed against the conversation column's edge and reading the column's own
-   canvas token, so the two surfaces stand on one ground and the hairline between
-   them is the only division. It opens and retreats with that column's width, so
-   it carries no tab chrome of its own; the body inside keeps the panel's inset
-   and scroll. */
-/* The rail's own mount: a body child that lays nothing out itself, so the
-   fixed column inside it is placed against the page, not against a box. */
-body[data-dsh-claude-style] .dsh-claude-details-root {
-  display: contents;
-}
-
-body[data-dsh-claude-style] .dsh-claude-details {
-  position: fixed;
-  /* The column sits over the chat, and under the header row that holds the
-     skin's own controls: a menu the host hangs from those controls opens inside
-     their layer, so it paints over the rail rather than under it (D106). */
-  z-index: var(--dsh-claude-layer-rail);
-  box-sizing: border-box;
-  /* The rail is the clip as well as the column: it gives the chat its width back
-     by growing narrower, and the body inside keeps the final box (D106). */
-  width: 320px;
-  overflow: hidden;
-  /* Match the sidebar's layout divider in colour and width (D9, D106). */
-  border-left: 0.5px solid var(--dsw-alias-border-l1);
-  background: var(--dsh-claude-canvas);
-  transition: width var(--dsh-claude-duration-column) var(--dsh-claude-ease-column);
-}
-
-/* The rail's first paint starts at no width and takes it over the column's own
-   stretch, so a rail arriving where the chat gives way grows out of the edge
-   rather than appearing beside it. */
-@starting-style {
-  body[data-dsh-claude-style] .dsh-claude-details {
-    width: 0;
-  }
-}
-
-/* The rail giving its width back: the body stands pinned to the rail's right
-   edge, so it holds still while the clip travels leftward and uncovers it, and
-   the two edges the reader sees are the chat's and the rail's alone. The node is
-   taken off the page once the transition ends (session-panel-rail.ts). */
-body[data-dsh-claude-style] .dsh-claude-details.is-leaving {
-  width: 0;
-  pointer-events: none;
-}
-
-body[data-dsh-claude-style] .dsh-claude-details-body {
-  position: absolute;
-  inset: 0 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  width: 320px;
-}
-
-body[data-dsh-claude-style] .dsh-claude-details-body > .dsh-claude-panel {
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-/* The rail takes its width from the chat under the header: the conversation's own
-   body box gives 320px of its width back to the rail, while the header keeps the
-   column's whole width, so its controls stand above the rail rather than beside
-   it. The inset travels on the same stretch as the rail, so the chat's edge and
-   the rail's edge are one edge through the whole move (D106). */
-body[data-dsh-claude-style] [data-dsh-claude-part~="conversation-body"] {
-  transition: margin-right var(--dsh-claude-duration-column) var(--dsh-claude-ease-column);
-}
-
-body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="conversation-body"] {
-  margin-right: 320px;
-}
-
-/* A reader who asked for no motion gets the rail where it belongs at once, and
-   the chat with it. */
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-details {
-  transition: none;
-}
-
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-part~="conversation-body"] {
-  transition: none;
-}
-
 /* Full-width figure rows keep a long duration or token count beside its label,
-   on the legend's own rhythm (D106). */
+   on the legend's own rhythm. */
 body[data-dsh-claude-style] .dsh-claude-panel-stats {
   display: flex;
   flex-direction: column;
@@ -576,10 +154,32 @@ body[data-dsh-claude-style] .dsh-claude-panel-stat {
   color: var(--dsw-alias-label-secondary, #5c5c5c);
 }
 
+body[data-dsh-claude-style] .dsh-claude-panel-stat dt {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 body[data-dsh-claude-style] .dsh-claude-panel-stat dd {
   margin: 0;
   color: var(--dsw-alias-label-primary, #161616);
   font-variant-numeric: tabular-nums;
   text-align: end;
   white-space: nowrap;
+}
+
+/* The host's own background-work chips beside the title step aside while the
+   session panel shows: the same work is the panel's subagents and background
+   jobs sections (D110). The subagent catalog's own root is the entry and leaves
+   with its trigger; the jobs count keeps the same treatment. */
+body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] :is([data-subagent-action], button[aria-haspopup="tree"], button[aria-expanded]:not([aria-haspopup])) {
+  display: none;
+}
+
+/* The preset's words stand in the panel's Environment section while the panel
+   shows (D110). The header band holds the label's `display` over the host's
+   container query, so the label leaves the row by position and visibility. */
+body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] [data-dsh-claude-part~="header-label"] {
+  position: absolute;
+  visibility: hidden;
 }

@@ -1,16 +1,14 @@
 /**
- * The details rail's latest human-input round (D106).
+ * The outputs section's latest human-input round (D110).
  *
  * A host turn may start for a notification or an automatic continuation. Only
  * an appended user-sourced message starts a new reading round. Calls retain
  * their round until results arrive, so a late result cannot enter a newer one.
  * The same ordered fold handles a restored log and incremental poll batches.
- * Only the outputs are read by round; the rail's work sections keep the whole
- * session.
  */
 import type { PanelOutput } from '@dsh-claude-style/contracts/session-panel'
-import type { PanelEvent } from './session-panel-log.js'
-import { panelArguments } from './session-panel-call.js'
+import type { PanelEvent } from './session-panel-event.js'
+import { panelArguments } from './session-panel-event.js'
 
 const IMAGE_EXT = /\.(?:png|jpe?g|webp|gif|svg|avif|bmp)$/i
 const DOCUMENT_EXT = /\.(?:md|markdown|txt|pdf|docx?|xlsx?|pptx?|csv|json|jsonl|yaml|yml|html?)$/i
@@ -56,7 +54,7 @@ function rememberOutput(state: PanelRoundState, path: string, origin: PanelOutpu
   state.outputs.push(output)
 }
 
-/** Fold round boundaries before attributing each event's own work (D106). */
+/** Fold round boundaries before attributing each event's own work (D110). */
 export function foldPanelRound(state: PanelRoundState, events: readonly PanelEvent[], directory: string | null) {
   for (const event of events) {
     const data = event.data

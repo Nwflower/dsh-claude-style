@@ -496,28 +496,22 @@
       ]
     },
     "packages/testing/scenarios/session-panel.mjs": {
+      "the skin's sections stand in the host panel after Environment, in their registered order": [
+        0
+      ],
+      "Environment leads with this computer before the host's working folder and closes with the preset": [
+        0,
+        1
+      ],
+      "the panel scrolls without a bar": [
+        0
+      ],
       "the context section arrives with the turn": [
+        0,
         2
       ],
       "the Reduced choice leaves the context bar's parts uncovered: the cover collapses and the parts keep the widths of the other choice": [
         0
-      ],
-      "the first frame stands environment, context and both figures sections, the unread rows under placeholders": [
-        0,
-        1,
-        2,
-        3,
-        4
-      ],
-      "a folded section keeps the insets of an open one, so its heading stays put across the fold": [
-        0
-      ],
-      "the figures sections start folded with a reading and every other section starts open": [
-        2
-      ],
-      "keyboard activation opens one section independently and all sections open again": [
-        0,
-        1
       ],
       "the session stats and the token usage carry their figures in the configured token units": [
         8
@@ -525,38 +519,25 @@
       "the figures count to each reading instead of landing on it": [
         150
       ],
-      "Outputs lists the files the turn wrote and folds past its second row": [
+      "Outputs lists the turn's files and folds past five rows with the host's own control": [
+        5
+      ],
+      "the first frame stands context and both figures sections under placeholders": [
+        0
+      ],
+      "the host's toggle closes the panel and the sections stop asking the host": [
+        0
+      ],
+      "the host header chips step aside while the panel shows": [
+        0
+      ],
+      "the panel stays inside the viewport and its figures change ink with the theme": [
         0,
-        2
-      ],
-      "the fold control shows the rest and puts them away again": [
-        2,
-        4
-      ],
-      "the finished disclosure reveals command history and folds it independently": [
-        0,
-        3
-      ],
-      "a finished command keeps a separate clock and its foreground provenance": [
+        1,
         2
       ],
       "the view switch stands in the title row between the title and the right-hand tools": [
         2
-      ],
-      "the header keeps the column whole and the rail starts under it": [
-        1
-      ],
-      "the host header chips step aside while the rail stands": [
-        0
-      ],
-      "a closed rail stops asking the host": [
-        0
-      ],
-      "the details rail stays inside the viewport in both themes": [
-        0,
-        1,
-        2,
-        320
       ],
       "an output opens its file in the host preview without another browser tab": [
         0
