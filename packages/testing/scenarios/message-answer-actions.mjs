@@ -70,6 +70,11 @@ function messageAnswerActionsScenario({ check }) {
   return {
     script: 'greeting',
     prompt: 'hello there',
+    patch: [
+      '- id: ui-skin-claude-style',
+      '  config:',
+      '    messageActions: true',
+    ],
     /** Slow enough that the second turn is still running when its row is read. */
     delayMs: 700,
     async assert({ page, session, notes, out }) {

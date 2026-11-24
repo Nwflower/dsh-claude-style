@@ -474,6 +474,40 @@ async function hostUsage({ mod, fakeHost, request, browser, scratchHome, scratch
         all.days?.[0]?.sessionIds?.join() === 'archived,main,other',
       JSON.stringify({ scope: all.scope, totals: all.totals, totalSessions: all.totalSessions }))
   }
+
+  // Live sessions advance incrementally via snapshotEvents instead of re-reading the full log on every append.
+  {
+    const home = runsPath(ROOT, 'smoke', 'usage-incremental')
+    fs.rmSync(home, { recursive: true, force: true })
+    const cwd = path.join(home, 'sessions', '--D-smoke--')
+    fs.mkdirSync(path.join(cwd, 's-live'), { recursive: true })
+    const logFile = path.join(cwd, 's-live', 'session.v4.jsonl.zstd')
+    fs.writeFileSync(logFile, 'v1')
+    const liveEvents = [
+      { ...settlement(at(0, 15), 1), seq: 0 },
+      { ...settlement(at(0, 15), 2), seq: 1 },
+    ]
+    const reads = []
+    const tails = []
+    const host = fakeHost(mod, {
+      fenced: true,
+      home,
+      live: ['s-live'],
+      events: { 's-live': liveEvents },
+      stored: [{ header: { id: 's-live' }, revision: 'r1' }],
+      reads,
+      tails,
+    })
+    const first = (await settledUsage(host, USAGE + '?scope=all')).value ?? {}
+    liveEvents.push({ ...settlement(at(0, 15), 3), seq: 2 })
+    fs.writeFileSync(logFile, 'v1-appended-bytes')
+    const second = (await settledUsage(host, USAGE + '?scope=active')).value ?? {}
+    check('live session log appends advance usage incrementally via snapshotEvents without re-reading the full log',
+      first.totals?.input === 20 && second.totals?.input === 30
+        && same(reads, ['s-live']) && tails.some(([id, from]) => id === 's-live' && from === 2),
+      JSON.stringify({ first: first.totals, second: second.totals, reads, tails }))
+    host.dispose()
+  }
 }
 
 export { hostUsage }

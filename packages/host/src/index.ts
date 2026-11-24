@@ -16,6 +16,7 @@ import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
 import { registerRoutes } from './routes.js'
 import type { DshContext, DshScope } from '@dsh-claude-style/engine/node/dsh'
 import { registerSettings } from './settings.js'
+import { createUsage } from './usage.js'
 import { registerWidgetUsage } from './widget-usage.js'
 
 export const name = PACKAGE_NAME
@@ -24,15 +25,21 @@ export { Config } from './settings.js'
 /**
  * Register the plugin's host surfaces.
  * @param ctx - host plugin context.
+ * @param config - live plugin configuration supplied by the host loader.
  */
-export function apply(ctx: DshContext) {
+export function apply(ctx: DshContext, config?: Record<string, unknown>) {
+  // Share one usage aggregator between HTTP routes and widget-board capabilities
+  // so both surfaces reuse the same folded cache and never double-scan logs.
+  const usage = createUsage(ctx)
+  ctx.effect?.(() => () => { usage.dispose() })
+
   // The property read inside registerRoutes (`scope.webServer`) is gated by the
   // fiber's inject declaration, and the host half re-applies while the web
   // server is already running (a hot relink after a client-bundle rebuild), so
   // the scope comes from inject; a host without it still activates the skin.
-  if (typeof ctx.inject === 'function') ctx.inject(['webServer'], (scope: DshScope) => { registerRoutes(ctx, scope) })
-  else registerRoutes(ctx, ctx as DshScope)
+  if (typeof ctx.inject === 'function') ctx.inject(['webServer'], (scope: DshScope) => { registerRoutes(ctx, scope, config, usage) })
+  else registerRoutes(ctx, ctx as DshScope, config, usage)
 
   registerSettings(ctx)
-  registerWidgetUsage(ctx)
+  registerWidgetUsage(ctx, usage)
 }

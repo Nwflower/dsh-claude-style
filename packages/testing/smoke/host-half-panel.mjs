@@ -118,6 +118,47 @@ async function hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHo
     agentlessBody !== null && agentlessBody.ok === false && agentlessBody.code === 'no-agent',
     JSON.stringify(agentlessBody ?? agentlessCompact))
   await hostPanelRound({ mod, fakeHost, request, browser, scratchHome })
+
+  // Live session-cost and session-panel skip redundant full reads while live.seq is unchanged or tail-readable.
+  {
+    const liveEvents = [
+      { seq: 0, type: 'session/start', time: 1_700_000_000_000, data: { header: { cwd: '/panel/live' } } },
+      { seq: 1, type: 'assistant/message', time: 1_700_000_000_100, data: { turn: 1, step: 0, usage: { inputTokens: 1000, outputTokens: 100 }, message: { source: { model: 'kimi-k3' } } } },
+    ]
+    const reads = []
+    const tails = []
+    const liveHost = fakeHost(mod, {
+      fenced: true,
+      home: scratchHome,
+      listen: true,
+      live: ['session-live'],
+      events: { 'session-live': liveEvents },
+      projections: { 'session-live': { workingDirectory: '/panel/live', sessionStats: { turns: 1, steps: 1 }, tokenUsage: { uncachedInputTokens: 1000, outputTokens: 100 } } },
+      reads,
+      tails,
+    })
+    const firstPanel = await request(liveHost, '/dsh-claude-style/session-panel?id=session-live', 'GET', '', browser)
+    const readsAfterCold = reads.length
+    check('live session-panel cold open succeeds', firstPanel.status === 200 && readsAfterCold > 0, JSON.stringify({ status: firstPanel.status, reads }))
+    // Wait past ANSWER_TTL_MS (1200ms); unchanged live.seq must NOT trigger another observeSession.
+    await new Promise(resolve => setTimeout(resolve, 1300))
+    const secondPanel = await request(liveHost, '/dsh-claude-style/session-panel?id=session-live', 'GET', '', browser)
+    check('live session-panel with unchanged seq reuses cached answer past ANSWER_TTL_MS',
+      secondPanel.status === 200 && reads.length === readsAfterCold, JSON.stringify({ status: secondPanel.status, readsAfterCold, reads }))
+
+    const firstCost = await request(liveHost, '/dsh-claude-style/session-cost?id=session-live', 'GET', '', browser)
+    const secondCost = await request(liveHost, '/dsh-claude-style/session-cost?id=session-live', 'GET', '', browser)
+    liveEvents.push({ seq: 2, type: 'assistant/message', time: 1_700_000_000_200, data: { turn: 2, step: 0, usage: { inputTokens: 1000, outputTokens: 100 }, message: { source: { model: 'kimi-k3' } } } })
+    const thirdCost = await request(liveHost, '/dsh-claude-style/session-cost?id=session-live', 'GET', '', browser)
+    const c1 = JSON.parse(firstCost.body).value
+    const c3 = JSON.parse(thirdCost.body).value
+    check('live session-cost reuses warm cache and advances new events incrementally via snapshotEvents',
+      reads.length === readsAfterCold
+        && tails.some(([id, from]) => id === 'session-live' && from === 2)
+        && c1 !== null && c3 !== null && c3.usd === c1.usd * 2,
+      JSON.stringify({ reads, tails, c1, c3 }))
+    liveHost.dispose()
+  }
 }
 
 export { hostPanel }

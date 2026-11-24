@@ -35,7 +35,8 @@ import { billingRowsOf, createSessionCost } from './session-cost.js'
 import { createSessionPanel } from './session-panel.js'
 import { compactSession } from './session-compact.js'
 import { sessionDirectoryName } from './session-name.js'
-import { createUsage } from './usage.js'
+import { createUsage, type UsageService } from './usage.js'
+import type { HostConfigSource } from './session-rewind-config.js'
 import { SessionRewind } from './session-rewind.js'
 import { sessionRewindRoutes } from './session-rewind-routes.js'
 import { HOME_SESSION_SCOPE_ACTIVE, HOME_SESSION_SCOPE_ALL, HOME_SESSION_SCOPE_WORKSPACE } from '@dsh-claude-style/contracts/prefs'
@@ -260,7 +261,7 @@ async function deleteSession(ctx: DshContext, req: DshRequest, res: DshResponse,
  * @param scope - the inject scope that carries the `webServer` declaration, or
  *     `ctx` itself on a host whose context injects nothing.
  */
-export function registerRoutes(ctx: DshContext, scope: DshScope) {
+export function registerRoutes(ctx: DshContext, scope: DshScope, config?: HostConfigSource, sharedUsage?: UsageService) {
   // The built output and the bundled fonts hang off the plugin package's own
   // directory; the fonts a user drops in live under the harness home.
   const root = packageRoot()
@@ -288,14 +289,15 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
       report('web server unavailable', new Error('the host carries no webServer service, so no route of this plugin is registered'))
       return
     }
-    const usage = createUsage(ctx)
+    const ownsUsage = sharedUsage === undefined
+    const usage = sharedUsage ?? createUsage(ctx)
     const hdsl = createHdslAccount(ctx)
     const sessionSearch = createSessionSearch(ctx)
     const peakrate = createPeakRate(ctx)
     const prices = createPrices(ctx)
     const sessionCost = createSessionCost(ctx, prices)
     const sessionPanel = createSessionPanel(ctx, sessionCost)
-    const sessionRewind = new SessionRewind(ctx)
+    const sessionRewind = new SessionRewind(ctx, config)
     // The listener is what makes a total O(1) after the first read; the
     // snapshot loads on the first ask, so a reader who never opens the figures
     // never reaches the repository.
@@ -597,12 +599,13 @@ export function registerRoutes(ctx: DshContext, scope: DshScope) {
     register(appearanceOverlays.label, appearanceOverlays.route)
 
     return () => {
-      usage.dispose()
+      if (ownsUsage) usage.dispose()
       peakrate.dispose()
       prices.dispose()
       sessionCost.dispose()
       sessionSearch.dispose()
       sessionPanel.dispose()
+      sessionRewind.dispose()
       // One route's disposer failing must not keep the others registered
       // (D12); the failure is reported.
       for (const dispose of disposers) {

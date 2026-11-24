@@ -2,10 +2,15 @@ import path from 'node:path'
 import { Readable } from 'node:stream'
 
 function fakeHost(mod, options = {}) {
-  const { fenced, home, live = [], events, launch, stored, reads, releases, lists, listCalls, registry, tails, queryShapes, broken, onRead, projections, jobs, agents, commands, directories = {}, filesystem, loader, listen = false } = options
+  const { fenced, home, live = [], events, launch, stored, reads, releases, lists, listCalls, registry, tails, queryShapes, broken, onRead, projections, jobs, agents, commands, directories = {}, filesystem, loader, listen = false, config } = options
   const shapes = queryShapes ?? ['observeSession', 'readTitleSnapshots']
   const routes = {}
   const listeners = {}
+  const cleanups = []
+  const runEffect = (fn) => {
+    const cleanup = fn()
+    if (typeof cleanup === 'function') cleanups.push(cleanup)
+  }
   const liveSession = (id) => ({
     id,
     header: { id, ...(directories[id] === undefined ? {} : { cwd: directories[id] }) },
@@ -115,7 +120,7 @@ function fakeHost(mod, options = {}) {
       if (name === 'loader' && loader !== undefined) return loader
       return undefined
     },
-    effect: (fn) => fn(),
+    effect: runEffect,
     ...(listen ? {
       on(name, listener) {
         const registered = listeners[name] ?? []
@@ -125,17 +130,20 @@ function fakeHost(mod, options = {}) {
       },
     } : {}),
     inject: (deps, cb) => cb({
-      effect: (fn) => fn(),
+      effect: runEffect,
       get: (name) => ctx.get(name),
       settings,
       webServer: { register(route) { routes[route.path] = route; return () => {} } },
     }),
   }
-  mod.apply(ctx)
+  mod.apply(ctx, config)
   const emit = async (name, ...args) => {
     for (const listener of listeners[name] ?? []) await listener(...args)
   }
-  return { routes, ctx, listeners, emit }
+  const dispose = () => {
+    while (cleanups.length > 0) cleanups.pop()()
+  }
+  return { routes, ctx, listeners, emit, dispose }
 }
 
 /**

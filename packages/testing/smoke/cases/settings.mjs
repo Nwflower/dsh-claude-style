@@ -17,7 +17,7 @@ export default {
     const expected = {
       general: ['brand', 'username', 'pageZoom', 'interfaceFontSize', 'sodium', 'soundCues', 'systemNotifications'],
       appearance: ['sidebarBrand', 'brandLockup', 'typeface', 'homeLayout', 'homeSessionScope', 'homeRipple', 'mascot', 'mascotScope', 'palette', 'paletteCards', 'backgroundOpacity'],
-      'main-window': ['turnNav', 'messageActions', 'conversationWidth', 'viewTabs', 'hideToolbarOutsideConversation', 'headerBand', 'processRows', 'answerAnchor', 'composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable'],
+      'main-window': ['turnNav', 'messageActions', 'rewindCheckpoints', 'rewindStorageLimit', 'rewindStorageDir', 'conversationWidth', 'viewTabs', 'hideToolbarOutsideConversation', 'headerBand', 'processRows', 'answerAnchor', 'composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable'],
       sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'sidebarEntries', 'workspaceView', 'sidebarPeek', 'sidebarLayout', 'sessionPanel'],
       motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator', 'reasoningDisplay', 'autoPopover'],
     }
@@ -25,14 +25,14 @@ export default {
     // rows: the conversation side, the composer's controls with the model
     // picker's rows, and the context meter with the statistics and the billing.
     const mainWindowGroups = [
-      { label: 'Conversation', rows: ['turnNav', 'messageActions', 'conversationWidth', 'viewTabs', 'hideToolbarOutsideConversation', 'headerBand', 'processRows', 'answerAnchor'] },
+      { label: 'Conversation', rows: ['turnNav', 'messageActions', 'rewindCheckpoints', 'rewindStorageLimit', 'rewindStorageDir', 'conversationWidth', 'viewTabs', 'hideToolbarOutsideConversation', 'headerBand', 'processRows', 'answerAnchor'] },
       { label: 'Composer', rows: ['composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent'] },
       { label: 'Context and cost', rows: ['contextDisplay', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable'] },
     ]
     // The home session scope waits for the Code home layout, and the title-bar
     // band for the Windows desktop window; the statistics bar's child controls
     // fold away cleanly while its switch is off (D112).
-    const expectedGrey = { appearance: ['homeSessionScope'], 'main-window': ['headerBand'] }
+    const expectedGrey = { appearance: ['homeSessionScope'], 'main-window': ['rewindCheckpoints', 'rewindStorageLimit', 'rewindStorageDir', 'headerBand'] }
     // A row may carry a note without waiting for anything: the typeface row names
     // the faces the page cannot draw, which this machine's own fonts decide, so
     // that row is left out of the comparison and read on its own below.
@@ -53,9 +53,10 @@ export default {
       JSON.stringify(mainWindow.groups) === JSON.stringify(mainWindowGroups),
       JSON.stringify(mainWindow.groups))
     const onWindows = settings.onWindows || {}
-    check('on the Windows window the title-bar row takes input and nothing stays greyed on the main-window tab',
+    check('on the Windows window the title-bar row takes input while only message-action children stay greyed under its off default',
       JSON.stringify(onWindows.rows) === JSON.stringify(expected['main-window']) &&
-        JSON.stringify(onWindows.disabled) === '[]' && JSON.stringify(onWindows.notes) === '[]',
+        JSON.stringify(onWindows.disabled) === JSON.stringify(['rewindCheckpoints', 'rewindStorageLimit', 'rewindStorageDir']) &&
+        JSON.stringify(onWindows.notes) === '[]',
       JSON.stringify(onWindows))
     const palette = settings.paletteCards || {}
     const paletteCard = (state, id) => (state.cards || []).find((card) => card.brand === id) || {}

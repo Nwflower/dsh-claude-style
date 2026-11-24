@@ -24,6 +24,11 @@ function messageRewindFilesScenario({ check }) {
       auxiliary: { text: ['Scripted rewind file edits'] },
     },
     prompt: PROMPT,
+    patch: [
+      '- id: ui-skin-claude-style',
+      '  config:',
+      '    messageActions: true',
+    ],
     beforeSend({ home, notes }) {
       const workspace = path.join(home, 'workspace')
       notes.workspace = workspace

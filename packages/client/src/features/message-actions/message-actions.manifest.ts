@@ -1,3 +1,9 @@
+import {
+  REWIND_STORAGE_LIMIT_1GB,
+  REWIND_STORAGE_LIMIT_256MB,
+  REWIND_STORAGE_LIMIT_2GB,
+  REWIND_STORAGE_LIMIT_512MB,
+} from '../../constants'
 import type { FeatureManifest } from '../../core/feature'
 
 export default {
@@ -13,6 +19,38 @@ export default {
     pref: 'messageActions',
     title: 'actionsTitle',
     // dsh-rewind takes the four write actions; the switch still governs revision history (D111).
+    sharedWith: { plugin: 'dsh-rewind', note: 'rewindPeerNote' },
+  }, {
+    tab: 'conversation',
+    rank: 26,
+    pref: 'rewindCheckpoints',
+    parent: 'messageActions',
+    title: 'rewindCheckpointsTitle',
+    desc: 'rewindCheckpointsDesc',
+    sharedWith: { plugin: 'dsh-rewind', note: 'rewindPeerNote' },
+  }, {
+    tab: 'conversation',
+    rank: 27,
+    pref: 'rewindStorageLimit',
+    parent: 'rewindCheckpoints',
+    title: 'rewindStorageLimitTitle',
+    desc: 'rewindStorageLimitDesc',
+    choiceLabels: {
+      [REWIND_STORAGE_LIMIT_256MB]: 'rewindStorageLimit256mb',
+      [REWIND_STORAGE_LIMIT_512MB]: 'rewindStorageLimit512mb',
+      [REWIND_STORAGE_LIMIT_1GB]: 'rewindStorageLimit1gb',
+      [REWIND_STORAGE_LIMIT_2GB]: 'rewindStorageLimit2gb',
+    },
+    sharedWith: { plugin: 'dsh-rewind', note: 'rewindPeerNote' },
+  }, {
+    tab: 'conversation',
+    rank: 28,
+    pref: 'rewindStorageDir',
+    parent: 'rewindCheckpoints',
+    title: 'rewindStorageDirTitle',
+    desc: 'rewindStorageDirDesc',
+    control: 'rewind-storage-dir',
+    controlLayout: 'inline',
     sharedWith: { plugin: 'dsh-rewind', note: 'rewindPeerNote' },
   }],
   cases: [],

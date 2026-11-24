@@ -127,18 +127,51 @@ export function modelOf(event: UsageEvent): string | null {
   return typeof model === 'string' && model !== '' ? model : null
 }
 
-/**
- * Fold one session's events into per-day buckets, plus a settlement count per
- * hour of day for the dashboard's peak-hour cell, both for the whole session and
- * for each day, so a range window can sum its own days' hours. A replaced sample
- * leaves its hour the same way it leaves its day.
- *
- * @param events - the session's durable events, in sequence order.
- * @returns a map of local day key to buckets, and a 24-slot hour histogram.
- */
-export function foldSession(events: UsageEvent[]): FoldedSession {
-  const days = new Map<string, DayBuckets>()
-  const hours = new Array(24).fill(0) as number[]
+type Settlement = { turn?: number, step?: number, buckets: Buckets, day: string, hour: number, model: string | null }
+
+/** Incremental fold state for one live session, advanced from tail snapshots. */
+export interface SessionFoldCursor {
+  days: Map<string, DayBuckets>
+  hours: number[]
+  last: Settlement | null
+  /** Next expected sequence number, or null if any folded event lacked a numeric seq. */
+  nextSeq: number | null
+}
+
+export function createSessionFoldCursor(): SessionFoldCursor {
+  return {
+    days: new Map<string, DayBuckets>(),
+    hours: new Array(24).fill(0) as number[],
+    last: null,
+    nextSeq: 0,
+  }
+}
+
+/** Deep-copy a cursor's day map so the persisted record never aliases live mutable state. */
+export function cloneFoldedDays(days: ReadonlyMap<string, DayBuckets>): Map<string, DayBuckets> {
+  const out = new Map<string, DayBuckets>()
+  for (const [day, bucket] of days) {
+    const copy: DayBuckets = {
+      input: bucket.input,
+      output: bucket.output,
+      cacheRead: bucket.cacheRead,
+      cacheWrite: bucket.cacheWrite,
+      calls: bucket.calls,
+    }
+    if (bucket.hours !== undefined) copy.hours = [...bucket.hours]
+    if (bucket.models !== undefined) {
+      const models = new Map<string, Buckets>()
+      for (const [model, cell] of bucket.models) models.set(model, { ...cell })
+      copy.models = models
+    }
+    out.set(day, copy)
+  }
+  return out
+}
+
+/** Advance a fold cursor across a chronological batch of events. */
+export function advanceSessionFold(cursor: SessionFoldCursor, events: readonly UsageEvent[]): void {
+  const { days, hours } = cursor
   const bump = (day: string, hour: number, buckets: Buckets, sign: number, model: string | null) => {
     hours[hour] += sign
     let target = days.get(day)
@@ -170,14 +203,19 @@ export function foldSession(events: UsageEvent[]): FoldedSession {
     }
     if (sign < 0 && BUCKET_KEYS.every((key) => target[key] === 0) && target.calls === 0) days.delete(day)
   }
-  // The replacement slot: one settlement per turn/step, replaced on retry.
-  type Settlement = { turn?: number, step?: number, buckets: Buckets, day: string, hour: number, model: string | null }
-  let last: Settlement | null = null
   for (const event of events) {
+    if (typeof event?.seq === 'number' && Number.isFinite(event.seq)) {
+      if (cursor.nextSeq !== null) {
+        if (event.seq < cursor.nextSeq) continue
+        cursor.nextSeq = event.seq + 1
+      }
+    } else {
+      cursor.nextSeq = null
+    }
     const type = event?.type
     if (type === 'llm/retry-started') {
       const data = event.data
-      if (last !== null && last.turn === data?.turn && last.step === data?.step) last = null
+      if (cursor.last !== null && cursor.last.turn === data?.turn && cursor.last.step === data?.step) cursor.last = null
       continue
     }
     if (type !== 'assistant/message' && type !== 'assistant/attempt') continue
@@ -191,14 +229,28 @@ export function foldSession(events: UsageEvent[]): FoldedSession {
     const model = modelOf(event)
     const turn = event.data?.turn
     const step = event.data?.step
-    const previous = last as Settlement | null
+    const previous = cursor.last
     const replacing = previous !== null && previous.turn === turn && previous.step === step
     if (replacing && previous !== null && bucketsEqual(previous.buckets, buckets)) continue
     if (replacing && previous !== null) bump(previous.day, previous.hour, previous.buckets, -1, previous.model)
     bump(day, hour, buckets, 1, model)
-    last = { turn, step, buckets, day, hour, model }
+    cursor.last = { turn, step, buckets, day, hour, model }
   }
-  return { days, hours }
+}
+
+/**
+ * Fold one session's events into per-day buckets, plus a settlement count per
+ * hour of day for the dashboard's peak-hour cell, both for the whole session and
+ * for each day, so a range window can sum its own days' hours. A replaced sample
+ * leaves its hour the same way it leaves its day.
+ *
+ * @param events - the session's durable events, in sequence order.
+ * @returns a map of local day key to buckets, and a 24-slot hour histogram.
+ */
+export function foldSession(events: readonly UsageEvent[]): FoldedSession {
+  const cursor = createSessionFoldCursor()
+  advanceSessionFold(cursor, events)
+  return { days: cursor.days, hours: cursor.hours }
 }
 
 /** The newest generation of a session directory's log, with its fingerprint. */

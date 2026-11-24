@@ -38,6 +38,11 @@ function messageActionsScenario({ check }) {
   return {
     script: 'greeting',
     prompt: 'hello there',
+    patch: [
+      '- id: ui-skin-claude-style',
+      '  config:',
+      '    messageActions: true',
+    ],
     async beforeSend(context) {
       const { page, notes } = context
       const value = page.locator('.dsh-claude-home-stat-value').first()

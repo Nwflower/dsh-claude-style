@@ -251,6 +251,30 @@ export const PLUGINS_PANEL_ID = 'plugins'
 /** Custom-price storage limits; decimal text avoids losing entered digits to floats. */
 export const PRICE_ROWS_MAX = 32
 
+/** Storage cap choices for workspace rewind checkpoints. */
+export const REWIND_STORAGE_LIMIT_256MB = '256mb'
+export const REWIND_STORAGE_LIMIT_512MB = '512mb'
+export const REWIND_STORAGE_LIMIT_1GB = '1gb'
+export const REWIND_STORAGE_LIMIT_2GB = '2gb'
+export const REWIND_STORAGE_LIMITS = [
+  REWIND_STORAGE_LIMIT_256MB,
+  REWIND_STORAGE_LIMIT_512MB,
+  REWIND_STORAGE_LIMIT_1GB,
+  REWIND_STORAGE_LIMIT_2GB,
+] as const
+/** Longest accepted custom directory path for workspace rewind checkpoints. */
+export const REWIND_STORAGE_DIR_MAX = 512
+
+/** Convert a rewind storage limit preference value into bytes. */
+export function rewindStorageLimitBytes(value: string): number {
+  switch (value) {
+    case REWIND_STORAGE_LIMIT_256MB: return 256 * 1024 * 1024
+    case REWIND_STORAGE_LIMIT_1GB: return 1024 * 1024 * 1024
+    case REWIND_STORAGE_LIMIT_2GB: return 2 * 1024 * 1024 * 1024
+    default: return 512 * 1024 * 1024
+  }
+}
+
 /** Model rows keep id order by default; brand order puts recognised vendor lockups first. */
 export const MODEL_ORDER_ID = 'id'
 export const MODEL_ORDER_BRAND = 'brand'
@@ -416,8 +440,14 @@ export const PREFS = {
   /** Leading uses the host slot; trailing leaves that slot available for third-party marks. */
   ongoingIndicatorSide: { type: 'choice', values: ONGOING_SIDES, default: ONGOING_SIDE_LEFT },
   turnNav: { type: 'boolean', default: true },
-  /** Whether a message the reader sent carries edit and retract beside its copy button (features/message-actions). */
-  messageActions: { type: 'boolean', default: true },
+  /** Whether a message the reader sent carries edit and retract beside its copy button (features/message-actions); default off. */
+  messageActions: { type: 'boolean', default: false },
+  /** Whether the host records workspace checkpoints for code restoration alongside message rewind. */
+  rewindCheckpoints: { type: 'boolean', default: true },
+  /** Maximum total disk budget kept for workspace rewind objects and file captures. */
+  rewindStorageLimit: { type: 'choice', values: REWIND_STORAGE_LIMITS, default: REWIND_STORAGE_LIMIT_512MB },
+  /** Optional absolute directory for workspace rewind objects and captures; blank uses the plugin home. */
+  rewindStorageDir: { type: 'text', default: '', max: REWIND_STORAGE_DIR_MAX },
   viewTabs: { type: 'boolean', default: true },
   hideToolbarOutsideConversation: { type: 'boolean', default: true },
   headerBand: { type: 'boolean', default: true },

@@ -7,10 +7,8 @@
  * never rewritten. A plan binds a confirmation to the source head and work-tree
  * tree so a late press cannot restore over newer activity.
  */
-import { createHash, randomUUID } from 'node:crypto'
-import {
-  chmod, lstat, mkdir, readFile as readFileAsync, readlink, rename, stat, symlink, unlink, writeFile,
-} from 'node:fs/promises'
+import { randomUUID } from 'node:crypto'
+import { chmod, mkdir, rename, writeFile } from 'node:fs/promises'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative, sep } from 'node:path'
 import type {
@@ -25,24 +23,28 @@ import type { DshContext, DshSessionObservation } from '@dsh-claude-style/engine
 import { readEvents } from '@dsh-claude-style/engine/node/session-events'
 import { pluginPath } from './harness-home.js'
 import { rewindPeerActive } from './rewind-peer.js'
+import { readRewindConfig, type HostConfigSource, type RewindRuntimeConfig } from './session-rewind-config.js'
 import {
   applyTree,
+  DEFAULT_MAX_SNAPSHOT_BYTES,
   diffTrees,
   locateGit,
   snapshotTree,
   type GitWorkspace,
+  type SnapshotOptions,
 } from './session-rewind-git.js'
+import {
+  captureFile,
+  pruneRewindStorage,
+  restoreCapturedFile,
+  type Capture,
+  type ProtectedTree,
+} from './session-rewind-store.js'
 
 const DOCUMENT_VERSION = 1
 const MAX_CAPTURE_BYTES = 16 * 1024 * 1024
 const PLAN_LIFETIME_MS = 5 * 60_000
 const PLAN_LIMIT = 32
-
-type Capture =
-  | { kind: 'absent' }
-  | { kind: 'file'; hash: string; mode: number }
-  | { kind: 'symlink'; target: string; directory: boolean }
-  | { kind: 'oversized' | 'unsupported' }
 
 interface StoredGit {
   cwd: string
@@ -50,6 +52,7 @@ interface StoredGit {
   gitDir: string
   repositoryObjects: string
   beforeTree: string
+  oversized?: string[]
 }
 
 interface TurnCheckpoint {
@@ -57,6 +60,7 @@ interface TurnCheckpoint {
   turn: number
   cwd: string
   createdAt: number
+  storage?: string
   git: StoredGit | null
   captures: Record<string, Capture>
   complete: boolean
@@ -98,9 +102,11 @@ interface WorkspaceRegistry {
 interface ActiveTurn {
   turn: number
   cwd: string
+  storage: string
   captures: Map<string, Capture>
   git: GitWorkspace | null
   beforeTree: string | null
+  oversized: string[]
   complete: boolean
   reason: string
 }
@@ -108,9 +114,11 @@ interface ActiveTurn {
 interface PendingPlan extends RewindPlan {
   createdAt: number
   headSeq: number
+  storage: string
   checkpoints: TurnCheckpoint[]
   workspace: GitWorkspace | null
   currentTree: string | null
+  skipPaths: ReadonlySet<string>
 }
 
 function emptyDocument(): RewindDocument {
@@ -138,22 +146,59 @@ function sessionCwd(session: LiveSession | undefined): string | null {
 }
 
 export class SessionRewind {
-  private readonly storage: string
+  private readonly defaultStorage: string
   private readonly documentPath: string
   private document: RewindDocument
   private readonly recorders = new Map<string, SessionRecorder>()
   private readonly mutations = new WeakMap<object, SessionRecorder>()
   private readonly plans = new Map<string, PendingPlan>()
+  private readonly disposers: (() => void)[] = []
+  private readonly abort = new AbortController()
+  private disposed = false
   private writes: Promise<void> = Promise.resolve()
+  private pruning: Promise<void> = Promise.resolve()
   private commitChain: Promise<void> = Promise.resolve()
 
-  constructor(private readonly ctx: DshContext) {
-    this.storage = pluginPath(ctx, 'rewind')
-    this.documentPath = join(this.storage, 'state.json')
+  constructor(private readonly ctx: DshContext, private readonly config?: HostConfigSource) {
+    this.defaultStorage = pluginPath(ctx, 'rewind')
+    this.documentPath = join(this.defaultStorage, 'state.json')
     this.document = existsSync(this.documentPath)
       ? validDocument(JSON.parse(readFileSync(this.documentPath, 'utf8')))
       : emptyDocument()
     this.listen()
+  }
+
+  dispose(): void {
+    if (this.disposed) return
+    this.disposed = true
+    this.abort.abort()
+    for (const off of this.disposers) {
+      try { off() } catch { /* listener already dropped with host generation */ }
+    }
+    this.disposers.length = 0
+    this.recorders.clear()
+    this.plans.clear()
+  }
+
+  private runtimeConfig(): RewindRuntimeConfig {
+    return readRewindConfig(this.ctx, this.config, this.defaultStorage)
+  }
+
+  private storageOf(checkpoint?: { storage?: string }): string {
+    return checkpoint?.storage ?? this.defaultStorage
+  }
+
+  snapshotOptions(): SnapshotOptions {
+    const budget = this.runtimeConfig().storageLimitBytes
+    return {
+      maxFileBytes: MAX_CAPTURE_BYTES,
+      maxSnapshotBytes: Math.min(DEFAULT_MAX_SNAPSHOT_BYTES, Math.max(MAX_CAPTURE_BYTES, Math.floor(budget / 2))),
+      signal: this.abort.signal,
+    }
+  }
+
+  signal(): AbortSignal {
+    return this.abort.signal
   }
 
   private save(): Promise<void> {
@@ -183,14 +228,16 @@ export class SessionRewind {
 
   private listen(): void {
     if (typeof this.ctx.on !== 'function') return
-    this.ctx.on('session/event', (session: LiveSession | null, event: SessionEvent) => {
-      if (session === null || typeof session.id !== 'string') return
+    const listen = (name: string, handler: (...args: any[]) => unknown, options?: { prepend?: boolean }) => {
+      const off = this.ctx.on?.(name, handler, options)
+      if (typeof off === 'function') this.disposers.push(off as () => void)
+    }
+    listen('session/event', (session: LiveSession | null, event: SessionEvent) => {
+      if (this.disposed || session === null || typeof session.id !== 'string') return
       const recorder = this.recorders.get(session.id)
       if (event.type === 'turn/start' && typeof event.data?.turn === 'number') {
-        // While dsh-rewind runs the checkpoints are its own (D111). A turn starts after the one before
-        // it ended, so dropping the recorder here loses no checkpoint in progress; with no recorder,
-        // the pre-execute hook no longer waits for this session.
-        if (rewindPeerActive(this.ctx)) {
+        // Yield when dsh-rewind is active (D111) or when workspace checkpoints are switched off.
+        if (rewindPeerActive(this.ctx) || !this.runtimeConfig().checkpointsEnabled) {
           this.recorders.delete(session.id)
           return
         }
@@ -200,11 +247,11 @@ export class SessionRewind {
         recorder?.end(event.data.turn)
       }
     })
-    this.ctx.on('session/disposed', (session: LiveSession) => {
+    listen('session/disposed', (session: LiveSession) => {
       // Durable checkpoints outlive the in-memory queue; only that queue is released.
       this.recorders.delete(session.id)
     })
-    this.ctx.on('tools/pre-execute', async (exec: { agent?: { session?: LiveSession } }, next: () => Promise<unknown>) => {
+    listen('tools/pre-execute', async (exec: { agent?: { session?: LiveSession } }, next: () => Promise<unknown>) => {
       const recorder = exec.agent?.session === undefined ? undefined : this.recorders.get(exec.agent.session.id)
       if (recorder !== undefined) {
         this.mutations.set(exec as object, recorder)
@@ -221,7 +268,7 @@ export class SessionRewind {
       await recorder.settled()
     }
     for (const name of ['fs/write-intent', 'fs/edit-intent', 'fs/delete-intent']) {
-      this.ctx.on(name, async (target: unknown, actor: object | undefined, next: () => Promise<unknown>) => {
+      listen(name, async (target: unknown, actor: object | undefined, next: () => Promise<unknown>) => {
         const intent = await next()
         await capture(target, actor)
         return intent
@@ -229,17 +276,50 @@ export class SessionRewind {
     }
   }
 
+  private protectedTrees(): ProtectedTree[] {
+    const out: ProtectedTree[] = []
+    for (const plan of this.plans.values()) {
+      if (plan.workspace === null) continue
+      if (plan.currentTree !== null) out.push({ workspace: plan.workspace, tree: plan.currentTree })
+      for (const checkpoint of plan.checkpoints) {
+        if (checkpoint.git !== null) out.push({ workspace: plan.workspace, tree: checkpoint.git.beforeTree })
+      }
+    }
+    return out
+  }
+
   async putCheckpoint(checkpoint: TurnCheckpoint): Promise<void> {
+    if (this.disposed) return
     const rows = this.document.checkpoints[checkpoint.sessionId] ?? []
     const next = rows.filter(row => row.turn !== checkpoint.turn)
     next.push(checkpoint)
     next.sort((a, b) => a.turn - b.turn)
     this.document.checkpoints[checkpoint.sessionId] = next
     await this.save()
+    const storageDir = this.storageOf(checkpoint)
+    const runPrune = this.pruning.then(async () => {
+      if (this.disposed) return
+      try {
+        const result = await pruneRewindStorage({
+          storageDir,
+          defaultStorageDir: this.defaultStorage,
+          limitBytes: this.runtimeConfig().storageLimitBytes,
+          checkpoints: this.document.checkpoints,
+          protectedTrees: this.protectedTrees(),
+          signal: this.abort.signal,
+          warn: message => this.warn(message),
+        })
+        if (result.changed && !this.disposed) await this.save()
+      } catch (error) {
+        if (!this.disposed) this.warn('storage prune failed: ' + messageOf(error))
+      }
+    })
+    this.pruning = runPrune.then(() => undefined, () => undefined)
+    await runPrune
   }
 
   checkpointStorage(): string {
-    return this.storage
+    return this.runtimeConfig().storageDir
   }
 
   warn(message: string): void {
@@ -255,91 +335,31 @@ export class SessionRewind {
     return link === undefined ? undefined : this.checkpoint(link.sourceSessionId, turn, seen)
   }
 
-  private workspaceOf(stored: StoredGit): GitWorkspace {
+  private workspaceOf(stored: StoredGit, storage: string): GitWorkspace {
+    const objects = join(storage, 'objects')
     return {
       root: stored.root,
       gitDir: stored.gitDir,
       repositoryObjects: stored.repositoryObjects,
-      objects: join(this.storage, 'objects'),
+      objects,
       env: {
-        GIT_OBJECT_DIRECTORY: join(this.storage, 'objects'),
+        GIT_OBJECT_DIRECTORY: objects,
         GIT_ALTERNATE_OBJECT_DIRECTORIES: stored.repositoryObjects,
       },
     }
   }
 
-  private async capture(absolute: string): Promise<Capture> {
-    let info
-    try {
-      info = await lstat(absolute)
-    } catch (error) {
-      if ((error as { code?: unknown }).code === 'ENOENT') return { kind: 'absent' }
-      throw error
-    }
-    if (info.isSymbolicLink()) {
-      let directory = false
-      try {
-        directory = (await stat(absolute)).isDirectory()
-      } catch (error) {
-        if ((error as { code?: unknown }).code !== 'ENOENT') throw error
-      }
-      return { kind: 'symlink', target: await readlink(absolute), directory }
-    }
-    if (!info.isFile()) return { kind: 'unsupported' }
-    if (info.size > MAX_CAPTURE_BYTES) return { kind: 'oversized' }
-    const bytes = await readFileAsync(absolute)
-    const hash = createHash('sha256').update(bytes).digest('hex')
-    const path = join(this.storage, 'captures', hash)
-    await mkdir(dirname(path), { recursive: true, mode: 0o700 })
-    try {
-      await writeFile(path, bytes, { flag: 'wx', mode: 0o600 })
-    } catch (error) {
-      if ((error as { code?: unknown }).code !== 'EEXIST') throw error
-    }
-    return { kind: 'file', hash, mode: info.mode & 0o777 }
+  private capture(absolute: string, storage: string): Promise<Capture> {
+    return captureFile(absolute, storage, MAX_CAPTURE_BYTES)
   }
 
-  async captureFor(recorder: SessionRecorder, absolute: string, turn: number): Promise<void> {
-    const capture = await this.capture(absolute)
+  async captureFor(recorder: SessionRecorder, absolute: string, turn: number, storage: string): Promise<void> {
+    const capture = await this.capture(absolute, storage)
     recorder.remember(absolute, capture, turn)
   }
 
-  private async restoreCapture(absolute: string, capture: Capture): Promise<void> {
-    if (capture.kind === 'oversized' || capture.kind === 'unsupported') throw new Error(`no complete capture for ${absolute}`)
-    if (capture.kind === 'absent') {
-      try {
-        const info = await lstat(absolute)
-        if (info.isDirectory() && !info.isSymbolicLink()) throw new Error(`refusing to remove directory ${absolute}`)
-        await unlink(absolute)
-      } catch (error) {
-        if ((error as { code?: unknown }).code !== 'ENOENT') throw error
-      }
-      return
-    }
-    await mkdir(dirname(absolute), { recursive: true, mode: 0o700 })
-    if (capture.kind === 'symlink') {
-      try {
-        await unlink(absolute)
-      } catch (error) {
-        if ((error as { code?: unknown }).code !== 'ENOENT') throw error
-      }
-      await symlink(capture.target, absolute, capture.directory ? 'junction' : 'file')
-      return
-    }
-    if (capture.kind !== 'file') throw new Error(`no complete capture for ${absolute}`)
-    const bytes = await readFileAsync(join(this.storage, 'captures', capture.hash))
-    const temporary = absolute + '.dsh-claude-rewind-' + process.pid + '.tmp'
-    try {
-      await writeFile(temporary, bytes, { mode: capture.mode })
-      await chmod(temporary, capture.mode)
-      await rename(temporary, absolute)
-    } catch (error) {
-      // A failed replace leaves no temporary beside the target; the original failure propagates.
-      try { await unlink(temporary) } catch (cleanup) {
-        if ((cleanup as { code?: unknown }).code !== 'ENOENT') throw new AggregateError([error, cleanup], 'session rewind: temporary cleanup failed')
-      }
-      throw error
-    }
+  private restoreCapture(absolute: string, capture: Capture, storage: string): Promise<void> {
+    return restoreCapturedFile(absolute, capture, storage)
   }
 
   private conversationFor(sessionId: string): LogicalConversation | undefined {
@@ -352,12 +372,29 @@ export class SessionRewind {
     return registry !== null && typeof registry === 'object' ? registry as WorkspaceRegistry : null
   }
 
-  private async sessionKnown(sessionId: string): Promise<boolean> {
+  private async storedSessionIds(): Promise<Set<string> | null> {
+    const persistence = this.ctx.get('sessionPersistence') as {
+      list?(): Promise<readonly { header?: { id?: unknown } }[]>
+    } | null | undefined
+    if (typeof persistence?.list !== 'function') return null
+    const listed = await persistence.list()
+    const ids = new Set<string>()
+    for (const entry of listed) {
+      const id = entry?.header?.id
+      if (typeof id === 'string' && id !== '') ids.add(id)
+    }
+    return ids
+  }
+
+  private async sessionKnown(sessionId: string, storedIds: ReadonlySet<string> | null): Promise<boolean> {
     if (this.liveSessions()?.get?.(sessionId) !== undefined) return true
-    const query = this.ctx.get('sessionQuery') as { observeSession?(id: string): Promise<DshSessionObservation> } | null | undefined
+    if (storedIds !== null) return storedIds.has(sessionId)
+    const query = this.ctx.get('sessionQuery') as {
+      observeSession?(id: string, options?: { projectionMode?: string }): Promise<DshSessionObservation>
+    } | null | undefined
     if (typeof query?.observeSession !== 'function') return true
     try {
-      const observation = await query.observeSession(sessionId)
+      const observation = await query.observeSession(sessionId, { projectionMode: 'none' })
       if (typeof observation.dispose === 'function') observation.dispose()
       else if (Symbol.dispose in observation) (observation as unknown as { [Symbol.dispose](): void })[Symbol.dispose]()
       return true
@@ -371,11 +408,12 @@ export class SessionRewind {
   private async reconcileArchiveState(pinSessionId: string | null = null): Promise<void> {
     const registry = this.workspaceRegistry()
     if (registry === null) return
+    const storedIds = this.document.conversations.length === 0 ? null : await this.storedSessionIds()
     let changed = false
     for (const conversation of this.document.conversations) {
       for (const revision of conversation.revisions) {
         const active = revision.sessionId === conversation.activeSessionId
-        const known = await this.sessionKnown(revision.sessionId)
+        const known = await this.sessionKnown(revision.sessionId, storedIds)
         if (!active && known && typeof registry.archiveSession === 'function') {
           try {
             await registry.archiveSession(revision.sessionId, { stopActivity: true })
@@ -456,13 +494,17 @@ export class SessionRewind {
     if (target?.git != null && checkpoints.some(checkpoint => checkpoint?.git?.root !== target.git?.root)) {
       reason = '目标之后的工作目录发生了变化，无法安全恢复'
     }
+    const storage = this.storageOf(target)
     let workspace: GitWorkspace | null = null
     let currentTree: string | null = null
+    let skipPaths = new Set<string>()
     let files: RewindFile[] = []
     if (reason === '' && target?.git != null) {
-      workspace = this.workspaceOf(target.git)
-      currentTree = await snapshotTree(workspace, this.storage)
-      files = await diffTrees(workspace, target.git.beforeTree, currentTree)
+      workspace = this.workspaceOf(target.git, storage)
+      const currentSnap = await snapshotTree(workspace, storage, this.snapshotOptions())
+      currentTree = currentSnap.tree
+      skipPaths = new Set([...(target.git.oversized ?? []), ...currentSnap.oversized])
+      files = await diffTrees(workspace, target.git.beforeTree, currentTree, skipPaths, this.abort.signal)
     }
     const listed = new Set(files.map(file => file.path))
     for (const checkpoint of checkpoints) {
@@ -493,12 +535,23 @@ export class SessionRewind {
       files,
       createdAt: now,
       headSeq,
+      storage,
       checkpoints: checkpoints.filter((checkpoint): checkpoint is TurnCheckpoint => checkpoint !== undefined),
       workspace,
       currentTree,
+      skipPaths,
     }
     this.plans.set(id, plan)
-    const { createdAt: _createdAt, headSeq: _headSeq, checkpoints: _checkpoints, workspace: _workspace, currentTree: _currentTree, ...answer } = plan
+    const {
+      createdAt: _createdAt,
+      headSeq: _headSeq,
+      storage: _storage,
+      checkpoints: _checkpoints,
+      workspace: _workspace,
+      currentTree: _currentTree,
+      skipPaths: _skipPaths,
+      ...answer
+    } = plan
     return answer
   }
 
@@ -533,32 +586,35 @@ export class SessionRewind {
   }
 
   private async restore(plan: PendingPlan): Promise<void> {
+    let skipPaths = plan.skipPaths
     if (plan.workspace !== null && plan.currentTree !== null) {
-      const currentTree = await snapshotTree(plan.workspace, this.storage)
-      if (currentTree !== plan.currentTree) throw new Error('session rewind: the work tree changed after confirmation')
+      const currentSnap = await snapshotTree(plan.workspace, plan.storage, this.snapshotOptions())
+      if (currentSnap.tree !== plan.currentTree) throw new Error('session rewind: the work tree changed after confirmation')
+      skipPaths = new Set([...plan.skipPaths, ...currentSnap.oversized])
     }
     const paths = [...new Set(plan.checkpoints.flatMap(checkpoint => Object.keys(checkpoint.captures)))]
     const safety = new Map<string, Capture>()
     for (const path of paths) {
-      const capture = await this.capture(path)
+      const capture = await this.capture(path, plan.storage)
       if (capture.kind === 'oversized' || capture.kind === 'unsupported') throw new Error(`cannot protect current file ${path}`)
       safety.set(path, capture)
     }
     const target = plan.checkpoints.find(checkpoint => checkpoint.turn === plan.turn)
     try {
       if (plan.workspace !== null && plan.currentTree !== null && target?.git != null) {
-        await applyTree(plan.workspace, this.storage, target.git.beforeTree, plan.currentTree)
+        await applyTree(plan.workspace, plan.storage, target.git.beforeTree, plan.currentTree, skipPaths, this.abort.signal)
       }
       const ordered = [...plan.checkpoints].sort((a, b) => b.turn - a.turn)
       for (const checkpoint of ordered) {
-        for (const [path, capture] of Object.entries(checkpoint.captures)) await this.restoreCapture(path, capture)
+        const storage = this.storageOf(checkpoint)
+        for (const [path, capture] of Object.entries(checkpoint.captures)) await this.restoreCapture(path, capture, storage)
       }
     } catch (error) {
       // Restoration is isolated from the already-created fork: put the original work tree back before reporting.
       try {
-        for (const [path, capture] of safety) await this.restoreCapture(path, capture)
+        for (const [path, capture] of safety) await this.restoreCapture(path, capture, plan.storage)
         if (plan.workspace !== null && plan.currentTree !== null && target?.git != null) {
-          await applyTree(plan.workspace, this.storage, plan.currentTree, target.git.beforeTree)
+          await applyTree(plan.workspace, plan.storage, plan.currentTree, target.git.beforeTree, skipPaths, this.abort.signal)
         }
       } catch (rollback) {
         throw new AggregateError([error, rollback], 'session rewind: restoration and its safety restoration both failed')
@@ -578,17 +634,23 @@ class SessionRecorder {
     const state: ActiveTurn = {
       turn,
       cwd: this.cwd,
+      storage: this.owner.checkpointStorage(),
       captures: new Map(),
       git: null,
       beforeTree: null,
+      oversized: [],
       complete: true,
       reason: '',
     }
     this.active = state
     this.enqueue(async () => {
       try {
-        state.git = await locateGit(state.cwd, this.owner.checkpointStorage())
-        if (state.git !== null) state.beforeTree = await snapshotTree(state.git, this.owner.checkpointStorage())
+        state.git = await locateGit(state.cwd, state.storage, this.owner.signal())
+        if (state.git !== null) {
+          const snap = await snapshotTree(state.git, state.storage, this.owner.snapshotOptions())
+          state.beforeTree = snap.tree
+          state.oversized = snap.oversized
+        }
       } catch (error) {
         // A checkpoint failure must not stop the Agent's turn; the dialog later refuses code restoration explicitly.
         state.complete = false
@@ -607,12 +669,14 @@ class SessionRecorder {
         turn,
         cwd: state.cwd,
         createdAt: Date.now(),
+        storage: state.storage,
         git: state.git !== null && state.beforeTree !== null ? {
           cwd: state.cwd,
           root: state.git.root,
           gitDir: state.git.gitDir,
           repositoryObjects: state.git.repositoryObjects,
           beforeTree: state.beforeTree,
+          ...(state.oversized.length > 0 ? { oversized: state.oversized } : {}),
         } : null,
         captures: Object.fromEntries(state.captures),
         complete: state.complete && [...state.captures.values()].every(capture => capture.kind !== 'oversized' && capture.kind !== 'unsupported'),
@@ -626,7 +690,7 @@ class SessionRecorder {
       const state = this.active
       if (state === null || state.captures.has(path)) return
       try {
-        await this.owner.captureFor(this, path, state.turn)
+        await this.owner.captureFor(this, path, state.turn, state.storage)
       } catch (error) {
         // Keep the turn running and make the affected checkpoint unavailable for code restoration.
         state.complete = false

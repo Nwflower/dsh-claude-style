@@ -240,14 +240,16 @@ async function waitForSummary(usage: ReturnType<typeof createUsage>, signal: Abo
  * @param ctx - the host plugin context.
  * @returns nothing; the registration drops with this generation.
  */
-export function registerWidgetUsage(ctx: DshContext): void {
+export function registerWidgetUsage(ctx: DshContext, sharedUsage?: ReturnType<typeof createUsage>): void {
   const register = (scope: DshContext) => {
     const board = scope.get(WIDGET_BOARD_SERVICE) as WidgetBoardService | undefined
     if (board === undefined || board.apiVersion !== WIDGET_BOARD_API_VERSION) return
-    const usage = createUsage(ctx)
-    ctx.effect?.(() => {
-      usage.dispose()
-    })
+    const usage = sharedUsage ?? createUsage(ctx)
+    if (sharedUsage === undefined) {
+      ctx.effect?.(() => () => {
+        usage.dispose()
+      })
+    }
     board.registerCapability({
       apiVersion: WIDGET_BOARD_API_VERSION,
       provider: WIDGET_USAGE_PROVIDER,

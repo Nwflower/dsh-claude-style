@@ -28,8 +28,8 @@ import { harnessPath } from '@dsh-claude-style/engine/node/harness-home'
 import { readRecord, writeRecord } from './usage-record.js'
 import type { RecordSession } from './usage-record.js'
 import { readEvents } from '@dsh-claude-style/engine/node/session-events'
-import { foldSession, listSessionLogs } from './usage-fold.js'
-import type { SessionLog, UsageEvent } from './usage-fold.js'
+import { advanceSessionFold, cloneFoldedDays, createSessionFoldCursor, listSessionLogs } from './usage-fold.js'
+import type { SessionFoldCursor, SessionLog, UsageEvent } from './usage-fold.js'
 import { readLedger } from './usage-ledger.js'
 import type { DayBuckets } from './usage-ledger.js'
 import { mergeLedgerFold, summarize } from './usage-summary.js'
@@ -128,11 +128,30 @@ interface WorkspaceRegistry {
  * @returns the service: `snapshot()` reads the current state, `refresh()`
  *   recomputes in the background.
  */
+interface LiveUsageSession {
+  seq?: unknown
+  snapshotEvents?(fromSeq: number): readonly UsageEvent[]
+}
+
+function liveSessionOf(ctx: DshContext, sessionId: string): LiveUsageSession | null {
+  const sessions = ctx.get('sessions') as { get?(id: string): LiveUsageSession | undefined } | null | undefined
+  const live = sessions?.get?.(sessionId)
+  return live !== undefined && live !== null && typeof live === 'object' ? live : null
+}
+
+function yieldTurn(): Promise<void> {
+  return new Promise((resolve) => setImmediate(resolve))
+}
+
+export type UsageService = ReturnType<typeof createUsage>
+
 export function createUsage(ctx: DshContext) {
   // The harness home, resolved per read through the one shared accessor.
   const home = () => harnessPath(ctx)
 
   const slots = new Map<string, UsageSlot>()
+  /** Incremental fold cursors for currently live sessions so log appends avoid full zstd re-reads. */
+  const liveCursors = new Map<string, { storedName: string, cursor: SessionFoldCursor }>()
   let disposed = false
 
   function slotFor(scope: HomeSessionScope, workspaceId: string) {
@@ -153,6 +172,7 @@ export function createUsage(ctx: DshContext) {
     let failed = 0
     let firstFailure: string | null = null
     for (const log of logs) {
+      if (disposed) break
       // The record is keyed by the stored name: it outlives the log, and the
       // name is what the disk still holds once the session is deleted.
       const stored = record.sessions.get(log.storedName)
@@ -160,6 +180,25 @@ export function createUsage(ctx: DshContext) {
       if (stored !== undefined && fingerprint !== undefined
         && fingerprint.size === log.size && fingerprint.mtimeMs === log.mtimeMs) {
         sessions.set(log.storedName, stored)
+        continue
+      }
+      // A live session already folded in this process advances from its in-memory
+      // tail instead of re-decompressing the entire multi-frame zstd log on disk.
+      const live = liveSessionOf(ctx, log.id)
+      const liveSeq = typeof live?.seq === 'number' && Number.isFinite(live.seq) ? live.seq : null
+      const cached = liveCursors.get(log.id)
+      if (live !== null && liveSeq !== null && cached !== undefined && cached.storedName === log.storedName
+        && cached.cursor.nextSeq !== null && liveSeq >= cached.cursor.nextSeq
+        && typeof live.snapshotEvents === 'function') {
+        if (liveSeq > cached.cursor.nextSeq) {
+          advanceSessionFold(cached.cursor, live.snapshotEvents(cached.cursor.nextSeq))
+          cached.cursor.nextSeq = liveSeq
+        }
+        sessions.set(log.storedName, {
+          fingerprint: { size: log.size, mtimeMs: log.mtimeMs },
+          days: cloneFoldedDays(cached.cursor.days),
+        })
+        read += 1
         continue
       }
       // Each changed log is read by its logical id: the host resolves a session
@@ -184,8 +223,22 @@ export function createUsage(ctx: DshContext) {
         if (stored !== undefined) sessions.set(log.storedName, stored)
         continue
       }
-      sessions.set(log.storedName, { fingerprint: { size: log.size, mtimeMs: log.mtimeMs }, days: foldSession(events).days })
+      const cursor = createSessionFoldCursor()
+      advanceSessionFold(cursor, events)
+      if (live !== null && liveSeq !== null && cursor.nextSeq !== null) {
+        liveCursors.set(log.id, { storedName: log.storedName, cursor })
+      } else {
+        liveCursors.delete(log.id)
+      }
+      sessions.set(log.storedName, {
+        fingerprint: { size: log.size, mtimeMs: log.mtimeMs },
+        days: cloneFoldedDays(cursor.days),
+      })
       read += 1
+      await yieldTurn()
+    }
+    for (const id of liveCursors.keys()) {
+      if (liveSessionOf(ctx, id) === null) liveCursors.delete(id)
     }
     if (firstFailure !== null) {
       ctx.logger?.warn?.(`${PACKAGE_NAME}: ${failed} session log(s) left out of the usage roll-up; the rest are recorded (first: ${firstFailure})`)
@@ -322,6 +375,7 @@ export function createUsage(ctx: DshContext) {
     refresh,
     dispose() {
       disposed = true
+      liveCursors.clear()
     },
   }
 }

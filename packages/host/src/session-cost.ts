@@ -168,11 +168,32 @@ export interface SessionCostStore {
   dispose(): void
 }
 
-/** How long a total is trusted without a new event before it is folded again. */
+/** How long a total is trusted without a live session or event subscription before refolding. */
 const STALE_MS = 10_000
+/** Closed sessions cannot mutate without reopening live or emitting session/event. */
+const CLOSED_STALE_MS = 5 * 60_000
+
+interface LiveCostSession {
+  seq?: unknown
+  snapshotEvents?(fromSeq: number): readonly UsageEvent[]
+}
+
+function liveSessionOf(ctx: DshContext, sessionId: string): LiveCostSession | null {
+  const sessions = ctx.get('sessions') as { get?(id: string): LiveCostSession | undefined } | null | undefined
+  const live = sessions?.get?.(sessionId)
+  return live !== undefined && live !== null && typeof live === 'object' ? live : null
+}
+
+function nextSeqOf(events: readonly UsageEvent[]): number | null {
+  if (events.length === 0) return 0
+  const last = events[events.length - 1]?.seq
+  return typeof last === 'number' && Number.isFinite(last) ? last + 1 : null
+}
 
 export function createSessionCost(ctx: DshContext, prices: PriceStore): SessionCostStore {
   const states = new Map<string, CostState>()
+  /** Next expected event sequence number per folded session, or null when events carry no seq. */
+  const nextSeqs = new Map<string, number | null>()
   /**
    * The rows the live subscription prices with, and the signature of the last
    * ask: a reader who edits the table gets every total folded again.
@@ -182,9 +203,11 @@ export function createSessionCost(ctx: DshContext, prices: PriceStore): SessionC
   /** When each total was last advanced, by a live event or by a fold. */
   const touchedAt = new Map<string, number>()
   const pending = new Map<string, Promise<SessionCostAnswer | null>>()
+  let stopEvents: (() => void) | null = null
   const offPriceChange = prices.onChange(() => {
     // The next ask re-prices the log against the table now in force.
     states.clear()
+    nextSeqs.clear()
     touchedAt.clear()
   })
 
@@ -193,6 +216,7 @@ export function createSessionCost(ctx: DshContext, prices: PriceStore): SessionC
       const oldest = states.keys().next().value
       if (oldest === undefined || oldest === '') break
       states.delete(oldest)
+      nextSeqs.delete(oldest)
       touchedAt.delete(oldest)
     }
   }
@@ -207,17 +231,22 @@ export function createSessionCost(ctx: DshContext, prices: PriceStore): SessionC
     if (state === undefined) return
     const document = prices.document()
     if (document === null) return
+    const seq = typeof event?.seq === 'number' && Number.isFinite(event.seq) ? event.seq : null
+    const expected = nextSeqs.get(sessionId) ?? null
+    if (seq !== null && expected !== null && seq < expected) return
     const next = applyCostEvent(state, event, document, liveBilling)
     if (next !== state) states.set(sessionId, next)
+    nextSeqs.set(sessionId, seq !== null ? seq + 1 : null)
     touchedAt.set(sessionId, Date.now())
   }
 
   function ensure() {
-    if (typeof ctx.on !== 'function') return
-    ctx.on('session/event', (session: { id?: unknown } | null, event: UsageEvent) => {
+    if (stopEvents !== null || typeof ctx.on !== 'function') return
+    const off = ctx.on('session/event', (session: { id?: unknown } | null, event: UsageEvent) => {
       const id = typeof session?.id === 'string' ? session.id : ''
       if (id !== '') observe(id, event)
     })
+    stopEvents = typeof off === 'function' ? off as () => void : () => {}
   }
 
   async function get(sessionId: string, billing: BillingRows = NO_BILLING): Promise<SessionCostAnswer | null> {
@@ -227,18 +256,39 @@ export function createSessionCost(ctx: DshContext, prices: PriceStore): SessionC
       billingSignature = signature
       liveBilling = billing
       states.clear()
+      nextSeqs.clear()
       touchedAt.clear()
       pending.clear()
     }
+    const document = prices.document()
     const held = states.get(sessionId)
     const touched = touchedAt.get(sessionId)
-    // A total a live event has not advanced for a while is folded again: a
-    // host whose event subscription never answered still gets a current figure,
-    // at the cost of one log read per session per interval.
-    if (held !== undefined && touched !== undefined && Date.now() - touched < STALE_MS) return answer(held)
+    const live = liveSessionOf(ctx, sessionId)
+    if (held !== undefined) {
+      const liveSeq = typeof live?.seq === 'number' && Number.isFinite(live.seq) ? live.seq : null
+      const expected = nextSeqs.get(sessionId) ?? null
+      if (live !== null && liveSeq !== null && expected !== null) {
+        if (liveSeq === expected) {
+          touchedAt.set(sessionId, Date.now())
+          return answer(held)
+        }
+        if (liveSeq > expected && typeof live.snapshotEvents === 'function' && document !== null) {
+          let state = held
+          for (const event of live.snapshotEvents(expected)) {
+            state = applyCostEvent(state, event, document, liveBilling)
+          }
+          states.set(sessionId, state)
+          nextSeqs.set(sessionId, liveSeq)
+          touchedAt.set(sessionId, Date.now())
+          return answer(state)
+        }
+      } else if (touched !== undefined) {
+        const ttl = stopEvents !== null && live === null ? CLOSED_STALE_MS : STALE_MS
+        if (Date.now() - touched < ttl) return answer(held)
+      }
+    }
     const running = pending.get(sessionId)
     if (running !== undefined) return running
-    const document = prices.document()
     if (document === null) return null
     const work = readEvents<UsageEvent>(ctx, PACKAGE_NAME, sessionId, 'the session cost')
       .then((events) => {
@@ -246,6 +296,7 @@ export function createSessionCost(ctx: DshContext, prices: PriceStore): SessionC
         if (events === null) return null
         const state = foldSessionCost(events, document, liveBilling)
         states.set(sessionId, state)
+        nextSeqs.set(sessionId, nextSeqOf(events))
         touchedAt.set(sessionId, Date.now())
         trim()
         return answer(state)
@@ -262,7 +313,10 @@ export function createSessionCost(ctx: DshContext, prices: PriceStore): SessionC
     get,
     dispose() {
       offPriceChange()
+      if (stopEvents !== null) stopEvents()
+      stopEvents = null
       states.clear()
+      nextSeqs.clear()
       touchedAt.clear()
       pending.clear()
     },

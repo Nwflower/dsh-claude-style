@@ -67,6 +67,8 @@ interface Entry {
   at: number
   /** The last event seq consumed by the context and round folds. */
   cursor: number
+  /** Billing signature used to build `value.stats.cost`. */
+  billingKey: string
   context: PanelContextState
   /** The latest human-input round and call ownership across polls. */
   round: PanelRoundState
@@ -184,7 +186,19 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
     }
   }
 
-  async function build(sessionId: string, entry: Entry, billing: BillingRows): Promise<SessionPanelValue> {
+  function billingKeyOf(billing: BillingRows): string {
+    return billing.currency === null
+      ? ''
+      : billing.currency + ':' + billing.rows.map(row => `${row.model}|${row.cacheMiss}|${row.cacheHit}|${row.output}`).join(';')
+  }
+
+  function liveSeqOf(sessionId: string): number | null {
+    const sessions = ctx.get('sessions') as { get?(id: string): { seq?: unknown } | undefined } | null | undefined
+    const seq = sessions?.get?.(sessionId)?.seq
+    return typeof seq === 'number' && Number.isFinite(seq) ? seq : null
+  }
+
+  async function build(sessionId: string, entry: Entry, billing: BillingRows, billingKey: string): Promise<SessionPanelValue> {
     const observation = await observe(sessionId)
     try {
       const projections = (observation.projections?.values ?? {}) as PanelProjections
@@ -211,6 +225,7 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
         stats: await statsOf(projections, sessionId, billing),
       }
       entry.value = value
+      entry.billingKey = billingKey
       entry.at = Date.now()
       entry.touchedAt = Date.now()
       return value
@@ -220,23 +235,29 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
   }
 
   async function get(sessionId: string, billing: BillingRows = { rows: [], currency: null }, fresh = false): Promise<SessionPanelValue> {
+    const billingKey = billingKeyOf(billing)
     const held = entries.get(sessionId)
     if (held !== undefined) {
       held.touchedAt = Date.now()
       if (held.loading !== null) return held.loading
-      if (!fresh && Date.now() - held.at < ANSWER_TTL_MS) return held.value
+      if (!fresh && held.at > 0 && held.billingKey === billingKey) {
+        if (Date.now() - held.at < ANSWER_TTL_MS) return held.value
+        const liveSeq = liveSeqOf(sessionId)
+        if (liveSeq !== null && liveSeq <= held.cursor + 1) return held.value
+      }
     }
     const entry: Entry = held ?? {
       value: { directory: null, context: null, outputs: [] },
       at: 0,
       cursor: -1,
+      billingKey,
       context: createPanelContext(),
       round: createPanelRound(),
       loading: null,
       touchedAt: Date.now(),
     }
     remember(sessionId, entry)
-    const work = build(sessionId, entry, billing)
+    const work = build(sessionId, entry, billing, billingKey)
     entry.loading = work
     try {
       return await work
