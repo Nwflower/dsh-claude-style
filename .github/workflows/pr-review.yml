@@ -1,0 +1,49 @@
+name: PR review intake
+
+# Assign a reviewer by the pull request's area, mirroring the issue intake
+# split: UI design and decisions go to the repository owner; existing UI
+# behavior, features, performance, fixes, docs and chores go to the maintainer.
+# The area is the explicit 类别 / Area tick in the pull request body, so a
+# keyword in the title or diff never misroutes a logic change to the owner.
+
+on:
+  pull_request:
+    types: [opened, ready_for_review, reopened]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  assign:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v9
+        with:
+          script: |
+            const pr = context.payload.pull_request
+            const { owner, repo } = context.repo
+            const author = pr.user.login
+            const body = pr.body || ''
+            // The template's 类别 / Area ticks are the only routing signal;
+            // an unticked body defaults to the maintainer, never the owner.
+            const design = /- \[x\]\s*界面设计与决策/i.test(body)
+            const impl = /- \[x\]\s*现有界面行为/.test(body)
+            const isDesign = design && !impl
+            const preferred = isDesign ? owner : 'Aa728848'
+            const fallback = isDesign ? 'Aa728848' : owner
+            // GitHub refuses a self-review request; hand it to the other seat.
+            const reviewer = author === preferred ? fallback : preferred
+            // Isolate a failed request so the explanatory comment still posts.
+            let requested = true
+            try {
+              await github.rest.pulls.requestReviewers({ owner, repo, pull_number: pr.number, reviewers: [reviewer] })
+            } catch { requested = false }
+            const areaZh = isDesign ? '界面设计与决策' : '实现与维护'
+            const areaEn = isDesign ? 'UI design and decisions' : 'implementation and maintenance'
+            const verbZh = requested ? '已请求' : '未能请求'
+            const verbEn = requested ? 'review requested from' : 'could not request review from'
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: pr.number,
+              body: `本 PR 判定为${areaZh}类，${verbZh} @${reviewer} 审查（界面设计与决策归仓库主；现有界面逻辑、性能、功能、修复与文档归维护者；可按实际改派）。\n\nClassified as ${areaEn}; ${verbEn} @${reviewer} (UI design and decisions to the repository owner; existing UI logic, performance, features, fixes and docs to the maintainer; reassign as needed).`
+            })
