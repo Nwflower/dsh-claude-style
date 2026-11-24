@@ -185,7 +185,7 @@ body[data-dsh-claude-style] .dsh-claude-panel-chip {
 body[data-dsh-claude-style] .dsh-claude-panel-skeleton,
 body[data-dsh-claude-style] .dsh-claude-panel-dot.is-pending {
   background: var(--dsw-alias-interactive-bg-hover-solid, rgba(0, 0, 0, 0.06));
-  animation: dsh-claude-pulse var(--dsh-claude-period-pulse) var(--dsh-claude-ease-in-out) var(--dsh-claude-loop-count, infinite);
+  animation: dsh-claude-pulse var(--dsh-claude-period-pulse) var(--dsh-claude-ease-in-out) var(--dsh-claude-loop-count, infinite) var(--dsh-claude-loop-play-state, running);
 }
 
 body[data-dsh-claude-style] .dsh-claude-panel-skeleton {

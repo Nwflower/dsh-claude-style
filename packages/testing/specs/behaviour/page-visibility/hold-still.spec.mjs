@@ -1,16 +1,12 @@
 /**
- * A window in the background holds still: every animation on the page pauses
- * where it stands, the skin's and the host's alike, and plays again from there
- * when the page comes back.
+ * Background visibility pauses the caret's blink. An open menu can still
+ * paint if the host accepts input while the page reports itself hidden.
  *
  * @capability page-visibility
- * @features caret, effort, home-ripple
- * @risk A window left in the background keeps producing frames, and coming back to it stalls for seconds while the compositor catches up.
+ * @features account, caret
+ * @risk Background animations keep drawing, or an opened menu stays transparent while the host accepts input.
  */
 import { spec } from '../../fixtures/behaviour.mjs'
-
-/** The animation a matrix dot draws on its own overlay, which `*` alone does not reach. */
-const OVERLAY = '::after'
 
 /**
  * Report the page off screen, then back, at the browser's boundary: a headless
@@ -26,25 +22,31 @@ async function reportPage(t, offScreen) {
   await t.settle()
 }
 
-/** How many animations the page is running, the ones drawn on an overlay included. */
-const running = (t) => t.page.evaluate(() => document.getAnimations().filter((animation) => animation.playState === 'running').length)
-
-export default spec({ page: 'effort' }, ({ test }) => {
-  test('the page holds every animation while it is off screen and plays them again on the return', async (t) => {
-    await t.page.click(t.surface('effort.trigger'))
-    await t.settle()
-    const dots = t.surface('effort.particle')
-    t.expectThat.equal(await t.read.computed(dots, 'animation-play-state', OVERLAY), 'running', 'a dot draws its overlay while the page is on screen')
-    const busy = await running(t)
-    t.expectThat.equal(busy > 0, true, `the page runs animations to hold (${busy})`)
-
+export default spec({ page: 'desktop' }, ({ test }) => {
+  test('the caret stops blinking off screen and resumes on return', async (t) => {
+    await t.prefs({ motion: 'full' })
+    await t.page.click(t.host('composer.input'))
+    const caret = t.surface('caret.layer')
+    await t.page.locator(caret).waitFor({ state: 'visible' })
+    t.expectThat.equal(await t.read.computed(caret, 'animation-play-state'), 'running', 'the caret blinks on screen')
     await reportPage(t, true)
-    t.expectThat.equal(await t.read.attribute('body', t.surface.attribute('skin.asleep')), '', 'the page wears the mark while it is off screen')
-    t.expectThat.equal(await t.read.computed(dots, 'animation-play-state', OVERLAY), 'paused', 'the overlay holds where it stands')
-    t.expectThat.equal(await running(t), 0, 'no animation on the page is left running')
-
+    t.expectThat.equal(await t.read.computed(caret, 'animation-play-state'), 'paused', 'the caret holds off screen')
     await reportPage(t, false)
-    t.expectThat.equal(await t.read.attribute('body', t.surface.attribute('skin.asleep')), null, 'the mark goes with the return')
-    t.expectThat.equal(await t.read.computed(dots, 'animation-play-state', OVERLAY), 'running', 'the overlay plays again')
+    t.expectThat.equal(await t.read.computed(caret, 'animation-play-state'), 'running', 'the caret blinks again')
+  })
+
+  test('the account menu paints while the page reports itself hidden', async (t) => {
+    await reportPage(t, true)
+    await t.page.locator('#host-account').click()
+    const menu = t.page.locator(t.surface('account.menu'))
+    await menu.waitFor({ state: 'visible' })
+    const opacity = await menu.evaluate(async (card) => {
+      const running = card.getAnimations().filter(animation => animation.playState === 'running')
+      await Promise.all(running.map(animation => animation.finished))
+      return getComputedStyle(card).opacity
+    })
+    t.expectThat.equal(await t.read.attribute('body', t.surface.attribute('skin.asleep')), '', 'the page still reports itself hidden')
+    t.expectThat.equal(opacity, '1', 'the account menu reaches full opacity')
+    await reportPage(t, false)
   })
 })

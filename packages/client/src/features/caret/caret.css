@@ -46,7 +46,7 @@ body[data-dsh-claude-style] [data-dsh-claude-caret-layer][data-dsh-claude-caret-
   will-change: transform;
   /* The native caret's own cycle: 500 ms lit, 500 ms dark. The script restarts
      it by name (CARET_BLINK_NAME), so the two spellings stay the same. */
-  animation: dsh-claude-caret-blink var(--dsh-claude-period-blink) step-end infinite;
+  animation: dsh-claude-caret-blink var(--dsh-claude-period-blink) step-end infinite var(--dsh-claude-loop-play-state, running);
 }
 
 body[data-dsh-claude-style] [data-dsh-claude-caret-layer][data-dsh-claude-caret-layer][data-dsh-claude-caret-visible] {

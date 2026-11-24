@@ -597,7 +597,7 @@ body[data-dsh-claude-style] :is(svg[data-state="ongoing"], .dsh-claude-ongoing-m
   background: var(--dsw-alias-label-secondary);
   /* The shared pulse, whose whole motion is opacity: a light that changes size
      with its brightness reads as a growing dot, not as a lamp. */
-  animation: dsh-claude-pulse var(--dsh-claude-period-breathe) var(--dsh-claude-ease-in-out) infinite;
+  animation: dsh-claude-pulse var(--dsh-claude-period-breathe) var(--dsh-claude-ease-in-out) infinite var(--dsh-claude-loop-play-state, running);
   display: inline-block;
   flex: none;
   color: transparent;
@@ -613,7 +613,7 @@ body[data-dsh-claude-style][data-dsh-claude-ongoing-indicator="ring"] svg[data-s
   border: 1.5px solid rgba(255, 255, 255, 0.18);
   border-top-color: var(--dsw-alias-label-primary);
   background: transparent;
-  animation: dsh-claude-ongoing-spin var(--dsh-claude-period-spin) linear infinite;
+  animation: dsh-claude-ongoing-spin var(--dsh-claude-period-spin) linear infinite var(--dsh-claude-loop-play-state, running);
   transform-origin: center center;
 }
 body[data-dsh-claude-style]:not([data-ds-dark-theme]) .dsh-claude-ongoing-mark[data-look="ring"],

@@ -176,7 +176,7 @@ body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-orbit .dsh-claude-chat
   bottom: auto;
   left: 50%;
   margin: -2px 0 0 -2px;
-  animation: dsh-claude-wait-dot-orbit-1 var(--dsh-claude-period-dot-orbit) linear infinite;
+  animation: dsh-claude-wait-dot-orbit-1 var(--dsh-claude-period-dot-orbit) linear infinite var(--dsh-claude-loop-play-state, running);
 }
 
 body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-orbit .dsh-claude-chat-wait-dot:nth-child(2) {
@@ -276,7 +276,7 @@ body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-orbit .dsh-claude-chat
    delay is negative and at least a period, so the wave never begins at the
    snippet's first frame — the hand-over finds the dots already on their way. */
 body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-bounce .dsh-claude-chat-wait-dot {
-  animation: dsh-claude-wait-dot var(--dsh-claude-period-dot-bounce) var(--dsh-claude-ease-standard) infinite alternate;
+  animation: dsh-claude-wait-dot var(--dsh-claude-period-dot-bounce) var(--dsh-claude-ease-standard) infinite alternate var(--dsh-claude-loop-play-state, running);
 }
 
 body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-bounce .dsh-claude-chat-wait-dot:nth-child(1) {
@@ -300,7 +300,7 @@ body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-bounce .dsh-claude-cha
    mirrored lines' motion twice — and every delay is negative, so each already
    stands on its own place. */
 body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-line .dsh-claude-chat-wait-dot {
-  animation: dsh-claude-wait-dot-line var(--dsh-claude-period-dot-line) var(--dsh-claude-ease-harmonic) infinite;
+  animation: dsh-claude-wait-dot-line var(--dsh-claude-period-dot-line) var(--dsh-claude-ease-harmonic) infinite var(--dsh-claude-loop-play-state, running);
   animation-delay: calc(-1 * var(--dsh-claude-period-dot-line) / 4);
 }
 

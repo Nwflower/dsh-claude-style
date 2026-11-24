@@ -512,7 +512,7 @@ body[data-dsh-claude-style] .dsh-claude-context-stats-skeleton-value {
   /* The count and the duration are the choice's (theme/chrome.css, D40): the
      shorthand reads --dsh-claude-loop-count, which that rule sets beside the
      longhands whose specificity outranks this one. */
-  animation: dsh-claude-pulse var(--dsh-claude-period-pulse) var(--dsh-claude-ease-in-out) var(--dsh-claude-loop-count, infinite);
+  animation: dsh-claude-pulse var(--dsh-claude-period-pulse) var(--dsh-claude-ease-in-out) var(--dsh-claude-loop-count, infinite) var(--dsh-claude-loop-play-state, running);
 }
 body[data-dsh-claude-style] .dsh-claude-context-stats-skeleton-label {
   width: 68% !important;

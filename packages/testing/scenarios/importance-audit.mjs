@@ -40,8 +40,7 @@ function mark(id) {
  * controls, the send flight, the wait badge's leave, the reveal of a panel, the
  * reasoning window whose markdown variant the walk's turn sometimes carries), a
  * state a pointer holds (a dragged effort knob, a file row swapping its
- * operation), the mark the page wears while it is off screen, which only a
- * hidden window carries, and the host's own mark for a theme transition. The
+ * operation), and the host's own mark for a theme transition. The
  * hover walk still covers the rules whose own trigger it can point at.
  */
 const TRANSIENT_SELECTORS = [
@@ -53,7 +52,7 @@ const TRANSIENT_SELECTORS = [
   '[data-dsh-claude-reader-hold]', '[data-dsh-claude-summary-running]', '[data-dsh-claude-wait-badge-leaving]',
   '[data-dsh-claude-file-merge]', '[data-dsh-claude-chat-reveal]', '[data-dsh-claude-roll]',
   '[data-dsh-claude-dragging]', '[data-dsh-claude-swapping]',
-  '[data-dsh-claude-reason-window]', mark('skin.asleep'),
+  '[data-dsh-claude-reason-window]',
   '[data-dsh-theme-transitioning]',
 ]
 

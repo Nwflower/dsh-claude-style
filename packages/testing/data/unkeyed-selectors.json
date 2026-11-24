@@ -29,12 +29,9 @@
       ]
     },
     {
-      "reason": "整页状态（窗口休眠、主题切换）要停下每个元素与伪元素上的动画和过渡，只在状态存在时命中",
+      "reason": "主题切换期间要停下每个元素的过渡",
       "selectors": [
-        "html[data-dsh-theme-transitioning] body[data-dsh-claude-style][data-dsh-theme-transitioning] *",
-        "body[data-dsh-claude-style][data-dsh-claude-asleep][data-dsh-claude-asleep] *",
-        "body[data-dsh-claude-style][data-dsh-claude-asleep][data-dsh-claude-asleep] *::before",
-        "body[data-dsh-claude-style][data-dsh-claude-asleep][data-dsh-claude-asleep] *::after"
+        "html[data-dsh-theme-transitioning] body[data-dsh-claude-style][data-dsh-theme-transitioning] *"
       ]
     },
     {

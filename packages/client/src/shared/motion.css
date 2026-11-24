@@ -172,7 +172,7 @@ body[data-dsh-claude-style] .dsh-claude-sweep-band {
   color: var(--dsw-alias-label-shimmer, var(--dsw-alias-label-primary));
   mask-image: var(--dsh-claude-band-mask);
   transform: translateX(-100%);
-  animation: dsh-claude-sweep-window var(--dsh-claude-period-host-sweep) var(--dsh-claude-ease-host-sweep) var(--dsh-claude-duration-host-sweep-delay) infinite;
+  animation: dsh-claude-sweep-window var(--dsh-claude-period-host-sweep) var(--dsh-claude-ease-host-sweep) var(--dsh-claude-duration-host-sweep-delay) infinite var(--dsh-claude-loop-play-state, running);
 }
 
 body[data-dsh-claude-style] .dsh-claude-sweep-glyphs {
@@ -182,7 +182,7 @@ body[data-dsh-claude-style] .dsh-claude-sweep-glyphs {
   white-space: nowrap;
   text-overflow: ellipsis;
   transform: translateX(100%);
-  animation: dsh-claude-sweep-glyphs var(--dsh-claude-period-host-sweep) var(--dsh-claude-ease-host-sweep) var(--dsh-claude-duration-host-sweep-delay) infinite;
+  animation: dsh-claude-sweep-glyphs var(--dsh-claude-period-host-sweep) var(--dsh-claude-ease-host-sweep) var(--dsh-claude-duration-host-sweep-delay) infinite var(--dsh-claude-loop-play-state, running);
 }
 
 /* A one-line owner's copy is generated from `data-text`, so the words are
@@ -222,6 +222,7 @@ body[data-dsh-claude-style][data-dsh-claude-status-motion="wash"] .dsh-claude-ch
   color: transparent;
   -webkit-text-fill-color: transparent;
   animation: dsh-claude-wash-hue var(--dsh-claude-period-wash-hue) steps(24, end) infinite, dsh-claude-wash-drift var(--dsh-claude-period-wash-drift) steps(24, end) infinite;
+  animation-play-state: var(--dsh-claude-loop-play-state, running);
 }
 
 /* The reader's animation choice (D40): the band is left out and the wash holds
