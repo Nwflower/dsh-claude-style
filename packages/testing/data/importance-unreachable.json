@@ -366,12 +366,10 @@
       ]
     },
     {
-      "reason": "设置页里的个别状态：出错、按下、展开、选好图片",
+      "reason": "设置页里的个别状态：出错、展开",
       "selectors": [
         "body[data-dsh-claude-style] .dsh-claude-settings-error",
-        "body[data-dsh-claude-style] .dsh-claude-settings-picker[aria-expanded=true]",
-        "body[data-dsh-claude-style] .dsh-claude-brand-image-preview>img",
-        "body[data-dsh-claude-style] .dsh-claude-brand-image-error"
+        "body[data-dsh-claude-style] .dsh-claude-settings-picker[aria-expanded=true]"
       ]
     },
     {

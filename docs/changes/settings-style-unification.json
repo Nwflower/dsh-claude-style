@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-24",
+  "group": "fixes",
+  "order": 1,
+  "external": false,
+  "zh": "统一设置页卡片、分段器、圆盘色板、焦点环、禁用态、字号缩放与自定义计费表弹窗样式，修复计费表在非对话页丢失样式及品牌组合区边框与字体令牌失效的问题",
+  "en": "Unify settings cards, segmented controls, colour discs, focus rings, disabled states, interface font scaling and the custom billing table modal, and fix missing billing styles outside active conversations and invalid brand lockup border and font tokens"
+}

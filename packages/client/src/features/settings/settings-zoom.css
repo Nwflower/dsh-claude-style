@@ -27,10 +27,6 @@ body[data-dsh-claude-style] .dsh-claude-settings-zoom-field {
   padding: 6px 8px;
 }
 
-body[data-dsh-claude-style] .dsh-claude-settings-zoom-field:focus-within {
-  border-color: var(--dsw-alias-brand-primary, #d97757);
-}
-
 body[data-dsh-claude-style] .dsh-claude-settings-zoom-input {
   width: 100%;
   min-width: 0;
@@ -51,30 +47,14 @@ body[data-dsh-claude-style] .dsh-claude-settings-zoom-unit {
   font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
 }
 
-/* 「恢复默认」：一个文字按钮，站在输入框左边，悬停时换成品牌色；页面的缩放已经是
-   默认值时它不出现。按下它把缩放写回设置表里的默认值。 */
+/* 「恢复默认」：站在输入框左边的静默文字按钮（共享基础规则在 settings-cards.css），
+   页面的缩放已经是默认值时它不出现。按下它把缩放写回设置表里的默认值。 */
 body[data-dsh-claude-style] .dsh-claude-settings-zoom-reset {
   flex: none;
-  padding: 0;
-  border: none;
-  background: transparent;
-  color: var(--dsw-alias-label-secondary);
-  font: inherit;
-  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 18px;
-  text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-
-body[data-dsh-claude-style] .dsh-claude-settings-zoom-reset:hover {
-  color: var(--dsw-alias-brand-primary);
 }
 
 body[data-dsh-claude-style] .dsh-claude-settings-zoom-reset:focus-visible {
-  outline: 2px solid var(--dsw-alias-brand-primary);
-  outline-offset: 2px;
   border-radius: 4px;
 }
 
@@ -131,5 +111,5 @@ body[data-dsh-claude-style] .dsh-claude-settings-zoom-range:focus {
 /* 键盘落在这条滑块上时，光环长在滑块自己身上：整条轨道外面再套一圈框会跟
    其他控件的描边撞在一起。 */
 body[data-dsh-claude-style] .dsh-claude-settings-zoom-range:focus-visible::-webkit-slider-thumb {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsw-alias-brand-primary) 28%, transparent);
+  box-shadow: 0 0 0 3px var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
 }

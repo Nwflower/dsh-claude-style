@@ -55,7 +55,7 @@ body[data-dsh-claude-style] .dsh-claude-scheme-name {
   border: 1px solid transparent;
   color: var(--dsw-alias-label-primary);
   font-family: var(--dsh-claude-font-serif);
-  font-size: 20px;
+  font-size: calc(20px * var(--dsh-claude-interface-font-scale, 1));
   font-weight: 500;
   line-height: 28px;
 }
@@ -210,20 +210,20 @@ body[data-dsh-claude-style] .dsh-claude-scheme-well:hover {
   background: var(--dsw-alias-interactive-bg-hover);
 }
 
-body[data-dsh-claude-style] .dsh-claude-scheme-well:has(:focus-visible) {
+body[data-dsh-claude-style] :is(.dsh-claude-scheme-well, .dsh-claude-context-ramp-swatch):has(:focus-visible) {
   box-shadow: 0 0 0 2px var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
 }
 
-/* The disc is the cards' disc at the line's size: a ring of the panel's face
-   inside a hairline, so a colour close to the panel still shows its edge. It
-   lifts under the pointer the way a card's disc does. */
-body[data-dsh-claude-style] .dsh-claude-scheme-disc {
+/* Shared 28px colour-picker disc: a ring of the surrounding surface inside a
+   hairline so colours close to the panel keep their edge, lifting on hover. */
+body[data-dsh-claude-style] :is(.dsh-claude-scheme-disc, .dsh-claude-context-ramp-swatch) {
   position: relative;
+  display: inline-flex;
   flex: none;
   box-sizing: border-box;
   width: 28px;
   height: 28px;
-  border: 2px solid var(--dsw-alias-bg-overlay);
+  border: 2px solid var(--dsh-claude-disc-ring, var(--dsw-alias-bg-overlay));
   border-radius: 50%;
   corner-shape: round;
   background-color: currentColor;
@@ -232,12 +232,12 @@ body[data-dsh-claude-style] .dsh-claude-scheme-disc {
   transition: scale var(--dsh-claude-duration-enter) var(--dsh-claude-ease-recoil);
 }
 
-body[data-dsh-claude-style] .dsh-claude-scheme-well:hover > .dsh-claude-scheme-disc {
+body[data-dsh-claude-style] :is(.dsh-claude-scheme-well:hover > .dsh-claude-scheme-disc, .dsh-claude-context-ramp-swatch:hover) {
   scale: var(--dsh-claude-scale-lift);
   transition-timing-function: var(--dsh-claude-ease-settle);
 }
 
-body[data-dsh-claude-style] .dsh-claude-scheme-disc-input {
+body[data-dsh-claude-style] :is(.dsh-claude-scheme-disc-input, .dsh-claude-context-ramp-color-input) {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -255,7 +255,7 @@ body[data-dsh-claude-style] .dsh-claude-scheme-hex {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--dsh-claude-font-code);
-  font-size: 12px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 16px;
 }
 
@@ -263,7 +263,7 @@ body[data-dsh-claude-style] .dsh-claude-scheme-hex {
 body[data-dsh-claude-style] .dsh-claude-scheme-derived {
   flex: none;
   color: var(--dsw-alias-label-tertiary);
-  font-size: 11px;
+  font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 16px;
   white-space: nowrap;
 }
@@ -273,7 +273,7 @@ body[data-dsh-claude-style] .dsh-claude-scheme-contrast {
   padding: 1px 7px;
   border-radius: 999px;
   color: var(--dsw-alias-label-tertiary);
-  font-size: 11px;
+  font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 16px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -344,7 +344,10 @@ body[data-dsh-claude-style] .dsh-claude-scheme-foot-gap {
 }
 
 /* The foot's buttons are the settings button plate at the card's smaller type. */
-body[data-dsh-claude-style] .dsh-claude-scheme-button {
+body[data-dsh-claude-style] :is(.dsh-claude-scheme-button, .dsh-claude-billing-row-button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 28px;
   padding: 0 12px;
   font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
@@ -353,9 +356,14 @@ body[data-dsh-claude-style] .dsh-claude-scheme-button {
 }
 
 body[data-dsh-claude-style] .dsh-claude-scheme-primary {
-  border-color: var(--dsw-alias-button-primary-fill);
-  background: var(--dsw-alias-button-primary-fill);
+  --dsh-claude-scheme-primary-fill: var(--dsw-alias-button-primary-fill);
+  border-color: var(--dsh-claude-scheme-primary-fill);
+  background: var(--dsh-claude-scheme-primary-fill);
   color: var(--dsw-alias-label-primary-foreground);
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-primary:hover:not(:disabled) {
+  --dsh-claude-scheme-primary-fill: var(--dsw-alias-button-primary-hover);
 }
 
 /* The scheme the page paints says so where its button stood. */

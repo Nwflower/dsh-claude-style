@@ -21,7 +21,7 @@ body[data-dsh-claude-style] .dsh-claude-palette-card-actions {
 
 /* The smallest type, for what is read once: a card's tag, the limit on records
    and the editor's note on its figures. */
-body[data-dsh-claude-style] :is(.dsh-claude-palette-card-tag, .dsh-claude-preview-card-tag, .dsh-claude-scheme-limit, .dsh-claude-scheme-note) {
+body[data-dsh-claude-style] :is(.dsh-claude-palette-card-tag, .dsh-claude-preview-card-tag, .dsh-claude-scheme-limit, .dsh-claude-scheme-note, .dsh-claude-billing-units, .dsh-claude-billing-row-head, .dsh-claude-billing-limit, .dsh-claude-billing-hint) {
   color: var(--dsw-alias-label-tertiary);
   font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 16px;
@@ -60,22 +60,11 @@ body[data-dsh-claude-style] .dsh-claude-palette-swatch:is(:hover, :focus-visible
   opacity: 1;
 }
 
-/* The manager's door beside the colour switch: the row's quiet text button. */
+/* The manager's door beside the colour switch: the row's quiet text button (settings-cards.css). */
 body[data-dsh-claude-style] .dsh-claude-palette-manage {
   margin-right: 4px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--dsw-alias-label-tertiary);
-  font: inherit;
   font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 20px;
-  cursor: pointer;
-  transition: color var(--dsh-claude-timing-feedback);
-}
-
-body[data-dsh-claude-style] .dsh-claude-palette-manage:hover {
-  color: var(--dsw-alias-label-secondary);
 }
 
 /* ---------- the managers' frame (scheme-modal.ts) ---------- */
@@ -85,13 +74,14 @@ body[data-dsh-claude-style] .dsh-claude-palette-manage:hover {
    leaving mark is written by the frame's close, which takes the manager off
    the page when the panel's exit ends. */
 body[data-dsh-claude-style] .dsh-claude-scheme-modal {
+  container-type: inline-size;
   position: fixed;
   inset: 0;
   z-index: var(--dsh-claude-layer-takeover);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(16px, 5vh, 48px) 24px;
+  padding: clamp(16px, calc(var(--dsh-claude-page-height, 100vh) * 0.05), 48px) 24px;
   background: rgba(20, 20, 19, 0.28);
   font-family: var(--dsw-font-family);
   color: var(--dsw-alias-label-primary);
@@ -183,12 +173,16 @@ body[data-dsh-claude-style] .dsh-claude-scheme-rail {
   background: color-mix(in srgb, var(--dsw-alias-label-primary) 3%, transparent);
 }
 
-body[data-dsh-claude-style] .dsh-claude-scheme-rail-title {
+body[data-dsh-claude-style] :is(.dsh-claude-scheme-rail-title, .dsh-claude-billing-title) {
   margin: 0;
-  padding: 0 10px 12px;
-  font-size: 15px;
+  font-family: var(--dsw-font-family);
+  font-size: calc(15px * var(--dsh-claude-interface-font-scale, 1));
   font-weight: 600;
   line-height: 22px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-scheme-rail-title {
+  padding: 0 10px 12px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-scheme-rail-scroll {

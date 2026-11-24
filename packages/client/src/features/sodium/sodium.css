@@ -1,8 +1,0 @@
-/* The sodium row's live count (D109): its own line under the row's description,
-   in the accent the settings page already gives a row's note, so the number of
-   rules the rewrite holds reads at a glance without opening the tooltip. */
-body[data-dsh-claude-style] .dsh-claude-sodium-rules {
-  display: block;
-  margin-top: 2px;
-  color: var(--dsw-alias-state-business-primary);
-}

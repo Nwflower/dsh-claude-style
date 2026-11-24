@@ -137,7 +137,7 @@ function sample(layout: Prefs['homeLayout']) {
         sampleComposer(layout),
       ),
     ),
-    React.createElement('span', { key: 'name', className: 'dsh-claude-home-card-name', 'aria-hidden': 'true' }, copy(NAMES[layout])),
+    React.createElement('span', { key: 'name', className: 'dsh-claude-settings-card-label', 'aria-hidden': 'true' }, copy(NAMES[layout])),
   ]
 }
 

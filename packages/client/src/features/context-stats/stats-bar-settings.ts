@@ -7,15 +7,14 @@ import {
   STATS_POSITION_INLINE,
   STATS_POSITION_OFF,
 } from '../../constants'
-import { PreviewCards } from '../../shared/preview-cards'
+import { useDarkTheme } from '../../shared/page-state'
+import { PreviewCards, SettingsSubField } from '../../shared/preview-cards'
 import { SEGMENT_CLASS } from '../../shared/segment-control'
 import { ClaudeStyleSegmentGroup } from '../../shared/segment-group'
 import { ClaudeStyleSwitch } from '../../shared/settings-switch'
 import {
   ContextMeterSample,
-  SettingsSubField,
   resolveContextRampStops,
-  useContextDarkTheme,
 } from './context-ramp-settings'
 import { copy } from './copy'
 import type { ContextRampStop } from '@dsh-claude-style/contracts/context-ramp'
@@ -179,7 +178,7 @@ function sampleComposer(
 /** Expandable configurator below the statistics-bar switch while enabled. */
 export function StatsBarPicker(props: SettingsRowView) {
   const { prefs, write, disabled } = props
-  const dark = useContextDarkTheme()
+  const dark = useDarkTheme()
   if (prefs.statsPosition === STATS_POSITION_OFF) return null
 
   const activeLayout: ActiveBarLayout = prefs.statsPosition === STATS_POSITION_INLINE ? STATS_POSITION_INLINE : STATS_POSITION_FOOTER
@@ -270,7 +269,7 @@ export function StatsBarPicker(props: SettingsRowView) {
         title: copy('statsMetricsTitle'),
         desc: copy('statsMetricsDesc'),
         className: 'dsh-claude-stats-bar-metrics-field',
-        footer: costUnbilled
+        note: costUnbilled
           ? React.createElement('span', { className: 'dsh-claude-stats-bar-hint' }, copy('statsCostBillingOffNote'))
           : null,
       },

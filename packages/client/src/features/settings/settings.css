@@ -124,7 +124,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-repo:focus-visible::before {
 }
 
 body[data-dsh-claude-style] .dsh-claude-settings-repo:focus-visible {
-  outline: 2px solid var(--dsw-alias-brand-primary, #d97757);
+  outline: 2px solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
   outline-offset: 1px;
 }
 
@@ -270,10 +270,10 @@ body[data-dsh-claude-style] [data-dsh-claude-settings-scroller] {
 }
 
 body[data-dsh-claude-style] .dsh-claude-settings-row-sub[data-disabled] {
-  opacity: .5;
+  opacity: 0.5;
 }
 
-body[data-dsh-claude-style] .dsh-claude-settings-row-sub[data-disabled] :is(button, input) {
+body[data-dsh-claude-style] .dsh-claude-settings-row-sub[data-disabled] :is(button, input, [role="button"]) {
   cursor: not-allowed;
 }
 
@@ -317,7 +317,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-inline-control {
 body[data-dsh-claude-style] .dsh-claude-settings-inline-control [role="status"] {
   max-width: 240px;
   color: var(--dsw-alias-label-tertiary);
-  font-size: 12px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 16px;
 }
 
@@ -338,6 +338,25 @@ body[data-dsh-claude-style] .dsh-claude-settings-row-block > .dsh-claude-setting
   flex: none;
   align-self: stretch;
   padding-right: 0;
+}
+
+/* Sub-fields inside an expanded block configurator share the row's title,
+   description and note rhythm without adding hairlines of their own. */
+body[data-dsh-claude-style] .dsh-claude-settings-subfield {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  min-width: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-subfield-text {
+  flex: 1 1 200px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 /* The row title is UI text in the host's row metrics: the sans face, not the
@@ -375,12 +394,12 @@ body[data-dsh-claude-style] .dsh-claude-settings-row-tag {
    stays readable and a line in the accent colour says who owns it or what it
    waits for. The reader's stored answer is what the control shows, so it already
    tells what will happen once that changes. */
-body[data-dsh-claude-style] .dsh-claude-settings-row button:disabled {
+body[data-dsh-claude-style] :is(.dsh-claude-settings-row:not(.dsh-claude-settings-row-sub) :is(button:disabled, input:disabled, [role="button"][aria-disabled="true"]), .dsh-claude-settings-button:disabled) {
   cursor: not-allowed;
-  opacity: .45;
+  opacity: 0.5;
 }
 
-body[data-dsh-claude-style] .dsh-claude-settings-row-note {
+body[data-dsh-claude-style] :is(.dsh-claude-settings-row-note, .dsh-claude-sodium-rules, .dsh-claude-stats-bar-hint) {
   display: block;
   margin-top: 2px;
   color: var(--dsw-alias-state-business-primary);
@@ -466,9 +485,7 @@ body[data-dsh-claude-style] .dsh-claude-settings-switch[data-moved]:not([data-on
 /* The row's three bordered controls — the username input, the quick-provider
    trigger and the custom brand rows' buttons — share one plate; each rule
    below adds only its own sizing and cursor. */
-body[data-dsh-claude-style] .dsh-claude-settings-input,
-body[data-dsh-claude-style] .dsh-claude-settings-picker,
-body[data-dsh-claude-style] .dsh-claude-settings-button {
+body[data-dsh-claude-style] :is(.dsh-claude-settings-input, .dsh-claude-settings-picker, .dsh-claude-settings-button, .dsh-claude-billing-row-button, .dsh-claude-context-ramp-remove) {
   box-sizing: border-box;
   border: 1px solid var(--dsw-alias-border-l1);
   border-radius: 8px;
@@ -489,8 +506,8 @@ body[data-dsh-claude-style] .dsh-claude-settings-input {
   outline: none;
 }
 
-body[data-dsh-claude-style] .dsh-claude-settings-input:focus {
-  border-color: var(--dsw-alias-brand-primary, #d97757);
+body[data-dsh-claude-style] .dsh-claude-settings-input:is(:focus, :focus-within) {
+  border-color: var(--dsw-focus-ring-color, var(--dsw-alias-border-l3));
 }
 
 body[data-dsh-claude-style] .dsh-claude-settings-input::placeholder {
@@ -516,65 +533,13 @@ body[data-dsh-claude-style] .dsh-claude-settings-picker[aria-expanded="true"] {
 
 /* The custom brand rows' buttons (settings-brand.ts) are plates of the same
    family as the input and the picker trigger, sized to their label. */
-body[data-dsh-claude-style] .dsh-claude-settings-button {
+body[data-dsh-claude-style] :is(.dsh-claude-settings-button, .dsh-claude-billing-row-button, .dsh-claude-context-ramp-remove) {
   flex: none;
   white-space: nowrap;
   cursor: pointer;
 }
-body[data-dsh-claude-style] .dsh-claude-settings-button:hover:not(:disabled) {
+body[data-dsh-claude-style] :is(.dsh-claude-settings-button, .dsh-claude-billing-row-button, .dsh-claude-context-ramp-remove):hover:not(:disabled) {
   border-color: var(--dsw-alias-border-l2);
-}
-body[data-dsh-claude-style] .dsh-claude-settings-button:focus-visible {
-  outline: 2px solid var(--dsw-alias-brand-primary, #d97757);
-  outline-offset: 1px;
-}
-body[data-dsh-claude-style] .dsh-claude-settings-button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-/* One brand image: a preview tile, whose transparent parts show the row's
-   canvas, then its buttons; a refusal is written under them in the page's
-   error colour. */
-body[data-dsh-claude-style] .dsh-claude-brand-image {
-  flex: none;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-  max-width: 55%;
-}
-body[data-dsh-claude-style] .dsh-claude-brand-image-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-body[data-dsh-claude-style] .dsh-claude-brand-image-preview {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 32px;
-  min-width: 32px;
-  max-width: 128px;
-  box-sizing: border-box;
-  padding: 4px;
-  border: 1px solid var(--dsw-alias-border-l1);
-  border-radius: 8px;
-}
-body[data-dsh-claude-style] .dsh-claude-brand-image-preview[data-empty] {
-  border-style: dashed;
-}
-body[data-dsh-claude-style] .dsh-claude-brand-image-preview > img {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-body[data-dsh-claude-style] .dsh-claude-brand-image-error {
-  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 18px;
-  color: var(--dsw-alias-state-error-primary, #c0392b);
-  text-align: right;
 }
 
 /* The quick-provider picker's card (packages/client/src/features/settings/quick-providers.ts):

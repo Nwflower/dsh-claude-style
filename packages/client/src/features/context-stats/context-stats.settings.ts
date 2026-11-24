@@ -8,7 +8,8 @@ import {
   CONTEXT_RAMP_MODE_CUSTOM,
   CONTEXT_RAMP_MODE_DEFAULT,
 } from '../../constants'
-import { PreviewCards } from '../../shared/preview-cards'
+import { useDarkTheme } from '../../shared/page-state'
+import { PreviewCards, SettingsSubField } from '../../shared/preview-cards'
 import { SEGMENT_CLASS } from '../../shared/segment-control'
 import { ClaudeStyleSegmentGroup } from '../../shared/segment-group'
 import { ClaudeStyleSwitch } from '../../shared/settings-switch'
@@ -16,11 +17,9 @@ import { openBillingEditor, unpricedModels } from './billing-editor'
 import {
   ContextMeterSample,
   ContextRampEditor,
-  SettingsSubField,
   resolveContextRampStops,
   serializeContextRamp,
   useAnimatedMeterPercent,
-  useContextDarkTheme,
 } from './context-ramp-settings'
 import { copy } from './copy'
 import { StatsBarPicker, StatsBarToggle } from './stats-bar-settings'
@@ -58,7 +57,7 @@ export const controls: SettingsControlsOf<typeof manifest> = {
 
 function ContextDisplayPicker(props: SettingsRowView) {
   const { prefs, write, disabled } = props
-  const dark = useContextDarkTheme()
+  const dark = useDarkTheme()
   const previewPercent = useAnimatedMeterPercent(disabled, prefs.motion)
   const [draftStops, setDraftStops] = React.useState<ContextRampStop[] | null>(null)
   const activeStops = draftStops ?? resolveContextRampStops(prefs.contextRampMode, prefs.contextRamp, dark)

@@ -2,7 +2,8 @@ import * as React from 'react'
 import { DEPLOY_ROOT, assetUrlUnder } from '@dsh-claude-style/contracts/routes'
 import { CRAB_IDLE_SHEET_URL, DEEPY_SHEET_URLS, WHALE_GIRL_SHEET_URLS } from 'virtual:dsh-claude-style/generated'
 import { MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_OFF, MASCOT_WHALEGIRL } from '../../constants'
-import { motionReduced, resolveMascot } from '../../core/prefs'
+import { resolveMascot } from '../../core/prefs'
+import { useMotionReduced } from '../../shared/page-state'
 import { PREVIEW_CARD_CLASS, PREVIEW_PICKER_CLASS, activateOnCardKey } from '../../shared/preview-cards'
 import { ClaudeStyleSwitch } from '../../shared/settings-switch'
 import { copy } from './copy'
@@ -130,14 +131,7 @@ function MascotToggle(props: SettingsRowView) {
 
 function MascotPicker(props: SettingsRowView) {
   const { prefs, write, disabled } = props
-  const [reduced, setReduced] = React.useState(motionReduced)
-
-  React.useEffect(() => {
-    const sync = () => setReduced(motionReduced())
-    const observer = new MutationObserver(sync)
-    observer.observe(document.body, { attributes: true, attributeFilter: ['data-dsh-claude-motion'] })
-    return () => observer.disconnect()
-  }, [])
+  const reduced = useMotionReduced()
 
   if (prefs.mascot === MASCOT_OFF) return null
 

@@ -9,6 +9,8 @@ import type { BrandImage } from '../../shared/custom-brand'
 import { readPrefs, savePrefs } from '../../core/prefs'
 import { brandingInkOf, brandingRecord, storeBrandingPresetPatch } from '../../shared/branding-presets'
 import { SeatArt, useBrandImages, WordArt, wordModeOf } from './brand-art'
+import { Glyph } from './palette-parts'
+import type { SettingsGlyphName } from '../../shared/settings-glyphs'
 import type { Prefs } from '../../constants'
 import { copy } from './copy'
 
@@ -93,24 +95,9 @@ function SeatPicker(props: { seat: Seat }) {
   })
 }
 
-/** The icon a seat draws over itself while the pointer is on it. */
-const ICONS = {
-  upload: ['M8 10.6V3.4', 'M5.1 6.3 8 3.4l2.9 2.9', 'M3.3 10.4v1.4c0 .5.4.9.9.9h7.6c.5 0 .9-.4.9-.9v-1.4'],
-  pencil: ['M11.1 2.9l2 2-7.4 7.4-2.6.6.6-2.6 7.4-7.4Z'],
-}
-
-/** One icon drawn in the seats' line. */
-function Icon(props: { icon: keyof typeof ICONS }) {
-  return React.createElement(
-    'svg',
-    { viewBox: '0 0 16 16', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': 'true' },
-    ICONS[props.icon].map((d, at) => React.createElement('path', { key: at, d })),
-  )
-}
-
 /** The plate a seat draws over itself: a circle of the panel's fill, a hairline and the icon in the accent. */
-function SeatPlate(props: { icon: keyof typeof ICONS }) {
-  return React.createElement('span', { className: 'dsh-claude-brand-plate dsh-claude-brand-seat-plate', 'aria-hidden': 'true' }, React.createElement(Icon, { icon: props.icon }))
+function SeatPlate(props: { icon: Extract<SettingsGlyphName, 'upload' | 'pencil'> }) {
+  return React.createElement('span', { className: 'dsh-claude-brand-plate dsh-claude-brand-seat-plate', 'aria-hidden': 'true' }, React.createElement(Glyph, { name: props.icon }))
 }
 
 /** The button that offers the name seat a wordmark image, in the seats' own plate. */
@@ -124,7 +111,7 @@ function ImageButton(props: { seat: Seat }) {
       'aria-label': copy('brandWordmarkPick'),
       onClick: props.seat.open,
     },
-    React.createElement(Icon, { icon: 'upload' }),
+    React.createElement(Glyph, { name: 'upload' }),
   )
 }
 

@@ -1,16 +1,8 @@
-/* @composer-gate */
 /* ---------- the custom price table ---------- */
-/* The settings row's control and the editor it opens (billing-editor.ts).
- *
- * The editor stands on <body>, over everything the page draws: a modal the
- * settings dialog cannot clip, placed against the window rather than the dialog.
- * Its card is the skin's card language — 12px radius, one hairline, the smallest
- * type for the rates.
- *
- * The card states the properties that carry its shape — its side inset, the
- * row's columns, the row's card chrome and the small line's type — and the
- * narrow block at the end only restates those plus the places a row turns into a
- * card. No rule is written twice.
+/* Settings row trigger and single-column table layout inside the shared modal
+ * frame (`shared/modal-host.ts` + `features/settings/palette-schemes.css`).
+ * Backdrop, 16px panel surface, entrance/exit motion, corner close button,
+ * inputs and action buttons come from the shared settings and modal sheets.
  */
 
 body[data-dsh-claude-style] .dsh-claude-billing-row-control {
@@ -21,132 +13,36 @@ body[data-dsh-claude-style] .dsh-claude-billing-row-control {
 }
 
 body[data-dsh-claude-style] .dsh-claude-billing-row-summary {
-  color: var(--dsw-alias-label-tertiary, #91888a);
-  font-size: 12px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 18px;
   font-variant-numeric: tabular-nums;
 }
 
-/* The small line: the card's unit note, its row limit and its hint share one. */
-body[data-dsh-claude-style] :is(.dsh-claude-billing-units, .dsh-claude-billing-row-head, .dsh-claude-billing-actions > span, .dsh-claude-billing-hint) {
-  color: var(--dsw-alias-label-tertiary, #91888a);
-  font-size: 11px;
-  line-height: 16px;
-}
-
-/* One button face for the row's "编辑" and the card's own buttons. */
-body[data-dsh-claude-style] :is(.dsh-claude-billing-row-button, .dsh-claude-billing-button) {
-  appearance: none;
-  flex: none;
-  height: 28px;
-  padding: 0 12px;
-  border: 1px solid var(--dsw-alias-border-l1, #e9e9e9);
-  border-radius: 8px;
-  background: var(--dsw-alias-bg-layer-1, #ffffff);
-  color: var(--dsw-alias-label-primary, #161616);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-body[data-dsh-claude-style] :is(.dsh-claude-billing-row-button, .dsh-claude-billing-button):hover:not(:disabled) {
-  border-color: var(--dsw-alias-border-l2, #dedede);
-}
-
-body[data-dsh-claude-style] :is(.dsh-claude-billing-row-button, .dsh-claude-billing-button):focus-visible {
-  outline: 2px solid var(--dsw-alias-brand-primary, #d97757);
-  outline-offset: 1px;
-}
-
-body[data-dsh-claude-style] :is(.dsh-claude-billing-row-button, .dsh-claude-billing-button):disabled,
-body[data-dsh-claude-style] .dsh-claude-billing-add:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-body[data-dsh-claude-style] .dsh-claude-billing-save {
-  border-color: var(--dsw-alias-button-primary-fill, #161616);
-  background: var(--dsw-alias-button-primary-fill, #161616);
-  color: var(--dsw-alias-label-primary-foreground, #ffffff);
-}
-
+/* Single-column dialog variant over `.dsh-claude-scheme-panel`. */
 body[data-dsh-claude-style] .dsh-claude-billing-card {
-  position: fixed;
-  inset: 0;
-  z-index: var(--dsh-claude-layer-takeover);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(20, 20, 19, 0.28);
-  font-family: var(--dsw-font-family);
-  color: var(--dsw-alias-label-primary, #161616);
-  --dsh-claude-billing-pad: 20px;
+  --dsh-claude-billing-pad: 24px;
   --dsh-claude-billing-columns: minmax(0, 1fr) 96px 96px 96px 26px;
   --dsh-claude-billing-row-pad: 4px 0;
-  --dsh-claude-billing-add-border: 0;
-}
-
-body[data-dsh-claude-style] .dsh-claude-billing-panel {
   display: flex;
   flex-direction: column;
   width: 720px;
-  max-width: 100%;
-  max-height: 100%;
-  box-sizing: border-box;
-  border: 1px solid var(--dsw-alias-border-l1, #e9e9e9);
-  border-radius: 14px;
-  background: var(--dsw-alias-bg-overlay, #ffffff);
-  box-shadow: 0 24px 64px rgba(20, 20, 19, 0.2), 0 4px 12px rgba(20, 20, 19, 0.1);
-  overflow: hidden;
+  height: auto;
+  max-height: min(640px, 100%);
 }
 
 body[data-dsh-claude-style] .dsh-claude-billing-head {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 18px var(--dsh-claude-billing-pad) 12px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px calc(var(--dsh-claude-billing-pad) + 32px) 12px var(--dsh-claude-billing-pad);
 }
 
-body[data-dsh-claude-style] .dsh-claude-billing-texts {
-  flex: 1;
-  min-width: 0;
-}
-
-body[data-dsh-claude-style] .dsh-claude-billing-head h3 {
-  margin: 0 0 2px;
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 22px;
-}
-
-body[data-dsh-claude-style] .dsh-claude-billing-head p {
+body[data-dsh-claude-style] .dsh-claude-billing-desc {
   margin: 0;
-  color: var(--dsw-alias-label-tertiary, #91888a);
-  font-size: 12px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 18px;
-}
-
-/* The card's two icon buttons: the close in its head, the remove at each row's end. */
-body[data-dsh-claude-style] :is(.dsh-claude-billing-close, .dsh-claude-billing-remove) {
-  appearance: none;
-  flex: none;
-  width: 26px;
-  height: 26px;
-  padding: 0;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--dsw-alias-label-tertiary, #91888a);
-  font: inherit;
-  font-size: 14px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-body[data-dsh-claude-style] .dsh-claude-billing-close:hover {
-  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.06));
-  color: var(--dsw-alias-label-primary, #161616);
 }
 
 body[data-dsh-claude-style] .dsh-claude-billing-units {
@@ -162,6 +58,13 @@ body[data-dsh-claude-style] .dsh-claude-billing-units > span:first-child {
 body[data-dsh-claude-style] .dsh-claude-billing-grid {
   padding: 0 var(--dsh-claude-billing-pad);
   overflow-y: auto;
+  min-height: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-billing-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-billing-row {
@@ -183,41 +86,36 @@ body[data-dsh-claude-style] .dsh-claude-billing-row-head > span:first-child {
   text-align: left;
 }
 
-body[data-dsh-claude-style] .dsh-claude-billing-field {
-  box-sizing: border-box;
-  width: 100%;
+body[data-dsh-claude-style] .dsh-claude-billing-model,
+body[data-dsh-claude-style] .dsh-claude-billing-num {
   min-width: 0;
-  height: 30px;
-  padding: 0 9px;
-  border: 1px solid var(--dsw-alias-border-l1, #e9e9e9);
-  border-radius: 7px;
-  background: var(--dsw-alias-bg-base, #ffffff);
-  color: var(--dsw-alias-label-primary, #161616);
-  font: inherit;
-  font-size: 12px;
 }
 
-body[data-dsh-claude-style] .dsh-claude-billing-num .dsh-claude-billing-field {
+body[data-dsh-claude-style] .dsh-claude-billing-field {
+  width: 100%;
+  max-width: none;
+  height: 30px;
+  padding: 0 9px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
+}
+
+body[data-dsh-claude-style] .dsh-claude-billing-num > .dsh-claude-billing-field {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-body[data-dsh-claude-style] .dsh-claude-billing-field:focus {
-  outline: none;
-  border-color: var(--dsw-alias-brand-primary, #d97757);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsw-alias-brand-primary, #d97757) 16%, transparent);
-}
-
-body[data-dsh-claude-style] .dsh-claude-billing-num > span {
+body[data-dsh-claude-style] .dsh-claude-billing-rate-label {
   display: var(--dsh-claude-billing-rate-label, none);
   margin-bottom: 3px;
-  color: var(--dsw-alias-label-tertiary, #91888a);
-  font-size: 10px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: calc(10px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 14px;
 }
 
-body[data-dsh-claude-style] .dsh-claude-billing-close {
-  font-size: 15px;
+body[data-dsh-claude-style] .dsh-claude-billing-remove {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-billing-remove:hover {
@@ -229,33 +127,20 @@ body[data-dsh-claude-style] .dsh-claude-billing-actions {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px var(--dsh-claude-billing-pad) 4px;
+  padding: 8px var(--dsh-claude-billing-pad) 4px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-billing-add {
-  appearance: none;
-  flex: 0;
-  height: 28px;
-  padding: 0 10px;
-  border: var(--dsh-claude-billing-add-border);
-  border-radius: 7px;
-  background: transparent;
-  color: var(--dsw-alias-label-secondary, #5c5852);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
+  height: 30px;
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
 }
 
-body[data-dsh-claude-style] .dsh-claude-billing-add:hover:not(:disabled) {
-  background: var(--dsw-alias-interactive-bg-hover, rgba(0, 0, 0, 0.06));
-}
-
-body[data-dsh-claude-style] .dsh-claude-billing-actions > span {
+body[data-dsh-claude-style] .dsh-claude-billing-limit {
   margin-left: auto;
 }
 
 body[data-dsh-claude-style] .dsh-claude-billing-hint {
-  padding: 6px var(--dsh-claude-billing-pad) 0;
+  padding: 4px var(--dsh-claude-billing-pad) 0;
 }
 
 body[data-dsh-claude-style] .dsh-claude-billing-foot {
@@ -263,51 +148,45 @@ body[data-dsh-claude-style] .dsh-claude-billing-foot {
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  padding: 16px var(--dsh-claude-billing-pad) 18px;
+  margin-top: 12px;
+  padding: 14px var(--dsh-claude-billing-pad) 18px;
+  border-top: 0.5px solid var(--dsh-claude-divider);
 }
 
-/* ---------- narrow: one card per row ---------- */
-/* A page under 760px folds a row into a card: the model above, the three rates
-   side by side with their own labels. The mark is the page's own width
-   (shared/page-scale.ts), so a zoomed page folds where it would at 100%. */
-body[data-dsh-claude-style][data-dsh-claude-page-under-768] .dsh-claude-billing-card {
-  padding: 12px;
-  --dsh-claude-billing-pad: 14px;
-  --dsh-claude-billing-columns: repeat(3, minmax(0, 1fr)) 24px;
-  --dsh-claude-billing-row-pad: 10px 8px 10px 10px;
-  --dsh-claude-billing-card-border: 1px solid var(--dsw-alias-border-l2, #dedede);
-  --dsh-claude-billing-card-radius: 10px;
-  --dsh-claude-billing-card-fill: var(--dsw-alias-bg-layer-1, #fafafa);
-  --dsh-claude-billing-rate-label: block;
-  --dsh-claude-billing-add-border: 1px solid var(--dsw-alias-border-l1, #e9e9e9);
-}
+/* Narrow modal container: fold each model row into a stacked card. */
+@container (max-width: 680px) {
+  body[data-dsh-claude-style] .dsh-claude-billing-card {
+    --dsh-claude-billing-pad: 16px;
+    --dsh-claude-billing-columns: repeat(3, minmax(0, 1fr)) 26px;
+    --dsh-claude-billing-row-pad: 10px 8px 10px 10px;
+    --dsh-claude-billing-card-border: 1px solid var(--dsw-alias-border-l1);
+    --dsh-claude-billing-card-radius: 10px;
+    --dsh-claude-billing-card-fill: var(--dsw-alias-bg-layer-1);
+    --dsh-claude-billing-rate-label: block;
+  }
 
-body[data-dsh-claude-style][data-dsh-claude-page-under-768] .dsh-claude-billing-units > span:last-child {
-  display: none;
-}
+  body[data-dsh-claude-style] .dsh-claude-billing-rows {
+    gap: 8px;
+  }
 
-body[data-dsh-claude-style][data-dsh-claude-page-under-768] .dsh-claude-billing-row-head {
-  display: none;
-}
+  body[data-dsh-claude-style] .dsh-claude-billing-units > span:last-child,
+  body[data-dsh-claude-style] .dsh-claude-billing-row-head {
+    display: none;
+  }
 
-body[data-dsh-claude-style][data-dsh-claude-page-under-768] .dsh-claude-billing-model {
-  grid-column: 1 / 4;
-  grid-row: 1;
-}
+  body[data-dsh-claude-style] .dsh-claude-billing-model {
+    grid-column: 1 / 4;
+    grid-row: 1;
+  }
 
-body[data-dsh-claude-style][data-dsh-claude-page-under-768] .dsh-claude-billing-remove {
-  grid-column: 4;
-  grid-row: 1;
-  align-self: center;
-  justify-self: end;
-}
+  body[data-dsh-claude-style] .dsh-claude-billing-remove {
+    grid-column: 4;
+    grid-row: 1;
+    justify-self: end;
+  }
 
-body[data-dsh-claude-style][data-dsh-claude-page-under-768] .dsh-claude-billing-add {
-  flex: 1;
-  height: 32px;
-}
-
-body[data-dsh-claude-style][data-dsh-claude-page-under-768] .dsh-claude-billing-button {
-  flex: 1;
-  height: 34px;
+  body[data-dsh-claude-style] .dsh-claude-billing-button {
+    flex: 1;
+    height: 32px;
+  }
 }

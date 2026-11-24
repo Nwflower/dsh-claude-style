@@ -25,7 +25,7 @@ body[data-dsh-claude-style] .dsh-claude-segment {
   background: transparent;
   color: var(--dsw-alias-label-secondary);
   font: inherit;
-  font-size: 14px;
+  font-size: calc(14px * var(--dsh-claude-interface-font-scale, 1));
   font-weight: 500;
   line-height: 18px;
   padding: 3px 12px;

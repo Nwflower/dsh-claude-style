@@ -246,12 +246,3 @@ body[data-dsh-claude-style] .dsh-claude-home-sample-tray {
   padding-top: 1.2cqw;
   border-top: 0.5px solid var(--dsh-claude-divider);
 }
-
-body[data-dsh-claude-style] .dsh-claude-home-card-name {
-  font-size: 12px;
-  line-height: 16px;
-}
-
-body[data-dsh-claude-style] .dsh-claude-home-card[data-active] .dsh-claude-home-card-name {
-  color: var(--dsw-alias-label-primary);
-}

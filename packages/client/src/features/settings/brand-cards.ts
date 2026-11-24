@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { brandingVendorOf } from '@dsh-claude-style/contracts/branding-presets'
 import { brandingInkOf } from '../../shared/branding-presets'
+import { activateOnCardKey } from '../../shared/preview-cards'
 import { brandingLabel, SeatArt, useBrandImages, usePageAppearance, WordArt } from './brand-art'
 import { openBrandManager } from './brand-manager'
 import { Glyph } from './palette-parts'
@@ -53,19 +54,14 @@ function BrandCard(props: { prefs: Prefs }) {
     React.createElement(
       'div',
       {
-        className: 'dsh-claude-palette-card dsh-claude-brand-card',
+        className: 'dsh-claude-palette-card dsh-claude-brand-set-card',
         role: 'button',
         tabIndex: 0,
         'data-branding': id,
         'data-active': '',
         'aria-label': label,
         onClick: edit,
-        // Enter and Space on the card itself open it; the seats inside it handle their own keys.
-        onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => {
-          if (event.target !== event.currentTarget || (event.key !== 'Enter' && event.key !== ' ')) return
-          event.preventDefault()
-          edit()
-        },
+        onKeyDown: (event: React.KeyboardEvent<HTMLDivElement>) => activateOnCardKey(event, edit),
       },
       React.createElement(
         'span',

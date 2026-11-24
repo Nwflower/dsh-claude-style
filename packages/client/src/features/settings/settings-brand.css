@@ -11,31 +11,14 @@ body[data-dsh-claude-style] .dsh-claude-palette-cards {
 }
 
 body[data-dsh-claude-style] .dsh-claude-palette-card {
-  display: flex;
   flex: 1 1 0;
-  flex-direction: column;
-  align-items: center;
   gap: 10px;
   min-width: 0;
   padding: 20px 16px 16px;
-  border: 1px solid var(--dsw-alias-border-l1);
-  border-radius: 12px;
-  background: var(--dsh-claude-card);
-  color: var(--dsw-alias-label-primary);
-  font: inherit;
 }
 
 body[data-dsh-claude-style] .dsh-claude-palette-card[role="button"] {
   cursor: pointer;
-}
-
-body[data-dsh-claude-style] .dsh-claude-palette-card[role="button"]:not([data-active]):hover {
-  border-color: var(--dsw-alias-border-l3);
-}
-
-body[data-dsh-claude-style] .dsh-claude-palette-card[data-active] {
-  border-color: var(--dsw-alias-brand-primary);
-  box-shadow: 0 0 0 1px var(--dsw-alias-brand-primary);
 }
 
 body[data-dsh-claude-style] .dsh-claude-palette-swatches {
@@ -104,22 +87,6 @@ body[data-dsh-claude-style] .dsh-claude-palette-hint {
 
 body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-palette-hint {
   background: var(--dsh-claude-card);
-}
-
-body[data-dsh-claude-style] .dsh-claude-palette-swatch-input {
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  opacity: 0;
-  cursor: pointer;
-}
-
-body[data-dsh-claude-style] .dsh-claude-palette-card-name {
-  font-size: calc(14px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 20px;
-  color: var(--dsw-alias-label-secondary);
 }
 
 body[data-dsh-claude-style] .dsh-claude-palette-reset {

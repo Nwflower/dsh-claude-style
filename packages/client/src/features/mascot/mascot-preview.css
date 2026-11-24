@@ -9,7 +9,6 @@ body[data-dsh-claude-style] .dsh-claude-mascot-cards {
 
 body[data-dsh-claude-style] .dsh-claude-mascot-card {
   padding: 16px 12px 14px;
-  background: var(--dsh-claude-card);
 }
 
 body[data-dsh-claude-style] .dsh-claude-mascot-card-stage {

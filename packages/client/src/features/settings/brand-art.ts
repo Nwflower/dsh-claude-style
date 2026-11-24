@@ -1,16 +1,16 @@
 import * as React from 'react'
-import { DARK_THEME_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { brandingVendorOf } from '@dsh-claude-style/contracts/branding-presets'
 import type { BrandingAppearance, BrandInk } from '@dsh-claude-style/contracts/branding-presets'
-import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { BRAND_CLAUDE, BRAND_INK_ORIGINAL } from '../../constants'
 import { brandingRecord, brandInkColour } from '../../shared/branding-presets'
-import { loadBrandingImages, pageAppearance, subscribeBrandImages } from '../../shared/custom-brand'
+import { loadBrandingImages, subscribeBrandImages } from '../../shared/custom-brand'
 import type { BrandImage, BrandImages } from '../../shared/custom-brand'
+import { usePageAppearance } from '../../shared/page-state'
 import { vendorName } from '../../shared/vendor-brands'
 import type { Prefs } from '../../constants'
 import { readPrefs } from '../../core/prefs'
 import { copy } from './copy'
+export { usePageAppearance }
 
 /**
  * How a brand set is drawn on the settings page (D97): the brand's own art
@@ -54,13 +54,6 @@ export function brandingLabel(prefs: Prefs, id: string) {
   if (id === '') return copy('brandingPresetTheme')
   if (brandingVendorOf(id) !== undefined) return vendorName(id)
   return brandingRecord(prefs, id)?.name || id
-}
-
-/** The appearance the page shows, following the host's flips while the reader looks. */
-export function usePageAppearance() {
-  const [appearance, setAppearance] = React.useState<BrandingAppearance>(pageAppearance)
-  React.useEffect(() => subscribeMutations(document.body, { attributes: true, attributeFilter: [DARK_THEME_ATTRIBUTE] }, () => setAppearance(pageAppearance())), [])
-  return appearance
 }
 
 /**

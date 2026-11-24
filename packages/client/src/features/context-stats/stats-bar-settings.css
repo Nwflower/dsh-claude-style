@@ -163,26 +163,8 @@ body[data-dsh-claude-style] .dsh-claude-stats-bar-sample-cache {
   color: var(--dsh-claude-tone-green, #25a06b);
 }
 
-/* Unified sub-rows under preview cards: matching settings-row title and description rhythm. */
-body[data-dsh-claude-style] .dsh-claude-stats-bar-field {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px 16px;
-  min-width: 0;
-}
-
 body[data-dsh-claude-style] .dsh-claude-stats-bar-metrics-field {
   align-items: flex-start;
-}
-
-body[data-dsh-claude-style] .dsh-claude-stats-bar-field-text {
-  flex: 1 1 200px;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-stats-bar-chips {
@@ -231,12 +213,4 @@ body[data-dsh-claude-style] .dsh-claude-stats-metric-chip[data-active] {
 body[data-dsh-claude-style] .dsh-claude-stats-metric-chip[data-active]:disabled {
   opacity: 0.85;
   cursor: default;
-}
-
-body[data-dsh-claude-style] .dsh-claude-stats-bar-hint {
-  flex-basis: 100%;
-  text-align: right;
-  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 18px;
-  color: var(--dsw-alias-state-business-primary);
 }

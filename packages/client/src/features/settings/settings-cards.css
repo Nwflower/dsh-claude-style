@@ -38,36 +38,35 @@ body[data-dsh-claude-style] .dsh-claude-preview-picker {
   gap: 8px;
 }
 
-body[data-dsh-claude-style] .dsh-claude-preview-card {
-  appearance: none;
-  margin: 0;
+body[data-dsh-claude-style] :is(.dsh-claude-preview-card, .dsh-claude-palette-card) {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 14px 12px 10px;
   box-sizing: border-box;
   border: 1px solid var(--dsw-alias-border-l1);
   border-radius: 12px;
-  background: var(--dsw-alias-bg-layer-1);
+  background: var(--dsh-claude-card);
   color: var(--dsw-alias-label-primary);
   font: inherit;
-  cursor: pointer;
-  transition: border-color var(--dsh-claude-timing-feedback);
+  transition: border-color var(--dsh-claude-timing-feedback), box-shadow var(--dsh-claude-timing-feedback);
 }
 
-body[data-dsh-claude-style] .dsh-claude-preview-card:hover {
+body[data-dsh-claude-style] .dsh-claude-preview-card {
+  appearance: none;
+  margin: 0;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 12px 10px;
+  cursor: pointer;
+}
+
+body[data-dsh-claude-style] :is(.dsh-claude-preview-card:not(:disabled, [aria-disabled="true"], [data-active]), .dsh-claude-palette-card[role="button"]:not([data-active])):hover {
   border-color: var(--dsw-alias-border-l2);
 }
 
-body[data-dsh-claude-style] .dsh-claude-preview-card:focus-visible {
-  outline: 2px solid var(--dsw-alias-brand-primary, #d97757);
-  outline-offset: 1px;
-}
-
-body[data-dsh-claude-style] .dsh-claude-preview-card[data-active] {
+body[data-dsh-claude-style] :is(.dsh-claude-preview-card, .dsh-claude-palette-card)[data-active] {
   border-color: var(--dsw-alias-brand-primary, #d97757);
+  box-shadow: 0 0 0 1px var(--dsw-alias-brand-primary, #d97757);
 }
 
 body[data-dsh-claude-style] .dsh-claude-preview-card-actions {
@@ -77,7 +76,7 @@ body[data-dsh-claude-style] .dsh-claude-preview-card-actions {
   min-height: 16px;
 }
 
-body[data-dsh-claude-style] :is(.dsh-claude-preview-card-action, .dsh-claude-palette-reset) {
+body[data-dsh-claude-style] :is(.dsh-claude-preview-card-action, .dsh-claude-palette-reset, .dsh-claude-palette-manage, .dsh-claude-settings-zoom-reset) {
   padding: 0;
   border: 0;
   background: none;
@@ -89,8 +88,8 @@ body[data-dsh-claude-style] :is(.dsh-claude-preview-card-action, .dsh-claude-pal
   transition: color var(--dsh-claude-timing-feedback);
 }
 
-body[data-dsh-claude-style] :is(.dsh-claude-preview-card-action, .dsh-claude-palette-reset):hover {
-  color: var(--dsw-alias-label-secondary);
+body[data-dsh-claude-style] :is(.dsh-claude-preview-card-action, .dsh-claude-palette-reset, .dsh-claude-palette-manage, .dsh-claude-settings-zoom-reset):hover:not(:disabled) {
+  color: var(--dsw-alias-label-primary);
 }
 
 body[data-dsh-claude-style] .dsh-claude-brand-card-logo {
@@ -103,10 +102,6 @@ body[data-dsh-claude-style] .dsh-claude-brand-card-logo {
 
 body[data-dsh-claude-style] .dsh-claude-brand-card-logo[data-brand="claude"] {
   background-image: var(--dsh-claude-image-claude-mark-clay);
-}
-
-body[data-dsh-claude-style] .dsh-claude-brand-card-logo[data-brand="deepseek"] {
-  background-image: var(--dsh-claude-image-deepseek-mark);
 }
 
 /* The theme style's card reads left to right: the mark, then the brand's word.
@@ -469,7 +464,7 @@ body[data-dsh-claude-style] .dsh-claude-ongoing-card {
   color: var(--dsw-alias-label-secondary);
 }
 
-body[data-dsh-claude-style] .dsh-claude-settings-card-label {
+body[data-dsh-claude-style] :is(.dsh-claude-settings-card-label, .dsh-claude-palette-card-name) {
   font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
   font-weight: 500;
   line-height: 20px;

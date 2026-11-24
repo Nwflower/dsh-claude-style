@@ -4,10 +4,12 @@ import { hidePointerHint, POINTER_HINT_CLASS, showPointerHint } from '../../shar
 import { PALETTE_SCHEME_CUSTOM } from '@dsh-claude-style/contracts/palette-schemes'
 import { linkFromAccent, schemeColours } from '../../shared/palette-colours'
 import { storedSchemes } from '../../shared/palette-scheme'
+import { Glyph } from '../../shared/settings-glyphs'
 import type { PalettePreset, Prefs } from '../../constants'
 import type { PaletteScheme } from '@dsh-claude-style/contracts/palette-schemes'
 import { copy } from './copy'
 import type { CopyKey } from './copy'
+export { Glyph }
 
 /**
  * What the colour cards and the scheme manager share (D97): a scheme's name as
@@ -73,23 +75,6 @@ export function schemeDiscs(scheme: PaletteScheme, staticPreset: boolean) {
     pairColour(colours.code.light, colours.code.dark),
     pairColour(colours.link.light ?? linkFromAccent(colours.accent, 'light'), colours.link.dark ?? linkFromAccent(colours.accent, 'dark')),
   ]
-}
-
-/** The line marks of the manager and the cards, drawn on a 16px grid in the text colour around them. */
-const GLYPHS = {
-  check: 'M3.5 8.5l3 3 6-7',
-  close: 'M4 4l8 8M12 4l-8 8',
-  pencil: 'M11.1 2.9l2 2-7.4 7.4-2.6.6.6-2.6 7.4-7.4Z',
-  plus: 'M8 3.5v9M3.5 8h9',
-  undo: 'M6 3.5L3.5 6 6 8.5M3.5 6h5.75a3.25 3.25 0 010 6.5H7',
-} as const
-
-export function Glyph(props: { name: keyof typeof GLYPHS }) {
-  return React.createElement(
-    'svg',
-    { className: 'dsh-claude-scheme-glyph', width: 16, height: 16, viewBox: '0 0 16 16', fill: 'none', 'aria-hidden': 'true' },
-    React.createElement('path', { d: GLYPHS[props.name], stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' }),
-  )
 }
 
 /** A scheme's five colours as a row of small dots, for a line of the manager's list. */

@@ -22,6 +22,7 @@ export function PercentControl(props: {
   fieldLabel: string
   trackLabel: string
   resetLabel: string
+  disabled?: boolean
   onPick: (percent: number) => void
   onReset: () => void
 }) {
@@ -30,6 +31,7 @@ export function PercentControl(props: {
   const control = React.useRef<HTMLDivElement>(null)
   const range = React.useRef<HTMLInputElement>(null)
   React.useEffect(() => { setText(String(props.percent)) }, [props.percent])
+  React.useEffect(() => { if (props.disabled) setOpen(false) }, [props.disabled])
 
   /** Write one percentage, held to the row's range, and leave the field on what it lands on. */
   function write(percent: number) {
@@ -92,20 +94,22 @@ export function PercentControl(props: {
     atDefault ? null : React.createElement('button', {
       type: 'button',
       className: 'dsh-claude-settings-zoom-reset',
+      disabled: props.disabled,
       onClick: props.onReset,
     }, props.resetLabel),
     React.createElement(
       'label',
       {
         className: 'dsh-claude-settings-input dsh-claude-settings-zoom-field',
-        onPointerEnter: () => setOpen(true),
-        onFocus: () => setOpen(true),
+        onPointerEnter: () => { if (!props.disabled && range.current?.disabled !== true) setOpen(true) },
+        onFocus: () => { if (!props.disabled && range.current?.disabled !== true) setOpen(true) },
       },
       React.createElement('input', {
         className: 'dsh-claude-settings-zoom-input',
         type: 'text',
         inputMode: 'numeric',
         maxLength: 4,
+        disabled: props.disabled,
         value: text,
         placeholder: String(props.defaultPercent),
         'aria-label': props.fieldLabel,
@@ -127,7 +131,7 @@ export function PercentControl(props: {
     ),
     React.createElement(
       'div',
-      { className: 'dsh-claude-settings-zoom-track dsh-claude-popover-card', 'data-open': open ? 'true' : 'false' },
+      { className: 'dsh-claude-settings-zoom-track dsh-claude-popover-card', 'data-open': open && !props.disabled ? 'true' : 'false' },
       React.createElement('input', {
         ref: range,
         className: 'dsh-claude-settings-zoom-range',
@@ -135,6 +139,7 @@ export function PercentControl(props: {
         min: props.min,
         max: props.max,
         step: 1,
+        disabled: props.disabled,
         value: typedPercent(),
         'aria-label': props.trackLabel,
         style: { '--dsh-claude-zoom-share': Math.round(share * 100) + '%' } as React.CSSProperties,

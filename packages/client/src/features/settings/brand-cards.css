@@ -10,8 +10,9 @@ body[data-dsh-claude-style] .dsh-claude-brand-cards {
   grid-template-columns: minmax(0, 1fr);
 }
 
-/* A brand card holds its lockup and its name in the middle of its frame. */
-body[data-dsh-claude-style] .dsh-claude-brand-card {
+/* A brand set card holds its lockup and its name in the middle of its frame,
+   independent of `.dsh-claude-brand-card` on the General tab. */
+body[data-dsh-claude-style] .dsh-claude-brand-set-card {
   justify-content: center;
 }
 
@@ -68,7 +69,7 @@ body[data-dsh-claude-style] .dsh-claude-brand-card-seat:is(:hover, :focus-visibl
 }
 
 body[data-dsh-claude-style] .dsh-claude-brand-card-seat:focus-visible {
-  outline: 1px solid var(--dsw-alias-brand-primary);
+  outline: 1px solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
   outline-offset: 0;
 }
 

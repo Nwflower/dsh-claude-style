@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { DARK_THEME_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import {
   CONTEXT_RAMP_MAX_STOPS,
   CONTEXT_RAMP_MIN_STOPS,
@@ -7,7 +6,6 @@ import {
   resolveContextRampStops,
   serializeContextRamp,
 } from '@dsh-claude-style/contracts/context-ramp'
-import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { CONTEXT_DISPLAY_PIE } from '../../constants'
 import { motionReduced } from '../../core/prefs'
 import { motionMs } from '../../shared/motion'
@@ -17,7 +15,6 @@ import {
   contextRampColorAt,
   contextRampGradientCss,
   hexToCssRgb,
-  isContextDarkTheme,
   readableContextInk,
 } from './context-ramp'
 import { copy } from './copy'
@@ -26,20 +23,6 @@ import type { Prefs } from '../../constants'
 
 const HEX_COLOR_RE = /^#?[0-9a-f]{6}$/i
 const STATIC_PREVIEW_PERCENT = 68
-
-/** Subscribe to `data-ds-dark-theme` on `<body>` so ramp samples repaint on theme flips. */
-export function useContextDarkTheme(): boolean {
-  const [dark, setDark] = React.useState(isContextDarkTheme)
-  React.useEffect(
-    () => subscribeMutations(
-      document.body,
-      { attributes: true, attributeFilter: [DARK_THEME_ATTRIBUTE] },
-      () => setDark(isContextDarkTheme()),
-    ),
-    [],
-  )
-  return dark
-}
 
 /** Animate preview occupancy smoothly from 1% up to 100% and back to 1%. */
 export function useAnimatedMeterPercent(disabled: boolean | undefined, motionPref: Prefs['motion']): number {
@@ -148,31 +131,6 @@ export function ContextMeterSample(props: {
         `${props.percent}%`,
       )
       : null,
-  )
-}
-
-/** Shared sub-row inside a settings block, matching settings-row title and description metrics. */
-export function SettingsSubField(props: {
-  title: string
-  desc: string
-  className?: string
-  footer?: React.ReactNode
-  children?: React.ReactNode
-}) {
-  const className = props.className === undefined
-    ? 'dsh-claude-stats-bar-field'
-    : `dsh-claude-stats-bar-field ${props.className}`
-  return React.createElement(
-    'div',
-    { className },
-    React.createElement(
-      'div',
-      { className: 'dsh-claude-stats-bar-field-text' },
-      React.createElement('div', { className: 'dsh-claude-settings-row-title' }, props.title),
-      React.createElement('div', { className: 'dsh-claude-settings-row-desc' }, props.desc),
-    ),
-    props.children,
-    props.footer ?? null,
   )
 }
 
@@ -414,7 +372,7 @@ export function ContextRampEditor(props: {
         { className: 'dsh-claude-context-ramp-controls' },
         React.createElement(
           'label',
-          { className: 'dsh-claude-context-ramp-swatch', style: { backgroundColor: selectedStop.color } },
+          { className: 'dsh-claude-context-ramp-swatch', style: { color: selectedStop.color } },
           React.createElement('input', {
             type: 'color',
             className: 'dsh-claude-context-ramp-color-input',
@@ -429,7 +387,7 @@ export function ContextRampEditor(props: {
         ),
         React.createElement('input', {
           type: 'text',
-          className: 'dsh-claude-context-ramp-field dsh-claude-context-ramp-hex',
+          className: 'dsh-claude-settings-input dsh-claude-context-ramp-hex',
           value: hexText,
           maxLength: 7,
           disabled,
@@ -456,7 +414,7 @@ export function ContextRampEditor(props: {
         }),
         React.createElement(
           'label',
-          { className: 'dsh-claude-context-ramp-field dsh-claude-context-ramp-percent-box' },
+          { className: 'dsh-claude-settings-input dsh-claude-context-ramp-percent-box' },
           React.createElement('input', {
             type: 'text',
             inputMode: 'numeric',

@@ -33,7 +33,7 @@
     { "id": "brand.custom-accent", "attribute": "data-dsh-claude-custom-palette", "property": "--dsh-claude-custom-accent", "feature": "brand", "sees": "the accent seed written by the selected colour scheme" },
     { "id": "brand.custom-canvas-light", "attribute": "data-dsh-claude-custom-palette", "property": "--dsh-claude-custom-canvas-light", "feature": "brand", "sees": "the light canvas seed written by the selected colour scheme" },
     { "id": "brand.custom-mark", "attribute": "data-dsh-claude-custom-mark", "property": "--dsh-claude-custom-mark", "feature": "brand", "sees": "the currently selected logo preset's image URL" },
-    { "id": "settings.brand-card", "selector": ".dsh-claude-brand-card", "feature": "settings", "sees": "one brand set's card under the brand switch, pressed while the page paints it" },
+    { "id": "settings.brand-card", "selector": ".dsh-claude-brand-set-card", "feature": "settings", "sees": "one brand set's card under the brand switch, pressed while the page paints it" },
     { "id": "settings.brand-editor", "selector": ".dsh-claude-brand-editor", "feature": "settings", "sees": "the brand manager's editor of the set in hand, whose name field and actions the scenarios drive" },
     { "id": "settings.brand-error", "selector": ".dsh-claude-brand-error", "feature": "settings", "sees": "a missing or invalid logo asset diagnostic, without disabling the remaining presets" },
     { "id": "brand.custom-scheme", "attribute": "data-dsh-claude-custom-edges", "property": "--dsh-claude-link", "feature": "brand", "sees": "the contour drawing the selected scheme owns, and the link colour the token sheet resolves under it" },
