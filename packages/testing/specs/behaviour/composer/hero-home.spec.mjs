@@ -1,20 +1,20 @@
 /**
- * The home page keeps the workspace switch over its label and the model seat on
- * one line: the header carries the switch's positioning reference, and the hero
- * slot takes the external-control gate the picker's block styles (#371).
+ * The home page keeps the workspace view menu over its label and the model seat
+ * on one line: the header carries the trigger's positioning reference, and the
+ * hero slot takes the external-control gate the picker's block styles (#371).
  *
  * @capability composer
  * @features composer,workspace,model
- * @risk The switch falls to the sidebar's middle, or the home model seat stacks into three lines and stretches the card.
+ * @risk The trigger falls to the sidebar's middle, or the home model seat stacks into three lines and stretches the card.
  */
 import { spec } from '../../fixtures/behaviour.mjs'
 import { mountHeroHome, dropHeroHome, readHeroHome, readHeroGateLeft } from '../../fixtures/hero-home.mjs'
 
 export default spec({ page: 'automode-hero' }, ({ test }) => {
-  test('the workspace header keeps the view switch\'s positioning reference', async t => {
+  test('the workspace header keeps the view menu\'s positioning reference', async t => {
     await mountHeroHome(t)
     const reading = await readHeroHome(t)
-    t.expectThat.equal({ header: reading.header, segments: reading.segments }, { header: 'relative', segments: 'absolute' }, 'the switch lays over the label inside the header, not over the sidebar root')
+    t.expectThat.equal({ header: reading.header, trigger: reading.trigger }, { header: 'relative', trigger: 'absolute' }, 'the trigger lays over the label inside the header, not over the sidebar root')
     await dropHeroHome(t)
   })
 

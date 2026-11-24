@@ -9,7 +9,7 @@ export const POPOVER_MARGIN = 8
 
 /** Where an anchored popover goes (resolveAnchoredPosition). */
 export interface AnchorOptions {
-  side?: 'right' | 'above' | 'above-left'
+  side?: 'right' | 'above' | 'above-left' | 'below-left'
   /** Distance kept from the viewport's edges; POPOVER_MARGIN when unset. */
   margin?: number
   /** Distance between the trigger and the card. */
@@ -38,9 +38,10 @@ export function anchorSpace(trigger: Element): AnchorSpace {
  * The viewport coordinates of a popover anchored to a trigger's box:
  * `'right'` bottom-aligns to the trigger's right (the account popover),
  * `'above'` right-aligns and opens over it, `'above-left'` matches left edges
- * (the permission menu). The hero menu resolves through this too but writes
- * the answer into custom properties, because the host re-places that card
- * from its own geometry every frame.
+ * (the permission menu), `'below-left'` matches left edges and opens under
+ * the trigger first (the workspace view menu). The hero menu resolves through
+ * this too but writes the answer into custom properties, because the host
+ * re-places that card from its own geometry every frame.
  *
  * @param rect - the trigger's bounding box.
  * @param width - the popover's laid-out width.
@@ -57,9 +58,17 @@ export function resolveAnchoredPosition(rect: DOMRect, width: number, height: nu
     const y = Math.min(Math.max(margin, rect.bottom - height), Math.max(margin, viewport.height - height - margin))
     return { x, y }
   }
-  const y = topOverTrigger(rect, height, opts.gap || 0, margin, viewport.height)
-  if (opts.side === 'above-left') return { x: Math.max(margin, Math.min(rect.left, viewport.width - width - margin)), y }
+  const gap = opts.gap || 0
+  const y = opts.side === 'below-left'
+    ? bottomOverTrigger(rect, height, gap, margin, viewport.height)
+    : topOverTrigger(rect, height, gap, margin, viewport.height)
+  if (opts.side === 'above-left' || opts.side === 'below-left') return { x: leftAligned(rect.left, width, viewport.width, margin), y }
   return { x: Math.max(margin, Math.min(rect.right - width, viewport.width - width - margin)), y }
+}
+
+/** The left edge both left-aligned sides share: the trigger's own left edge, held inside the window. */
+function leftAligned(triggerLeft: number, width: number, viewportWidth: number, margin: number) {
+  return Math.max(margin, Math.min(triggerLeft, viewportWidth - width - margin))
 }
 
 /**
@@ -97,6 +106,22 @@ function topOverTrigger(rect: DOMRect, height: number, gap: number, margin: numb
   const roomAbove = rect.top - gap - margin
   const roomBelow = viewportHeight - margin - below
   return roomAbove >= roomBelow ? margin : Math.max(margin, viewportHeight - height - margin)
+}
+
+/**
+ * The top of a card that opens under its trigger: below it while it fits
+ * there, above it while it fits there instead, and otherwise held against the
+ * window's edge on the side with more room — the mirror of topOverTrigger for
+ * a menu that reads downward first.
+ */
+function bottomOverTrigger(rect: DOMRect, height: number, gap: number, margin: number, viewportHeight: number) {
+  const below = rect.bottom + gap
+  if (below + height <= viewportHeight - margin) return below
+  const above = rect.top - gap - height
+  if (above >= margin) return above
+  const roomAbove = rect.top - gap - margin
+  const roomBelow = viewportHeight - margin - below
+  return roomBelow >= roomAbove ? Math.max(margin, viewportHeight - height - margin) : margin
 }
 
 /**

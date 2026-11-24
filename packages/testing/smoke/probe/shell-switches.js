@@ -39,7 +39,7 @@
           // their own case drives that choice.
           permissionsControl: document.querySelectorAll('.dsh-claude-perm-container').length +
             (document.body.hasAttribute('data-dsh-claude-permissions') ? 1 : 0),
-          workspaceView: document.querySelectorAll('.dsh-claude-ws-segments').length,
+          workspaceView: document.querySelectorAll('.dsh-claude-ws-menu-trigger').length,
           sidebarSearch: (window.__slots || []).filter(function (entry) {
             return entry.id === 'dsh-claude-style.search' || entry.seat === 'dsh-claude-style.search'
           }).length,
@@ -99,12 +99,13 @@
           var on = await settleSwitch(onPatch)
           r.switches.steps.push({ key: switchKeys[si], off: off, on: on })
         }
-        // The segment control drives the host's own view store rather than a
-        // list of the skin's: 已归档 asks for the archived-only filter and one
-        // flat list, and 进行中 puts the filter back with the grouping that
-        // stood before the visit. The store is the registration the stand-in
-        // keeps under `sidebar.workspaces` (stand-in/slots.js), so the snapshot
-        // read here is the host's answer, not the skin's mark.
+        // The view menu drives the host's own view store rather than a list
+        // of the skin's: 已归档 asks for the archived-only filter and one flat
+        // list, 全部 asks for the mixed filter with the grouping that stood
+        // before the visit, and 工作区 puts the filter back with that grouping.
+        // The store is the registration the stand-in keeps under
+        // `sidebar.workspaces` (stand-in/slots.js), so the snapshot read here
+        // is the host's answer, not the skin's mark.
         var readView = function (item) {
           var store = window.__dshSmokeHost.workspaceViewStore
           var snapshot = store === undefined ? null : store.getSnapshot()
@@ -115,8 +116,10 @@
             checked: item === null ? null : item.getAttribute('aria-checked'),
           }
         }
-        var clickSegment = async function (view) {
-          var item = document.querySelector('.dsh-claude-ws-segment[data-view="' + view + '"]')
+        var pickView = async function (view) {
+          var trigger = document.querySelector('.dsh-claude-ws-menu-trigger')
+          if (trigger !== null) trigger.click()
+          var item = document.querySelector('.dsh-claude-ws-menu [data-view="' + view + '"]')
           if (item !== null) item.click()
           document.body.appendChild(document.createElement('i'))
           await sleep(300)
@@ -130,8 +133,9 @@
         await sleep(300)
         r.switches.dateView.on = groupOfHost()
         r.switches.view = {
-          archived: await clickSegment('archived'),
-          active: await clickSegment('active'),
+          archived: await pickView('archived'),
+          all: await pickView('all'),
+          active: await pickView('active'),
         }
         if (bell !== null) bell.click()
         document.body.appendChild(document.createElement('i'))
@@ -145,8 +149,8 @@
         await sleep(300)
         r.switches.flat = {
           picked: readView(null),
-          archived: await clickSegment('archived'),
-          active: await clickSegment('active'),
+          archived: await pickView('archived'),
+          active: await pickView('active'),
         }
         hostStore.actions.setGroupBy('workspace')
         document.body.appendChild(document.createElement('i'))
@@ -157,21 +161,23 @@
       await probe.onlyFor(['switches'], async function () {
         // A browser left on 已归档 hands the next load a store already on
         // `only` + `flat`; the switch's teardown and install is the same pair a
-        // reload runs, so the feature has to come back on that segment instead
-        // of driving the store back to 进行中.
+        // reload runs, so the feature has to come back on that view instead
+        // of driving the store back to 工作区.
         var store = window.__dshSmokeHost.workspaceViewStore
         store.actions.setArchivedFilter('only')
         store.actions.setGroupBy('flat')
         await settleSwitch({ workspaceView: false })
         await settleSwitch({ workspaceView: true })
-        var segment = document.querySelector('.dsh-claude-ws-segment[data-view="archived"]')
+        var row = document.querySelector('.dsh-claude-ws-menu [data-view="archived"]')
         var snapshot = store.getSnapshot()
         r.switches.reinstall = {
           snapshot: { archivedFilter: snapshot.archivedFilter, groupBy: snapshot.groupBy },
-          checked: segment === null ? null : segment.getAttribute('aria-checked'),
+          checked: row === null ? null : row.getAttribute('aria-checked'),
         }
-        // Hand the rail scenario a 进行中 section again.
-        var active = document.querySelector('.dsh-claude-ws-segment[data-view="active"]')
+        // Hand the rail scenario a 工作区 section again.
+        var trigger = document.querySelector('.dsh-claude-ws-menu-trigger')
+        if (trigger !== null) trigger.click()
+        var active = document.querySelector('.dsh-claude-ws-menu [data-view="active"]')
         if (active !== null) active.click()
         await sleep(300)
       })
@@ -181,7 +187,7 @@
       // so its rows stay where the host drew them.
       var railMarks = function () {
         return {
-          segments: document.querySelectorAll('.dsh-claude-ws-segments').length,
+          menu: document.querySelectorAll('.dsh-claude-ws-menu-trigger').length,
           rows: document.querySelectorAll('[data-row-key]').length,
         }
       }

@@ -44,7 +44,7 @@ const RAIL = {
   glyph: '[data-dsh-claude-part~="panel-glyph"]',
   newSession: 'button[data-dsh-claude-part~="new-session"]',
   seat: '[data-dsh-claude-part~="new-session-mask"]',
-  segments: '.dsh-claude-ws-segments',
+  viewMenu: '.dsh-claude-ws-menu-trigger',
 }
 
 /** How far a control's centre may stand from the column's own line and still read as on it. */
@@ -151,7 +151,7 @@ const readRail = (page) => page.evaluate((rail) => {
       return list === null ? null : Number.parseFloat(getComputedStyle(list).rowGap)
     })(),
     column: box(column),
-    segments: box(document.querySelector(rail.segments)),
+    viewMenu: box(document.querySelector(rail.viewMenu)),
   }
 }, RAIL)
 
@@ -217,14 +217,14 @@ function sidebarRailScenario({ check }) {
    * still wide. The rail's reading means something only beside it: a check that
    * finds no control passes on a page where none was ever built.
    */
-  let wideSegments = 0
+  let wideMenu = 0
   let wide = null
   const hoveredPlates = []
   return {
     script: 'greeting',
     prompt: 'hello there',
     async beforeSend({ page }) {
-      wideSegments = await page.evaluate((rail) => document.querySelectorAll(rail.segments).length, RAIL)
+      wideMenu = await page.evaluate((rail) => document.querySelectorAll(rail.viewMenu).length, RAIL)
       const original = await page.evaluate((rail) => ({
         dark: document.body.hasAttribute('data-ds-dark-theme'),
         layout: document.body.getAttribute(rail.layoutAttribute),
@@ -282,8 +282,8 @@ function sidebarRailScenario({ check }) {
             rail.chipCentre - rail.chipWidth / 2 >= rail.column.left &&
             rail.chipCentre + rail.chipWidth / 2 <= rail.column.right,
           JSON.stringify(rail === null ? null : { column: rail.column, chipCentre: rail.chipCentre, chipWidth: rail.chipWidth })),
-        check('展开时侧栏里有一件皮肤自己的两档控件',
-          wideSegments > 0, JSON.stringify({ wide: wideSegments })),
+        check('展开时侧栏里有一件皮肤自己的视图菜单',
+          wideMenu > 0, JSON.stringify({ wide: wideMenu })),
         check('展开时面板行之间等距，首行与新建会话之间的间隔就是这个行距',
           rhythm !== null && rhythm.evenSteps &&
             Math.abs(rhythm.gap - rhythm.gapUnderPlate) <= LINE_TOLERANCE_PX,
@@ -310,8 +310,8 @@ function sidebarRailScenario({ check }) {
             rows.slice(1).every((row, index) => Math.abs(row.top - rows[index].bottom - rail.panelGap) <= LINE_TOLERANCE_PX),
           JSON.stringify(rail === null ? null : { panelGap: rail.panelGap, rows })),
         check('收起成图标栏后这件控件整件离开页面，宿主自己的分区按钮不再被它压住',
-          rail !== null && rail.segments === null,
-          JSON.stringify(rail === null ? null : { segments: rail.segments })),
+          rail !== null && rail.viewMenu === null,
+          JSON.stringify(rail === null ? null : { viewMenu: rail.viewMenu })),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]
     },

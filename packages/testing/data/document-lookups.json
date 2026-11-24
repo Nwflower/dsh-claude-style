@@ -25,6 +25,10 @@
       "count": 1,
       "reason": "The self-built trigger and popover, swept when the drawer is dropped."
     },
+    "packages/client/src/features/workspace/view-menu.ts": {
+      "count": 1,
+      "reason": "The menu card a generation whose teardown a client reload dropped left in the body, swept once when the next trigger is seated."
+    },
     "packages/client/src/core/selection-paint.ts": {
       "count": 1,
       "reason": "The transcript roots the selection paints were opened on, swept once at teardown: a root keeps its mark until the host replaces it, so no list of them outlives the page that holds them."

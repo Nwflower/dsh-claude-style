@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-24",
+  "group": "improvements",
+  "order": 0,
+  "external": false,
+  "zh": "工作区标题处的「进行中 / 已归档」分段控件改为「工作区 / 已归档 / 全部」下拉菜单，默认工作区；触发按钮常驻替代标题文本，悬停底板环绕文字而不推移文字，菜单默认向下展开并与标题左对齐，全部一档由宿主列表混排已归档会话",
+  "en": "Replace the Active / Archived segments at the workspace heading with a Workspace / Archived / All dropdown defaulting to Workspace; the trigger permanently replaces the heading text with a hover plate that grows around the words without moving them, the card opens downward left-aligned with the heading, and All keeps archived rows among the others in the host's own list"
+}

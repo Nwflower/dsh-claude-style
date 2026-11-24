@@ -1,5 +1,5 @@
 /**
- * The 已归档 segment is the skin's own page of the archive, not the host's tree:
+ * The 已归档 view is the skin's own page of the archive, not the host's tree:
  * one page of thirty conversations stands first and the reader's scroll to the
  * foot appends the next, so a workspace whose archive holds hundreds keeps the
  * sidebar fast and every row still opens, unarchives and deletes through the
@@ -16,7 +16,7 @@ import { boxOf } from '../../fixtures/boxes.mjs'
  * The stand-in host's workspace section, stood the way the smoke's own block
  * stands it: the host's class names are assembled at runtime so this file
  * spells no mark (the same escape the engine uses). The page carries the
- * switches case's services, so the view store the segment drives is the
+ * switches case's services, so the view store the menu drives is the
  * stand-in's own. The root is the host's own box — a bounded column whose
  * region clips what overflows — and its list seat (the host's own list area) is
  * the scroll port: the skin's rows are seated in it and the host tree body
@@ -71,20 +71,20 @@ async function setup(t, count) {
 }
 
 /**
- * The 已归档 segment: the second radio of the section's own switch. While 进行中
- * stands the control rests: it comes back under the pointer, so the heading's
- * hover is the reader's way to it (workspace.css).
+ * The 已归档 view: the second row of the section's own menu. The trigger
+ * stands in the heading's place in every view (workspace.css), so the pick is
+ * a press on it and a press on the row.
  */
 async function pickArchived(t) {
-  // The label takes no pointer of its own (workspace.css): the header under it is the hover's target.
-  await t.page.getByText('Workspaces', { exact: true }).locator('..').hover()
-  await t.page.getByRole('radiogroup').getByRole('radio').nth(1).click()
+  await t.page.locator(t.surface('workspace.view-menu-trigger')).click()
+  await t.page.locator(`${t.surface('workspace.view-menu')} [${t.surface.attribute('workspace.view-menu-row')}="archived"]`).click()
   await t.settle()
 }
 
-/** The 进行中 segment. */
+/** The 工作区 view: the first row of the menu. */
 async function pickActive(t) {
-  await t.page.getByRole('radiogroup').getByRole('radio').nth(0).click()
+  await t.page.locator(t.surface('workspace.view-menu-trigger')).click()
+  await t.page.locator(`${t.surface('workspace.view-menu')} [${t.surface.attribute('workspace.view-menu-row')}="active"]`).click()
   await t.settle()
 }
 
@@ -234,7 +234,7 @@ export default spec({ page: 'switches' }, ({ test }) => {
     const opened = await t.page.evaluate(() => window.__archiveFixture.opened)
     t.expectThat.equal(opened, ['arch-0419'], 'the host opens the pressed archived session')
     t.expectThat.equal(await rowCount(t), 30, 'the list stands as it was')
-    t.expectThat.equal(await t.page.getByRole('radiogroup').getByRole('radio', { checked: true }).count(), 1, 'the segment still names one view')
+    t.expectThat.equal(await t.page.locator(`${t.surface('workspace.view-menu')} [aria-checked="true"]`).count(), 1, 'the menu still names one view')
   })
 
   test('leaving 已归档 hands the room back and returning restarts at the top', async (t) => {
@@ -243,7 +243,7 @@ export default spec({ page: 'switches' }, ({ test }) => {
     await scrollToFoot(t)
     t.expectThat.equal(await rowCount(t), 60, 'the second page stands before the leave')
     await pickActive(t)
-    t.expectThat.absent(await rowCount(t), 'the archived rows leave with the segment')
+    t.expectThat.absent(await rowCount(t), 'the archived rows leave with the view')
     const hostTree = await boxOf(t.page.getByText('project', { exact: true }))
     t.expectThat.visible(hostTree, 'the host own tree is back where it stood')
     await pickArchived(t)

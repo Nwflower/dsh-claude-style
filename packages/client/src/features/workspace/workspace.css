@@ -1,86 +1,92 @@
-/* ---------- Workspace section: 进行中 / 已归档 segments ---------- */
-/* The segment control and the archived row action dress the host's own
+/* ---------- Workspace section: the 工作区 / 已归档 / 全部 view menu ---------- */
+/* The menu trigger and the archived row action dress the host's own
    workspace browser under the marks packages/client/src/features/workspace/workspace-view.ts
    writes; sidebar-adjacent, but split from theme/sidebar.css when that file
    neared the 750-line stop line. */
 
-/* ---------- workspace section: 进行中 / 已归档 ---------- */
-/* The section label gives way to a two-state segment control (the skin's own
-   markup, built by packages/client/src/features/workspace/workspace-view.ts);
-   the two segments are the host's own archived filter, so the tree below the
-   header stays the host's in both. The label and the control cross-fade by
-   opacity further down.
-   The control's look is the shared small segment look (shared/segment-control.css);
-   this sheet keeps its placement over the label and the crossfade.
-   The control is a mode switch, not furniture: while 进行中 is the state it steps
-   aside for the plain 工作区 heading and comes back as soon as the pointer is in
-   the section — the header itself or the tree below it. In 已归档 it stays put,
-   because it is the way back.
-   The two swap by opacity rather than display, so they cross-fade; the control
-   is laid over the label's own slot (absolute, same 16px) so neither the header's
-   height nor the actions' position moves while they swap. */
+/* ---------- workspace section: the view menu in the heading's place ---------- */
+/* The section label gives way to a view menu trigger (the skin's own markup,
+   built by packages/client/src/features/workspace/view-menu.ts); its three
+   views are the host's own archived filter, so the tree below the header stays
+   the host's in 工作区 and 全部, and only 已归档 seats the skin's own list.
+   The trigger stands in the heading's place in every view, naming the view in
+   force: the heading's words are hidden whole, and the trigger's words stand
+   exactly where they stood. Its hover plate grows 6px around the words on
+   every side — the offsets below take that padding back off the measured
+   slot — so the target reads as one row-height plate without moving the text.
+   The trigger is absolute, so neither the header's height nor the actions'
+   position moves. */
 /* The host's own header attribute carries the reference even where the part's
-   host class is not met on the page: the switch lays over the label at top:50%. */
+   host class is not met on the page. */
 body[data-dsh-claude-style] [data-sidebar-workspace-header] {
   position: relative;
 }
 body[data-dsh-claude-style] [data-dsh-claude-part~="section-header"] {
   position: relative;
 }
-body[data-dsh-claude-style] .dsh-claude-ws-segments {
+body[data-dsh-claude-style] .dsh-claude-ws-menu-trigger {
   position: absolute;
-  /* The label's own left edge, measured by the pass (workspace-view.ts): the
-     host's header padding carries the label in from the header's edge, and the
-     switch lays over the label's slot, not over the padding. */
-  left: var(--dsh-claude-ws-segments-left, 0px);
-  top: 50%;
-  transform: translateY(-50%);
-  opacity: 1;
-  visibility: visible;
-  transition: opacity var(--dsh-claude-duration-surface) var(--dsh-claude-ease-standard), visibility var(--dsh-claude-duration-surface) var(--dsh-claude-ease-standard);
+  /* The heading's own text slot, measured by the pass (workspace-view.ts):
+     the host's header padding carries the label in from the header's edge.
+     The 6px padding grows the hover plate around the words; subtracting it
+     from the measured left and top keeps the words on the heading's own edge
+     and line, not pushed down and right by the plate. */
+  left: calc(var(--dsh-claude-ws-menu-left, 0px) - 6px);
+  top: calc(var(--dsh-claude-ws-menu-top, 0px) - 6px);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-family: var(--dsw-font-family);
+  font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 16px;
+  color: var(--dsw-alias-label-tertiary, #91888a);
+  cursor: pointer;
+  transition: background-color var(--dsh-claude-timing-feedback), color var(--dsh-claude-timing-feedback);
 }
-body[data-dsh-claude-style] [data-dsh-claude-ws-view="active"] .dsh-claude-ws-segments {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
+body[data-dsh-claude-style] .dsh-claude-ws-menu-trigger:hover,
+body[data-dsh-claude-style] .dsh-claude-ws-menu-trigger[data-open="true"] {
+  color: var(--dsw-alias-label-primary, #161616);
+  background: var(--dsh-claude-hover-bg, rgba(0, 0, 0, 0.08));
 }
-body[data-dsh-claude-style] [data-dsh-claude-ws-view="active"]:hover .dsh-claude-ws-segments,
-body[data-dsh-claude-style] [data-dsh-claude-part~="section-header"]:hover .dsh-claude-ws-segments {
-  /* The hover rule outranks the hidden state above on specificity alone: it
-     carries one pseudo-class more (D9). */
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
+body[data-dsh-claude-style] .dsh-claude-ws-menu-caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  flex: none;
+}
+body[data-dsh-claude-style] .dsh-claude-ws-menu-caret svg {
+  width: 12px;
+  height: 12px;
 }
 body[data-dsh-claude-style] [data-dsh-claude-part~="section-label"][data-dsh-claude-ws-label] {
-  /* The heading is a label, not a target: it must not swallow clicks aimed at the
-     control laid over it, nor start a selection drag. */
+  /* The heading gives way whole: the trigger replaces its words in every
+     view. visibility takes the label out of paint, hit-testing and the
+     accessibility tree while its layout box stays for the pass to measure;
+     it must not swallow clicks aimed at the trigger nor start a selection
+     drag. */
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
-  opacity: 0;
-  transition: opacity var(--dsh-claude-duration-surface) var(--dsh-claude-ease-standard);
+  visibility: hidden;
 }
-body[data-dsh-claude-style] [data-dsh-claude-ws-view="active"] [data-dsh-claude-part~="section-label"][data-dsh-claude-ws-label] {
-  opacity: 1;
-}
-body[data-dsh-claude-style] [data-dsh-claude-ws-view="active"]:hover [data-dsh-claude-part~="section-label"][data-dsh-claude-ws-label],
-body[data-dsh-claude-style] [data-dsh-claude-part~="section-header"]:hover [data-dsh-claude-part~="section-label"][data-dsh-claude-ws-label] {
-  /* The hovered ancestor carries one pseudo-class more than the shown label
-     above, so this rule wins on specificity alone. */
-  opacity: 0;
-}
-body[data-dsh-claude-style] .dsh-claude-ws-segment {
-  padding: 0 8px;
-  height: 20px;
-  /* The checked plate cross-fades here, where the view tabs only fade their ink. */
-  transition: background-color var(--dsh-claude-timing-feedback), color var(--dsh-claude-timing-feedback);
-}
-body[data-dsh-claude-style] .dsh-claude-ws-segment:hover {
-  color: var(--dsw-alias-label-primary, #161616);
+/* The view list's card is the shared popover card (shared/popover.css); it
+   opens under its trigger, so it grows from the top left. */
+body[data-dsh-claude-style] .dsh-claude-ws-menu {
+  position: fixed;
+  min-width: 128px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  transform-origin: top left;
 }
 /* ---------- 已归档: the skin's own page of the archive ---------- */
-/* The 已归档 segment is the skin's own list (archived-list.ts), not the host's
+/* The 已归档 view is the skin's own list (archived-list.ts), not the host's
    tree: the host would mount every archived conversation at once, which is what
    slows the section down once the archive holds hundreds. The rows are seated in
    the host's list seat, which stays the scroll port, and the host tree body gives

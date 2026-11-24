@@ -6,7 +6,7 @@ import { createStamp } from '@dsh-claude-style/engine/dom'
 import { markPartsWithin } from '@dsh-claude-style/engine/parts'
 import { createHostToast } from '../../shared/host-toast'
 import { createViewStoreFollower } from './view-store'
-import { createSegmentControl } from './segments'
+import { createViewMenu } from './view-menu'
 import { createArchivedActions } from './archived-actions'
 import { createArchivedList } from './archived-list'
 import { hostTooltip } from '../../shared/host-tooltip'
@@ -15,20 +15,21 @@ import type { FeatureUi } from '../../core/feature'
 import type manifest from './workspace-view.manifest'
 
 /**
- * Recast the sidebar workspace section into active and archived segments driven
- * by the host view store. The archived segment pages the skin's own list so a
+ * Recast the sidebar workspace section into a 工作区 / 已归档 / 全部 view menu
+ * driven by the host view store. The 已归档 view pages the skin's own list so a
  * large archive is not mounted whole; row actions stay the host's.
  */
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The host's Toast and icons, reached through the plugin loader's `require` — the same packages its UI uses. */
   const toast = createHostToast()
-  /** The section's view (active / archived), its heading, marked for workspace.css. */
+  /** The section's view (工作区 / 已归档 / 全部), its heading, marked for workspace.css. */
   const viewStamp = createStamp('data-dsh-claude-ws-view')
   const labelStamp = createStamp('data-dsh-claude-ws-label')
-  /** The switch's left edge follows the label's own, measured in the read phase. */
-  const SEGMENTS_LEFT_VAR = '--dsh-claude-ws-segments-left'
+  /** The trigger's text slot follows the label's own, measured in the read phase. */
+  const MENU_LEFT_VAR = '--dsh-claude-ws-menu-left'
+  const MENU_TOP_VAR = '--dsh-claude-ws-menu-top'
   const follower = createViewStoreFollower()
-  const segments = createSegmentControl((next) => {
+  const viewMenu = createViewMenu((next) => {
     follower.drive(next)
     sync()
   })
@@ -45,7 +46,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let sectionLabel: HTMLElement | null = null
   /** The label's offset within its header, taken in the read phase; null asks sync to read it. */
   let labelLeft: number | null = null
-  /** The header the switch's alignment was written on, kept so it leaves with the control. */
+  let labelTop: number | null = null
+  /** The header the trigger's alignment was written on, kept so it leaves with the control. */
   let dressedHeader: HTMLElement | null = null
   /** The section labels on the page, taken from the bus and released with the section. */
   let labelWatch: MatchList<HTMLElement> | null = null
@@ -118,7 +120,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /**
    * The host's view store, once the browser's registration is on the page; the
-   * section keeps its plain label until then, since a segment that cannot drive
+   * section keeps its plain label until then, since a menu that cannot drive
    * the host would lie about the list.
    */
   function watch() {
@@ -152,12 +154,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** Remove the control and list; without the wide-sidebar heading a control would cover rail buttons. */
   function dropSection() {
     list.unmount()
-    segments.release()
+    viewMenu.release()
     labelStamp.release()
     viewStamp.release()
-    dressedHeader?.style.removeProperty(SEGMENTS_LEFT_VAR)
+    dressedHeader?.style.removeProperty(MENU_LEFT_VAR)
+    dressedHeader?.style.removeProperty(MENU_TOP_VAR)
     dressedHeader = null
     labelLeft = null
+    labelTop = null
   }
 
   function sync() {
@@ -180,21 +184,25 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const header = label.parentElement
     labelStamp.mark(label)
     const view = follower.view()
-    segments.sync(header, view)
+    viewMenu.sync(header, view)
     if (dressedHeader !== header) {
-      dressedHeader?.style.removeProperty(SEGMENTS_LEFT_VAR)
+      dressedHeader?.style.removeProperty(MENU_LEFT_VAR)
+      dressedHeader?.style.removeProperty(MENU_TOP_VAR)
       dressedHeader = header
     }
     // The host's header padding carries the label in from the header's edge;
-    // the switch lays over the label's slot, so its left edge is the label's
-    // own offset, not the header's.
-    const value = `${labelLeft ?? label.offsetLeft}px`
-    if (header.style.getPropertyValue(SEGMENTS_LEFT_VAR) !== value) header.style.setProperty(SEGMENTS_LEFT_VAR, value)
+    // the trigger's words stand on the label's own offset, not the header's.
+    // The stylesheet subtracts the hover plate's padding from both.
+    const leftValue = `${labelLeft ?? label.offsetLeft}px`
+    if (header.style.getPropertyValue(MENU_LEFT_VAR) !== leftValue) header.style.setProperty(MENU_LEFT_VAR, leftValue)
+    const topValue = `${labelTop ?? label.offsetTop}px`
+    if (header.style.getPropertyValue(MENU_TOP_VAR) !== topValue) header.style.setProperty(MENU_TOP_VAR, topValue)
     viewStamp.mark(root, view)
     // The archived list rides inside the host's own list seat, which the wide
     // sidebar registers as this section's scroller (host.sidebar-list-seat): its
     // tree body gives way, so the seat keeps serving the wheel hand-off, the
-    // scroll-state gating and the gutter. Other segments restore the host tree.
+    // scroll-state gating and the gutter. The 工作区 and 全部 views restore the
+    // host tree.
     if (view === 'archived') {
       const seat = root.querySelector(LIST_AREA_SELECTOR)
       // sectionOf() stood this label only where the root keeps a list seat.
@@ -207,15 +215,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
   }
 
-  /**
-   * The pass's read phase: the segment control's own box, taken before this
-   * frame's writes. A pass that builds the control measures it in the write
-   * phase instead (sliding-pill).
-   */
+  /** The pass's read phase: the label's own offset, taken before this frame's writes. */
   function measure() {
-    segments.measure()
     const label = sectionLabel
-    labelLeft = label !== null && label.isConnected ? label.offsetLeft : null
+    const standing = label !== null && label.isConnected
+    labelLeft = standing ? label.offsetLeft : null
+    labelTop = standing ? label.offsetTop : null
   }
 
   ui.workspace = {

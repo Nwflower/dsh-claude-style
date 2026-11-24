@@ -298,12 +298,17 @@ export default {
       dateView.start === 'workspace' && dateView.on === 'flat' && dateView.off === 'workspace',
       JSON.stringify(dateView))
     const archivedView = view.archived || {}
+    const allView = view.all || {}
     const activeView = view.active || {}
-    check('the 已归档 segment drives the host\'s own view: archived rows alone in one flat list, and the segment checked',
+    check('the 已归档 view drives the host\'s own view: archived rows alone in one flat list, and the row checked',
       archivedView.snapshot?.archivedFilter === 'only' && archivedView.snapshot?.groupBy === 'flat' &&
         archivedView.checked === 'true',
       JSON.stringify(archivedView))
-    check('the 进行中 segment puts the filter back with the date view\'s own flat list standing before the visit, and stands checked again',
+    check('the 全部 view asks the host to keep archived rows among the others, with the grouping that stood before the visit, and stands checked',
+      allView.snapshot?.archivedFilter === 'show' && allView.snapshot?.groupBy === 'flat' &&
+        allView.checked === 'true',
+      JSON.stringify(allView))
+    check('the 工作区 view puts the filter back with the date view\'s own flat list standing before the visit, and stands checked again',
       activeView.snapshot?.archivedFilter === 'default' && activeView.snapshot?.groupBy === 'flat' &&
         activeView.checked === 'true',
       JSON.stringify(activeView))
@@ -313,17 +318,17 @@ export default {
         flatView.active?.snapshot?.groupBy === 'flat',
       JSON.stringify(flatView))
     const reinstall = sw.reinstall || {}
-    check('a store left on 已归档 comes back on that segment when the feature installs again',
+    check('a store left on 已归档 comes back on that view when the feature installs again',
       reinstall.snapshot?.archivedFilter === 'only' && reinstall.snapshot?.groupBy === 'flat' &&
         reinstall.checked === 'true',
       JSON.stringify(reinstall))
     const rail = sw.rail || {}
     check('the host dropping the section heading takes the workspace control off the page with it, leaving the host\'s own tree where it stands',
-      !!rail.wide && rail.wide.segments > 0 && rail.wide.rows > 0 && !!rail.collapsed &&
-        rail.collapsed.segments === 0 && rail.collapsed.rows === rail.wide.rows,
+      !!rail.wide && rail.wide.menu > 0 && rail.wide.rows > 0 && !!rail.collapsed &&
+        rail.collapsed.menu === 0 && rail.collapsed.rows === rail.wide.rows,
       JSON.stringify(rail))
     check('the heading coming back seats the control in the section again',
-      !!rail.back && rail.back.segments > 0 && rail.back.rows === rail.wide.rows, JSON.stringify(rail.back))
+      !!rail.back && rail.back.menu > 0 && rail.back.rows === rail.wide.rows, JSON.stringify(rail.back))
     commonChecks(r)
   },
   'switches-off'(r) {

@@ -1,6 +1,6 @@
 /**
  * The workspace section in the shape of the host, stood for the specs that
- * judge the switch over its heading: the header padding carries the label in
+ * judge the menu trigger over its heading: the header padding carries the label in
  * from the edge, and the list seat below makes the section one the view
  * feature dresses (#378). The section stands inside the sidebar slot, where
  * the engine marks the sidebar parts. The host's class names are assembled at
@@ -31,11 +31,15 @@ export async function mountSection(t) {
 
 export function readAlignment(t) {
   return t.page.evaluate(() => {
-    const seg = document.querySelector('.dsh-claude-ws-segments')
+    const trigger = document.querySelector('.dsh-claude-ws-menu-trigger')
+    const words = trigger === null ? null : trigger.querySelector('.dsh-claude-ws-menu-label')
     const label = document.querySelector('[data-dsh-claude-ws-label]')
-    if (seg === null || label === null) return null
+    if (words === null || label === null) return null
+    const wordsBox = words.getBoundingClientRect()
+    const labelBox = label.getBoundingClientRect()
     return {
-      delta: Math.round(seg.getBoundingClientRect().left - label.getBoundingClientRect().left),
+      delta: Math.round(wordsBox.left - labelBox.left),
+      topDelta: Math.round(wordsBox.top - labelBox.top),
       offset: label.offsetLeft,
     }
   })
