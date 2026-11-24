@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Claude Code 风格",
+    "description": "为 DeepSeek Harness 网页界面复刻 Claude Code Desktop 的视觉与交互体验，涵盖暖色与深色主题、模型选择器、权限切换、统计栏与账户抽屉。"
+  }
+}
