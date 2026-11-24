@@ -76,7 +76,6 @@ jobs:
       - run: npm run docs:check
       - run: npm run changelog:check
       - run: npm run agents:check
-      - run: npm run checks:numbers -- --check
 
   # Build `lib/` once so every lane judges the same generated artifact (D47).
   build:

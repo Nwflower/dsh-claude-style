@@ -147,17 +147,19 @@
       var more = list.nextElementSibling.firstElementChild
       var tools = conversation.querySelector('._headerUtilities_c_1')
       var stripMark = probe.surface('view-tabs.strip')
-      await probe.until(function () { return getComputedStyle(row).position },
-        function (read) { return read[read.length - 1] === 'absolute' }, 'the view switch to join the title row')
+      await probe.until(function () {
+        return getComputedStyle(row).position === 'absolute' && row.getBoundingClientRect().left >= row.parentElement.getBoundingClientRect().left
+      }, function (read) { return read[read.length - 1] === true }, 'the view switch to join the title row')
 
       var rowBox = row.getBoundingClientRect()
       var toolsBox = tools.getBoundingClientRect()
       var listBox = list.getBoundingClientRect()
       var moreBox = more.getBoundingClientRect()
+      var justify = getComputedStyle(row).justifyContent
       r.viewTabs = {
         besideTools: row.hasAttribute(stripMark) && Math.abs(rowBox.top + rowBox.height / 2 - toolsBox.top - toolsBox.height / 2) <= 1 &&
           rowBox.right < toolsBox.left,
-        rightAligned: getComputedStyle(row).justifyContent === 'flex-end' &&
+        rightAligned: (justify === 'flex-end' || justify === 'flow-end' || justify === 'end') &&
           rowBox.left < listBox.left && listBox.right <= moreBox.left && moreBox.right <= rowBox.right,
         clickable: more.contains(document.elementFromPoint(moreBox.x + moreBox.width / 2, moreBox.y + moreBox.height / 2)),
       }

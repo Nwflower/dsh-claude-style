@@ -93,11 +93,10 @@ Each script states its purpose at the top of the script. `node scripts/checks/ve
 | `npm run changelog:check` | fail when a `docs/changes/` fragment does not validate or `docs/CHANGELOG.md` holds an `[Unreleased]` section; the cloud job runs this |
 | `npm run docs:index` | generate and check the ADR index from decision and retirement files |
 | `npm run docs:check` | fail when the committed ADR index differs from the ADR files; the cloud job runs this |
-| `npm run checks:numbers` | every number a check decides on, as a generated record |
 | `npm run agents` | write this table into AGENTS.md from `package.json` and each script's own header |
 | `npm run agents:check` | fail when AGENTS.md's command table differs from `package.json`; the cloud job runs this |
 | `npm run lint` | check source limits, repository references, dependency direction and spec contracts (D76, D92) |
-| `npm run element-collections` | the element-keyed collections the browser half keeps, by file (C1) |
+| `npm run element-collections` | the element-keyed collections the browser half keeps, by file |
 | `npm run stand-in` | the built plugin's one stand-in-page lane (D92): host-half and installation checks, then the behaviour specs a reader can observe |
 | `npm run behaviour` | live-page debugging and focused spec listing for the stand-in page (D92), driven from outside through Playwright on the BUILT plugin (`lib/`); no running DSH instance is needed |
 | `npm run faults` | whether the specs catch known defects |
@@ -139,6 +138,6 @@ A spec runs on a cloud runner whose frame takes far longer than a local one, and
 - Tag a commit that carries code. A documentation-only commit skips the build and every spec lane, and the verdict reads a skipped lane as no judgement at all.
 - Bump `version` in `package.json` by hand. No script writes that field, and the tag is compared against it only after the tag is pushed.
 - Write the release section before tagging: `npm run changelog -- --release <version>` moves `docs/changes/` into `docs/CHANGELOG.md` and empties the directory. `changelog:check` refuses an `[Unreleased]` heading and knows nothing about whether the current version has a section.
-- Run the five checks the release job reruns after publishing `dev`: `npm run lint`, `docs:check`, `changelog:check`, `agents:check`, `checks:numbers`. A moved assertion needs `npm run checks:numbers` to regenerate its record.
+- Run the four checks the release job reruns after publishing `dev`: `npm run lint`, `docs:check`, `changelog:check`, `agents:check`.
 - Push `git tag v<version>`. The workflow packs once, publishes `dev`, rechecks the tree, moves `dist` and the tag onto the packaged commit, then publishes `latest`, or `next` for a version carrying a hyphen.
 - The tag ends on the dist commit, which has no run of its own: pushing the same tag again finds no matrix. Fix forward with a new version.

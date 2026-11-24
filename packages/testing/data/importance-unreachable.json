@@ -2,13 +2,18 @@
   "note": "The selectors the importance scenario's walk cannot match an element with, each under the reason it is out of reach. A selector the sheet writes that is neither matched in a page state nor recorded here fails the scenario, and a recorded one that starts matching fails it too: the list is a debt, and it only shrinks. A group may carry \"either\": true when the walk's own answer depends on the moment or on the machine it runs on — a rule that paints inside one animation frame, a row the host renders on some platforms only. Such a record counts whether the walk catches it or not, so the check never asks for it to be struck. Regenerate the rest from importance-verdicts.json's sweep.dead after a run, and review every line.",
   "groups": [
     {
-      "reason": "首页用量面板：临时宿主里没有用量数据，面板画的是空状态",
+      "reason": "推理等级顶档：测试宿主默认模型不在顶档",
       "selectors": [
         "body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-matrix",
         "body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-fill",
         "body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-ticks",
         "body[data-dsh-claude-style] .dsh-claude-effort[data-apex] .dsh-claude-effort-knob",
-        "body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-effort[data-apex] .dsh-claude-effort-knob",
+        "body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-effort[data-apex] .dsh-claude-effort-knob"
+      ]
+    },
+    {
+      "reason": "首页用量面板：临时宿主里没有用量数据，面板画的是空状态",
+      "selectors": [
         "body[data-dsh-claude-style] .dsh-claude-home-models-more",
         "body[data-dsh-claude-style] .dsh-claude-home-panel[data-computing] .dsh-claude-home-stat[data-skeleton] .dsh-claude-home-stat-value",
         "body[data-dsh-claude-style] .dsh-claude-home-panel[data-computing] .dsh-claude-home-models[data-skeleton] .dsh-claude-home-model-swatch",

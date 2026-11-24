@@ -1,5 +1,5 @@
 {
-  "note": "The bounds a check compares against, each with the reason it holds that value (D92: a check reads its bound here instead of carrying a number of its own, so loosening one is a visible change with a reason beside it). The bounds of the other lanes move in with the migration; this file holds the ones a check reads so far.",
+  "note": "Numeric bounds read by scenario checks, each paired with the reason for its value (D92).",
   "bounds": [
     {
       "name": "longSessionGrowthRatio",

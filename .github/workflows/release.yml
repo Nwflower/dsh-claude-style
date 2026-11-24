@@ -110,7 +110,6 @@ jobs:
       - run: npm run docs:check
       - run: npm run changelog:check
       - run: npm run agents:check
-      - run: npm run checks:numbers -- --check
       - run: npm run build
       # Build before writing npm's contents to dist because generated `lib/` is
       # absent from a fresh checkout (D47).

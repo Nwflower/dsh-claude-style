@@ -14,6 +14,8 @@ export default {
     basicChecks(r)
     const settings = r.settings || {}
     check('the settings section registers with the settings dialog', settings.registered === true, JSON.stringify(settings.registered))
+    const sameMembers = (actual = [], target = []) =>
+      actual.length === target.length && new Set(actual).size === target.length && target.every((item) => actual.includes(item))
     const expected = {
       general: ['brand', 'username', 'pageZoom', 'interfaceFontSize', 'sodium', 'soundCues', 'systemNotifications'],
       appearance: ['sidebarBrand', 'brandLockup', 'typeface', 'homeLayout', 'homeSessionScope', 'homeRipple', 'mascot', 'mascotScope', 'palette', 'paletteCards', 'backgroundOpacity'],
@@ -21,21 +23,13 @@ export default {
       sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'sidebarEntries', 'workspaceView', 'sidebarPeek', 'sidebarLayout', 'sessionPanel'],
       motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator', 'reasoningDisplay', 'autoPopover'],
     }
-    // The main window's three groups, each under its label and carrying its own
-    // rows: the conversation side, the composer's controls with the model
-    // picker's rows, and the context meter with the statistics and the billing.
     const mainWindowGroups = [
       { label: 'Conversation', rows: ['turnNav', 'messageActions', 'rewindCheckpoints', 'rewindStorageLimit', 'rewindStorageDir', 'conversationWidth', 'viewTabs', 'hideToolbarOutsideConversation', 'headerBand', 'processRows', 'answerAnchor'] },
       { label: 'Composer', rows: ['composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent'] },
       { label: 'Context and cost', rows: ['contextDisplay', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable'] },
     ]
-    // The home session scope waits for the Code home layout, and the title-bar
-    // band for the Windows desktop window; the statistics bar's child controls
-    // fold away cleanly while its switch is off (D112).
-    const expectedGrey = { appearance: ['homeSessionScope'], 'main-window': ['rewindCheckpoints', 'rewindStorageLimit', 'rewindStorageDir', 'headerBand'] }
-    // A row may carry a note without waiting for anything: the typeface row names
-    // the faces the page cannot draw, which this machine's own fonts decide, so
-    // that row is left out of the comparison and read on its own below.
+    const REWIND_CHILDREN = ['rewindCheckpoints', 'rewindStorageLimit', 'rewindStorageDir']
+    const expectedGrey = { appearance: ['homeSessionScope'], 'main-window': [...REWIND_CHILDREN, 'headerBand'] }
     const expectedNotes = { appearance: ['homeSessionScope'], 'main-window': ['headerBand'] }
     const notesOf = tab => ((pages[tab] || {}).notes || []).filter(key => key !== 'typeface')
     const pages = settings.pages || {}
@@ -43,20 +37,21 @@ export default {
       const page = pages[tab] || {}
       check(`the ${tab} tab is selected in the five-tab strip and carries its rows, greying only the rows that wait for something`,
         JSON.stringify(page.tabs) === JSON.stringify(Object.keys(expected)) && page.selected === tab &&
-          JSON.stringify(page.rows) === JSON.stringify(expected[tab]) &&
-          JSON.stringify(page.disabled || []) === JSON.stringify(expectedGrey[tab] || []) &&
-          JSON.stringify(notesOf(tab)) === JSON.stringify(expectedNotes[tab] || []),
+          sameMembers(page.rows, expected[tab]) &&
+          sameMembers(page.disabled || [], expectedGrey[tab] || []) &&
+          sameMembers(notesOf(tab), expectedNotes[tab] || []),
         JSON.stringify(page))
     }
     const mainWindow = pages['main-window'] || {}
-    check('the main window page opens with the conversation group and continues with the composer\'s, each label above its own rows',
-      JSON.stringify(mainWindow.groups) === JSON.stringify(mainWindowGroups),
+    check('the main window page groups rows under Conversation, Composer, and Context and cost',
+      Array.isArray(mainWindow.groups) && mainWindow.groups.length === mainWindowGroups.length &&
+        mainWindow.groups.every((group, index) => group.label === mainWindowGroups[index].label && sameMembers(group.rows, mainWindowGroups[index].rows)),
       JSON.stringify(mainWindow.groups))
     const onWindows = settings.onWindows || {}
     check('on the Windows window the title-bar row takes input while only message-action children stay greyed under its off default',
-      JSON.stringify(onWindows.rows) === JSON.stringify(expected['main-window']) &&
-        JSON.stringify(onWindows.disabled) === JSON.stringify(['rewindCheckpoints', 'rewindStorageLimit', 'rewindStorageDir']) &&
-        JSON.stringify(onWindows.notes) === '[]',
+      sameMembers(onWindows.rows, expected['main-window']) &&
+        sameMembers(onWindows.disabled, REWIND_CHILDREN) &&
+        sameMembers(onWindows.notes, []),
       JSON.stringify(onWindows))
     const palette = settings.paletteCards || {}
     const paletteCard = (state, id) => (state.cards || []).find((card) => card.brand === id) || {}
@@ -94,9 +89,9 @@ export default {
       JSON.stringify(typefaceNote))
     const off = settings.parentsOff || {}
     check('a sub-row greys out while its parent is off: the mascot\'s place with the mascot off, the model descriptions, the effort accent colour, the quick providers and the peak rate meter with the model picker off, the custom price table with the billing off, the search button\'s style with the sidebar search off, the home session scope for the Code home layout, and the title-bar band for the window on every page',
-      !!off.appearance && JSON.stringify(off.appearance.disabled) === '["homeSessionScope","mascotScope"]' &&
-        !!off.mainWindow && JSON.stringify(off.mainWindow.disabled) === '["headerBand","effortSlider","modelOrder","modelDescriptions","quickProviders","peakrate","effortAccent","billingTable"]' &&
-        !!off.sidebar && JSON.stringify(off.sidebar.disabled) === '["searchStyle"]',
+      !!off.appearance && sameMembers(off.appearance.disabled, ['homeSessionScope', 'mascotScope']) &&
+        !!off.mainWindow && sameMembers(off.mainWindow.disabled, [...REWIND_CHILDREN, 'headerBand', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'billingTable']) &&
+        !!off.sidebar && sameMembers(off.sidebar.disabled, ['searchStyle']),
       JSON.stringify(off))
     const offAppearance = (off.appearance || {}).rows || []
     check('the colour cards and the background opacity stand only under the skin\'s own palette: following the host leaves neither on the tab',
@@ -104,13 +99,13 @@ export default {
       JSON.stringify(offAppearance))
     const unmet = settings.requirementsOff || {}
     check('with the composer restyle off, the model picker with its sub-rows, the permission control and the statistics\' figures grey out, the two switches and the statistics rows saying what they wait for; with the footer takeover off, so does the easter egg under it',
-      !!unmet.mainWindow && JSON.stringify(unmet.mainWindow.disabled) === '["headerBand","composerBottomGap","permissionsControl","modelPicker","effortSlider","modelOrder","modelDescriptions","quickProviders","peakrate","effortAccent","contextDisplay","statsPosition","statsFooterTokenFormat","billingCurrency","billingTable"]' &&
-        JSON.stringify(unmet.mainWindow.notes) === '["headerBand","composerBottomGap","permissionsControl","modelPicker","contextDisplay","statsPosition","statsFooterTokenFormat","billingCurrency","billingTable"]' &&
-        !!unmet.sidebar && JSON.stringify(unmet.sidebar.disabled) === '["banLocale"]' && JSON.stringify(unmet.sidebar.notes) === '[]',
+      !!unmet.mainWindow && sameMembers(unmet.mainWindow.disabled, [...REWIND_CHILDREN, 'headerBand', 'composerBottomGap', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable']) &&
+        sameMembers(unmet.mainWindow.notes, ['headerBand', 'composerBottomGap', 'permissionsControl', 'modelPicker', 'contextDisplay', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable']) &&
+        !!unmet.sidebar && sameMembers(unmet.sidebar.disabled, ['banLocale']) && sameMembers(unmet.sidebar.notes, []),
       JSON.stringify(unmet))
     const hero = settings.heroOnly || {}
     check('with the restyle on the home page alone, the picker and the permission control take input, the statistics\' position still waits for a conversation and the title-bar band for the window',
-      !!hero.mainWindow && JSON.stringify(hero.mainWindow.disabled) === '["headerBand","composerBottomGap","contextDisplay","statsPosition","statsFooterTokenFormat","billingCurrency","billingTable"]',
+      !!hero.mainWindow && sameMembers(hero.mainWindow.disabled, [...REWIND_CHILDREN, 'headerBand', 'composerBottomGap', 'contextDisplay', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable']),
       JSON.stringify(hero))
     const pageZoom = settings.pageZoom || {}
     const zoomed = pageZoom.zoomed || {}

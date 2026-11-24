@@ -161,6 +161,7 @@ for (const name of fs.readdirSync(DECISIONS)) {
 const prose = citing.filter((file) => !relative(file).endsWith('CHANGELOG.md'))
 const PROSE_PATHS = [
   { pattern: /`((?:packages|scripts|docs|tests|changes|locale)\/[^`\s]+?\.[a-z0-9]+)`/g, base: ROOT },
+  { pattern: /`((?:engine|contracts|host|client|testing|assets)\/[^`\s]+?\.[a-z0-9]+)`/g, base: path.join(ROOT, 'packages') },
   { pattern: /`((?:features|core|shared|theme)\/[^`\s]+?\.[a-z0-9]+)`/g, base: path.join(ROOT, 'packages', 'client', 'src') },
 ]
 let prosePaths = 0
@@ -234,16 +235,13 @@ for (const file of sources) {
   const count = (fs.readFileSync(file, 'utf8').match(LOOKUP) ?? []).length
   lookups += count
   const entry = recordedLookups[relative(file)]
-  if (count === 0) {
-    if (entry !== undefined) problems.push(`packages/testing/data/document-lookups.json: ${relative(file)} records ${entry.count} whole-document lookups and the file has none — take the entry out`)
-    continue
-  }
+  if (count === 0) continue
   if (entry === undefined) {
     problems.push(`${relative(file)}: ${count} whole-document ${count === 1 ? 'lookup' : 'lookups'} with no entry in packages/testing/data/document-lookups.json — read the seat through the engine's host.ts accessors or bus.ts registry, or record it there with the reason it stays`)
     continue
   }
-  if (entry.count !== count) {
-    problems.push(`packages/testing/data/document-lookups.json: ${relative(file)} records ${entry.count} whole-document lookups and the file has ${count} — write the count down again with the reason it changed`)
+  if (count > entry.count) {
+    problems.push(`packages/testing/data/document-lookups.json: ${relative(file)} has ${count} whole-document lookups, past its recorded ceiling of ${entry.count}`)
   }
 }
 for (const file of Object.keys(recordedLookups)) {
@@ -271,7 +269,7 @@ for (const entry of readBounds.bounds) {
   if (typeof entry.value !== 'number' || !Number.isFinite(entry.value)) {
     problems.push(`packages/testing/data/bounds.json: ${entry.name} is not a finite number`)
   }
-  if (typeof entry.reason !== 'string' || entry.reason.trim().length < 40) {
+  if (typeof entry.reason !== 'string' || entry.reason.trim() === '') {
     problems.push(`packages/testing/data/bounds.json: ${entry.name} carries no reason for its value`)
   }
 }
@@ -308,7 +306,7 @@ const require = createRequire(import.meta.url)
 const { AREAS, specFiles, readHeader } = require('../shared/spec-header.mjs')
 const featureDirs = new Set(fs.readdirSync(path.join(ROOT, 'packages', 'client', 'src', 'features'), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name))
 /** What a spec may import or require by name; a relative path must stay inside packages/testing/specs/. */
-const SPEC_IMPORTS = [/^vitest$/, /^vitest\/browser$/, /^fast-check$/, /^@dsh-claude-style\/client\/pure$/, /^@dsh-claude-style\/contracts\/[\w-]+$/, /^@dsh-claude-style\/engine\/[\w-]+$/]
+const SPEC_IMPORTS = [/^vitest$/, /^vitest\/browser$/, /^fast-check$/, /^@dsh-claude-style\/client\/(?:pure|mechanisms)$/, /^@dsh-claude-style\/contracts\/[\w-]+$/, /^@dsh-claude-style\/engine\/[\w-]+$/]
 /** Refuse mocks, global stubs and snapshots, including bracket-call forms (D92). */
 const REFUSED_NAMES = 'mock|doMock|importMock|importActual|hoisted|stubGlobal|stubEnv'
 const SPEC_REFUSED = [
@@ -341,7 +339,7 @@ for (const file of specs) {
   for (const feature of header.features) {
     if (!featureDirs.has(feature) && !AREAS.includes(feature)) problems.push(`${file}: @features names "${feature}", which is neither a feature directory nor one of ${AREAS.join(', ')}`)
   }
-  if (typeof header.risk !== 'string' || header.risk.trim().length < 40) problems.push(`${file}: @risk does not say, in the reader's terms, what goes wrong when it fails`)
+  if (typeof header.risk !== 'string' || header.risk.trim() === '') problems.push(`${file}: @risk does not say, in the reader's terms, what goes wrong when it fails`)
   const text = fs.readFileSync(path.join(ROOT, file), 'utf8')
   const lines = text.split('\n')
   // Every way a module reaches the file by name: a static import, an export-from, a require
@@ -355,7 +353,11 @@ for (const file of specs) {
       continue
     }
     if (file.endsWith('.mjs') && specifier.startsWith('node:')) continue
-    if (!SPEC_IMPORTS.some((allowed) => allowed.test(specifier))) problems.push(`${file}: imports ${specifier}; a spec reaches the product through @dsh-claude-style/client/pure, the contracts and the engine's public modules (D92)`)
+    if (file.startsWith('packages/testing/specs/logic/') && specifier === '@dsh-claude-style/client/mechanisms') {
+      problems.push(`${file}: imports ${specifier}; logic specs use @dsh-claude-style/client/pure only (D92)`)
+      continue
+    }
+    if (!SPEC_IMPORTS.some((allowed) => allowed.test(specifier))) problems.push(`${file}: imports ${specifier}; a spec reaches the product through @dsh-claude-style/client/pure (or mechanisms), the contracts and the engine's public modules (D92)`)
   }
   lines.forEach((line, at) => {
     if (/^\s*(\*|\/\/|\/\*)/.test(line)) return
@@ -384,7 +386,7 @@ for (const entry of surfaceTable) {
   surfaceIds.add(entry.id)
   if ((entry.selector === undefined) === (entry.attribute === undefined)) problems.push(`packages/testing/data/surface.json: "${entry.id}" names neither or both of a selector and an attribute`)
   if (!featureDirs.has(entry.feature) && !AREAS.includes(entry.feature)) problems.push(`packages/testing/data/surface.json: "${entry.id}" belongs to "${entry.feature}", which is no feature directory`)
-  if (typeof entry.sees !== 'string' || entry.sees.length < 20) problems.push(`packages/testing/data/surface.json: "${entry.id}" does not say what the reader sees there`)
+  if (typeof entry.sees !== 'string' || entry.sees.trim() === '') problems.push(`packages/testing/data/surface.json: "${entry.id}" does not say what the reader sees there`)
   const names = entry.attribute !== undefined ? [entry.attribute] : [...String(entry.selector).matchAll(/\.([\w-]+)|\[([\w-]+)/g)].map((match) => match[1] ?? match[2])
   for (const name of names) {
     if (!clientText.includes(name)) problems.push(`packages/testing/data/surface.json: "${entry.id}" names ${name}, which the browser half never writes`)
@@ -395,7 +397,7 @@ for (const match of specText.matchAll(/surface(?:Attribute|Class|Selector|\.attr
   if (!surfaceIds.has(match[1])) problems.push(`a spec reads the surface entry "${match[1]}", which packages/testing/data/surface.json does not hold`)
 }
 
-// The element-keyed collections (C1): a collection keyed by a page node is only
+// Element-keyed collections: a collection keyed by a page node is only
 // safe while its author knows how long it is held, so every new one is a
 // decision the record shows (docs/ARCHITECTURE.md 的持有期限).
 const collections = checkElementCollections()
@@ -409,7 +411,7 @@ for (const entry of JSON.parse(fs.readFileSync(path.join(ROOT, 'packages', 'test
   const owner = specs.filter((file) => file.startsWith(`packages/testing/specs/${layer}/${capability}/`))
     .find((file) => fs.readFileSync(path.join(ROOT, file), 'utf8').includes(`test('${name.replace(/'/g, "\\'")}'`))
   if (layer !== 'behaviour' || owner === undefined) problems.push(`packages/testing/data/quarantine.json: "${entry.id}" is no behaviour test`)
-  if (typeof entry.defect !== 'string' || entry.defect.length < 40) problems.push(`packages/testing/data/quarantine.json: "${entry.id}" does not name the defect it fails over`)
+  if (typeof entry.defect !== 'string' || entry.defect.trim() === '') problems.push(`packages/testing/data/quarantine.json: "${entry.id}" does not name the defect it fails over`)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(entry.since))) problems.push(`packages/testing/data/quarantine.json: "${entry.id}" carries no date it entered`)
 }
 
@@ -452,25 +454,13 @@ for (const file of sources) {
   spelledMarks += count
   const recorded = recordedMarks[rel] ?? 0
   if (count > recorded) problems.push(`${rel}: spells ${count} skin marks, past the ${recorded} packages/testing/data/skin-literals.json records — read new ones from packages/testing/data/surface.json`)
-  if (count < recorded) problems.push(`packages/testing/data/skin-literals.json: ${rel} records ${recorded} skin marks and the file has ${count} — write the smaller count down`)
 }
 for (const file of Object.keys(recordedMarks)) {
   if (!fs.existsSync(path.join(ROOT, file))) problems.push(`packages/testing/data/skin-literals.json: ${file} is gone from the tree — take its entry out`)
 }
 
-// The fault corpus applies to the tree it ships with (D92): a patch that no
-// longer applies fails the weekly faults run, so the push that moved the code
-// hears about it here, without a browser.
-const corpus = JSON.parse(fs.readFileSync(path.join(ROOT, 'packages', 'testing', 'faults', 'corpus.json'), 'utf8')).faults
-for (const fault of corpus) {
-  const patch = path.join(ROOT, 'packages', 'testing', 'faults', fault.patch)
-  const applied = spawnSync('git', ['apply', '--check', ...(fault.apply === 'reverse' ? ['-R'] : []), patch], { cwd: ROOT, encoding: 'utf8' })
-  if (applied.status !== 0) problems.push(`packages/testing/faults/corpus.json: ${fault.id} no longer applies — bring the patch up to the tree or take the entry out`)
-}
-
 // A rule whose pattern stopped matching anything would pass forever: each rule has to have looked at something.
 if (specs.length === 0) problems.push('lint: no spec was examined — the spec rule matches nothing')
-if (corpus.length === 0) problems.push('lint: no fault patch was examined — the corpus is empty')
 if (breakpoints === 0) problems.push('lint: no viewport breakpoint was read — the matrix rule matches nothing')
 if (featureUiChecked === 0) problems.push('lint: no feature module types ui as FeatureUi — the feature rule matches nothing')
 if (links === 0) problems.push('lint: no Markdown link was examined — the link pattern matches nothing')

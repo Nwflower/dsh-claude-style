@@ -1,4 +1,4 @@
-import { MARKUP, SKIN_FACE, SKIN_HAT, same, check, contrast, basicChecks, commonChecks } from './_shared.mjs'
+import { MARKUP, same, check, contrast, basicChecks, commonChecks } from './_shared.mjs'
 
 export default {
   'crab-states'(r) {

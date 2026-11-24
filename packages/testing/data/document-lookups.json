@@ -1,9 +1,9 @@
 {
-  "note": "The whole-document lookups the browser half still makes outside the modules that own them, one entry per file: what it counts, when those reads happen where that is known, and which of them are debt. A lookup in a refresh pass or a frame callback costs the page's own size on every frame of a long conversation, so the sanctioned readers are the engine host.ts's accessors (cacheFirstMatch caches a match and a miss until the page's structure changes), the engine bus.ts's observeMatches registry, the engine stylesheet.ts's own sheet, and the engine chat-dom.ts's two per-frame answers; every other site is recorded here and the list only shrinks. A read by an element's id is not counted: the browser answers it from its own index rather than by walking the tree, which is how the fold controls reach the body their aria-controls names. scripts/checks/lint.mjs counts the sites the way this file records them: a file whose count rises is refused, a file whose count falls has to be written down again, and an entry whose count reaches zero is taken out.",
+  "note": "Per-file ceiling of whole-document lookups outside the sanctioned cached accessors (packages/engine/src/host.ts, bus.ts, stylesheet.ts, chat-dom.ts). Queries by id are uncounted; counts only shrink.",
   "files": {
     "packages/client/src/features/hero-menu/hero-menu.ts": {
       "count": 1,
-      "reason": "The hero row's open pickers, read in the refresh pass. Their openness is the host's `aria-expanded` on nodes that stay mounted, and the bus's registry follows node additions alone, so it cannot serve this site: it would keep serving a trigger that has closed (eight smoke checks said so). The answer this site needs is invalidated by an attribute change, which is either a reader of its own or the row the pass already holds."
+      "reason": "The hero row's open pickers, read in the refresh pass. Their openness is the host's `aria-expanded` on nodes that stay mounted, which a node-addition registry cannot track."
     },
     "packages/client/src/features/search/search-host-takeover.ts": {
       "count": 1,

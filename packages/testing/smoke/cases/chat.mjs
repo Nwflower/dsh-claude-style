@@ -1,4 +1,4 @@
-import { MARKUP, SKIN_FACE, SKIN_HAT, BAND_ANIMATION, same, check, contrast, basicChecks, commonChecks } from './_shared.mjs'
+import { MARKUP, BAND_ANIMATION, same, check, contrast, basicChecks, commonChecks } from './_shared.mjs'
 import { bound } from '../../bounds.mjs'
 
 /**

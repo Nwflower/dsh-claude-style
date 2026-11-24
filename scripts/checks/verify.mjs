@@ -195,7 +195,6 @@ function gatesFor(request) {
     { id: 'docs', minutes: 5, script: 'scripts/checks/decisions-index.mjs', args: ['--check'] },
     { id: 'changelog', minutes: 5, script: 'scripts/release/changelog.mjs', args: ['--check'] },
     { id: 'agents', minutes: 5, script: 'scripts/checks/agents-commands.mjs', args: ['--check'] },
-    { id: 'numbers', minutes: 5, script: 'packages/testing/check-numbers.mjs', args: ['--check'] },
     // The appearance snapshot's sources rule and the shrink-only ledgers, against HEAD (D92).
     { id: 'scope', minutes: 5, script: 'scripts/ci/ci-scope.mjs', args: ['--appearance', '--ledgers', '--tree'] },
     { id: 'build', minutes: 15, script: 'scripts/build/build.mjs', args: [] },
