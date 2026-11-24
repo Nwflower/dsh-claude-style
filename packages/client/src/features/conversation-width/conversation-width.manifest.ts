@@ -15,7 +15,6 @@ export default {
     rank: 30,
     pref: 'conversationWidth',
     title: 'conversationWidthTitle',
-    desc: 'conversationWidthDesc',
     choiceLabels: {
       [CONVERSATION_WIDTH_FULL]: 'conversationWidthFull',
       [CONVERSATION_WIDTH_THREE_QUARTERS]: 'conversationWidthThreeQuarters',

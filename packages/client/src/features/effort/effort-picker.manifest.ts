@@ -30,7 +30,6 @@ export default {
     pref: 'effortAccent',
     parent: 'effortSlider',
     title: 'effortAccentTitle',
-    desc: 'effortAccentDesc',
   }],
   cases: []
 } satisfies FeatureManifest

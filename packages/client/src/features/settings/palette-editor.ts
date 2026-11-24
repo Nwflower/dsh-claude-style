@@ -260,7 +260,6 @@ export function PaletteEditor(props: { prefs: Prefs, id: string, created: Palett
       React.createElement(Reset, { key: 'accent-reset', own: draft.accent !== undefined, name: copy('paletteSeedAccent'), run: () => commit(withoutSeed(draft, 'accent')) }),
       rows,
     ),
-    React.createElement('p', { className: 'dsh-claude-scheme-note' }, copy('paletteContrastNote', { text: String(PALETTE_TEXT_CONTRAST), accent: String(PALETTE_ACCENT_CONTRAST) })),
     React.createElement(
       'div',
       { className: 'dsh-claude-scheme-options' },

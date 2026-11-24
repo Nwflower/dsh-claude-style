@@ -19,7 +19,7 @@ export function brandRows(view: SettingsView): SettingsRow[] {
       node: view.controls.row(
         'sidebarBrand',
         copy('brandLockupTitle'),
-        copy('brandLockupDesc'),
+        null,
         view.controls.toggle(prefs.sidebarBrand, on => { write({ sidebarBrand: on }) }),
         { lead: prefs.sidebarBrand ? brandManageButton() : null },
       ),

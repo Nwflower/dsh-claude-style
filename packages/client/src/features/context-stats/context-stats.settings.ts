@@ -177,10 +177,7 @@ function ContextDisplayPicker(props: SettingsRowView) {
       : null,
     React.createElement(
       SettingsSubField,
-      {
-        title: copy('contextNumbersTitle'),
-        desc: copy('contextNumbersDesc'),
-      },
+      { title: copy('contextNumbersTitle') },
       React.createElement(ClaudeStyleSwitch, {
         on: prefs.contextNumbers,
         disabled,

@@ -486,13 +486,13 @@ export class SessionRewind {
     const checkpoints = turns.filter(candidate => candidate >= turn)
       .map(candidate => this.checkpoint(sessionId, candidate))
     const target = checkpoints[0]
-    let reason = target === undefined ? '这个目标轮次还没有插件检查点' : ''
-    if (checkpoints.some(checkpoint => checkpoint === undefined)) reason = '部分后续轮次没有完整检查点'
+    let reason = target === undefined ? 'missing-target' : ''
+    if (reason === '' && checkpoints.some(checkpoint => checkpoint === undefined)) reason = 'incomplete-later'
     if (checkpoints.some(checkpoint => checkpoint?.complete === false)) {
-      reason = checkpoints.find(checkpoint => checkpoint?.complete === false)?.reason || '检查点包含无法恢复的文件'
+      reason = checkpoints.find(checkpoint => checkpoint?.complete === false)?.reason || 'unrestorable-files'
     }
     if (target?.git != null && checkpoints.some(checkpoint => checkpoint?.git?.root !== target.git?.root)) {
-      reason = '目标之后的工作目录发生了变化，无法安全恢复'
+      reason = 'workspace-moved'
     }
     const storage = this.storageOf(target)
     let workspace: GitWorkspace | null = null

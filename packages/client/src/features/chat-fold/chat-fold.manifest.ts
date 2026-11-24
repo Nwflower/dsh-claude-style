@@ -17,7 +17,6 @@ export default {
     rank: 50,
     pref: 'reasoningDisplay',
     title: 'reasoningDisplayTitle',
-    desc: 'reasoningDisplayDesc',
     choiceLabels: {
       continuous: 'reasoningDisplayContinuous',
       stepped: 'reasoningDisplayStepped',

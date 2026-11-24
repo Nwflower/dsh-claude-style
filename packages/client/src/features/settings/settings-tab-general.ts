@@ -131,7 +131,7 @@ export function createSettingsGeneralTab(): SettingsTab {
         node: controls.row(
           'pageZoom',
           copy('pageZoomTitle'),
-          copy('pageZoomDesc'),
+          null,
           React.createElement(PercentControl, {
             percent: pageZoomPercent(prefs.pageZoom),
             min: PAGE_ZOOM_MIN,

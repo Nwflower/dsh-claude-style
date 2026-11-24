@@ -9,7 +9,7 @@ export default {
   // it — and a pass draws the ring with the reading the same pass handed it.
   order: 72,
   // The ring stands in the composer toolbar row whenever the composer restyle
-  // covers the conversation (D112).
+  // covers the conversation (D113).
   pref: 'composerScope',
   prefValues: [COMPOSER_SCOPE_CONVERSATION, COMPOSER_SCOPE_ALL],
   reads: ['model'],

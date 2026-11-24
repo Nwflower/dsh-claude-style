@@ -32,7 +32,7 @@ function backgroundOpacityRow(view: SettingsView): SettingsRow {
     node: view.controls.row(
       'backgroundOpacity',
       copy('backgroundOpacityTitle'),
-      copy('backgroundOpacityDesc'),
+      null,
       React.createElement(PercentControl, {
         percent: backgroundOpacityPercent(view.prefs.backgroundOpacity),
         min: BACKGROUND_OPACITY_MIN,
@@ -59,8 +59,8 @@ function backgroundOpacityRow(view: SettingsView): SettingsRow {
  */
 function typefaceDesc(prefs: Prefs): React.ReactNode {
   const missing = webfontsUnavailable()
-  if (prefs.typeface !== TYPEFACE_CLAUDE || missing === null || missing.length === 0) return copy('typefaceDesc')
-  return noteDesc(copy('typefaceDesc'), copy('typefaceMissing', { names: missing.join(' / ') }))
+  if (prefs.typeface !== TYPEFACE_CLAUDE || missing === null || missing.length === 0) return null
+  return noteDesc(null, copy('typefaceMissing', { names: missing.join(' / ') }))
 }
 
 export function createSettingsAppearanceTab(): SettingsTab {
@@ -76,7 +76,7 @@ export function createSettingsAppearanceTab(): SettingsTab {
         node: controls.row(
           'palette',
           copy('paletteTitle'),
-          copy('paletteDesc'),
+          null,
           controls.toggle(prefs.palette !== PALETTE_HOST, on => { write({ palette: on ? PALETTE_CLAUDE : PALETTE_HOST }) }),
           // The manager's door stands with the cards it manages: following the host leaves it nothing.
           { lead: prefs.palette === PALETTE_HOST ? null : paletteManageButton() },

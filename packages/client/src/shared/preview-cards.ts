@@ -92,7 +92,7 @@ export function PreviewCards<V extends string>(props: PreviewCardsProps<V>) {
 /** Shared sub-row inside a block configurator, matching settings-row title, description and note rhythm. */
 export function SettingsSubField(props: {
   title: string
-  desc: string
+  desc?: string
   className?: string
   note?: React.ReactNode
   children?: React.ReactNode
@@ -100,6 +100,7 @@ export function SettingsSubField(props: {
   const className = props.className === undefined
     ? 'dsh-claude-settings-subfield'
     : `dsh-claude-settings-subfield ${props.className}`
+  const hasDesc = (props.desc !== undefined && props.desc !== '') || (props.note !== undefined && props.note !== null)
   return React.createElement(
     'div',
     { className },
@@ -107,7 +108,7 @@ export function SettingsSubField(props: {
       'div',
       { className: 'dsh-claude-settings-subfield-text' },
       React.createElement('div', { className: 'dsh-claude-settings-row-title' }, props.title),
-      React.createElement('div', { className: 'dsh-claude-settings-row-desc' }, props.desc, props.note ?? null),
+      hasDesc ? React.createElement('div', { className: 'dsh-claude-settings-row-desc' }, props.desc ?? null, props.note ?? null) : null,
     ),
     props.children,
   )

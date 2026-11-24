@@ -59,36 +59,54 @@ function fileStatus(status: RewindFile['status']): string {
   return copy('file-captured')
 }
 
+function formatRewindReason(reason: string): string {
+  if (reason === 'missing-target') return copy('reasonMissingTarget')
+  if (reason === 'incomplete-later') return copy('reasonIncompleteLater')
+  if (reason === 'unrestorable-files') return copy('reasonUnrestorableFiles')
+  if (reason === 'workspace-moved') return copy('reasonWorkspaceMoved')
+  if (reason.startsWith('dirty-files-exceeded:')) {
+    const [, count = '', limit = ''] = reason.split(':')
+    return copy('reasonDirtyFilesExceeded', { count, limit })
+  }
+  if (reason.startsWith('snapshot-size-exceeded:')) {
+    const [, limit = ''] = reason.split(':')
+    return copy('reasonSnapshotSizeExceeded', { limit })
+  }
+  return reason
+}
+
 function RewindConfirmation(props: { plan: RewindPlan, action: RewindAction, close(choice: { restore: boolean } | null): void }) {
-  const [restore, setRestore] = React.useState(props.plan.restoreAvailable)
+  const [restore, setRestore] = React.useState(props.plan.restoreAvailable && props.plan.files.length > 0)
+  const turnCount = props.plan.laterTurns + 1
+  const fileCount = props.plan.files.length
   const footer = React.createElement(React.Fragment, null,
     React.createElement('button', {
       type: 'button', className: 'dsh-claude-rewind-button', onClick: () => props.close(null), 'data-modal-autofocus': true,
     }, copy('cancel')),
     React.createElement('button', {
       type: 'button', className: 'dsh-claude-rewind-button dsh-claude-rewind-primary',
-      onClick: () => props.close({ restore }),
+      onClick: () => props.close({ restore: restore && props.plan.restoreAvailable }),
     }, copy('confirmRewind')),
   )
   return React.createElement(Modal, {
     open: true,
     title: confirmationTitle(props.action),
     closeLabel: copy('close'),
-    description: copy('rewindDescription', { count: props.plan.laterTurns + 1 }),
+    description: copy(turnCount === 1 ? 'rewindDescriptionOne' : 'rewindDescription', { count: turnCount }),
     onClose: () => props.close(null),
     className: 'dsh-claude-rewind-modal',
     contentClassName: 'dsh-claude-rewind-content',
     footer,
   },
-    React.createElement('label', { className: 'dsh-claude-rewind-restore' },
+    fileCount === 0 ? null : React.createElement('label', { className: 'dsh-claude-rewind-restore' },
       React.createElement('input', {
         type: 'checkbox', checked: restore, disabled: !props.plan.restoreAvailable,
         onChange: event => { setRestore(event.currentTarget.checked) },
       }),
-      React.createElement('span', null, copy('restoreFiles', { count: props.plan.files.length })),
+      React.createElement('span', null, copy(fileCount === 1 ? 'restoreFilesOne' : 'restoreFiles', { count: fileCount })),
     ),
     !props.plan.restoreAvailable && props.plan.reason !== ''
-      ? React.createElement('p', { className: 'dsh-claude-rewind-reason' }, copy('checkpointUnavailable', { reason: props.plan.reason }))
+      ? React.createElement('p', { className: 'dsh-claude-rewind-reason' }, copy('checkpointUnavailable', { reason: formatRewindReason(props.plan.reason) }))
       : null,
     props.plan.files.length === 0 ? null : React.createElement('ul', { className: 'dsh-claude-rewind-files' },
       props.plan.files.map(file => React.createElement('li', { key: file.status + ':' + file.path },

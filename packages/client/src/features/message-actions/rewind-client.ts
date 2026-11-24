@@ -57,7 +57,7 @@ export async function executeRewind(
   }
   const workspace = hostUiWorkspace(ctx) as HostUiWorkspaceService | null
   if (workspace === null || typeof workspace.openSession !== 'function') throw new Error('message-actions: host uiWorkspace.openSession is unavailable')
+  await refreshConversations()
   workspace.openSession(childId)
   await seedDraft(ctx, childId, text, send)
-  await refreshConversations()
 }

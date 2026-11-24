@@ -1,5 +1,5 @@
 {
-  "composerTitle": { "zh": "重绘对话框", "en": "Composer restyle" },
+  "composerTitle": { "zh": "重绘输入框", "en": "Input box restyle" },
   "scopeOff": { "zh": "关闭", "en": "Off" },
   "scopeHero": { "zh": "仅首页", "en": "Home only" },
   "scopeConversation": { "zh": "仅对话", "en": "Conversation only" },
@@ -7,7 +7,6 @@
   "heroHint": { "zh": "描述任务或提出问题", "en": "How can I help you today?" },
   "defaultHint": { "zh": "输入 / 以使用命令", "en": "Type / for commands" },
   "composerBottomGapTitle": { "zh": "底部间距", "en": "Bottom gap" },
-  "composerBottomGapDesc": { "zh": "对话页输入区与窗口底边的距离。", "en": "Room between the conversation's composer and the bottom of the window." },
   "gapCompact": { "zh": "紧凑", "en": "Compact" },
   "gapTheme": { "zh": "默认", "en": "Default" },
   "gapRoomy": { "zh": "宽松", "en": "Roomy" }

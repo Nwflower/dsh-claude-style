@@ -21,7 +21,6 @@ export default {
     rank: 46,
     pref: 'contextDisplay',
     title: 'contextDisplayTitle',
-    desc: 'contextDisplayDesc',
     control: 'context-display',
     requires: CONVERSATION_COMPOSER_REQUIRES,
   }, {
@@ -35,12 +34,11 @@ export default {
     requires: CONVERSATION_COMPOSER_REQUIRES,
   }, {
     // Independent of whether the composer statistics bar is on: this unit choice
-    // reaches the bar, the context popover and the session panel alike (D112).
+    // reaches the bar, the context popover and the session panel alike (D113).
     tab: 'statistics',
     rank: 55,
     pref: 'statsFooterTokenFormat',
     title: 'statsFooterTokenFormatTitle',
-    desc: 'statsFooterTokenFormatDesc',
     choiceLabels: {
       [FOOTER_TOKEN_DIGITS]: 'statsFooterTokenDigitsSample',
       [FOOTER_TOKEN_UNITS]: 'statsFooterTokenUnitsSample',
@@ -51,7 +49,6 @@ export default {
     rank: 57,
     pref: 'billingCurrency',
     title: 'billingCurrencyTitle',
-    desc: 'billingCurrencyDesc',
     choiceLabels: { off: 'billingCurrencyOff', CNY: 'billingCurrencyCny', USD: 'billingCurrencyUsd' },
     requires: CONVERSATION_COMPOSER_REQUIRES,
   }, {
@@ -60,7 +57,6 @@ export default {
     pref: 'billingTable',
     parent: 'billingCurrency',
     title: 'billingTableTitle',
-    desc: 'billingTableDesc',
     control: 'billing-table',
     requires: CONVERSATION_COMPOSER_REQUIRES,
   }],

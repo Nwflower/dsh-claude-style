@@ -4,8 +4,8 @@
     "en": "Session panel details"
   },
   "sessionPanelDesc": {
-    "zh": "会话面板里的上下文、会话统计、Token 用量与产出各节，以及环境一节的本机、分支与预设行。",
-    "en": "The context, session stats, token usage and outputs sections of the session panel, and the computer, branch and preset rows of its environment section."
+    "zh": "在会话面板展示上下文、会话统计、Token 用量与产出分节，并补充本机与预设信息。",
+    "en": "Add context, session stats, token usage and outputs sections to the session panel, along with computer and preset rows."
   },
   "thisComputer": {
     "zh": "本机",
@@ -28,11 +28,11 @@
     "en": "System prompt"
   },
   "capabilityTokens": {
-    "zh": "工具、技能和MCP",
+    "zh": "工具、技能和 MCP",
     "en": "Tools, skills & MCP"
   },
   "capabilityToolsMcp": {
-    "zh": "工具和MCP",
+    "zh": "工具和 MCP",
     "en": "Tools & MCP"
   },
   "capabilityToolsSkills": {
@@ -64,8 +64,8 @@
     "en": "Context injection"
   },
   "contextEstimate": {
-    "zh": "分项按发送给模型的内容计价，并按比例分配至已用上下文；百分比为整个上下文窗口的占比。",
-    "en": "Parts are priced from the content sent to the model and shared out in proportion across used context. Percentages refer to the entire context window."
+    "zh": "各分项按发送内容估算并按已用上下文比例折算；百分比相对于整个上下文窗口。",
+    "en": "Each category is estimated from sent content and scaled across used context; percentages are relative to the full context window."
   },
   "compactDistance": {
     "zh": "距离自动压缩还有 {tokens}",
@@ -88,8 +88,8 @@
     "en": "This session has no live agent to compact"
   },
   "compactUnavailable": {
-    "zh": "当前宿主没有压缩能力",
-    "en": "This host runs no compaction backend"
+    "zh": "当前环境不支持会话压缩",
+    "en": "Session compaction is unavailable"
   },
   "compactFailed": {
     "zh": "压缩没有完成",
@@ -120,8 +120,8 @@
     "en": "Failed"
   },
   "noContext": {
-    "zh": "还没有上下文读数",
-    "en": "No context reading yet"
+    "zh": "暂无上下文数据",
+    "en": "No context data yet"
   },
   "unavailable": {
     "zh": "会话总览暂不可用",

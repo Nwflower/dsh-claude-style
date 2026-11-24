@@ -399,7 +399,7 @@ body[data-dsh-claude-style] :is(.dsh-claude-settings-row:not(.dsh-claude-setting
   opacity: 0.5;
 }
 
-body[data-dsh-claude-style] :is(.dsh-claude-settings-row-note, .dsh-claude-sodium-rules, .dsh-claude-stats-bar-hint) {
+body[data-dsh-claude-style] :is(.dsh-claude-settings-row-note, .dsh-claude-stats-bar-hint) {
   display: block;
   margin-top: 2px;
   color: var(--dsw-alias-state-business-primary);

@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-24",
+  "group": "improvements",
+  "order": 10,
+  "external": false,
+  "zh": "精简设置页与功能界面的冗余说明和内部术语，支持首页问候语随界面语言与品牌切换，修复消息回退弹窗在英文界面下的中文原因文本、单复数与零文件复选框问题。",
+  "en": "Streamline redundant settings descriptions and internal jargon across the UI, localize home greetings by shell language and active brand, and fix Chinese-only rewind reasons, pluralization and empty-file checkboxes in the rewind confirmation modal."
+}

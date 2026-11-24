@@ -15,7 +15,6 @@ export default {
     rank: 30,
     pref: 'modelPicker',
     title: 'pickerTitle',
-    desc: 'pickerDesc',
     // The menu is drawn into the restyled composer.
     requires: ANY_COMPOSER_REQUIRES,
   }, {

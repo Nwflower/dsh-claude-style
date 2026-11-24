@@ -28,7 +28,6 @@ export default {
     pref: 'composerBottomGap',
     parent: 'composerScope',
     title: 'composerBottomGapTitle',
-    desc: 'composerBottomGapDesc',
     choiceLabels: {
       [COMPOSER_GAP_COMPACT]: 'gapCompact',
       [COMPOSER_GAP_THEME]: 'gapTheme',

@@ -96,7 +96,7 @@ export function createTeamMode(options: {
 
   function save(sessionId: string, enabled: boolean): Promise<string | null> {
     const teams = hostRemoteAgentTeams(ctx)
-    if (teams === null) return Promise.resolve(copy('teamFailed', { message: 'agentTeams' }))
+    if (teams === null) return Promise.resolve(copy('teamUnavailable'))
     return teams.setEnabled(sessionId, enabled).then(answer => answer.ok ? null : answer.error.message)
   }
 

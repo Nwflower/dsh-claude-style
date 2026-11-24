@@ -75,6 +75,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const seats = new Map<HTMLElement, Seat>()
   let editing: Editing | null = null
   let cancelFrame: (() => void) | null = null
+  let seatsDirty = false
   let released = false
   let pendingAction = false
   /** dsh-rewind is on the page: the four write actions are its own (D111). */
@@ -83,13 +84,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let drawnYielded = rewindYielded
 
   /** 一次写入等下一帧：宿主一批挂进来的是一整棵子树，逐条写会把那批拆碎。 */
-  function queue(write: () => void) {
+  function queue() {
     if (released || cancelFrame !== null) return
     cancelFrame = requestFrame({
       write() {
         cancelFrame = null
         if (released) return
-        write()
+        sync()
       },
     })
   }
@@ -334,10 +335,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
   }
 
-  const seatsOnPage = observeMatches<HTMLElement>(MESSAGE_SEATS_SELECTOR, () => queue(sync))
-  const sessionRows = observeMatches<HTMLElement>(SESSION_ROW_SELECTOR, () => queue(sync))
-  const inheritedRows = observeMatches<HTMLElement>(INHERITED_HISTORY_ROW_SELECTOR, () => queue(sync))
-  const turnTailRows = observeMatches<HTMLElement>(TURN_TAIL_SELECTOR, () => queue(sync))
+  const seatsOnPage = observeMatches<HTMLElement>(MESSAGE_SEATS_SELECTOR, queue)
+  const sessionRows = observeMatches<HTMLElement>(SESSION_ROW_SELECTOR, queue)
+  const inheritedRows = observeMatches<HTMLElement>(INHERITED_HISTORY_ROW_SELECTOR, queue)
+  const turnTailRows = observeMatches<HTMLElement>(TURN_TAIL_SELECTOR, queue)
 
   /**
    * 收尾行所属会话的快照订阅（D111）：分岔的收尾行先挂上页面，timeline 的
@@ -360,7 +361,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
     if (followed !== undefined && followed.sessionId === sessionId) return
     followed?.stop()
-    snapshotFollows.set(row, { sessionId, stop: target.subscribe(() => queue(sync)) })
+    snapshotFollows.set(row, { sessionId, stop: target.subscribe(queue) })
   }
 
   function sync() {
@@ -370,6 +371,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
         closeEditor()
         dismissRewindConfirmations()
       }
+      seatsDirty = true
+    }
+    if (seatsDirty) {
+      seatsDirty = false
       redrawSeats()
     }
     applyRevisionVisibility(sessionRows.all())
@@ -400,13 +405,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const stopRemovals = subscribeMutations(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: [ROW_PHASE_ATTRIBUTE] }, (records) => {
     for (const record of records) {
       if (record.type === 'attributes') {
-        queue(sync)
+        queue()
         continue
       }
       for (const node of record.removedNodes) {
         if (!(node instanceof Element)) continue
         if (node.matches(`[${BUTTONS_SEAT_ATTRIBUTE}]`) || node.querySelector(`[${ACTION_BUTTON_ATTRIBUTE}]`) !== null) {
-          queue(sync)
+          queue()
           return
         }
       }
@@ -420,22 +425,21 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       if (row !== null) draw(seat, row, line)
     }
   }
-  function redrawHistoryButtons() {
-    redrawSeats()
-    queue(sync)
+  const revisionsChanged = () => {
+    seatsDirty = true
+    queue()
   }
-  const revisionsChanged = () => { queue(redrawHistoryButtons) }
   document.addEventListener(REVISIONS_CHANGED_EVENT, revisionsChanged)
   // dsh-rewind arriving or leaving moves the write actions; sync redraws the seats under the new answer (D111).
   const stopPeerWatch = subscribePeerPresence(() => {
     rewindYielded = peerPresent('dsh-rewind')
-    queue(sync)
+    queue()
   })
   // Background metadata loading is isolated from installation; a failure is reported without uninstalling the row controls.
   void refreshConversations().catch(report)
 
   ui.messageActions = { onCopyChange: relabel }
-  queue(sync)
+  queue()
 
   return () => {
     released = true

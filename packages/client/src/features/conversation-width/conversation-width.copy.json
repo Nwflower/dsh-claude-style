@@ -1,6 +1,5 @@
 {
   "conversationWidthTitle": { "zh": "对话栏宽度", "en": "Conversation width" },
-  "conversationWidthDesc": { "zh": "调整对话区域的宽度比例。", "en": "Adjust the width ratio of the conversation column." },
   "conversationWidthFull": { "zh": "100%", "en": "100%" },
   "conversationWidthThreeQuarters": { "zh": "75%", "en": "75%" },
   "conversationWidthHalf": { "zh": "50%", "en": "50%" }

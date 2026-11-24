@@ -72,7 +72,7 @@ export function createSettingsMotionTab(): SettingsTab {
         node: view.controls.row(
           'ongoingIndicator',
           copy('ongoingTitle'),
-          copy('ongoingDesc'),
+          null,
           ongoingPicker(prefs, write),
           { block: true, aside: view.aside('ongoingIndicator') },
         ),
@@ -82,7 +82,7 @@ export function createSettingsMotionTab(): SettingsTab {
         node: view.controls.row(
           'autoPopover',
           copy('autoPopoverTitle'),
-          copy('autoPopoverDesc'),
+          null,
           view.controls.segment(autoPopoverOptions, prefs.autoPopover, value => { write({ autoPopover: value }) }),
         ),
       },

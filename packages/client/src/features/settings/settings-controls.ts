@@ -299,9 +299,10 @@ export function managedDesc(text: string, managed: boolean): React.ReactNode {
  * one thing the reader has to do about it (D98). The strings come from the
  * feature's copy file, where the same rule holds.
  */
-export function noteDesc(text: string, note: string | null): React.ReactNode {
+export function noteDesc(text: string | null, note: string | null): React.ReactNode {
   if (note === null) return text
-  return [text, React.createElement('span', { key: 'note', className: 'dsh-claude-settings-row-note' }, note)]
+  const noteNode = React.createElement('span', { key: 'note', className: 'dsh-claude-settings-row-note' }, note)
+  return text === null || text === '' ? noteNode : [text, noteNode]
 }
 /**
  * The control builders. They hold no state of their own: every value and

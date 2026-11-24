@@ -256,8 +256,8 @@ export function registerWidgetUsage(ctx: DshContext, sharedUsage?: ReturnType<ty
       id: WIDGET_USAGE_CAPABILITY,
       title: { zh: '用量汇总', en: 'Usage roll-up' },
       description: {
-        zh: '读取本插件已经折好的会话用量：每天的分桶、按小时的结算次数与各模型的 token 总量。',
-        en: 'Reads the session usage this plugin has already folded: per-day buckets, hourly settlements and per-model token totals.',
+        zh: '汇总每日、每小时及各模型的会话 Token 用量。',
+        en: 'Summarizes daily, hourly and per-model session token usage.',
       },
       permission: {},
       input: WIDGET_USAGE_INPUT,

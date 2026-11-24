@@ -8,5 +8,5 @@
   "archiveDeleteFailed": { "zh": "删除失败：{detail}", "en": "Delete failed: {detail}" },
   "archiveDeleteOpen": { "zh": "会话仍被本应用占用，重启后再删除", "en": "The conversation is still held open by this app; restart it, then delete again" },
   "workspaceTitle": { "zh": "工作区视图菜单", "en": "Workspace view menu" },
-  "workspaceDesc": { "zh": "工作区标题处提供「工作区 / 已归档 / 全部」下拉菜单，默认工作区；已归档的会话单独列出，可以在那里删除。", "en": "A Workspace / Archived / All dropdown at the workspace heading, defaulting to Workspace; archived conversations get a list of their own, where they can be deleted." }
+  "workspaceDesc": { "zh": "在工作区标题处切换活跃、已归档与全部会话视图。", "en": "Switch between Workspace, Archived and All views from the workspace heading." }
 }

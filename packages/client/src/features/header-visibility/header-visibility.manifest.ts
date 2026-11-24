@@ -14,7 +14,6 @@ export default {
     rank: 55,
     pref: 'hideToolbarOutsideConversation',
     title: 'hideToolbarOutsideConversationTitle',
-    desc: 'hideToolbarOutsideConversationDesc',
   }],
   cases: ['settings'],
   scenarios: ['sessionPanel'],

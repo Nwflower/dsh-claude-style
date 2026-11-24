@@ -1,4 +1,5 @@
 import { HOME_LAYOUT_STUDIO } from '../../constants'
+import { activeLocale } from '../../core/i18n'
 import { getUsername } from '../../shared/identity'
 import { readPrefs } from '../../core/prefs'
 import { pickHeroGreeting, pickStudioGreeting } from './greetings'
@@ -21,9 +22,11 @@ export function createGreetingCopy() {
     sync(hero: boolean) {
       if (hero && !wasHero) draw = Math.random()
       wasHero = hero
-      const greeting = readPrefs().homeLayout === HOME_LAYOUT_STUDIO
-        ? pickStudioGreeting(getUsername())
-        : pickHeroGreeting(getUsername(), draw)
+      const currentPrefs = readPrefs()
+      const locale = activeLocale()
+      const greeting = currentPrefs.homeLayout === HOME_LAYOUT_STUDIO
+        ? pickStudioGreeting(getUsername(), locale)
+        : pickHeroGreeting(getUsername(), draw, locale, currentPrefs.brand)
       for (const span of replaced.keys()) if (!span.isConnected) replaced.delete(span)
       // The host renders one title group per hero variant; the first span of
       // each is the greeting (a preview badge may sit before it).

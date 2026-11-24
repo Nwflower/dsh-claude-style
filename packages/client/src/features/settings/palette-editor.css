@@ -302,13 +302,6 @@ body[data-dsh-claude-style] .dsh-claude-scheme-reset-space {
   width: 24px;
 }
 
-/* What the figures are, under the columns they stand in. */
-body[data-dsh-claude-style] .dsh-claude-scheme-note {
-  flex: none;
-  margin: -6px 0 0;
-  padding-left: calc(var(--dsh-claude-scheme-label) + 18px);
-}
-
 /* The scheme's two choices, on the colours' own label column. */
 body[data-dsh-claude-style] .dsh-claude-scheme-options {
   display: grid;

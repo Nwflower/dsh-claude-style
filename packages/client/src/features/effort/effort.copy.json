@@ -2,8 +2,7 @@
   "effortLabel": { "zh": "推理等级", "en": "Reasoning effort" },
   "effortFaster": { "zh": "更快", "en": "Faster" },
   "effortSmarter": { "zh": "更强", "en": "Smarter" },
-  "effortAccentTitle": { "zh": "思考强度重点色", "en": "Effort accent colour" },
-  "effortAccentDesc": { "zh": "推理等级按钮根据当前档位应用强调色。", "en": "Apply accent colour to the reasoning effort button based on the current level." },
+  "effortAccentTitle": { "zh": "推理等级强调色", "en": "Effort accent colour" },
   "effortSliderTitle": { "zh": "推理等级滑块", "en": "Reasoning effort slider" },
-  "effortSliderDesc": { "zh": "在模型选择器中显示推理等级调节滑块。", "en": "Show the reasoning effort slider in the model picker." }
+  "effortSliderDesc": { "zh": "在输入区工具栏显示推理等级按钮与调节滑块。", "en": "Show the reasoning effort button and slider in the composer toolbar." }
 }

@@ -11,7 +11,6 @@ export default {
     rank: 30,
     pref: 'sidebarEntries',
     title: 'entriesTitle',
-    desc: 'entriesDesc',
   }],
   cases: [],
 } satisfies FeatureManifest

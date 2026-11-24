@@ -361,7 +361,7 @@ export async function snapshotTree(
     }
     const candidates = [...unique]
     if (candidates.length > maxDirtyFiles) {
-      throw new Error('工作区变更文件数超过上限（' + String(candidates.length) + ' > ' + String(maxDirtyFiles) + '）')
+      throw new Error(`dirty-files-exceeded:${String(candidates.length)}:${String(maxDirtyFiles)}`)
     }
 
     const safePaths: string[] = []
@@ -392,7 +392,7 @@ export async function snapshotTree(
           totalDirtyBytes += info.size
           if (totalDirtyBytes > maxSnapshotBytes) {
             const limitMb = Math.max(1, Math.round(maxSnapshotBytes / (1024 * 1024)))
-            throw new Error('单次快照变更体积超过上限（>' + String(limitMb) + ' MB）')
+            throw new Error(`snapshot-size-exceeded:${String(limitMb)}`)
           }
           safePaths.push(slashPath)
         }

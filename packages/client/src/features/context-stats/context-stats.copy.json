@@ -15,10 +15,6 @@
     "zh": "上下文占用图示",
     "en": "Context meter"
   },
-  "contextDisplayDesc": {
-    "zh": "控制输入区工具栏上下文占用指标的展示形态。",
-    "en": "Choose the context meter shape in the composer toolbar."
-  },
   "contextDisplayPie": {
     "zh": "饼图",
     "en": "Pie"
@@ -75,17 +71,13 @@
     "zh": "上下文占用百分比",
     "en": "Context percentage"
   },
-  "contextNumbersDesc": {
-    "zh": "在上下文占用图示旁显示百分比数值。",
-    "en": "Show the percentage figure beside the context meter."
-  },
   "statsPositionTitle": {
     "zh": "对话统计栏",
     "en": "Conversation statistics bar"
   },
   "statsPositionDesc": {
-    "zh": "在输入区展示当前会话的实时聚合读数。",
-    "en": "Show live session-level figures in the composer."
+    "zh": "在输入区实时展示当前会话的用量与性能指标。",
+    "en": "Show live session usage and timing metrics in the composer."
   },
   "statsPositionFooter": {
     "zh": "随宽度同行",
@@ -110,10 +102,6 @@
   "statsFooterAlignTitle": {
     "zh": "水平位置",
     "en": "Horizontal position"
-  },
-  "statsFooterAlignDesc": {
-    "zh": "统计读数在输入区行内的对齐方向。",
-    "en": "Alignment of the statistics strip across the composer."
   },
   "statsFooterAlignLeft": {
     "zh": "左侧",
@@ -167,10 +155,6 @@
     "zh": "Token 单位",
     "en": "Token units"
   },
-  "statsFooterTokenFormatDesc": {
-    "zh": "控制对话统计栏、上下文弹层与会话面板中的数值写法。",
-    "en": "Format token counts in the statistics bar, context popover and session panel."
-  },
   "statsFooterTokenDigitsSample": {
     "zh": "1,000,000 tok",
     "en": "1,000,000 tok"
@@ -182,10 +166,6 @@
   "billingCurrencyTitle": {
     "zh": "计费币种",
     "en": "Billing currency"
-  },
-  "billingCurrencyDesc": {
-    "zh": "计算会话费用所使用的官方价格表币种。",
-    "en": "Select the official currency for session cost calculations."
   },
   "billingCurrencyOff": {
     "zh": "关闭",
@@ -204,8 +184,8 @@
     "en": "Custom price table"
   },
   "billingTableDesc": {
-    "zh": "自定义模型单价以覆盖默认价格表。",
-    "en": "Custom model prices to override default rate tables."
+    "zh": "按模型覆盖默认单价，同名条目优先于内置价格表。",
+    "en": "Override default rates per model; matching entries take precedence over built-in tables."
   },
   "billingTableEdit": {
     "zh": "编辑",
