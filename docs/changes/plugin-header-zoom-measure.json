@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-24",
+  "group": "fixes",
+  "order": 3,
+  "external": false,
+  "zh": "修复开启页面缩放时插件管理页右上角刷新与安装按钮偏移并被顶栏裁剪的问题",
+  "en": "Counter-scale the plugin manager page's offscreen header measurement clone under page zoom so toolbar actions stay aligned without clipping"
+}

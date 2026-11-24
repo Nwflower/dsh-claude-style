@@ -985,6 +985,11 @@
           "owner": "element"
         }
       ]
+    },
+    "body[data-dsh-claude-style][data-dsh-claude-page-zoom] [data-plugin-bar][data-measuring]|width": {
+      "selector": "body[data-dsh-claude-style][data-dsh-claude-page-zoom] [data-plugin-bar][data-measuring]",
+      "prop": "width",
+      "verdict": "transient state"
     }
   }
 }

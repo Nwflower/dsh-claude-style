@@ -489,3 +489,8 @@ export const CONVERSATION_MAIN_SLOT_SELECTOR = '[data-slot="main.conversation"]'
 export const COMPOSER_CONTROLS_SELECTOR = '[data-dsh-claude-part~="composer-controls"]'
 
 export const CONVERSATION_INPUT_RIGHT_SLOT_SELECTOR = '[data-slot="conversation.input.right"]'
+
+/** Ephemeral out-of-flow clone measured by the plugin manager page's scroll header. */
+export const PLUGIN_BAR_ATTRIBUTE = 'data-plugin-bar'
+export const PLUGIN_MEASURING_ATTRIBUTE = 'data-measuring'
+export const PLUGIN_HEADER_MEASURING_SELECTOR = `[${PLUGIN_BAR_ATTRIBUTE}][${PLUGIN_MEASURING_ATTRIBUTE}]`

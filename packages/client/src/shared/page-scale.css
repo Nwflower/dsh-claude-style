@@ -32,3 +32,13 @@ body[data-dsh-claude-style][data-dsh-claude-page-under-1000]:not([data-dsh-claud
   grid-template-columns: var(--dsh-windows-sidebar-width, 280px) minmax(0, 1fr) minmax(0, 0px) !important;
 }
 }
+
+/* The plugin manager's scroll header measures an ephemeral [data-measuring]
+   clone via getBoundingClientRect() and writes those readings back as CSS
+   pixel offsets and widths. Counter-scaling the clone and dividing its
+   percentage width by the page zoom keeps its container query, wrapping and
+   measured boxes in CSS pixels (D81). */
+body[data-dsh-claude-style][data-dsh-claude-page-zoom] [data-plugin-bar][data-measuring] {
+  zoom: calc(1 / var(--dsh-claude-page-zoom-factor, 1));
+  width: calc((100% + var(--plugin-page-scrollbar-width, 0px)) / var(--dsh-claude-page-zoom-factor, 1)) !important;
+}

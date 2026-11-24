@@ -54,6 +54,7 @@ const TRANSIENT_SELECTORS = [
   '[data-dsh-claude-dragging]', '[data-dsh-claude-swapping]',
   '[data-dsh-claude-reason-window]',
   '[data-dsh-theme-transitioning]',
+  '[data-measuring]',
 ]
 
 /**
