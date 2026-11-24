@@ -1,4 +1,4 @@
-import { COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_CONTENT_SELECTOR, CONVERSATION_MAIN_SLOT_SELECTOR, PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
+import { COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_CONTENT_SELECTOR, CONVERSATION_MAIN_SLOT_SELECTOR, MODEL_SLOT_SELECTOR, PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { HOLDS_ATTR } from '../../constants'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { observeSize } from '@dsh-claude-style/engine/bus'
@@ -10,8 +10,10 @@ const FRAME = 'data-dsh-claude-composer-frame'
 const HEIGHT = '--dsh-claude-composer-toolbar-height'
 const TRAILING_MIN = '--dsh-claude-composer-trailing-min'
 const TRAILING = '[data-dsh-claude-part~="trailing"]'
-const MODEL_FLEX = '.dsh-claude-model-seat, .dsh-claude-model-seat-model, .dsh-claude-model-btn'
-const MODEL_LABEL = '.dsh-claude-model-btn-label'
+const HOST_MODEL_ROOT = `${MODEL_SLOT_SELECTOR} > [data-dsh-claude-part~="host-root"]`
+const HOST_MODEL_TRIGGER = `${HOST_MODEL_ROOT} > [data-dsh-claude-part~="trigger"]`
+const MODEL_FLEX = `[data-dsh-claude-part~="composer-controls"], .dsh-claude-model-seat, .dsh-claude-model-seat-model, .dsh-claude-model-btn, ${HOST_MODEL_ROOT}, ${HOST_MODEL_TRIGGER}`
+const MODEL_LABEL = `.dsh-claude-model-btn-label, ${HOST_MODEL_TRIGGER} > [data-dsh-claude-part~="trigger-label"]`
 
 function number(value: string) {
   const parsed = Number.parseFloat(value)
@@ -41,34 +43,38 @@ function flexItems(container: HTMLElement): HTMLElement[] {
 
 /**
  * The width at which the trailing cluster has every fixed control and the
- * model's ten-character recognition floor. Only the model's nested flex boxes
- * need their contents summed; every other effective item has a fixed width.
+ * model's ten-character recognition floor. Only the controls group and the
+ * model's nested flex boxes need their contents summed; every other effective
+ * item has a fixed width.
  */
-function minimumItemWidth(item: HTMLElement): number {
+function minimumItemWidth(item: HTMLElement, state: { sawLabel: boolean }): number {
   const style = getComputedStyle(item)
   const margins = horizontalMargins(style)
   if (item.matches(MODEL_LABEL)) {
+    state.sawLabel = true
     const floor = number(style.minWidth) + (style.boxSizing === 'border-box' ? 0 : horizontalInsets(style))
     return floor + margins
   }
-  if (item.matches(MODEL_FLEX)) return minimumFlexWidth(item) + margins
+  if (item.matches(MODEL_FLEX)) return minimumFlexWidth(item, state) + margins
   return item.getBoundingClientRect().width + margins
 }
 
-function minimumFlexWidth(container: HTMLElement): number {
+function minimumFlexWidth(container: HTMLElement, state: { sawLabel: boolean }): number {
   const style = getComputedStyle(container)
   const items = flexItems(container)
   const gap = number(style.columnGap) * Math.max(0, items.length - 1)
-  return horizontalInsets(style) + gap + items.reduce((sum, item) => sum + minimumItemWidth(item), 0)
+  return horizontalInsets(style) + gap + items.reduce((sum, item) => sum + minimumItemWidth(item, state), 0)
 }
 
-/** Null while no independent right-hand control is occupying the cluster. */
+/** Null while no independent right-hand control or visible model label occupies the cluster. */
 export function composerTrailingMinimum(card: HTMLElement, row: HTMLElement): number | null {
   const held = (card.getAttribute(HOLDS_ATTR) ?? '').split(/\s+/).includes('composer-right-filled')
   if (!held) return null
   const trailing = row.querySelector<HTMLElement>(TRAILING)
-  if (trailing === null || trailing.querySelector(MODEL_LABEL) === null) return null
-  return Math.ceil(minimumFlexWidth(trailing))
+  if (trailing === null) return null
+  const state = { sawLabel: false }
+  const width = Math.ceil(minimumFlexWidth(trailing, state))
+  return state.sawLabel ? width : null
 }
 
 /** Share the composer's scheduler and size notifications; no second observer. */

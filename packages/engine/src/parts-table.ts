@@ -130,6 +130,7 @@ export const CONVERSATION_PARTS: PartTable = {
   activityExpanded: 'composer-activity',
   primary: 'composer-primary',
   trigger: 'trigger',
+  triggerEffort: 'trigger-effort',
   chevron: 'trigger-chevron',
   rail: 'attachment-rail',
   image: 'attachment-image',

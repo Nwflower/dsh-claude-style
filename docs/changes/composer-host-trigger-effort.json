@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-24",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "修复关闭重绘模型选择器时底栏宿主原生推理等级标签在长模型名称与促销徽章旁被截断为省略号的问题",
+  "en": "Prevent the host model selector's reasoning effort label from truncating to an ellipsis beside long model names and promotion badges when the model picker restyle is off"
+}

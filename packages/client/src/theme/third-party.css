@@ -69,3 +69,24 @@ body[data-dsh-claude-style]:not([data-we-wallpaper]) [data-dsh-claude-settings-r
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-controls"] {
   --dsh-pe-seat-nudge: 0;
 }
+
+/* ---------- Third-party repair: dsh-connect-workbuddy's model label ---------- */
+/* WorkBuddyModelLabel renders an inline-flex row inside the host's block
+   triggerLabel and modelName boxes without a width ceiling of its own, so a
+   narrow trigger or menu row clips the trailing promotion pill and load icon
+   instead of ellipsizing the model name. Cap the flex row at its container and
+   let the leading name span absorb the ellipsis while the rate, promotion pill
+   and load glyph keep their full boxes. The classes belong to another plugin,
+   so they stay out of the host contract table (D3). */
+body[data-dsh-claude-style] .dsm-workbuddy-model-label {
+  max-width: 100%;
+  min-width: 0;
+}
+body[data-dsh-claude-style] .dsm-workbuddy-model-label > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+body[data-dsh-claude-style] .dsm-workbuddy-model-label > .dsm-workbuddy-model-label-rate {
+  flex: none;
+}

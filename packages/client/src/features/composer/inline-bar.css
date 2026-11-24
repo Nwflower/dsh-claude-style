@@ -13,9 +13,10 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"]
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"] {
   display: inline-flex;
   align-items: center;
+  gap: 4px;
   height: var(--dsh-claude-footer-control-height);
   min-width: 0;
-  max-width: min(280px, 100%);
+  max-width: min(360px, 100%);
   padding: 0 4px;
   border: none;
   border-radius: 6px;
@@ -34,10 +35,17 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"]
   cursor: default;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"] [data-dsh-claude-part~="trigger-label"] {
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+/* ModelSelect gives triggerEffort flex-shrink: 1000 so the level collapses
+   before the model name. Keep the level whole in every restyled card so a
+   tight row shortens the model label instead. */
+body[data-dsh-claude-style] [data-composer-card] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"] > [data-dsh-claude-part~="trigger-effort"] {
+  flex: none;
 }
 body[data-dsh-claude-style] [data-composer-card][data-composer-variant="inline"] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"] > [data-dsh-claude-part~="trigger-chevron"] {
   display: none;

@@ -43,7 +43,8 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh
    (inline-bar.css). The seat takes the row's own 4px leading inset so the
    control stands apart from the plate instead of touching it; the inset is part
    of the measured cluster floor, so the wrapping decision still carries it. */
-body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-part~="trailing"] .dsh-claude-model-seat {
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-part~="trailing"] .dsh-claude-model-seat,
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-part~="trailing"] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] {
   margin-inline-start: 4px;
 }
 /* The release tag stays beside the model's name in every layout: it is part of
@@ -98,7 +99,8 @@ body[data-dsh-claude-style] [data-composer-card][data-composer-variant] [data-ds
 body[data-dsh-claude-style] [data-composer-card]:is([data-dsh-claude-composer-layout="compact"], [data-dsh-claude-composer-layout="stacked"]) [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="trailing"] .dsh-claude-model-seat > .dsh-claude-model-seat-model {
   min-width: calc(10ch + 8px);
 }
-body[data-dsh-claude-style] [data-composer-card]:is([data-dsh-claude-composer-layout="compact"], [data-dsh-claude-composer-layout="stacked"]) [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
+body[data-dsh-claude-style] [data-composer-card]:is([data-dsh-claude-composer-layout="compact"], [data-dsh-claude-composer-layout="stacked"]) [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label,
+body[data-dsh-claude-style] [data-composer-card]:is([data-dsh-claude-composer-layout="compact"], [data-dsh-claude-composer-layout="stacked"]) [data-dsh-claude-composer-toolbar] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"] [data-dsh-claude-part~="trigger-label"] {
   min-width: 10ch;
 }
 /* The new-conversation card reads as one control line at every width it has
@@ -113,7 +115,8 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-compos
   flex-wrap: nowrap;
 }
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"]) [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat > .dsh-claude-model-seat-model,
-body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"]) [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"]) [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label,
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"]) [data-dsh-claude-composer-toolbar] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"] [data-dsh-claude-part~="trigger-label"] {
   min-width: 0;
 }
 /* Below the one-line floor the card takes its second line, and only its
@@ -126,7 +129,8 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-compos
   flex-wrap: nowrap;
 }
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card][data-dsh-claude-composer-layout="stacked"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat > .dsh-claude-model-seat-model,
-body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card][data-dsh-claude-composer-layout="stacked"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card][data-dsh-claude-composer-layout="stacked"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label,
+body[data-dsh-claude-style] [data-dsh-claude-part~="composer-hero"] [data-composer-card][data-dsh-claude-composer-layout="stacked"] [data-dsh-claude-composer-toolbar] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"] [data-dsh-claude-part~="trigger-label"] {
   min-width: 0;
 }
 /* The right-hand cluster keeps every fixed control at its own width and
@@ -181,13 +185,15 @@ body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-comp
   flex-wrap: nowrap;
 }
 body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat > .dsh-claude-model-seat-model,
-body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label,
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant] [data-dsh-claude-composer-toolbar] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"] [data-dsh-claude-part~="trigger-label"] {
   min-width: 0;
 }
 /* With an independent control in the cluster, the name takes its natural width
    while the row has room and may ellipsize to its recognition floor, never to
    zero. The measured cluster floor makes the wrapping decision before the name
    grows; clipping its box keeps that floor stable in Chromium and Firefox (#427). */
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"])[data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="composer-controls"],
 body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"])[data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat {
   flex: 1 1 0;
   min-width: 0;
@@ -197,7 +203,8 @@ body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-comp
   min-width: calc(10ch + 8px);
   overflow: hidden;
 }
-body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"])[data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label {
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"])[data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-btn-label,
+body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"])[data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] [data-slot="conversation.input.model"] > [data-dsh-claude-part~="host-root"] > [data-dsh-claude-part~="trigger"] [data-dsh-claude-part~="trigger-label"] {
   min-width: 10ch;
 }
 /* The native width handle can overflow the outer phase frame without adding
