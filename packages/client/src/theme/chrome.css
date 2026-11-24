@@ -394,24 +394,10 @@ body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] :is([class^="dsh-c
 }
 
 /* ---------- the page off screen ---------- */
-/* The mark rides <body data-dsh-claude-asleep> (packages/client/src/core/page-visibility.ts, D40) while
-   the window is hidden: every animation on the page holds where it stands and
-   resumes there, so the page the reader comes back to is the page they left, and
-   no rule here paints anything. The host's own animations are held with the
-   skin's, because a frame the compositor runs for a window nobody sees costs the
-   same whoever wrote the animation, and catching those frames up is what stalls
-   the return. `*` reaches no pseudo-element and two of the skin's animations run
-   on ::before and ::after, so those get selectors of their own. `!important`
-   because two of the skin's animations write their `animation` shorthand with
-   it, and the shorthand's `running` outranks a plain longhand; the mark is spelt
-   twice because those two rules, and the skeleton's, come from feature sheets
-   later in the cascade at the specificity one mark reaches, so the pause has to
-   stand above them rather than beside them (the way caret.css's layer rule
-   repeats its own attribute). */
-body[data-dsh-claude-style][data-dsh-claude-asleep][data-dsh-claude-asleep] *,
-body[data-dsh-claude-style][data-dsh-claude-asleep][data-dsh-claude-asleep] *::before,
-body[data-dsh-claude-style][data-dsh-claude-asleep][data-dsh-claude-asleep] *::after {
-  animation-play-state: paused !important;
+/* The visibility owner sets this mark (D40). Loops opt in where they are
+   declared so an entrance can paint and an exit can reach animationend. */
+body[data-dsh-claude-style][data-dsh-claude-asleep] {
+  --dsh-claude-loop-play-state: paused;
 }
 
 /* ---------- the background fill's opacity ---------- */

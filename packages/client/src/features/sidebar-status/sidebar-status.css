@@ -62,7 +62,7 @@ body[data-dsh-claude-style]:not([data-dsh-claude-ongoing-indicator="ring"]) [dat
 body[data-dsh-claude-style] .dsh-claude-ongoing-preview:not([data-look="ring"]) .dsh-claude-ongoing-mark,
 body[data-dsh-claude-style] .dsh-claude-sidebar-group-seat .dsh-claude-ongoing-mark:not([data-look="ring"]) {
   background: var(--dsh-claude-status-running);
-  animation: dsh-claude-status-breathe var(--dsh-claude-period-status-breathe) var(--dsh-claude-ease-in-out) infinite;
+  animation: dsh-claude-status-breathe var(--dsh-claude-period-status-breathe) var(--dsh-claude-ease-in-out) infinite var(--dsh-claude-loop-play-state, running);
 }
 @keyframes dsh-claude-status-breathe {
   0%, 100% { opacity: 0.3; }
@@ -96,7 +96,7 @@ body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-sideba
       background-repeat: no-repeat;
       background-clip: text;
       -webkit-text-fill-color: transparent;
-      animation: dsh-claude-title-shine var(--dsh-claude-period-status-title) var(--dsh-claude-ease-status-title) infinite;
+      animation: dsh-claude-title-shine var(--dsh-claude-period-status-title) var(--dsh-claude-ease-status-title) infinite var(--dsh-claude-loop-play-state, running);
     }
     body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"])[data-dsh-claude-ongoing-indicator="shimmer"] [data-dsh-claude-running-title]:dir(rtl):not([aria-selected="true"]) > [data-dsh-claude-part~="row-title"],
     body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"])[data-dsh-claude-ongoing-indicator="shimmer"] [data-dsh-claude-part~="project-row"][data-dsh-claude-workspace-running]:dir(rtl) [data-dsh-claude-part~="row-title"],

@@ -25,7 +25,7 @@
     { "id": "skin.sidebar-layout", "attribute": "data-dsh-claude-sidebar-layout", "feature": "core", "sees": "the sidebar density chosen by the reader: relaxed or compact" },
     { "id": "skin.root", "attribute": "data-dsh-claude-style", "feature": "core", "sees": "the page the skin is applied to: every stylesheet the skin ships is scoped under this mark on <body>" },
     { "id": "skin.motion", "attribute": "data-dsh-claude-motion", "feature": "core", "sees": "the motion the reader asked for, resolved: the stylesheets still every animation under its reduced value" },
-    { "id": "skin.asleep", "attribute": "data-dsh-claude-asleep", "feature": "core", "sees": "the page off screen: the stylesheets hold every animation on it where it stands until the mark comes off" },
+    { "id": "skin.asleep", "attribute": "data-dsh-claude-asleep", "feature": "core", "sees": "the page off screen, where the skin pauses its looping animations until the mark comes off" },
     { "id": "skin.page-zoom", "attribute": "data-dsh-claude-page-zoom", "feature": "core", "sees": "the page's own scale, resolved: every length the skin writes is divided by it, and the stylesheet draws the page at it through the factor property projected from this mark" },
     { "id": "skin.page-under-600", "attribute": "data-dsh-claude-page-under-600", "feature": "core", "sees": "the page's own width at or under 600px, where the new-conversation card gives its right-hand controls a second line" },
     { "id": "skin.page-under-768", "attribute": "data-dsh-claude-page-under-768", "feature": "core", "sees": "the page's own width at or under 768px, where the host auto-collapses the sidebar and its track follows the sidebar's own state" },

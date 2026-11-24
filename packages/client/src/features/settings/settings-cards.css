@@ -174,7 +174,7 @@ body[data-dsh-claude-style] .dsh-claude-motion-sample {
 body[data-dsh-claude-style] .dsh-claude-motion-word {
   grid-area: 1 / 1;
   justify-self: center;
-  animation: dsh-claude-motion-word var(--dsh-claude-period-preview-swap) var(--dsh-claude-swap-ease) infinite;
+  animation: dsh-claude-motion-word var(--dsh-claude-period-preview-swap) var(--dsh-claude-swap-ease) infinite var(--dsh-claude-loop-play-state, running);
 }
 
 body[data-dsh-claude-style] .dsh-claude-motion-word + .dsh-claude-motion-word {
@@ -236,7 +236,7 @@ body[data-dsh-claude-style] .dsh-claude-caret-sample-bar {
      stands whole. The drawn caret switches its blink back on with every move
      (features/caret/caret.ts), so the animation is off for the whole time the
      line is being typed and the caret is lit while it moves. */
-  animation: dsh-claude-caret-blink var(--dsh-claude-period-blink) step-end infinite;
+  animation: dsh-claude-caret-blink var(--dsh-claude-period-blink) step-end infinite var(--dsh-claude-loop-play-state, running);
 }
 
 body[data-dsh-claude-style] .dsh-claude-caret-sample-bar[data-typing] {
