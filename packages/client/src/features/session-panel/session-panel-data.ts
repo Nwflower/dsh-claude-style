@@ -57,20 +57,22 @@ export function useLiveOccupancy(sessionId: string, live = true): ContextOccupan
     const face = sessionProjectionFaces(panelHost(), sessionId, [OCCUPANCY_KEY])?.[OCCUPANCY_KEY]
     return occupancyFrom(face)
   }, [sessionId])
-  const [occupancy, setOccupancy] = React.useState<ContextOccupancy | null>(read)
+  const [occupancy, setOccupancy] = React.useState<ContextOccupancy | null>(() => (live ? read() : null))
   React.useEffect(() => {
-    if (sessionId === '') return undefined
+    if (sessionId === '' || !live) {
+      setOccupancy(null)
+      return undefined
+    }
     const refresh = () => {
       const next = read()
       setOccupancy(previous => (sameOccupancy(previous, next) ? previous : next))
     }
     refresh()
-    if (!live) return undefined
     const face = sessionProjectionFaces(panelHost(), sessionId, [OCCUPANCY_KEY])?.[OCCUPANCY_KEY]
     if (typeof face?.subscribe !== 'function') return undefined
     return face.subscribe(refresh)
   }, [live, read, sessionId])
-  return occupancy
+  return live ? (occupancy ?? read()) : null
 }
 
 /** One session's reading, shared by every section of the panel that shows it. */

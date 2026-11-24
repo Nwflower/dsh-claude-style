@@ -11,7 +11,6 @@ import { usePanelReading } from './session-panel-data'
 import { panelFiguresOf } from './session-panel-figures'
 import type { PanelFigures } from './session-panel-figures'
 import { useLiveFigures } from './session-panel-live'
-import { useSectionFolded } from './section-fold'
 import { Skeleton, panelEntry } from './panel-rows'
 import type { PanelStats } from '@dsh-claude-style/contracts/session-panel'
 
@@ -100,8 +99,7 @@ export function speedText(stats: PanelStats) {
  * surface of one session, not a second set of numbers.
  */
 export const StatsSection = panelEntry(function StatsBody({ sessionId }) {
-  const folded = useSectionFolded('claude-style-stats')
-  const { figures, failed } = useFigures(sessionId, !folded)
+  const { figures, failed } = useFigures(sessionId)
   if (failed) return null
   if (figures === null) return h(PendingFigures, { labels: ['statsTurns', 'statsSteps', 'statsModelTime', 'statsToolTime'] })
   const stats = figures.stats
@@ -124,8 +122,7 @@ export const StatsSection = panelEntry(function StatsBody({ sessionId }) {
  * With billing off or a model no table prices, the cost row is left out.
  */
 export const TokensSection = panelEntry(function TokensBody({ sessionId }) {
-  const folded = useSectionFolded('claude-style-tokens')
-  const { figures, failed } = useFigures(sessionId, !folded)
+  const { figures, failed } = useFigures(sessionId)
   const tokens = useTokenText()
   if (failed) return null
   if (figures === null) return h(PendingFigures, { labels: ['statsUncachedInput', 'statsCacheRead', 'statsCacheWrite', 'statsOutput'] })

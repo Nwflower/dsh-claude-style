@@ -3,7 +3,6 @@ import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import { formatCompactTokens } from '../../shared/format'
 import { copy } from './copy'
 import { usePanelReading, useLiveOccupancy } from './session-panel-data'
-import { useSectionFolded } from './section-fold'
 import { contextRows, contextOverview } from './context-rows'
 import type { ContextOverview, ContextRow } from './context-rows'
 import { compactOffer, requestCompaction } from './compact-offer'
@@ -40,8 +39,7 @@ export function useOverview(sessionId: string, live = true) {
  * the distance to it (D100).
  */
 export const ContextSection = panelEntry(function ContextBody({ sessionId }) {
-  const folded = useSectionFolded('claude-style-context')
-  const { context, answered, failed, overview } = useOverview(sessionId, !folded)
+  const { context, answered, failed, overview } = useOverview(sessionId)
   if (overview === null && failed && !answered) return h('p', { className: 'dsh-claude-panel-note' }, copy('unavailable'))
   if (overview === null && context !== null) return h('p', { className: 'dsh-claude-panel-note' }, copy('noContext'))
   if (overview === null) {

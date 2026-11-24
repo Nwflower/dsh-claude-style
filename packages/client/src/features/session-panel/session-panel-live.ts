@@ -89,20 +89,23 @@ function subscribeLiveFigures(listener: () => void) {
 }
 
 /**
- * Follow the live reading of one session. When `live` is false (the surface is
- * folded away behind CSS), the caller keeps a static snapshot without waking on
- * per-frame streaming ticks.
+ * Follow the live reading of one session. When `live` is false, returns null so
+ * hidden summary slots fall back to the route's settled reading without holding
+ * a stale initial snapshot or waking on per-frame streaming ticks.
  * @param sessionId - the session the panel shows.
  * @param live - whether to subscribe to live per-frame updates.
- * @returns the reading, or null while this session has none published.
+ * @returns the reading, or null while inactive or while this session has none published.
  */
 export function useLiveFigures(sessionId: string, live = true): SessionFigures | null {
   const read = React.useCallback(() => figuresOf(sessionId), [sessionId])
-  const [figures, setFigures] = React.useState<SessionFigures | null>(read)
+  const [figures, setFigures] = React.useState<SessionFigures | null>(() => (live ? read() : null))
   React.useEffect(() => {
+    if (!live) {
+      setFigures(null)
+      return undefined
+    }
     setFigures(read())
-    if (!live) return undefined
     return subscribeLiveFigures(() => { setFigures(read()) })
   }, [live, read])
-  return figures
+  return live ? (figures ?? read()) : null
 }
