@@ -124,10 +124,16 @@ function bottomOverTrigger(rect: DOMRect, height: number, gap: number, margin: n
   return roomBelow >= roomAbove ? Math.max(margin, viewportHeight - height - margin) : margin
 }
 
+function setImportant(style: CSSStyleDeclaration, property: string, value: string) {
+  if (style.getPropertyValue(property) === value && style.getPropertyPriority(property) === 'important') return
+  style.setProperty(property, value, 'important')
+}
+
 /**
  * Position a fixed-position popover relative to its trigger. `important`
  * switches to `style.setProperty(..., 'important')`, as the account popover
- * requires; the same-value guard skips a write that would only dirty layout.
+ * requires; opposing `right` and `bottom` insets are cleared to `auto` so a
+ * stylesheet or peer plugin writing dual insets cannot stretch or pull the card.
  */
 export function positionAnchoredPopover(trigger: Element, pop: HTMLElement, opts: AnchorOptions = {}) {
   const space = anchorSpace(trigger)
@@ -136,11 +142,15 @@ export function positionAnchoredPopover(trigger: Element, pop: HTMLElement, opts
   const leftValue = `${Math.round(x)}px`
   const topValue = `${Math.round(y)}px`
   if (opts.important) {
-    if (pop.style.left !== leftValue) pop.style.setProperty('left', leftValue, 'important')
-    if (pop.style.top !== topValue) pop.style.setProperty('top', topValue, 'important')
+    setImportant(pop.style, 'left', leftValue)
+    setImportant(pop.style, 'top', topValue)
+    setImportant(pop.style, 'right', 'auto')
+    setImportant(pop.style, 'bottom', 'auto')
   } else {
     if (pop.style.left !== leftValue) pop.style.left = leftValue
     if (pop.style.top !== topValue) pop.style.top = topValue
+    if (pop.style.right !== 'auto') pop.style.right = 'auto'
+    if (pop.style.bottom !== 'auto') pop.style.bottom = 'auto'
   }
   return { x, y }
 }

@@ -80,4 +80,32 @@ export default spec({ page: 'desktop' }, ({ test }) => {
     await upwardFromTheRow(t)
     t.expectThat.boxWithin(await cardBox(t), await windowBox(t), 'the menu stays inside the window at 125%', 1)
   })
+
+  test('opposing right and bottom insets on the menu card are cleared so the card never stretches or shifts to the window edge', async (t) => {
+    await openMenu(t)
+    const before = await cardBox(t)
+    await t.page.evaluate((selector) => {
+      const card = document.querySelector(selector)
+      card.style.right = '12px'
+      card.style.bottom = '12px'
+      card.style.marginLeft = 'auto'
+    }, t.surface('account.menu'))
+    await t.settle()
+    const after = await cardBox(t)
+    const inline = await t.page.evaluate((selector) => {
+      const card = document.querySelector(selector)
+      return {
+        right: card.style.getPropertyValue('right'),
+        rightPriority: card.style.getPropertyPriority('right'),
+        bottom: card.style.getPropertyValue('bottom'),
+        bottomPriority: card.style.getPropertyPriority('bottom'),
+      }
+    }, t.surface('account.menu'))
+    t.expectThat.equal(inline.right, 'auto', 'inline right is reset to auto')
+    t.expectThat.equal(inline.rightPriority, 'important', 'inline right carries important priority')
+    t.expectThat.equal(inline.bottom, 'auto', 'inline bottom is reset to auto')
+    t.expectThat.equal(inline.bottomPriority, 'important', 'inline bottom carries important priority')
+    t.expectThat.equal(Math.abs(after.left - before.left) <= 1 && Math.abs(after.width - before.width) <= 1, true,
+      `the card keeps its left edge and width (${JSON.stringify(before)} -> ${JSON.stringify(after)})`)
+  })
 })

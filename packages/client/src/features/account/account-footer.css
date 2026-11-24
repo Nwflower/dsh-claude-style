@@ -295,6 +295,7 @@ body[data-dsh-claude-style] [data-dsh-claude-account-menu] {
      1px border on both sides, and the embed wrapper's 2px inset on both sides.
      The row remains the floor for a footer without a wide entry, and the page
      bound keeps a wide footer from carrying the card past the window. */
+  margin: 0;
   width: max(var(--dsh-claude-account-width, 260px), calc(var(--dsh-claude-account-footer-width, 0px) + 18px));
   min-width: 0;
   max-width: min(340px, calc(var(--dsh-claude-page-width, 100vw) - 16px));

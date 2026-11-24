@@ -103,6 +103,8 @@ export function createAccountDrawer(options: {
     if (!inRail(accountBtn)) {
       accountPopover.style.removeProperty('left')
       accountPopover.style.removeProperty('top')
+      accountPopover.style.removeProperty('right')
+      accountPopover.style.removeProperty('bottom')
       return
     }
     positionAnchoredPopover(accountBtn, accountPopover, { side: 'right', important: true })

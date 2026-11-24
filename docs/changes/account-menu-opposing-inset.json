@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-24",
+  "group": "fixes",
+  "order": 2,
+  "external": false,
+  "zh": "修复账号菜单弹层在同时存在内联或外部右偏移样式时被拉向窗口右边缘的问题",
+  "en": "Reset opposing right and bottom insets when positioning anchored popovers so the account menu stays aligned with its trigger"
+}
