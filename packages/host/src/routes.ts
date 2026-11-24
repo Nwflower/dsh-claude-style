@@ -2,7 +2,7 @@
  * The plugin's host routes: everything the browser half cannot reach itself.
  *
  * These are the surfaces D75 describes — the model copy document, the webfonts,
- * the OS user, the HDSL account, the routed assets, session deletion, the usage
+ * the OS user, the routed assets, session deletion, the usage
  * and search roll-ups, the peak rate catalog and the reader's brand images — each
  * registered on the host's web server under this plugin's route prefix. Every
  * route is registered on its own: one path the web server refuses is reported,
@@ -12,9 +12,9 @@
  * the browser half addresses the same names.
  */
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
-import { HDSL_PATH, HDSL_SKIN_PATH, PEAKRATE_PATH, PRICES_PATH, ROUTE_PREFIX, SESSION_COMPACT_PATH, SESSION_COST_PATH, SESSION_DELETE_PATH, SESSION_PANEL_PATH, SESSION_SEARCH_PATH, SOUND_PATH, USAGE_PATH, USERNAME_PATH, WEBFONTS_PATH } from '@dsh-claude-style/contracts/routes'
+import { PEAKRATE_PATH, PRICES_PATH, ROUTE_PREFIX, SESSION_COMPACT_PATH, SESSION_COST_PATH, SESSION_DELETE_PATH, SESSION_PANEL_PATH, SESSION_SEARCH_PATH, SOUND_PATH, USAGE_PATH, USERNAME_PATH, WEBFONTS_PATH } from '@dsh-claude-style/contracts/routes'
 import { OPTIONAL_WEBFONTS } from '@dsh-claude-style/contracts/webfonts'
-import { existsSync, readFileSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs'
 import { userInfo } from 'node:os'
 import { dirname, join, resolve, sep } from 'node:path'
 import { brandRoutes } from './brand.js'
@@ -25,8 +25,6 @@ import { pluginPath } from './harness-home.js'
 import { fenceRefused, methodRefused, readRequestBody, refusalOf, sendJson } from '@dsh-claude-style/engine/node/http'
 import { clampSoundVolume, isSoundName, playSystemSound, soundCapability } from './sound.js'
 import { createStaticFiles } from '@dsh-claude-style/engine/node/static-files'
-import { createHdslAccount } from './hdsl.js'
-import type { HdslReading } from './hdsl.js'
 import { packageRoot } from './package-root.js'
 import { createPeakRate } from './peakrate.js'
 import { createPrices } from './prices.js'
@@ -291,7 +289,6 @@ export function registerRoutes(ctx: DshContext, scope: DshScope, config?: HostCo
     }
     const ownsUsage = sharedUsage === undefined
     const usage = sharedUsage ?? createUsage(ctx)
-    const hdsl = createHdslAccount(ctx)
     const sessionSearch = createSessionSearch(ctx)
     const peakrate = createPeakRate(ctx)
     const prices = createPrices(ctx)
@@ -444,39 +441,6 @@ export function registerRoutes(ctx: DshContext, scope: DshScope, config?: HostCo
         return
       }
       void playSoundRequest(req, res).catch((error: unknown) => fail(res, error))
-    })
-
-    // Read-only and same-origin only; the player's avatar path is dropped
-    // here: the browser half needs a picture, not the home directory it
-    // lives in.
-    registerGuarded('HDSL account', 'exact', HDSL_PATH, ['GET', 'HEAD'], (_req, res) => {
-      sendPayload(res, hdsl.read().then((profile: HdslReading) => {
-        const { skinFile, ...account } = profile
-        return account
-      }))
-    })
-
-    // The player's own avatar. The path comes from the environment and
-    // never from the request, so this route cannot be pointed anywhere; a
-    // missing file is a 404 and the browser half falls back to the brand
-    // mark.
-    registerGuarded('HDSL skin', 'exact', HDSL_SKIN_PATH, ['GET', 'HEAD'], (req, res) => {
-      // A failed read propagates to the web server, which logs it and answers.
-      return hdsl.read().then((profile: HdslReading) => {
-        // A file removed under the launcher is a 404 like no file at all.
-        if (typeof profile.skinFile !== 'string' || !existsSync(profile.skinFile)) {
-          res.writeHead(404, { 'cache-control': 'no-store' })
-          res.end()
-          return
-        }
-        const body = readFileSync(profile.skinFile)
-        res.writeHead(200, {
-          'content-type': 'image/png',
-          'content-length': String(body.byteLength),
-          'cache-control': 'no-cache',
-        })
-        res.end(req.method === 'HEAD' ? undefined : body)
-      })
     })
 
     register('session delete', {

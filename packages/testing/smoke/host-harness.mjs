@@ -2,7 +2,7 @@ import path from 'node:path'
 import { Readable } from 'node:stream'
 
 function fakeHost(mod, options = {}) {
-  const { fenced, home, live = [], events, launch, stored, reads, releases, lists, listCalls, registry, tails, queryShapes, broken, onRead, projections, jobs, agents, commands, directories = {}, filesystem, loader, listen = false, config } = options
+  const { fenced, home, live = [], events, stored, reads, releases, lists, listCalls, registry, tails, queryShapes, broken, onRead, projections, jobs, agents, commands, directories = {}, filesystem, loader, listen = false, config } = options
   const shapes = queryShapes ?? ['observeSession', 'readTitleSnapshots']
   const routes = {}
   const listeners = {}
@@ -21,19 +21,6 @@ function fakeHost(mod, options = {}) {
     },
   })
   const settings = { configure: () => () => {} }
-  // The harness's launch environment, as its own snapshot behaves: the canonical
-  // order is process, project-env, user-env, and a layer left out of the asked
-  // list stays unreachable.
-  const launchEnvironment = launch === undefined ? undefined : {
-    getFrom(name, sources) {
-      for (const source of ['process', 'project-env', 'user-env']) {
-        if (!sources.includes(source)) continue
-        const values = launch[source]
-        if (values !== undefined && Object.prototype.hasOwnProperty.call(values, name)) return { value: values[name], source }
-      }
-      return undefined
-    },
-  }
   // Modelled on the host's connection.requestRejection(): the Host/Origin fence
   // (loopback, no cross-site marker, Origin naming the Host), then the cookie.
   const connection = {
@@ -55,7 +42,6 @@ function fakeHost(mod, options = {}) {
         get: (id) => (live.includes(id) ? liveSession(id) : undefined),
         list: () => live.map(liveSession),
       }
-      if (name === 'launchEnvironment') return launchEnvironment
       if (name === 'jobs' && jobs !== undefined) return jobs
       // The agent registry and the command registry, as the rail's compact control
       // reads them: the press runs the host's own `/compact` (D100).
@@ -147,8 +133,7 @@ function fakeHost(mod, options = {}) {
 }
 
 /**
- * One request through a registered route; resolves with `{ status, body }`, and
- * with the answer's bytes as `raw` (the skin route answers with a picture).
+ * One request through a registered route; resolves with `{ status, body, raw }`.
  *
  * `peer` is the socket address the route sees. The local stand-in reads it, so a
  * request made from this machine carries this machine's address (D75) unless a

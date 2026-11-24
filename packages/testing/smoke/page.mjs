@@ -3,11 +3,11 @@
  * stand-in host, the built bundle and the probe. Both page scripts are plain
  * browser scripts, each read as the parts below in this order; what they need
  * from Node — the page name, the cases this load runs, the run's tier, the
- * markup payload, the launcher's pixel — is set on `window` before them.
+ * markup payload — is set on `window` before them.
  */
 import fs from 'fs'
 import path from 'path'
-import { MARKUP, PNG_1PX } from './shared.mjs'
+import { MARKUP } from './shared.mjs'
 import { MODEL_SEAT_NAME } from '../specs/fixtures/model-seat.mjs'
 
 const SURFACE = JSON.parse(fs.readFileSync(new URL('../data/surface.json', import.meta.url), 'utf8')).surface
@@ -581,7 +581,7 @@ ${sessionTitleArea}
 ${chatSubmit}
 ${foldArea}
 </div>
-<script>window.SMOKE_CASE = ${JSON.stringify(name)}; window.SMOKE_GROUPS = ${JSON.stringify(cases)}; window.SMOKE_TIER = ${JSON.stringify(tier)}; window.SMOKE_MARKUP = ${JSON.stringify(MARKUP)}; window.SMOKE_PNG = ${JSON.stringify(PNG_1PX)}; window.SMOKE_SURFACE = ${JSON.stringify(SURFACE)}</script>
+<script>window.SMOKE_CASE = ${JSON.stringify(name)}; window.SMOKE_GROUPS = ${JSON.stringify(cases)}; window.SMOKE_TIER = ${JSON.stringify(tier)}; window.SMOKE_MARKUP = ${JSON.stringify(MARKUP)}; window.SMOKE_SURFACE = ${JSON.stringify(SURFACE)}</script>
 <script>${STAND_IN}</script>
 <script src="/client.js"></script>
 <script>${probe}</script>

@@ -1,7 +1,7 @@
 /**
  * The settings store and the value each case starts it on: the plugin action
- * patched with the markup payload, the launcher contract three cases model, the
- * identity name, and the settings the case seeds before the bundle.
+ * patched with the markup payload, the identity name, and the settings the case
+ * seeds before the bundle.
  */
 (function () {
   var host = window.__dshSmokeHost
@@ -13,15 +13,7 @@
     action.setAttribute('aria-label', MARKUP)
     action.setAttribute('data-cordis-badge', MARKUP)
   }
-  // The launcher cases leave the custom nickname empty on purpose: the name
-  // they show is the one the launcher published.
-  var LAUNCHER = {
-    hdsl: { hasSkinImage: true },
-    'hdsl-noskin': { hasSkinImage: false },
-    'hdsl-broken': { hasSkinImage: true },
-  }
-  var launcherCase = LAUNCHER[CASE] !== undefined
-  var username = CASE === 'markup' ? MARKUP : CASE === 'desktop' || launcherCase ? '' : 'Tester'
+  var username = CASE === 'markup' ? MARKUP : CASE === 'desktop' ? '' : 'Tester'
   var formListeners = []
   var formValue = { username: username, collapseFooter: true, homeLayout: CASE === 'studio' ? 'studio' : 'classic', brand: CASE === 'deepy' ? 'off' : undefined }
   // The crab-states case picks the crab, whose states it walks through; the
@@ -62,8 +54,6 @@
     Object.assign(formValue, patch)
     notifyForm()
   }
-  host.LAUNCHER = LAUNCHER
-  host.launcherCase = launcherCase
   host.form = form
   host.formValue = formValue
   host.formListeners = formListeners

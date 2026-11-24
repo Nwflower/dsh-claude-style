@@ -1,4 +1,4 @@
-import { MARKUP, SKIN_FACE, SKIN_HAT, same, check, contrast, basicChecks, commonChecks } from './_shared.mjs'
+import { MARKUP, same, check, contrast, basicChecks, commonChecks } from './_shared.mjs'
 import { deferredWanted, SHIPPED_PREFS } from '../shared.mjs'
 
 export default {
@@ -88,40 +88,6 @@ export default {
       JSON.stringify({ segments: r.segmentsInHome, popovers: r.popoversInHome }))
     check('returning to the conversation draws the ladder again',
       same(r.rowsAfterReturn, ladder), JSON.stringify(r.rowsAfterReturn))
-    commonChecks(r)
-  },
-  hdsl(r) {
-    basicChecks(r)
-    check("the launcher's account name outranks the OS-user probe", r.accountUser === 'HDSLPlayer', JSON.stringify(r.accountUser))
-    check("the launcher's atlas is cropped into the head the launcher itself draws",
-      r.skinCanvas !== null && r.skinCanvas.width === 64 && r.skinFlag === true,
-      JSON.stringify({ canvas: r.skinCanvas, flag: r.skinFlag }))
-    check('the head takes the box from the profile picture, uncut by a round mask',
-      r.photo === null && r.avatarRadius === '0px',
-      JSON.stringify({ photo: r.photo, radius: r.avatarRadius }))
-    check('the crop is the face, inset, with the hat layer over the whole box',
-      same(r.skinPixels && r.skinPixels.face, SKIN_FACE) &&
-        same(r.skinPixels && r.skinPixels.hatTop, SKIN_HAT) &&
-        same(r.skinPixels && r.skinPixels.hatBottom, SKIN_HAT) &&
-        same(r.skinPixels && r.skinPixels.margin, [0, 0, 0, 0]),
-      JSON.stringify(r.skinPixels))
-    commonChecks(r)
-  },
-  'hdsl-noskin'(r) {
-    basicChecks(r)
-    check('the launcher account still names the instance', r.accountUser === 'HDSLPlayer', JSON.stringify(r.accountUser))
-    check('a built-in figure with no picture leaves the circle to the mark alone',
-      r.skinCanvas === null && r.skinFlag === false && r.photo === null,
-      JSON.stringify({ canvas: r.skinCanvas, flag: r.skinFlag, photo: r.photo }))
-    commonChecks(r)
-  },
-  'hdsl-broken'(r) {
-    basicChecks(r)
-    check('a picture the launcher points at but cannot serve leaves no canvas and no marker',
-      r.skinCanvas === null && r.skinFlag === false,
-      JSON.stringify({ canvas: r.skinCanvas, flag: r.skinFlag }))
-    check('the failed picture falls back to the circle as it was',
-      r.avatarRadius === '50%', JSON.stringify(r.avatarRadius))
     commonChecks(r)
   },
   markup(r) {

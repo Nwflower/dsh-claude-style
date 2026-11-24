@@ -5,7 +5,7 @@ import { installPageScale } from './shared/page-scale'
 import { adoptSkin } from '@dsh-claude-style/engine/skin'
 import { motionReduced } from './core/prefs'
 import { setHostContext } from './core/host-context'
-import { loadHdsl, loadUsername } from './shared/identity'
+import { loadUsername } from './shared/identity'
 import { installWebfonts } from './shared/webfonts'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import { loadModelCopy } from './features/model/model-copy'
@@ -448,7 +448,6 @@ export function apply(ctx: HostContext) {
   if (typeof ctx.inject === 'function') ctx.inject(['configForms'], () => { adoptSettingsForm(ctx) })
   loadModelCopy()
   loadUsername()
-  loadHdsl()
   // Preferences are read asynchronously from the host settings namespace;
   // applying the defaults first keeps every gated rule in a defined state
   // for the frames before that read settles, and is exactly the shipped

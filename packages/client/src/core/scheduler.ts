@@ -1,6 +1,6 @@
 import { installScheduler as installEngineScheduler } from '@dsh-claude-style/engine/scheduler'
 import type { FeatureHandle, SchedulerCalls } from '@dsh-claude-style/engine/scheduler'
-import { onHdslLoaded, onUsernameLoaded } from '../shared/identity'
+import { onUsernameLoaded } from '../shared/identity'
 import { onModelCopyLoaded } from '../features/model/model-copy'
 import { loadPrefs, refreshMotionAttribute, subscribePrefs } from './prefs'
 import type { HostContext } from '@dsh-claude-style/engine/host'
@@ -80,7 +80,7 @@ export type Ui = SchedulerCalls & { [K in HandleName]?: Handles[K] }
 export function installScheduler(ctx: HostContext, ui: Ui, features: HandleName[]) {
   return installEngineScheduler<HandleName>(ctx, ui, features, {
     copyChange: [subscribePrefs, onModelCopyLoaded],
-    refresh: [onUsernameLoaded, onHdslLoaded],
+    refresh: [onUsernameLoaded],
     start: loadPrefs,
     systemMotionChanged: refreshMotionAttribute,
   })

@@ -1,9 +1,8 @@
 /**
- * The identity routes and the OS-user probe, answered inside the page: the probe
- * for every case, the launcher's contract only for the case that models an HDSL
- * launch, the studio case's usage answer, and the launcher's atlas bytes. Three
- * different names — the custom nickname Tester, the account's Ada, the
- * launcher's HDSLPlayer — are what make the fallback order observable. The two
+ * The identity route and the OS-user probe, answered inside the page: the probe
+ * for every case, and the studio case's usage answer. Two different names — the
+ * custom nickname Tester and the account's Ada — make the fallback order
+ * observable. The two
  * price routes answer only for a spec that holds `window.__costFixture`: every
  * other case leaves them to the real fetch, which is what makes the cost
  * segment stand as a dash there. The sound route answers the settings page's
@@ -13,12 +12,8 @@
 (function () {
   var host = window.__dshSmokeHost
   var CASE = host.CASE
-  var LAUNCHER = host.LAUNCHER
 
   var realFetch = window.fetch
-  var PNG_1PX = Uint8Array.from(
-    atob(window.SMOKE_PNG),
-    function (c) { return c.charCodeAt(0) })
   function jsonResponse(payload) {
     return new Response(JSON.stringify(payload), { headers: { 'content-type': 'application/json' } })
   }
@@ -35,17 +30,6 @@
         mark: { type: 'image/png', version: '1-1', url: '/dsh-claude-style/brand/mark?v=1-1' },
         wordmark: { type: 'image/svg+xml', version: '1-1', url: '/dsh-claude-style/brand/wordmark?v=1-1' },
       }))
-    }
-    if (url === '/dsh-claude-style/hdsl') {
-      // Three launcher cases: the player's own atlas, a built-in figure (no
-      // picture at all), and an atlas the player deleted before the page
-      // loaded — the two fallbacks the account row has to survive.
-      return Promise.resolve(jsonResponse(LAUNCHER[CASE] !== undefined
-        ? {
-            ok: true, contract: true, name: 'HDSLPlayer', vendor: 'deepseek', kind: 'official',
-            skin: 'local', skinModel: 'default', hasSkinImage: LAUNCHER[CASE].hasSkinImage,
-          }
-        : { ok: true, contract: false }))
     }
     if (url === '/dsh-claude-style/webfonts' && CASE === 'settings') {
       return Promise.resolve(jsonResponse({ ok: true, faces: [] }))
@@ -132,13 +116,6 @@
           resolve(jsonResponse({ ok: true, value: value }))
         })
       })
-    }
-    if (url === '/dsh-claude-style/hdsl-skin.png') {
-      // An <img> or a canvas source loads this outside the fetch stub, so the
-      // HTTP stand-in serves the bytes; this branch only keeps a stray request
-      // from reaching the real network.
-      if (SKIN_CASES.indexOf(CASE) === -1) return Promise.resolve(new Response(null, { status: 404 }))
-      return Promise.resolve(new Response(PNG_1PX, { headers: { 'content-type': 'image/png' } }))
     }
     if (url === '/dsh-claude-style/sound' && CASE === 'settings') {
       // The page is a loopback page, so the player asks here before it falls back

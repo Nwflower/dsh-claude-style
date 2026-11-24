@@ -198,13 +198,6 @@
       ]
     },
     {
-      "reason": "启动器的皮肤头像：只在由启动器带着皮肤启动的实例里出现",
-      "selectors": [
-        "body[data-dsh-claude-style] .dsh-claude-account-avatar[data-dsh-claude-skin]",
-        "body[data-dsh-claude-style] .dsh-claude-account-skin"
-      ]
-    },
-    {
       "reason": "折叠的侧栏里的账户区：走查没有折叠侧栏",
       "selectors": [
         "body[data-dsh-claude-style] [data-dsh-claude-part~=sidebar-root][data-dsh-claude-part~=sidebar-collapsed] .dsh-claude-account-btn",

@@ -9,14 +9,8 @@ const CLIENT = path.join(ROOT, 'lib', 'client.js')
 // The host half as the package ships it (D73): the build writes it to lib/host.
 const HOST = path.join(ROOT, 'lib', 'host', 'index.js')
 const MARKUP = '<img src=x onerror="window.__pwned=(window.__pwned||0)+1">'
-/** One transparent pixel: the launcher's avatar the HDSL case serves. */
+/** One transparent pixel: the custom-brand mark fixture served by the stand-in. */
 const PNG_1PX = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='
-/** Use distinct face and hat pixels so an incorrect avatar crop fails. */
-const SKIN_FIXTURE = path.join(import.meta.dirname, 'fixtures', 'skin-64.png')
-const SKIN_FACE = [255, 0, 0, 255]
-const SKIN_HAT = [0, 255, 0, 255]
-/** `hdsl-broken` omits the atlas because its deleted picture must produce a 404. */
-const SKIN_CASES = ['hdsl']
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b)
@@ -107,6 +101,6 @@ function retractFailures(count, start = failedLabels.length - count) {
 }
 
 export {
-    ROOT, CLIENT, HOST, MARKUP, PNG_1PX, SKIN_FIXTURE, SKIN_FACE, SKIN_HAT, SKIN_CASES,
+    ROOT, CLIENT, HOST, MARKUP, PNG_1PX,
     sleep, same, check, failures, failedChecks, retractFailures, skips, setTier, tierName, TIMING_CASES, FEATURE_CASES, DEFERRED_FEATURES, SHIPPED_PREFS, deferredWanted, PAGES, pagesFor,
 }

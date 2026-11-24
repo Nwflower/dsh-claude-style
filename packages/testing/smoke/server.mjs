@@ -1,13 +1,13 @@
 /**
  * The stand-in host's own server: the built bundle, the routed assets under the
- * build's manifest, the launcher's pictures, and one HTML page per name. The
+ * build's manifest, the custom-brand fixtures, and one HTML page per name. The
  * smoke and the behaviour layer (D92) load their pages from it, so both read
  * the same stand-in and the same build output.
  */
 import fs from 'fs'
 import http from 'http'
 import path from 'path'
-import { ROOT, CLIENT, PNG_1PX, SKIN_FIXTURE, SKIN_CASES } from './shared.mjs'
+import { ROOT, CLIENT, PNG_1PX } from './shared.mjs'
 
 /**
  * The build's asset manifest: which names the page may ask for, their type and
@@ -34,7 +34,7 @@ async function serveStandIn(html) {
   let current = null
   /**
    * Which page a request belongs to. Every request a page makes — the bundle,
-   * the routed assets, the launcher's pictures — carries that page's own URL as
+   * the routed assets, the custom-brand fixtures — carries that page's own URL as
    * its referer, which is what keeps the pages apart while several of them are
    * being driven. A request with none is answered for the last page served.
    */
@@ -58,21 +58,10 @@ async function serveStandIn(html) {
       // draw the vendor lockups those rules name.
       res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' })
       res.end(fs.readFileSync(path.join(ROOT, 'lib', 'model-descriptions.json')))
-    } else if (name === 'dsh-claude-style/hdsl-skin.png') {
-      // The launcher's atlas, which the skin loads outside `fetch`, so the
-      // page-side stand-in cannot answer it. `hdsl-broken` models a file the
-      // player removed after the launcher wrote the contract.
-      if (SKIN_CASES.indexOf(fromPage(req)) === -1) {
-        res.writeHead(404, { 'cache-control': 'no-store' })
-        res.end()
-        return
-      }
-      res.writeHead(200, { 'content-type': 'image/png' })
-      res.end(fs.readFileSync(SKIN_FIXTURE))
     } else if (name === 'dsh-claude-style/brand/mark' || name === 'dsh-claude-style/brand/wordmark') {
-      // The custom-brand case's images, loaded outside `fetch` like the
-      // launcher's atlas: a one-pixel mark, and a wordmark whose only size is
-      // a 4:1 viewBox, so the measured proportions are observable.
+      // The custom-brand case's images, loaded outside `fetch`: a one-pixel
+      // mark, and a wordmark whose only size is a 4:1 viewBox, so the measured
+      // proportions are observable.
       if (fromPage(req) !== 'custom-brand') {
         res.writeHead(404, { 'cache-control': 'no-store' })
         res.end()

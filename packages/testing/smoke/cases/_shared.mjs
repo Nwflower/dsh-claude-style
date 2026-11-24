@@ -1,4 +1,4 @@
-import { MARKUP, SKIN_FACE, SKIN_HAT, same, check } from '../shared.mjs'
+import { MARKUP, same, check } from '../shared.mjs'
 
 /** The host's highlight band, read as its window's animation and then its copy's (shared/motion.css). */
 const BAND_ANIMATION = 'dsh-claude-sweep-window, dsh-claude-sweep-glyphs'
@@ -76,4 +76,4 @@ function commonChecks(r) {
     JSON.stringify(r.hostRowEnd))
 }
 
-export { MARKUP, SKIN_FACE, SKIN_HAT, BAND_ANIMATION, same, check, contrast, basicChecks, commonChecks }
+export { MARKUP, BAND_ANIMATION, same, check, contrast, basicChecks, commonChecks }

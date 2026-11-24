@@ -23,7 +23,7 @@
     "packages/testing/smoke/cases/chat-wait.mjs": 7,
     "packages/testing/smoke/cases/settings.mjs": 10,
     "packages/testing/smoke/cases/stats.mjs": 5,
-    "packages/testing/smoke/probe/account-reads.js": 8,
+    "packages/testing/smoke/probe/account-reads.js": 7,
     "packages/testing/smoke/probe/agent-desktop.js": 22,
     "packages/testing/smoke/probe/agent-turn-nav.js": 5,
     "packages/testing/smoke/probe/brand.js": 7,

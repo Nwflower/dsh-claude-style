@@ -40,6 +40,6 @@ export default {
       note: 'homeSessionScopeRequired',
     },
   }],
-  cases: ['hero', 'studio', 'late-forms', 'hdsl', 'hdsl-noskin', 'hdsl-broken'],
+  cases: ['hero', 'studio', 'late-forms'],
   scenarios: ['mobileHome', 'systemTypography'],
 } satisfies FeatureManifest

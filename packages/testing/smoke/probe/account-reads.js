@@ -1,6 +1,6 @@
 /**
  * The shared reads off the page the shell features built: the account drawer and
- * the synthetic popover, the row's avatar and its served skin sheet, this
+ * the synthetic popover, the row's avatar, this
  * package's own stylesheet tags beside a sibling's, the body marks, the slot
  * registrations and the model seat inside an inline card.
  */
@@ -45,23 +45,6 @@
     r.photo = photo ? { attrs: attrs(photo), referrerPolicy: photo.referrerPolicy } : null
     r.photoSrc = photo ? photo.getAttribute('src') : null
     r.photoHidden = photo ? photo.hidden : null
-    // The launcher's own picture is a texture sheet, so the row crops the head
-    // into a canvas instead of handing the sheet to the <img>. Sampled at the
-    // fixture's landmarks: red face inside the inset, green hat at the box's
-    // corners, nothing in the margin between them.
-    r.skinFlag = r.avatarAttrs !== null && r.avatarAttrs.indexOf('data-dsh-claude-skin') !== -1
-    r.avatarRadius = avatar ? getComputedStyle(avatar).borderRadius : null
-    var skinHead = avatar ? avatar.querySelector('canvas.dsh-claude-account-skin') : null
-    r.skinCanvas = skinHead ? { width: skinHead.width, height: skinHead.height } : null
-    r.skinPixels = null
-    if (skinHead) {
-      var skinContext = skinHead.getContext('2d')
-      var pixelAt = function (x, y) {
-        var data = skinContext.getImageData(x, y, 1, 1).data
-        return [data[0], data[1], data[2], data[3]]
-      }
-      r.skinPixels = { face: pixelAt(32, 32), hatTop: pixelAt(2, 2), hatBottom: pixelAt(62, 62), margin: pixelAt(62, 30) }
-    }
     var mirrored = drawer ? drawer.querySelector('[data-action-index]') : null
     r.mirroredText = mirrored ? mirrored.querySelector('.dsh-claude-popover-item-text').textContent : null
     var badge = mirrored ? mirrored.querySelector('.dsh-claude-popover-item-badge') : null

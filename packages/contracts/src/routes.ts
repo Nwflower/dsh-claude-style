@@ -46,12 +46,6 @@ export function assetUrlUnder(baked: string, deployRoot: string | null): string 
 /** One-shot host OS user route; the browser half caches the response and never polls. */
 export const USERNAME_PATH = `${ROUTE_PREFIX}/username`
 
-/** Forwards the launcher's `HDSL_` environment metadata, which browser code cannot read. */
-export const HDSL_PATH = `${ROUTE_PREFIX}/hdsl`
-
-/** The player's own avatar PNG, forwarded; the absolute path never leaves the host half. */
-export const HDSL_SKIN_PATH = `${ROUTE_PREFIX}/hdsl-skin.png`
-
 /** Deletes stored session data and its archive id; the browser has no host deletion API. */
 export const SESSION_DELETE_PATH = `${ROUTE_PREFIX}/session-delete`
 
