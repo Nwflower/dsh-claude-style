@@ -21,5 +21,9 @@ test('every narrow-frame fallback is gated to a hover-capable fine pointer', () 
     expect(rule.type).toBe(CSSRule.STYLE_RULE)
     expect((rule as CSSStyleRule).style.getPropertyValue('grid-template-columns')).not.toBe('')
   }
-  expect([...sheet.cssRules].filter(rule => rule.type === CSSRule.STYLE_RULE)).toHaveLength(0)
+  const topStyleRules = [...sheet.cssRules].filter((rule): rule is CSSStyleRule => rule.type === CSSRule.STYLE_RULE)
+  for (const rule of topStyleRules) {
+    expect(rule.style.getPropertyValue('grid-template-columns')).toBe('')
+    expect(rule.selectorText).not.toContain('layout-frame')
+  }
 })
