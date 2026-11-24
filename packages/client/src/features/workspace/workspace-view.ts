@@ -49,6 +49,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let labelTop: number | null = null
   /** The header the trigger's alignment was written on, kept so it leaves with the control. */
   let dressedHeader: HTMLElement | null = null
+  let disposed = false
+  function schedulePass() {
+    if (!disposed && typeof ui.schedule === 'function') ui.schedule()
+  }
+  /** Re-measure when quiet header controls or font swaps change the header's box without a bus mutation. */
+  const headerResize = typeof ResizeObserver === 'function' ? new ResizeObserver(schedulePass) : null
   /** The section labels on the page, taken from the bus and released with the section. */
   let labelWatch: MatchList<HTMLElement> | null = null
   /** The list's additions, marked before the frame paints; see watchAdditions. */
@@ -166,6 +172,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     viewMenu.release()
     labelStamp.release()
     viewStamp.release()
+    headerResize?.disconnect()
     dressedHeader?.style.removeProperty(MENU_LEFT_VAR)
     dressedHeader?.style.removeProperty(MENU_TOP_VAR)
     dressedHeader = null
@@ -195,9 +202,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const view = follower.view()
     viewMenu.sync(header, view)
     if (dressedHeader !== header) {
+      headerResize?.disconnect()
       dressedHeader?.style.removeProperty(MENU_LEFT_VAR)
       dressedHeader?.style.removeProperty(MENU_TOP_VAR)
       dressedHeader = header
+      headerResize?.observe(header)
     }
     // The host's header padding carries the label in from the header's edge;
     // the trigger's words stand on the label's own offset, not the header's.
@@ -239,6 +248,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
   }
 
+  document.fonts?.addEventListener('loadingdone', schedulePass)
+  void document.fonts?.ready.then(schedulePass)
+
   ui.workspace = {
     measure,
     sync,
@@ -248,6 +260,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   return () => {
+    disposed = true
+    document.fonts?.removeEventListener('loadingdone', schedulePass)
+    headerResize?.disconnect()
     toast.dispose()
     follower.dispose()
     list.dispose()

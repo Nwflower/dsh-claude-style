@@ -7,7 +7,7 @@
  * runtime so this file spells no mark.
  */
 export async function mountSection(t) {
-  await t.page.evaluate(() => {
+  await t.page.evaluate(async () => {
     const suffix = 'w1_1'
     const cls = (name) => '_' + name + '_' + suffix
     const root = document.createElement('div')
@@ -25,6 +25,7 @@ export async function mountSection(t) {
     root.append(header, list)
     document.querySelector('[data-slot="sidebar"]').appendChild(root)
     window.dispatchEvent(new Event('resize'))
+    await document.fonts?.ready
   })
   await t.settle()
 }
