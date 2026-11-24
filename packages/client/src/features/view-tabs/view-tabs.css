@@ -120,3 +120,26 @@ body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-view-tab
 body[data-dsh-claude-style] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tabs-more"] {
   margin-top: 0;
 }
+
+/* Bridge the 8px gap after the tablist and the lower caption margin down to the
+   header edge (y = 6..bandHeight) while keeping the top 6px resize edge clear (D40, D43). */
+body[data-dsh-claude-style] [data-dsh-header-band~="tabs"] [data-dsh-view-tabs] [data-conversation-tabs]::before {
+  content: "";
+  position: absolute;
+  inset: -1px -8px calc(11px - var(--dsh-header-band-height) / 2) 0;
+  z-index: -1;
+  -webkit-app-region: no-drag;
+}
+
+body[data-dsh-claude-style] [data-dsh-header-band~="tabs"] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tabs-more"] {
+  position: relative;
+  overflow: visible;
+}
+
+body[data-dsh-claude-style] [data-dsh-header-band~="tabs"] [data-dsh-view-tabs] [data-dsh-claude-part~="view-tabs-more"]::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 calc(12px - var(--dsh-header-band-height) / 2) 0;
+  z-index: -1;
+  -webkit-app-region: no-drag;
+}

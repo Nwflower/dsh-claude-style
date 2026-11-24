@@ -210,3 +210,13 @@ body[data-dsh-claude-style] [data-dsh-header-band~="actions"] [data-dsh-header-c
   z-index: var(--dsh-claude-layer-chrome);
   -webkit-app-region: no-drag;
 }
+
+/* Bridge the 8px horizontal gaps and lower caption margin (y = 6..bandHeight)
+   without altering the clusters' measured boxes, keeping the top 6px resize edge clear (D40, D43). */
+body[data-dsh-claude-style] [data-dsh-header-band~="actions"] :is([data-dsh-header-actions], [data-dsh-header-corner])::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 calc(12px - var(--dsh-header-band-height, var(--dsh-windows-titlebar-height, 40px)) / 2) -8px;
+  z-index: -1;
+  -webkit-app-region: no-drag;
+}

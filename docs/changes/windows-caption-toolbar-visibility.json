@@ -3,6 +3,6 @@
   "group": "fixes",
   "order": 0,
   "external": true,
-  "zh": "修复 Windows 桌面端指针移入顶栏拖拽区、划过按钮间隙或在右侧面板展开时经过顶栏会意外隐藏视图标签与右侧工具栏的问题，并在顶栏菜单展开期间保持工具栏可见",
-  "en": "Fix the view tabs and right-hand toolbar hiding unexpectedly on Windows desktop when the pointer enters the caption drag region, crosses gaps between controls, or moves across the caption with the right panel open, and keep the toolbar visible while a header menu is open"
+  "zh": "将顶栏右侧工具与视图标签的自动显示范围调整为主会话列与宿主右侧面板，在顶栏菜单展开期间保持显示，移入左侧边栏、底部面板、顶栏空白拖拽带或窗口外部时隐藏，并连通桌面顶栏内标签与工具按钮间的 8px 横向间隙及底部边缘以消除移动闪退与从顶栏滑出窗口后的常显残留",
+  "en": "Keep the right-hand toolbar and view tabs visible over the main conversation column and host right panel as well as while a header menu is open, fade them out over the left sidebar, bottom panel, blank caption drag strip and outside the window, and bridge the 8px gaps and lower margin across lifted caption controls so sliding between controls or out of the caption never flickers or leaves the toolbar stuck visible"
 }
