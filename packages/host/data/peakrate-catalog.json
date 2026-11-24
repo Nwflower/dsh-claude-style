@@ -2494,7 +2494,7 @@
       "title": "Sference chat pricing clock",
       "subtitle": "Request arrival pricing in your local time",
       "kicker": "Half-price chat requests overnight",
-      "policyNote": "Automatic 50% discount for chat requests arriving daily 22:00–06:00 Europe/Berlin, following daylight saving. Arrival, not completion, determines pricing. Priority retains its premium; The provider states that Batch API and decisions models are not discounted further. No published end date.",
+      "policyNote": "Automatic 50% discount for chat requests arriving daily 22:00–06:00 Europe/Berlin, following daylight saving. Arrival, not completion, determines pricing. Priority retains its premium; Batch API and decisions models are not discounted further. The winter equivalent is 21:00–05:00 UTC; the summer equivalent is 20:00–04:00 UTC. No published end date.",
       "schedule": {
         "timeZone": "Europe/Berlin",
         "peakDays": [
