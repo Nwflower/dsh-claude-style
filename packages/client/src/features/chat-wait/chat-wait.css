@@ -72,8 +72,7 @@ body[data-dsh-claude-style] [data-chat-running][data-dsh-claude-wait] [data-dsh-
 }
 
 /* The whale tail is DeepSeek's own character: under the Claude brand it is hidden
-   and the skin's loader stands where it was, leading the line. The snippet the
-   bouncing motion is ported from is recorded in docs/THIRD_PARTY_NOTICES.md. */
+   and the skin's loader stands where it was, leading the line. */
 body[data-dsh-claude-style][data-dsh-claude-brand="claude"] [data-chat-running][data-dsh-claude-wait] [data-dsh-claude-part~="running-icon"] {
   display: none;
 }
@@ -117,7 +116,7 @@ body[data-dsh-claude-style] .dsh-claude-chat-wait-dot {
   height: 4px;
   border-radius: 50%;
   background: var(--dsw-alias-brand-primary, #d97757);
-  transform-origin: 50% 100%;
+  transform-origin: 50% 50%;
   opacity: 0;
   /* How far this dot travels to reach the loader's centre line, the unit
      direction of the line it walks, and that line's far end — worked out here so
@@ -136,16 +135,27 @@ body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-leaving .dsh-claude-ch
   opacity: 1;
 }
 
-/* The three places the bounce runs in, seven pixels apart; the walk keeps the
-   same places and walks the lines that meet in their middle — one up, one down
-   and left, one down and right, 120° apart — with the second walked the other
-   way, so its far end is the one up and to the left. */
-body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-bounce .dsh-claude-chat-wait-dot:nth-child(2),
+/* The vertical wave lane: three pure round dots at 6px spacing, vertically
+   centred across the 14px box (bottom: 1px with 8px lift). The walking lane
+   keeps its own 7px positions and walks three lines meeting in their middle —
+   one up, one down and left, one down and right, 120° apart. */
+body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-bounce .dsh-claude-chat-wait-dot {
+  bottom: 1px;
+  left: 1px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-bounce .dsh-claude-chat-wait-dot:nth-child(2) {
+  left: 7px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-bounce .dsh-claude-chat-wait-dot:nth-child(3) {
+  left: 13px;
+}
+
 body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-line .dsh-claude-chat-wait-dot:nth-child(2) {
   left: 7px;
 }
 
-body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-bounce .dsh-claude-chat-wait-dot:nth-child(3),
 body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-line .dsh-claude-chat-wait-dot:nth-child(3) {
   left: 14px;
 }
@@ -271,12 +281,43 @@ body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-orbit .dsh-claude-chat
   91.67%, 100% { translate: -4.75px 5.8px; }
 }
 
-/* The bouncing lane, ported from the snippet (docs/THIRD_PARTY_NOTICES.md): the
-   three start behind each other by two and three fifths of the period, and every
-   delay is negative and at least a period, so the wave never begins at the
-   snippet's first frame — the hand-over finds the dots already on their way. */
+/* The fourth lane: three dots reciprocating in phase along three 120° axes,
+   each shifted perpendicularly from the centre by 1.6px (0.4× diameter) with
+   the same chirality. At the midpoint they brush past each other in a tight
+   equilateral triangle without shrinking or colliding, then emerge into the
+   mirrored outer triangle (half-travel 5.8px, circumradius 6.02px). */
+body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-cross .dsh-claude-chat-wait-dot {
+  top: 50%;
+  bottom: auto;
+  left: 50%;
+  margin: -2px 0 0 -2px;
+  --dsh-claude-cross-start-x: -5.8px;
+  --dsh-claude-cross-start-y: -1.6px;
+  --dsh-claude-cross-end-x: 5.8px;
+  --dsh-claude-cross-end-y: -1.6px;
+  animation: dsh-claude-wait-dot-cross var(--dsh-claude-period-dot-cross) var(--dsh-claude-ease-harmonic) infinite var(--dsh-claude-loop-play-state, running);
+}
+
+body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-cross .dsh-claude-chat-wait-dot:nth-child(2) {
+  --dsh-claude-cross-start-x: 4.29px;
+  --dsh-claude-cross-start-y: -4.22px;
+  --dsh-claude-cross-end-x: -1.51px;
+  --dsh-claude-cross-end-y: 5.82px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-cross .dsh-claude-chat-wait-dot:nth-child(3) {
+  --dsh-claude-cross-start-x: 1.51px;
+  --dsh-claude-cross-start-y: 5.82px;
+  --dsh-claude-cross-end-x: -4.29px;
+  --dsh-claude-cross-end-y: -4.22px;
+}
+
+/* The vertical wave lane: three pure round dots oscillating 8px peak-to-peak on
+   a 1200ms symmetric quad curve, staggered by 200ms (a sixth of the period)
+   from left to right. Every delay is negative so the wave is already flowing
+   when a hand-over reads it. */
 body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-bounce .dsh-claude-chat-wait-dot {
-  animation: dsh-claude-wait-dot var(--dsh-claude-period-dot-bounce) var(--dsh-claude-ease-standard) infinite alternate var(--dsh-claude-loop-play-state, running);
+  animation: dsh-claude-wait-dot var(--dsh-claude-period-dot-bounce) var(--dsh-claude-ease-dot-wave) infinite var(--dsh-claude-loop-play-state, running);
 }
 
 body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-bounce .dsh-claude-chat-wait-dot:nth-child(1) {
@@ -284,11 +325,11 @@ body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-bounce .dsh-claude-cha
 }
 
 body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-bounce .dsh-claude-chat-wait-dot:nth-child(2) {
-  animation-delay: calc(-3 * var(--dsh-claude-period-dot-bounce) / 5);
+  animation-delay: calc(-5 * var(--dsh-claude-period-dot-bounce) / 6);
 }
 
 body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-bounce .dsh-claude-chat-wait-dot:nth-child(3) {
-  animation-delay: calc(-2 * var(--dsh-claude-period-dot-bounce) / 5);
+  animation-delay: calc(-4 * var(--dsh-claude-period-dot-bounce) / 6);
 }
 
 /* The walking lane: each dot walks its own line at a simple harmonic pace — at
@@ -314,13 +355,11 @@ body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-line .dsh-claude-chat-
 
 /* What the hand-over needs from a lane's own motion, read by wait-loader.ts: the
    shares at which a dot fades in as the loader opens and how long that fade
-   takes, and the shares at which a dot stands still and can be handed over. The
-   bounce fades in at the top of its hop, the walk at the middle of its line;
-   which curve the opening fade runs on is read from the token sheet (D9). */
+   takes, and the shares at which a dot stands still and can be handed over. */
 body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-bounce {
-  --dsh-claude-dot-arrives: 1;
-  --dsh-claude-dot-leaves: 1;
-  --dsh-claude-dot-fade: 0.5;
+  --dsh-claude-dot-arrives: 0;
+  --dsh-claude-dot-leaves: 0 0.5;
+  --dsh-claude-dot-fade: 0.25;
 }
 
 body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-line {
@@ -337,6 +376,14 @@ body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-orbit {
   --dsh-claude-dot-fade: 0.125;
 }
 
+/* The tangentially offset cross-pass lane stands still at both outer triangles
+   simultaneously, fading in from its opening outer peak. */
+body[data-dsh-claude-style] .dsh-claude-chat-wait-lane.is-cross {
+  --dsh-claude-dot-arrives: 0;
+  --dsh-claude-dot-leaves: 0 0.5;
+  --dsh-claude-dot-fade: 0.25;
+}
+
 /* The reader's animation choice (D40): the lane stands on its still frame — the
    dots on their own places, with no keyframe to read — and the loader takes no
    other motion up (wait-loader.ts). Pausing alone does not hold them: the
@@ -347,30 +394,25 @@ body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-chat-w
   animation: none;
 }
 
-/* The dot flattens against the floor as it leaves and rounds out on the way up.
-   The stops at two and three fifths are where the wave's second and third dots
-   stand when the bounce takes over. The snippet's radius stops are left out: on
-   a 4px box they clamp to the curve the dot already carries, and a radius among
-   the keyframes would keep the animation off the compositor. */
+/* Pure round dots travelling 8px between the top horizontal baseline (0%, 100%)
+   and the lower turning point (50%) without squash or stretch. */
 @keyframes dsh-claude-wait-dot {
-  0% {
-    translate: 0 0;
-    scale: 1.7 0.25;
-    animation-timing-function: linear;
-  }
-
-  40% {
-    translate: 0 calc(-2 * var(--dsh-claude-distance-travel) / 5);
-    scale: 1;
-    animation-timing-function: linear;
-  }
-
-  60% {
-    translate: 0 calc(-3 * var(--dsh-claude-distance-travel) / 5);
-  }
-
-  100% {
+  0%, 100% {
     translate: 0 calc(-1 * var(--dsh-claude-distance-travel));
+  }
+
+  50% {
+    translate: 0 0;
+  }
+}
+
+@keyframes dsh-claude-wait-dot-cross {
+  0%, 100% {
+    translate: var(--dsh-claude-cross-start-x) var(--dsh-claude-cross-start-y);
+  }
+
+  50% {
+    translate: var(--dsh-claude-cross-end-x) var(--dsh-claude-cross-end-y);
   }
 }
 

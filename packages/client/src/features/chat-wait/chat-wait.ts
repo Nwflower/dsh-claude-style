@@ -159,7 +159,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /**
    * The loader the Claude brand leads the row with, where the host draws its
-   * whale tail: one lane of accent dots for each of the loader's three motions
+   * whale tail: one lane of accent dots for each of the loader's four motions
    * (chat-wait.css). Every motion is built up front, so swapping lanes is a
    * hand-over rather than a redraw. The dots are decorative — the host's live
    * region is what a reader hears — and the rotation is wait-loader.ts's.
@@ -167,7 +167,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function buildLoader() {
     const loader = buildElement('span', 'dsh-claude-chat-wait-loader')
     loader.setAttribute('aria-hidden', 'true')
-    const laneDots: [string, number][] = [['is-bounce', 3], ['is-line', 3], ['is-orbit', 4]]
+    const laneDots: [string, number][] = [['is-bounce', 3], ['is-line', 3], ['is-orbit', 4], ['is-cross', 3]]
     for (const [lane, count] of laneDots) {
       const dots = buildElement('span', `dsh-claude-chat-wait-lane ${lane}`)
       for (let dot = 0; dot < count; dot += 1) dots.append(buildElement('span', 'dsh-claude-chat-wait-dot'))

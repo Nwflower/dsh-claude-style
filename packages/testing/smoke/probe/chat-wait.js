@@ -100,7 +100,7 @@
           clock: clock.hidden ? null : clock.textContent,
           badge: badge.hidden ? null : badge.textContent,
           // The loader the Claude brand leads the line with, and the host's own
-          // whale tail it stands in for: three lanes of dots in the accent in
+          // whale tail it stands in for: four lanes of dots in the accent in
           // force, one lane for each motion, of which the lane in play is drawn
           // and the others wait out of the page
           // (features/chat-wait/wait-loader.ts). A change between the motions
@@ -287,9 +287,10 @@
       r.wait.tools = await awaitWord(function (reading) { return reading.word === 'Running tools…' && reading.copies === 1 })
       // Each lane's own motion, one at a time: the hopping wave reads a whole
       // bounce, the walk a whole period, the corner swap a whole turn.
-      r.wait.bounceLane = await watchLane('is-bounce', 40, 25)
+      r.wait.bounceLane = await watchLane('is-bounce', 48, 25)
       r.wait.lineLane = await watchLane('is-line', 50, 25)
       r.wait.orbitLane = await watchLane('is-orbit', 61, 40)
+      r.wait.crossLane = await watchLane('is-cross', 49, 25)
       // And the rotation itself: long enough for two changes to land, so the
       // stretch between two of them can be timed.
       r.wait.rotation = await watchRotation()

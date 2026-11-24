@@ -324,7 +324,7 @@ License: Apache-2.0.
 
 ## Uiverse — "Loader" by mobinkakei
 
-The loader the waiting line leads with under the Claude brand (`packages/client/src/features/chat-wait/chat-wait.ts` and the `dsh-claude-chat-wait-loader` rules in its stylesheet) is ported from a Uiverse loader: its three dots, its squash-and-stretch keyframes (the flat-bottomed radius the dot lands with, the round pose two fifths into the bounce, the travel to the top), its half-second period and the phase each dot starts behind the one before it — renamed into this package's own classes, read from its own motion tokens and painted with the accent in force. The snippet's three shadow ellipses are left out, so the loader carries no shadow at all.
+The waiting line's loader under the Claude brand (`packages/client/src/features/chat-wait/chat-wait.ts` and the `dsh-claude-chat-wait-loader` rules in its stylesheet) began as a port of a Uiverse loader: its three accent dots in a row, the staggered phases and the vertical travel are kept from that snippet, renamed into this package's own classes and read from its own motion tokens. The motion itself has since been rewritten from a reference recording: the dots are pure circles with no squash-and-stretch, the period is 1200ms with a sixth-period stagger, and the hand-overs between the loader's four motions swirl in polar coordinates. The snippet's three shadow ellipses were left out from the start, so the loader carries no shadow at all.
 
 Source: <https://uiverse.io/mobinkakei/grumpy-turtle-41>
 

@@ -551,8 +551,10 @@ edit the JSON, not the table.
 | `--dsh-claude-duration-rise` | `500ms` | a line of the home greeting rising into place |
 | `--dsh-claude-duration-stagger` | `70ms` | how far behind the piece before it a staggered piece starts: the greeting's second line |
 | `--dsh-claude-period-dot-orbit` | `2400ms` | one turn of the waiting line's loader dots that swap corners: four quarter-turns of the two pairs, which leaves every dot where it started |
+| `--dsh-claude-period-dot-cross` | `1200ms` | one round trip of the waiting line's loader dots along three tangentially offset 120-degree axes in phase, brushing past each other at the centre |
 | `--dsh-claude-period-dot-rotate` | `10s` | how long one of the waiting line's loader motions stands before another takes its place, the next one picked so a motion never follows itself |
-| `--dsh-claude-duration-dot-morph` | `480ms` | how long a loader dot takes, once the motion it leaves has it standing still, to travel from that pose into the path of the motion taking over |
+| `--dsh-claude-duration-dot-morph` | `680ms` | how long a loader dot takes, once the motion it leaves has it standing still, to swirl in polar coordinates from that pose into the path of the motion taking over |
+| `--dsh-claude-duration-dot-settle` | `80ms` | the brief level-line hold after a synchronised swirl lands at the top of the wave before the dots ripple downward |
 | `--dsh-claude-duration-reduced` | `0.01ms` | every skin animation and transition under the Reduced animation choice (D40) |
 | `--dsh-claude-period-status-title` | `3000ms` | the running title's strong shimmer: 15 percent rest, 70 percent travel, 15 percent rest |
 | `--dsh-claude-period-status-breathe` | `1200ms` | one opacity cycle of the sidebar's running dot, matching Claude Desktop's status-dot cadence |
@@ -573,8 +575,8 @@ edit the JSON, not the table.
 | `--dsh-claude-period-spin` | `850ms` | one turn of the sidebar's ongoing-conversation ring |
 | `--dsh-claude-period-landed` | `1400ms` | the mark on the turn the conversation navigator landed on |
 | `--dsh-claude-period-hold` | `840ms` | how long the reasoning window's text stands between two steps |
-| `--dsh-claude-period-dot-bounce` | `500ms` | one bounce of the waiting line's loader dots under the Claude brand, and the period each dot's own start is measured against |
-| `--dsh-claude-period-dot-line` | `1250ms` | one round trip of the waiting line's loader dots along their own lines, the motion the dots take while the turn is not thinking |
+| `--dsh-claude-period-dot-bounce` | `1200ms` | one full vertical wave of the waiting line's three round loader dots under the Claude brand, with each dot staggered by a sixth of this period |
+| `--dsh-claude-period-dot-line` | `1250ms` | one round trip of the waiting line's loader dots along their own lines |
 | `--dsh-claude-ease-standard` | `ease` | feedback and surfaces: the default curve |
 | `--dsh-claude-ease-out` | `ease-out` | something arriving and settling: a fold's door, content entering the chat area, the landing mark, a hint appearing and leaving |
 | `--dsh-claude-ease-enter` | `cubic-bezier(0.34, 1.3, 0.64, 1)` | a message the reader sends growing into its row: the slight overshoot as it takes its full size |
@@ -588,9 +590,10 @@ edit the JSON, not the table.
 | `--dsh-claude-ease-recoil` | `cubic-bezier(0.34, 3.85, 0.64, 1)` | a lifted colour disc springing back into its row once the pointer leaves, overshooting well past its place before it rests |
 | `--dsh-claude-ease-settle` | `cubic-bezier(0.22, 1, 0.36, 1)` | a surface or a page settling into place out of its anchor: menus and dialogs opening and closing, a settings page sliding, the overtime badge sliding onto its line, the greeting's lines rising, a hint travelling between colour discs, a colour disc lifting |
 | `--dsh-claude-ease-host-sweep` | `steps(48, end)` | the band across the waiting line's words and a running process group's header |
-| `--dsh-claude-ease-harmonic` | `cubic-bezier(0.37, 0, 0.63, 1)` | a loader dot walking its line from one end to the other, its size between an end and the middle, and its travel from one motion into the next: a sine's simple harmonic, at rest at either end and fastest halfway |
-| `--dsh-claude-ease-damped-out` | `cubic-bezier(0.33, 1, 0.68, 1)` | a loader dot's fade as the loader opens, for a motion that does most of its change early: a walking or swapping dot coming in |
-| `--dsh-claude-ease-damped-in` | `cubic-bezier(0.32, 0, 0.67, 0)` | a loader dot's fade as the loader opens, for a motion that does most of its change late: a bouncing dot coming in |
+| `--dsh-claude-ease-harmonic` | `cubic-bezier(0.37, 0, 0.63, 1)` | a loader dot walking its line or crossing its offset axis from one end to the other, its size between an end and the middle, and the radial glide of a swirl hand-over: a sine's simple harmonic, at rest at either end and fastest halfway |
+| `--dsh-claude-ease-dot-wave` | `cubic-bezier(0.45, 0, 0.55, 1)` | the vertical wave of the three round loader dots: symmetric quadratic ease-in-out with gentle holds at both turning points |
+| `--dsh-claude-ease-dot-swirl` | `cubic-bezier(0.28, 0, 0.2, 1)` | the counter-clockwise angular sweep of a loader hand-over: brisk acceleration out of departure and a long smooth unwind into the landing pose |
+| `--dsh-claude-ease-damped-out` | `cubic-bezier(0.33, 1, 0.68, 1)` | a loader dot's fade as the loader opens |
 | `--dsh-claude-distance-nudge` | `4px` | the short offset a surface rises from, a small row's wording swap travels, and the colour disc under the pointer lifts |
 | `--dsh-claude-distance-travel` | `8px` | the waiting line's wording swap, a settings page's slide, the overtime badge's sideways slide, and both directions of the waiting line's loader dots: the lift off their floor and the reach along their own lines |
 | `--dsh-claude-distance-rise` | `12px` | how far below its place a line of the home greeting starts, and the overtime badge's upward slide |
@@ -940,20 +943,29 @@ the press hands the whole page to the other side.
 The host's running row, its divider and its live region stay as the host draws
 them. Its whale tail is DeepSeek's own character, so under the Claude brand the
 skin hides it and leads the line with its own loader: dots of the accent in force
-in a small box, playing one of three motions
-(`features/chat-wait/wait-loader.ts`). Three dots bounce and flatten against the
-floor as they leave; three dots walk three lines through one point, each a simple
-harmonic along its own line, shrinking as it crosses the middle so no frame of
-the line motion draws a dot larger than the bouncing one; four dots swap the
-corners of a rectangle, one pair and then the other. The loader opens on one of
-the three at random and lets another take over on a slow clock. A change never
-cuts and the box never empties: each dot of the motion leaving waits for its own
-still moment — the top of a hop, an end of a walk, a corner between two swaps —
-and the dot it is paired with in the motion arriving takes its place there, at
-its size, then travels into its own path on the harmonic curve. The dots are
-paired so they travel least; from three dots to four one splits in two, and from
-four to three the spare one glides onto its partner and is gone where the two
-meet. Under the other brands the host's whale stands.
+in a small box, playing one of four motions
+(`features/chat-wait/wait-loader.ts`). Three pure round dots ripple vertically
+between a top baseline and a lower turning point, a sixth of the period apart,
+with no squash at either end; three dots walk three lines through one point,
+each a simple harmonic along its own line, shrinking as it crosses the middle
+so no frame of the line motion draws a dot larger than the wave's; four dots
+swap the corners of a rectangle, one pair and then the other; three dots
+reciprocate in phase along three axes 120° apart, each axis shifted sideways
+from the centre by two fifths of a dot, so at the midpoint they brush past one
+another as a tight triangle instead of meeting in one point. The loader opens
+on one of the four at random and lets another take over on a slow clock. A
+change never cuts and the box never empties: each dot of the motion leaving
+waits for its own still moment — a turning point of the wave, an end of a walk,
+a corner between two swaps, an outer triangle of the cross — and the dot it is
+paired with in the motion arriving takes its place there, at its size, then
+swirls counter-clockwise around the box's centre into its own path: the angle
+sweeps about 207° on a brisk-out, long-settle curve while the radius glides on
+the harmonic one. Dots are paired so their swirls are even; from three dots to
+four one splits in two, and from four to three the spare one swirls onto its
+partner and is gone where the two meet. A synchronised lane (the cross, the
+corner swap) lands all its dots at one instant; landing on the wave from one,
+the dots rest together on the top baseline for a breath before rippling down
+in order. Under the other brands the host's whale stands.
 
 The host's own shimmering words step aside for the skin's line beside it: the
 wording in the secondary label on a line of its own, the turn's clock after it in

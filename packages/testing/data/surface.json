@@ -185,6 +185,7 @@
     { "id": "stats.ramp-preset-attr", "attribute": "data-preset", "feature": "context-stats", "sees": "the colour-ramp mode identifier (`default`, `classic` or `custom`) on a segment button" },
     { "id": "stats.ramp-stage", "selector": ".dsh-claude-context-ramp-stage", "feature": "context-stats", "sees": "the custom OKLCH colour-ramp editor card unfolded only while the `custom` segment is active" },
     { "id": "stats.ramp-stop", "selector": ".dsh-claude-context-ramp-stop", "feature": "context-stats", "sees": "one draggable colour-stop handle along the 0–100 % custom context-ramp gradient bar" },
-    { "id": "stats.ramp-remove", "selector": ".dsh-claude-context-ramp-remove", "feature": "context-stats", "sees": "the button removing the selected colour stop while more than two stops stand on the custom ramp" }
+    { "id": "stats.ramp-remove", "selector": ".dsh-claude-context-ramp-remove", "feature": "context-stats", "sees": "the button removing the selected colour stop while more than two stops stand on the custom ramp" },
+    { "id": "chat-wait.lane-cross", "selector": ".dsh-claude-chat-wait-lane.is-cross", "feature": "chat-wait", "sees": "the loader lane whose three dots reciprocate in phase along three tangentially offset axes, brushing past one another at the centre" }
   ]
 }

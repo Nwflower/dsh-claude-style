@@ -1,21 +1,32 @@
 import { motionReduced } from '../../core/prefs'
-import { motionEase, motionMs } from '../../shared/motion'
+import { motionEase, motionEaseAt, motionMs } from '../../shared/motion'
 
 /**
- * Rotate the waiting loader's three dot motions every token period, morphing
- * each dot at its still frame. Pairings minimise travel; reduced motion snaps to
- * the resting frame (D40). Lanes and keyframes live in chat-wait.css.
+ * Rotate the waiting loader's four dot motions every token period, swirling
+ * each dot in counter-clockwise polar coordinates from its still frame into the
+ * arriving lane. Reduced motion snaps to the resting frame (D40). Lanes and
+ * keyframes live in chat-wait.css.
  */
 
 /** A motion the loader's dots play. */
-export type WaitLoaderMotion = 'bounce' | 'line' | 'orbit'
+export type WaitLoaderMotion = 'bounce' | 'line' | 'orbit' | 'cross'
 
-/** The lane, and how many dots, one motion is built from. */
-const LANES: { motion: WaitLoaderMotion; lane: string; dots: number }[] = [
-  { motion: 'bounce', lane: 'is-bounce', dots: 3 },
-  { motion: 'line', lane: 'is-line', dots: 3 },
-  { motion: 'orbit', lane: 'is-orbit', dots: 4 },
+/** The lane, dot count, and whether its dots reach rest together. */
+const LANES: { motion: WaitLoaderMotion; lane: string; dots: number; sync: boolean; landShare: number }[] = [
+  { motion: 'bounce', lane: 'is-bounce', dots: 3, sync: false, landShare: 0 },
+  { motion: 'line', lane: 'is-line', dots: 3, sync: false, landShare: 0 },
+  { motion: 'orbit', lane: 'is-orbit', dots: 4, sync: true, landShare: 0.9583 },
+  { motion: 'cross', lane: 'is-cross', dots: 3, sync: true, landShare: 0 },
 ]
+
+/** Full circle in radians. */
+const TWO_PI = Math.PI * 2
+/** Preferred counter-clockwise sweep (~207 deg) used to pair swirl arcs cleanly. */
+const TARGET_SWIRL = -Math.PI * 1.15
+/** Samples along one polar swirl arc, matching is-orbit's baked curve precision. */
+const SWIRL_STEPS = 16
+/** Maximum interval between samples during a level-line hold before wave launch. */
+const HOLD_STEP_MS = 35
 
 /**
  * The motion the Reduced choice rests on: the bounce lane's three dots on their
@@ -165,7 +176,7 @@ function poseAt(dot: HTMLElement, clock: MotionClock, wait: number): Pose {
   const scale = style.scale === 'none' ? [] : style.scale.split(' ').map(parseFloat)
   clock.motion.currentTime = now
   const originX = dot.offsetLeft + dot.offsetWidth / 2
-  const originY = dot.offsetTop + dot.offsetHeight
+  const originY = dot.offsetTop + dot.offsetHeight / 2
   return {
     x: originX + (translate[0] ?? 0),
     y: originY + (translate[1] ?? 0),
@@ -173,6 +184,54 @@ function poseAt(dot: HTMLElement, clock: MotionClock, wait: number): Pose {
     originY,
     scaleX: scale[0] ?? 1,
     scaleY: scale[1] ?? scale[0] ?? 1,
+  }
+}
+
+/** Visual centre of the loader box, used as the pole of every swirl arc. */
+function centerOf(loader: HTMLElement): { x: number; y: number } {
+  return {
+    x: (loader.clientWidth || 18) / 2,
+    y: (loader.clientHeight || 14) / 2,
+  }
+}
+
+/** Polar coordinates of a point relative to the loader's centre. */
+function polarOf(point: { x: number; y: number }, center: { x: number; y: number }): { r: number; theta: number } {
+  const dx = point.x - center.x
+  const dy = point.y - center.y
+  return { r: Math.hypot(dx, dy), theta: Math.atan2(dy, dx) }
+}
+
+/** Counter-clockwise angular sweep from one angle to another in screen coordinates. */
+function ccwDelta(fromTheta: number, toTheta: number): number {
+  const raw = (((toTheta - fromTheta) % TWO_PI) + TWO_PI) % TWO_PI
+  const ccw = raw - TWO_PI
+  return ccw > -Math.PI / 3 ? ccw - TWO_PI : ccw
+}
+
+/** Cost of pairing two dots on a counter-clockwise swirl: favours uniform sweep around TARGET_SWIRL. */
+function swirlCost(from: Pose, to: Pose, center: { x: number; y: number }): number {
+  const startPolar = polarOf(from, center)
+  const endPolar = polarOf(to, center)
+  const delta = ccwDelta(startPolar.theta, endPolar.theta)
+  return Math.abs(delta - TARGET_SWIRL) + Math.abs(endPolar.r - startPolar.r) * 0.08
+}
+
+/** World position along a counter-clockwise polar spiral at normalised progress `u`. */
+function swirlAt(
+  from: { r: number; theta: number },
+  to: { r: number; theta: number },
+  delta: number,
+  center: { x: number; y: number },
+  u: number,
+): { x: number; y: number } {
+  const eTheta = motionEaseAt('--dsh-claude-ease-dot-swirl', u)
+  const eRadius = motionEaseAt('--dsh-claude-ease-harmonic', u)
+  const radius = from.r + (to.r - from.r) * eRadius
+  const angle = from.theta + delta * eTheta
+  return {
+    x: center.x + radius * Math.cos(angle),
+    y: center.y + radius * Math.sin(angle),
   }
 }
 
@@ -220,11 +279,19 @@ function timelineNow(): number {
 
 /**
  * Start the motions of a lane that has just come back into the page at `start`,
- * the moment its hand-over measures every wait from, and read their clocks.
+ * or phase-locked so its `landShare` stands at `start + targetRel`, and read
+ * their clocks.
  */
-function anchor(dots: HTMLElement[], start: number): MotionClock[] {
+function anchor(dots: HTMLElement[], start: number, targetRel?: number, landShare = 0): MotionClock[] {
   return dots.map((dot) => {
-    clockOf(dot).motion.startTime = start
+    const clock = clockOf(dot)
+    if (targetRel === undefined) {
+      clock.motion.startTime = start
+    } else {
+      const offsetInTurn = landShare * clock.turn
+      const cycles = Math.ceil((targetRel - offsetInTurn) / clock.turn) + 1
+      clock.motion.startTime = start + targetRel - offsetInTurn - cycles * clock.turn
+    }
     return clockOf(dot)
   })
 }
@@ -252,8 +319,8 @@ function switchDot(dot: Element, shown: boolean, wait: number, start: number): A
 }
 
 /** The curve a lane's opening fade runs on, read from the token sheet (D9). */
-function openingEase(motion: WaitLoaderMotion): '--dsh-claude-ease-damped-in' | '--dsh-claude-ease-damped-out' {
-  return motion === 'bounce' ? '--dsh-claude-ease-damped-in' : '--dsh-claude-ease-damped-out'
+function openingEase(): '--dsh-claude-ease-damped-out' {
+  return '--dsh-claude-ease-damped-out'
 }
 
 /**
@@ -272,7 +339,7 @@ function open(loader: HTMLElement, to: WaitLoaderMotion) {
     handOverAnimation(dot, [{ opacity: 0 }, { opacity: 1 }], {
       duration: clock.turn * lane.fade,
       delay: lane.arrives.length === 0 ? 0 : waitFor(clock, lane.arrives),
-      easing: motionEase(openingEase(to)),
+      easing: motionEase(openingEase()),
       // Held at both ends: a dot stays hidden until its own moment comes, and
       // keeps the value it reached afterwards.
       fill: 'both',
@@ -281,31 +348,140 @@ function open(loader: HTMLElement, to: WaitLoaderMotion) {
 }
 
 /**
- * Morph the loader from one motion into the next (the file's header describes
- * the shape of it). Every wait below is measured from one moment, the start
- * every new animation is given, so a dot handed over is drawn at the frame its
- * still moment comes and nowhere else.
- *
- * @returns the hand-over's animations, which are all over once the last dot has
- *     landed in its new motion.
+ * Sample a counter-clockwise polar swirl as additive keyframes on an arriving
+ * dot, plus an optional flat hold between `swirlEnd` and `landEnd` so a
+ * synchronised arrival can rest on a level baseline before rippling into motion.
+ */
+function arrivingSwirlKeyframes(
+  dot: HTMLElement,
+  clock: MotionClock,
+  fromPos: Pose,
+  toPos: Pose,
+  center: { x: number; y: number },
+  wait: number,
+  swirlEnd: number,
+  landEnd: number,
+): Keyframe[] {
+  const fromPolar = polarOf(fromPos, center)
+  const toPolar = polarOf(toPos, center)
+  const delta = ccwDelta(fromPolar.theta, toPolar.theta)
+  const total = Math.max(1, landEnd - wait)
+  const swirlSpan = Math.max(1, swirlEnd - wait)
+  const frames: Keyframe[] = []
+  for (let step = 0; step <= SWIRL_STEPS; step += 1) {
+    const u = step / SWIRL_STEPS
+    const t = wait + u * swirlSpan
+    const offset = (t - wait) / total
+    const target = u === 0 ? fromPos : u === 1 ? toPos : swirlAt(fromPolar, toPolar, delta, center, u)
+    const here = poseAt(dot, clock, t)
+    const dx = target.x - here.x
+    const dy = target.y - here.y
+    frames.push({
+      offset,
+      translate: step === SWIRL_STEPS && landEnd <= swirlEnd ? '0px 0px' : `${dx.toFixed(2)}px ${dy.toFixed(2)}px`,
+    })
+  }
+  if (landEnd > swirlEnd) {
+    const holdSpan = landEnd - swirlEnd
+    const holdSteps = Math.max(4, Math.ceil(holdSpan / HOLD_STEP_MS))
+    for (let step = 1; step <= holdSteps; step += 1) {
+      const t = swirlEnd + (step / holdSteps) * holdSpan
+      const offset = step === holdSteps ? 1 : (t - wait) / total
+      if (step === holdSteps) {
+        frames.push({ offset, translate: '0px 0px' })
+        continue
+      }
+      const here = poseAt(dot, clock, t)
+      frames.push({
+        offset,
+        translate: `${(toPos.x - here.x).toFixed(2)}px ${(toPos.y - here.y).toFixed(2)}px`,
+      })
+    }
+  }
+  return frames
+}
+
+/** Sample a counter-clockwise polar swirl as absolute translate keyframes on a spare leaving dot. */
+function spareSwirlKeyframes(
+  fromPos: Pose,
+  toPos: Pose,
+  center: { x: number; y: number },
+): Keyframe[] {
+  const fromPolar = polarOf(fromPos, center)
+  const toPolar = polarOf(toPos, center)
+  const delta = ccwDelta(fromPolar.theta, toPolar.theta)
+  const frames: Keyframe[] = []
+  for (let step = 0; step <= SWIRL_STEPS; step += 1) {
+    const u = step / SWIRL_STEPS
+    const target = u === 0 ? fromPos : u === 1 ? toPos : swirlAt(fromPolar, toPolar, delta, center, u)
+    const scaleX = fromPos.scaleX + (toPos.scaleX - fromPos.scaleX) * u
+    const scaleY = fromPos.scaleY + (toPos.scaleY - fromPos.scaleY) * u
+    frames.push({
+      offset: u,
+      translate: `${(target.x - fromPos.originX).toFixed(2)}px ${(target.y - fromPos.originY).toFixed(2)}px`,
+      scale: `${scaleX.toFixed(3)} ${scaleY.toFixed(3)}`,
+    })
+  }
+  return frames
+}
+
+/**
+ * Morph the loader from one motion into the next along coherent counter-clockwise
+ * polar swirls. Staggered departures landing on a synchronised lane (`cross`,
+ * `orbit`) share one arrival instant; synchronised departures landing on the
+ * wave (`bounce`) land together on the top baseline, hold briefly, and ripple
+ * downward in order. Landing on the walk (`line`), each dot's swirl lands a
+ * beat after the one before it and releases straight into the already-moving
+ * walk, so displacement starts promptly and asynchronously rather than waiting
+ * for every dot to reach a still end.
  */
 function morph(loader: HTMLElement, from: WaitLoaderMotion, to: WaitLoaderMotion): Animation[] {
   const start = timelineNow()
   const travel = motionMs('--dsh-claude-duration-dot-morph')
-  const ease = motionEase('--dsh-claude-ease-harmonic')
+  const settle = motionMs('--dsh-claude-duration-dot-settle')
+  const scaleEase = motionEase('--dsh-claude-ease-harmonic')
+  const center = centerOf(loader)
+  const fromEntry = laneEntry(from)
+  const toEntry = laneEntry(to)
   const timing = timingOf(laneOf(loader, from))
   const leaving = dotsOf(loader, from)
   const leavingClocks = leaving.map(clockOf)
   const moments = leavingClocks.map((clock) => waitFor(clock, timing.leaves))
   const stood = leaving.map((dot, at) => poseAt(dot, leavingClocks[at], moments[at]))
-  // The lane arriving comes back into the page, which starts its motion from the
-  // top, on the same clock as everything else here.
+  const maxMoment = Math.max(...moments)
+  const sharedSwirlEnd = maxMoment + travel
+  const waveSyncArrival = fromEntry.sync && to === 'bounce'
+  const lineWalkArrival = to === 'line'
+  const lineStagger = motionMs('--dsh-claude-period-dot-line') / 8
+  // The lane arriving comes back into the page, anchored so a synchronised lane
+  // stands on its rest pose at `sharedSwirlEnd` and a wave receiving a synchronised
+  // swirl launches from its top baseline after the brief hold. The walk keeps its
+  // own running clock (the stylesheet's negative delays phase the three dots), and
+  // each dot's swirl lands a beat after the one before it, straight into the moving
+  // walk — so displacement begins promptly and asynchronously, with no wait at an end.
   place(loader, to, from)
   const arriving = dotsOf(loader, to)
-  const clocks = anchor(arriving, start)
+  const clocks = toEntry.sync
+    ? anchor(arriving, start, sharedSwirlEnd, toEntry.landShare)
+    : waveSyncArrival
+      ? anchor(arriving, start, sharedSwirlEnd + settle, 0)
+      : anchor(arriving, start)
+  const swirlEnds = arriving.map((_, at) => {
+    if (toEntry.sync || waveSyncArrival) return sharedSwirlEnd
+    if (lineWalkArrival) return sharedSwirlEnd + at * lineStagger
+    return moments[Math.min(at, moments.length - 1)] + travel
+  })
+  const landEnds = arriving.map((_, at) => {
+    if (toEntry.sync) return sharedSwirlEnd
+    if (waveSyncArrival) return sharedSwirlEnd + settle + at * (clocks[at].turn / 6)
+    return swirlEnds[at]
+  })
+  const pairTargets = arriving.map((dot, at) => poseAt(dot, clocks[at], landEnds[at]))
   const pairs = pairDots(leaving.length, arriving.length, (one, two) => {
-    const there = poseAt(arriving[two], clocks[two], moments[one])
-    return Math.hypot(there.x - stood[one].x, there.y - stood[one].y)
+    const target = toEntry.sync || waveSyncArrival || lineWalkArrival
+      ? pairTargets[two]
+      : poseAt(arriving[two], clocks[two], moments[one] + travel)
+    return swirlCost(stood[one], target, center)
   })
   // The first of an arriving dot's partners to stand still is the one it takes
   // the place of; any other meets it there afterwards.
@@ -319,36 +495,39 @@ function morph(loader: HTMLElement, from: WaitLoaderMotion, to: WaitLoaderMotion
       animations.push(switchDot(dot, false, moments[one], start))
       continue
     }
-    // A spare dot glides onto the partner already standing in for it, and is
-    // gone at the frame the two are one.
     const partner = pairs.find((pair) => pair[0] === one)
     if (partner === undefined) throw new Error('chat-wait: a loader dot was left out of the hand-over')
-    const meet = poseAt(arriving[partner[1]], clocks[partner[1]], moments[one] + travel)
-    const own = stood[one]
-    animations.push(handOverAnimation(dot, [
-      { translate: `${own.x - own.originX}px ${own.y - own.originY}px`, scale: `${own.scaleX} ${own.scaleY}` },
-      { translate: `${meet.x - own.originX}px ${meet.y - own.originY}px`, scale: `${meet.scaleX} ${meet.scaleY}` },
-    ], { duration: travel, delay: moments[one], easing: ease, fill: 'forwards' }, start))
-    animations.push(switchDot(dot, false, moments[one] + travel, start))
+    const arrivingAt = partner[1]
+    const endAt = toEntry.sync || waveSyncArrival ? sharedSwirlEnd : lineWalkArrival ? landEnds[arrivingAt] : moments[one] + travel
+    const meet = poseAt(arriving[arrivingAt], clocks[arrivingAt], waveSyncArrival || lineWalkArrival ? landEnds[arrivingAt] : endAt)
+    const dur = Math.max(1, endAt - moments[one])
+    animations.push(handOverAnimation(
+      dot,
+      spareSwirlKeyframes(stood[one], meet, center),
+      { duration: dur, delay: moments[one], easing: 'linear', fill: 'forwards' },
+      start,
+    ))
+    animations.push(switchDot(dot, false, endAt, start))
   }
   for (const [at, dot] of arriving.entries()) {
     const lead = leads[at]
     const wait = moments[lead]
-    const here = poseAt(dot, clocks[at], wait)
-    const landed = poseAt(dot, clocks[at], wait + travel)
+    const swirlEnd = toEntry.sync || waveSyncArrival ? sharedSwirlEnd : lineWalkArrival ? swirlEnds[at] : wait + travel
+    const landEnd = toEntry.sync ? sharedSwirlEnd : waveSyncArrival ? landEnds[at] : swirlEnd
+    const landed = poseAt(dot, clocks[at], landEnd)
     animations.push(switchDot(dot, true, wait, start))
-    // An offset added onto the motion's own path, shrinking to nothing: the dot
-    // starts where its partner stood and is moving with its new motion by the
-    // time it lands. Its size is carried from its partner's to the one its
-    // motion has for it on landing.
-    animations.push(handOverAnimation(dot, [
-      { translate: `${stood[lead].x - here.x}px ${stood[lead].y - here.y}px` },
-      { translate: '0px 0px' },
-    ], { duration: travel, delay: wait, easing: ease, composite: 'add' }, start))
-    animations.push(handOverAnimation(dot, [
-      { scale: `${stood[lead].scaleX} ${stood[lead].scaleY}` },
-      { scale: `${landed.scaleX} ${landed.scaleY}` },
-    ], { duration: travel, delay: wait, easing: ease }, start))
+    animations.push(handOverAnimation(
+      dot,
+      arrivingSwirlKeyframes(dot, clocks[at], stood[lead], landed, center, wait, swirlEnd, landEnd),
+      { duration: Math.max(1, landEnd - wait), delay: wait, easing: 'linear', composite: 'add' },
+      start,
+    ))
+    if (stood[lead].scaleX !== landed.scaleX || stood[lead].scaleY !== landed.scaleY) {
+      animations.push(handOverAnimation(dot, [
+        { scale: `${stood[lead].scaleX} ${stood[lead].scaleY}` },
+        { scale: `${landed.scaleX} ${landed.scaleY}` },
+      ], { duration: Math.max(1, swirlEnd - wait), delay: wait, easing: scaleEase }, start))
+    }
   }
   return animations
 }

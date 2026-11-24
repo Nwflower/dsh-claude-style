@@ -26,6 +26,10 @@
 import { bound } from '../bounds.mjs'
 import fs from 'node:fs'
 import path from 'node:path'
+import surfaceTable from '../data/surface.json' with { type: 'json' }
+
+const CROSS_LANE = surfaceTable.surface.find((entry) => entry.id === 'chat-wait.lane-cross')
+if (CROSS_LANE?.selector === undefined) throw new Error('wait-line: the cross lane surface is incomplete')
 
 /** The clauses the model writes, which the line says back word for word. */
 const PHRASES = ['Checking the file is true', 'Reading the row model']
@@ -46,15 +50,17 @@ const APP = 'const first = 1\n'
  * The loader's motions, each with the lane it plays in, how many dots it draws,
  * the animation its first dot runs and that animation's own turn
  * (features/chat-wait/chat-wait.css). `wait-loader.ts` hands the row over from
- * one to the next every `--dsh-claude-period-dot-rotate`, so any of the three may
- * be the one standing when the head is read; the smoke case reads the same three
+ * one to the next every `--dsh-claude-period-dot-rotate`, so any of the four may
+ * be the one standing when the head is read; the smoke case reads the same four
  * (cases/chat-wait.mjs).
  */
 const MOTIONS = [
-  { lane: 'is-bounce', dots: 3, animation: 'dsh-claude-wait-dot', duration: '0.5s' },
+  { lane: 'is-bounce', dots: 3, animation: 'dsh-claude-wait-dot', duration: '1.2s' },
   { lane: 'is-line', dots: 3, animation: 'dsh-claude-wait-dot-line', duration: '1.25s' },
   { lane: 'is-orbit', dots: 4, animation: 'dsh-claude-wait-dot-orbit-1', duration: '2.4s' },
 ]
+// The cross keyframes are the wave's own name with the lane's suffix (chat-wait.css).
+MOTIONS.push({ lane: CROSS_LANE.selector.split('.').pop(), dots: 3, animation: `${MOTIONS[0].animation}-${CROSS_LANE.selector.split('.').pop().replace('is-', '')}`, duration: '1.2s' })
 
 /**
  * The head of the running row on the real host: the skin's own loader where the
@@ -89,7 +95,7 @@ const readHead = (page) => page.evaluate(() => {
   return {
     dots: lane === null ? 0 : lane.children.length,
     shown: loader !== null && getComputedStyle(loader).display !== 'none',
-    // Which of the loader's three motions stands: the dots bounce while the
+    // Which of the loader's four motions stands: the dots ripple while the
     // turn thinks, walk their own lines while it works, or swap the corners of
     // their own rectangle. The reading beside it is the animation that motion
     // runs, so the two are checked against each other.

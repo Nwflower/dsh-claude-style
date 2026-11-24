@@ -1,10 +1,16 @@
 import { BAND_ANIMATION, basicChecks, check } from './_shared.mjs'
 import { bound } from '../../bounds.mjs'
 import { handoverCounts, handoverJumps } from './chat-handover.mjs'
+import surfaceTable from '../../data/surface.json' with { type: 'json' }
+
+const CROSS_LANE = surfaceTable.surface.find((entry) => entry.id === 'chat-wait.lane-cross')
+if (CROSS_LANE?.selector === undefined) throw new Error('chat-wait: the cross lane surface is incomplete')
+const CROSS_NAME = CROSS_LANE.selector.split('.').pop()
+
 
 /**
  * The waiting line (packages/client/src/features/chat-wait/): the running row's
- * line beside the host's words, the loader's three motions and their rotation,
+ * line beside the host's words, the loader's four motions and their rotation,
  * the wording states and swaps, the overtime badge and the margin it waits out,
  * the row's pin and its ownership hand-overs.
  */
@@ -18,12 +24,15 @@ export default {
     const loader = working.loader || {}
     const laneOf = (reading, name) => (reading.lanes || []).find((lane) => String(lane.name).includes(name)) || {}
     const numbers = (text) => (String(text).match(/-?[\d.]+/g) || []).map(Number)
-    const LANE_DOTS = [['is-bounce', 3], ['is-line', 3], ['is-orbit', 4]]
+    const LANE_DOTS = [['is-bounce', 3], ['is-line', 3], ['is-orbit', 4], [CROSS_NAME, 3]]
     const OPENINGS = ['dsh-claude-wait-dot', 'dsh-claude-wait-dot-line', 'dsh-claude-wait-dot-orbit-1']
-    // 三条轨道都在页面上、各带自己的球数（3 / 3 / 4），其中一条在用；开哪一条是随机的，
-    // 所以这里只认「用的是三条之一」。
-    check('加载点把三条轨道都建好了——三颗跳球、三颗走路、四颗交换四角——其中一条在用，主机的鲸鱼尾让位',
-      loader.shown === true && (loader.lanes || []).length === 3 &&
+    // The cross keyframes are the wave's own name with the lane's suffix (chat-wait.css).
+    const CROSS_ANIMATION = `${OPENINGS[0]}-${CROSS_NAME.replace('is-', '')}`
+    OPENINGS.push(CROSS_ANIMATION)
+    // 四条轨道都在页面上、各带自己的球数（3 / 3 / 4 / 3），其中一条在用；开哪一条是随机的，
+    // 所以这里只认「用的是四条之一」。
+    check('加载点把四条轨道都建好了——三颗波浪、三颗走路、四颗交换四角、三颗三轴穿越——其中一条在用，主机的鲸鱼尾让位',
+      loader.shown === true && (loader.lanes || []).length === 4 &&
         LANE_DOTS.every(([name, count]) => (laneOf(loader, name).opacity || []).length === count) &&
         LANE_DOTS.some(([name]) => String(loader.motion).includes(name)) &&
         OPENINGS.includes(String(loader.animation)) && loader.background === 'rgb(217, 119, 87)' &&
@@ -33,10 +42,12 @@ export default {
     // 所以读的是样式表写下的曲线，与此刻轮到谁无关。
     const bounceFrames = (wait.bounceLane || { frames: [] }).frames || []
     const bounceY = bounceFrames.map((frame) => numbers(frame.translate[0])[1]).filter((one) => Number.isFinite(one))
-    check('跳球那条：一颗球从地面弹起 8px 再落回，三颗各错开一个相位',
+    const bounceScales = bounceFrames.flatMap((frame) => frame.scale || []).map((one) => String(one))
+    const bounceRound = bounceScales.every((one) => one === 'none' || one === '1' || one === '1 1')
+    check('波浪那条：纯圆三点无压扁，一颗从顶端基线下落 8px 再回到顶端，1200ms 一周、三颗各错开 200ms',
       bounceFrames.length >= 40 && bounceFrames[0].animation === 'dsh-claude-wait-dot' &&
-        bounceFrames[0].duration === '0.5s' && (bounceFrames[0].delays || []).join(',') === '-0.5s,-0.3s,-0.2s' &&
-        Math.min(...bounceY) <= -7.5 && Math.max(...bounceY) >= -0.5,
+        bounceFrames[0].duration === '1.2s' && (bounceFrames[0].delays || []).join(',') === '-1.2s,-1s,-0.8s' &&
+        Math.min(...bounceY) <= -7.5 && Math.max(...bounceY) >= -0.5 && bounceRound,
       JSON.stringify({ readings: bounceFrames.length, low: Math.min(...bounceY), high: Math.max(...bounceY), head: bounceFrames[0] }))
     // 走路那条：一端走到另一端各占半个周期，所以过半个周期球落在中点另一侧、离中点的距离与
     // 大小都一样；三颗各错开三分之一个周期（相差半个周期就是把同一个动作镜像过去），
@@ -108,13 +119,39 @@ export default {
         near(spot(orbitFrames[25], 1), spot(orbitFrames[10], 3), 0.6) && near(spot(orbitFrames[25], 3), spot(orbitFrames[10], 1), 0.6) &&
         near(spot(orbitFrames[25], 0), spot(orbitFrames[10], 0), 0.05) && dwells && closes && bow >= 1,
       JSON.stringify({ readings: orbitFrames.length, shape, bow: Number(bow.toFixed(2)), closes, dwells }))
+    // 三轴穿越那条：三颗同相沿互成 120° 的直线往返，每条线相对中心切向偏置 1.6px；
+    // 中点三颗组成边长约 2.77px 的紧贴正三角形擦肩而过（不缩点、不重叠），两端是镜像三角形。
+    const crossFrames = (wait.crossLane || { frames: [] }).frames || []
+    const crossSpot = (frame, dot) => ({ x: numbers(frame.translate[dot])[0], y: numbers(frame.translate[dot])[1] })
+    const crossDist = (p, q) => Math.hypot(p.x - q.x, p.y - q.y)
+    const crossMid = crossFrames.length > 24 ? [0, 1, 2].map((dot) => crossSpot(crossFrames[24], dot)) : []
+    const crossSides = crossMid.length === 3 ? [crossDist(crossMid[0], crossMid[1]), crossDist(crossMid[1], crossMid[2]), crossDist(crossMid[2], crossMid[0])] : []
+    const crossStart = crossFrames.length > 0 ? [0, 1, 2].map((dot) => crossSpot(crossFrames[0], dot)) : []
+    const crossEnd = crossFrames.length > 24 ? [0, 1, 2].map((dot) => crossSpot(crossFrames[24], dot)) : []
+    // Each walk is one straight line: its midpoint sits 1.6px from the centre (the offset),
+    // and the two ends are equidistant from that foot on opposite sides.
+    const mirrored = crossStart.length === 3 && crossEnd.length === 3 &&
+      [0, 1, 2].every((dot) => {
+        const p = crossStart[dot], q = crossEnd[dot]
+        const mx = (p.x + q.x) / 2, my = (p.y + q.y) / 2
+        const foot = Math.hypot(mx, my)
+        const dStart = Math.hypot(p.x - mx, p.y - my), dEnd = Math.hypot(q.x - mx, q.y - my)
+        return Math.abs(foot - 1.6) <= 0.1 && Math.abs(dStart - dEnd) <= 0.1 && Math.abs(dStart - 5.8) <= 0.15
+      })
+    const crossScales = crossFrames.flatMap((frame) => frame.scale || []).map((one) => String(one))
+    const crossRound = crossScales.every((one) => one === 'none' || one === '1' || one === '1 1')
+    check('三轴穿越那条：三颗同相往返、中点擦肩成 2.77px 正三角、两端镜像、全程纯圆',
+      crossFrames.length >= 48 && crossFrames[0].animation === CROSS_ANIMATION &&
+        crossFrames[0].duration === '1.2s' && (crossFrames[0].delays || []).every((one) => one === '0s') &&
+        crossSides.length === 3 && crossSides.every((one) => Math.abs(one - 2.77) <= 0.1) && mirrored && crossRound,
+      JSON.stringify({ readings: crossFrames.length, sides: crossSides.map((one) => Number(one.toFixed(2))), mirrored }))
     // 轮换：一个动作站满 10 秒才换，换的是另一条轨道（不会换到自己）；交接一开始新的那条
     // 就在场，所以从那一帧算换。
     const rotation = (wait.rotation || []).filter((frame) => frame !== null && frame.loader !== null && frame.loader.motion !== null)
     const seen = rotation.map((frame) => ({ at: frame.at, motion: String(frame.loader.motion), loader: frame.loader }))
     const starts = seen.length === 0 ? [] : [0]
     for (let at = 1; at < seen.length; at += 1) if (seen[at].motion !== seen[at - 1].motion) starts.push(at)
-    const motionOf = (at) => (String(seen[at].motion).match(/is-(bounce|line|orbit)/) || [])[1]
+    const motionOf = (at) => (String(seen[at].motion).match(/is-(bounce|line|orbit|cross)/) || [])[1]
     const changes = starts.slice(1)
     // 换与换之间隔多久：只看相邻两次换之间的那一段，采样起点不算一次变化。
     const gaps = changes.slice(1).map((at, index) => seen[at].at - seen[changes[index]].at)
@@ -134,8 +171,8 @@ export default {
     const shown = (lane, dot) => (lane.opacity || [])[dot] > 0.5
     const inView = (frame) => (frame.loader.lanes || []).flatMap((lane) => (lane.spots || []).filter((_, dot) => shown(lane, dot)))
     const before = changes.length === 0 ? null : seen[changes[0] - 1]
-    const comeLane = changes.length === 0 ? null : ['is-bounce', 'is-line', 'is-orbit'].find((name) => name === `is-${motionOf(changes[0])}`) ?? null
-    const goneLane = before === null ? null : ['is-bounce', 'is-line', 'is-orbit'].find((name) => laneShows(before, name, (one) => one > 0.9)) ?? null
+    const comeLane = changes.length === 0 ? null : ['is-bounce', 'is-line', 'is-orbit', CROSS_NAME].find((name) => name === `is-${motionOf(changes[0])}`) ?? null
+    const goneLane = before === null ? null : ['is-bounce', 'is-line', 'is-orbit', CROSS_NAME].find((name) => laneShows(before, name, (one) => one > 0.9)) ?? null
     const handing = changes.length < 2 ? [] : seen.slice(changes[0] - 1, changes[1])
     const settled = goneLane === null || comeLane === null ? null
       : handing.find((frame) => laneShows(frame, goneLane, (one) => one < 0.1) && laneShows(frame, comeLane, (one) => one > 0.9)) ?? null
