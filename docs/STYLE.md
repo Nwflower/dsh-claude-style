@@ -417,10 +417,12 @@ column dividers.
 
 The title area and the session's more-actions trigger stay visible. The view
 tabs, their overflow menu and the right-hand tools fade in while the pointer is
-over the header, the main content with the session panel inside it, or the sidebar, including the
-composer and the Windows caption space above the conversation. The caption carries
-the sidebar's collapse control, so those columns keep the header buttons up. The
-tools fade out over the host right panel and keep their place in the header.
+over the header, the main content with the session panel inside it, the sidebar
+or its resize handle, or the Windows caption strip before the window buttons,
+and while a menu opened from the header stands on screen. The caption carries
+the sidebar's collapse control and the lifted toolbar, so the whole strip keeps
+the header buttons up. The tools fade out over the host right panel and keep
+their place in the header.
 Keyboard focus reveals them immediately. Reduced motion applies the opacity
 changes immediately, and touch-only devices keep the controls visible.
 The Conversation setting Hide toolbar outside the conversation starts on.

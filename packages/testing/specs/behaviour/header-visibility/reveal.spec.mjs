@@ -1,7 +1,7 @@
 /**
  * @capability header-visibility
  * @features header-visibility, view-tabs
- * @risk The session menu leaves the title, the toolbar hides over the sidebar that carries the caption's collapse control or over the host's session panel inside the conversation, or the native view tabs disappear with the tools while right alignment is disabled.
+ * @risk The session menu leaves the title, the toolbar hides in the Windows caption drag strip or across control gaps, over the sidebar and its resize handle, over the host's session panel, or while a header menu stands open, or the native view tabs disappear with the tools while right alignment is disabled.
  */
 import { HEADER_PARTS } from '@dsh-claude-style/engine/parts-table'
 import { host, spec, surface } from '../../fixtures/behaviour.mjs'
@@ -16,6 +16,8 @@ const HEADER_SLOT = host.attributes('shell.header-slot')
 const CONTENT = host.attributes('chat.content')
 const TABLIST = host.attributes('header.conversation-tabs')
 const SIDEBAR_SLOT = host.attributes('shell.sidebar-slot')
+const SIDEBAR_HANDLE = host('shell.sidebar-handle')
+const SIDEBAR_HANDLE_ATTRS = host.attributes('shell.sidebar-handle')
 const RIGHTBAR = host('shell.rightbar-column')
 const RIGHTBAR_ATTRS = host.attributes('shell.rightbar-column')
 const SESSION_PANEL = host.attributes('conversation.session-panel')
@@ -29,7 +31,7 @@ const CLASSES = {
 }
 
 async function mount(t) {
-  await t.page.evaluate(({ phase, windows, main, headerSlot, content, tablist, classes, rootClass, sidebarSlot, rightbarAttrs, sessionPanel }) => {
+  await t.page.evaluate(({ phase, windows, main, headerSlot, content, tablist, classes, rootClass, sidebarSlot, sidebarHandleAttrs, rightbarAttrs, sessionPanel }) => {
     document.documentElement.setAttribute(windows, '')
     const captionHeight = 40
     const windowButtons = 140
@@ -49,12 +51,13 @@ async function mount(t) {
     }
     const shell = box('div', [], 'position:fixed;inset:0;background:white;z-index:9')
     // The sidebar slot's root child carries the sidebar-root part the walk assigns.
-    const sidebarSlotEl = box('div', sidebarSlot, 'position:absolute;inset:0 auto 0 0;width:16%')
+    const sidebarSlotEl = box('div', sidebarSlot, `position:absolute;inset:${captionHeight}px auto 0 0;width:16%`)
     const sidebarRoot = box('div', [['class', rootClass]], 'width:100%;height:100%')
     const sidebar = box('button', [], 'width:100%;height:100%')
     sidebar.textContent = 'Sessions'
     sidebarRoot.append(sidebar)
     sidebarSlotEl.append(sidebarRoot)
+    const sidebarHandle = box('div', sidebarHandleAttrs, `position:absolute;inset:${captionHeight}px auto 0 calc(16% - 4px);width:8px;z-index:2`)
     const outlet = box('div', main, 'display:contents')
     const frame = box('div', [[phase, 'active']], `position:absolute;inset:${captionHeight}px 16% 0;display:flex;flex-direction:column`)
     const slot = box('div', headerSlot, 'display:contents')
@@ -73,12 +76,12 @@ async function mount(t) {
     })
     const viewList = box('div', [...tablist, ['class', classes.tablist], ['role', 'tablist']], '')
     viewList.append(controls[0].firstElementChild)
-    const moreViews = box('button', [['aria-label', 'More views'], ['aria-haspopup', 'menu']], '')
+    const moreViews = box('button', [['aria-label', 'More views'], ['aria-haspopup', 'menu'], ['aria-expanded', 'false']], '')
     controls[0].append(viewList, moreViews)
     const utilities = controls[1]
     const utilitySlot = box('div', [], 'display:contents')
     utilitySlot.append(utilities.firstElementChild)
-    const sessionMenu = box('button', [['aria-label', 'More actions'], ['aria-haspopup', 'menu']], '')
+    const sessionMenu = box('button', [['aria-label', 'More actions'], ['aria-haspopup', 'menu'], ['aria-expanded', 'false']], '')
     sessionMenu.innerHTML = '<span><svg width="16" height="16"><circle cx="8" cy="8" r="2"/></svg></span>'
     utilities.append(utilitySlot, sessionMenu)
     const chat = box('section', content, 'flex:1;position:relative')
@@ -86,14 +89,14 @@ async function mount(t) {
     const panel = box('aside', sessionPanel, 'position:absolute;inset:12px 8px auto auto;width:30%;height:50%;background:white')
     panel.setAttribute('aria-label', 'Session panel')
     chat.append(panel)
-    const rightbar = box('div', [...rightbarAttrs, ['aria-label', 'Host right panel']], 'position:absolute;inset:0 0 0 auto;width:16%;background:white')
+    const rightbar = box('div', [...rightbarAttrs, ['aria-label', 'Host right panel']], `position:absolute;inset:${captionHeight}px 0 0 auto;width:16%;background:white`)
     header.append(title, ...controls)
     slot.append(header)
     frame.append(slot, chat)
     outlet.append(frame)
-    shell.append(sidebarSlotEl, outlet, rightbar)
+    shell.append(sidebarSlotEl, outlet, rightbar, sidebarHandle)
     document.body.prepend(shell)
-  }, { phase: PHASE, windows: WINDOWS, main: MAIN, headerSlot: HEADER_SLOT, content: CONTENT, tablist: TABLIST, classes: CLASSES, rootClass: localClass('root'), sidebarSlot: SIDEBAR_SLOT, rightbarAttrs: RIGHTBAR_ATTRS, sessionPanel: SESSION_PANEL })
+  }, { phase: PHASE, windows: WINDOWS, main: MAIN, headerSlot: HEADER_SLOT, content: CONTENT, tablist: TABLIST, classes: CLASSES, rootClass: localClass('root'), sidebarSlot: SIDEBAR_SLOT, sidebarHandleAttrs: SIDEBAR_HANDLE_ATTRS, rightbarAttrs: RIGHTBAR_ATTRS, sessionPanel: SESSION_PANEL })
 }
 
 export default spec({ page: 'desktop' }, ({ test }) => {
@@ -104,6 +107,7 @@ export default spec({ page: 'desktop' }, ({ test }) => {
     const header = page.locator(`[${MARK}]`)
     const chat = page.getByRole('region', { name: 'Conversation' })
     const sidebar = page.getByRole('button', { name: 'Sessions', exact: true })
+    const sidebarHandle = page.locator(SIDEBAR_HANDLE)
     const sessionPanel = page.getByRole('complementary', { name: 'Session panel' })
     const rightbar = page.locator(RIGHTBAR)
     const title = header.getByText('Session title', { exact: true })
@@ -155,13 +159,15 @@ export default spec({ page: 'desktop' }, ({ test }) => {
 
     await chat.hover({ position: { x: chatBox.width / 4, y: chatBox.height / 2 } })
     t.expectThat.equal(await visibility(), shown, 'the conversation shows the controls')
-    // The caption carries the sidebar's collapse control, so the sidebar keeps the
-    // header buttons up, as does the host's session panel inside the conversation;
+    // The caption carries the sidebar's collapse control, so the sidebar, its
+    // resize handle and the host's session panel keep the header buttons up;
     // only the host right panel hides them.
     await sessionPanel.hover()
     t.expectThat.equal(await visibility(), shown, 'the session panel keeps the controls up')
     await sidebar.hover()
     t.expectThat.equal(await visibility(), shown, 'the sidebar keeps the controls up')
+    await sidebarHandle.hover()
+    t.expectThat.equal(await visibility(), shown, 'the sidebar resize handle keeps the controls up')
     await rightbar.hover()
     t.expectThat.equal(await visibility(), titleOnly, 'the host right panel hides the controls')
     const samples = await header.evaluate(element => element.fadeSamples)
@@ -175,19 +181,42 @@ export default spec({ page: 'desktop' }, ({ test }) => {
     await action.hover()
     t.expectThat.equal(await visibility(), shown, 'a tool responds as a hover target while hidden')
 
+    // Opening a portaled menu from the header keeps the toolbar visible while
+    // the pointer moves onto the menu outside the conversation box.
+    await moreViews.evaluate(element => element.setAttribute('aria-expanded', 'true'))
+    await rightbar.hover()
+    t.expectThat.equal(await visibility(), shown, 'an open header menu keeps the controls up')
+    await moreViews.evaluate(element => element.setAttribute('aria-expanded', 'false'))
+    t.expectThat.equal(await visibility(), titleOnly, 'closing the header menu applies the current pointer position')
+
     const headerBox = await header.boundingBox()
     const blankCaption = { x: headerBox.x + headerBox.width / 2, y: headerBox.y / 2 }
     await page.mouse.move(blankCaption.x, blankCaption.y)
     t.expectThat.equal(await visibility(), shown, 'the blank Windows caption space reveals the controls')
-    // The native drag region hands the pointer off with no relatedTarget; the
-    // blank band must keep the controls up rather than read as a window exit.
-    await page.evaluate(point => {
-      const target = document.elementFromPoint(point.x, point.y) || document.body
-      target.dispatchEvent(new PointerEvent('pointerout', { bubbles: true, pointerType: 'mouse', clientX: point.x, clientY: point.y, relatedTarget: null }))
-    }, blankCaption)
-    t.expectThat.equal(await visibility(), shown, 'a handoff into blank caption space keeps the controls up')
-    // Leaving the window from the caption direction raises pointerleave on the
-    // document; the toolbar hides even though the exit sits inside the band.
+    // On Windows, entering `-webkit-app-region: drag` switches hit-testing to
+    // HTCAPTION and sends WM_MOUSELEAVE: both the exited control and the
+    // document element receive pointerleave while the cursor stays in the band.
+    const handoffIntoCaption = async (point) => {
+      await action.hover()
+      await action.evaluate((button, at) => {
+        button.dispatchEvent(new PointerEvent('pointerout', { bubbles: true, pointerType: 'mouse', clientX: at.x, clientY: at.y, relatedTarget: null }))
+        button.dispatchEvent(new PointerEvent('pointerleave', { bubbles: false, pointerType: 'mouse', clientX: at.x, clientY: at.y, relatedTarget: null }))
+        document.documentElement.dispatchEvent(new PointerEvent('pointerleave', { bubbles: false, pointerType: 'mouse', clientX: at.x, clientY: at.y, relatedTarget: null }))
+      }, point)
+    }
+    await handoffIntoCaption(blankCaption)
+    t.expectThat.equal(await visibility(), shown, 'a Windows HTCAPTION handoff into blank caption space keeps the controls up')
+    await handoffIntoCaption({ x: 24, y: headerBox.y / 2 })
+    t.expectThat.equal(await visibility(), shown, 'the Windows caption above the sidebar keeps the controls up')
+    const rightCaption = await page.evaluate(y => ({ x: innerWidth - 180, y }), headerBox.y / 2)
+    await handoffIntoCaption(rightCaption)
+    t.expectThat.equal(await visibility(), shown, 'the Windows caption above an open right panel keeps the controls up')
+    const nativeButtons = await page.evaluate(y => ({ x: innerWidth - 40, y }), headerBox.y / 2)
+    await handoffIntoCaption(nativeButtons)
+    t.expectThat.equal(await visibility(), titleOnly, 'entering the native Windows caption buttons hides the controls')
+    await page.mouse.move(blankCaption.x, blankCaption.y)
+    t.expectThat.equal(await visibility(), shown, 'returning to the caption restores the controls')
+    // Leaving the window across its top edge raises pointerleave at y <= 0.
     await page.evaluate(point => {
       document.documentElement.dispatchEvent(new PointerEvent('pointerleave', { pointerType: 'mouse', clientX: point.x, clientY: 0 }))
     }, blankCaption)

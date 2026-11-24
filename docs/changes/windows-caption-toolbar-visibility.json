@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-24",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "修复 Windows 桌面端指针移入顶栏拖拽区、划过按钮间隙或在右侧面板展开时经过顶栏会意外隐藏视图标签与右侧工具栏的问题，并在顶栏菜单展开期间保持工具栏可见",
+  "en": "Fix the view tabs and right-hand toolbar hiding unexpectedly on Windows desktop when the pointer enters the caption drag region, crosses gaps between controls, or moves across the caption with the right panel open, and keep the toolbar visible while a header menu is open"
+}
