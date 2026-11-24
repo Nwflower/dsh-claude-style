@@ -87,7 +87,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     },
   })
 
-  /** The section root a label sits in: the label's header, and that header's parent. */
+  /** Read the label's CSS-pixel offset from its header's padding box without integer rounding drift. */
+  function readLabelOffset(label: HTMLElement, header: HTMLElement) {
+    const headerRect = header.getBoundingClientRect()
+    const labelRect = label.getBoundingClientRect()
+    const scale = headerRect.width > 0 && header.offsetWidth > 0 ? headerRect.width / header.offsetWidth : 1
+    return {
+      left: Math.round(((labelRect.left - headerRect.left) / scale - header.clientLeft) * 100) / 100,
+      top: Math.round(((labelRect.top - headerRect.top) / scale - header.clientTop) * 100) / 100,
+    }
+  }
   function sectionRoot(label: Element) {
     const header = label.parentElement
     return header === null ? null : header.parentElement
@@ -193,9 +202,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // The host's header padding carries the label in from the header's edge;
     // the trigger's words stand on the label's own offset, not the header's.
     // The stylesheet subtracts the hover plate's padding from both.
-    const leftValue = `${labelLeft ?? label.offsetLeft}px`
+    const measured = labelLeft !== null && labelTop !== null ? { left: labelLeft, top: labelTop } : readLabelOffset(label, header)
+    const leftValue = `${measured.left}px`
     if (header.style.getPropertyValue(MENU_LEFT_VAR) !== leftValue) header.style.setProperty(MENU_LEFT_VAR, leftValue)
-    const topValue = `${labelTop ?? label.offsetTop}px`
+    const topValue = `${measured.top}px`
     if (header.style.getPropertyValue(MENU_TOP_VAR) !== topValue) header.style.setProperty(MENU_TOP_VAR, topValue)
     viewStamp.mark(root, view)
     // The archived list rides inside the host's own list seat, which the wide
@@ -218,9 +228,15 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The pass's read phase: the label's own offset, taken before this frame's writes. */
   function measure() {
     const label = sectionLabel
-    const standing = label !== null && label.isConnected
-    labelLeft = standing ? label.offsetLeft : null
-    labelTop = standing ? label.offsetTop : null
+    const header = label?.parentElement ?? null
+    if (label !== null && label.isConnected && header !== null) {
+      const offset = readLabelOffset(label, header)
+      labelLeft = offset.left
+      labelTop = offset.top
+    } else {
+      labelLeft = null
+      labelTop = null
+    }
   }
 
   ui.workspace = {

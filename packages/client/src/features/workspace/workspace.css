@@ -40,6 +40,7 @@ body[data-dsh-claude-style] .dsh-claude-ws-menu-trigger {
   background: transparent;
   font-family: var(--dsw-font-family);
   font-size: calc(12px * var(--dsh-claude-interface-font-scale, 1));
+  font-weight: 500;
   line-height: 16px;
   color: var(--dsw-alias-label-tertiary, #91888a);
   cursor: pointer;
@@ -64,10 +65,12 @@ body[data-dsh-claude-style] .dsh-claude-ws-menu-caret svg {
 }
 body[data-dsh-claude-style] [data-dsh-claude-part~="section-label"][data-dsh-claude-ws-label] {
   /* The heading gives way whole: the trigger replaces its words in every
-     view. visibility takes the label out of paint, hit-testing and the
-     accessibility tree while its layout box stays for the pass to measure;
-     it must not swallow clicks aimed at the trigger nor start a selection
-     drag. */
+     view. inline-block aligns the measured box to the 16px line-height box
+     shared with the flex trigger label rather than font-dependent inline
+     ascent/descent metrics; visibility takes the label out of paint,
+     hit-testing and the accessibility tree while its layout box stays for
+     the pass to measure. */
+  display: inline-block;
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
