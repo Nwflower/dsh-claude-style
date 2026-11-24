@@ -5,7 +5,7 @@ import { WIDTH_HANDLE_SELECTOR } from '@dsh-claude-style/contracts/dom'
  *
  * The host states the handle's bar on its own `::after` and reveals it the frame
  * the pointer enters the 10px hit strip, so a pointer crossing the transcript's
- * edge on its way anywhere else flashes a rule down the page (issue #270). The
+ * edge on its way anywhere else flashes a rule down the page. The
  * bar is revealed here instead once the pointer has rested on the handle, and a
  * press reveals it at once: a reader who means to drag has stopped passing
  * through. The host's own `data-dragging` keeps it up for the drag.

@@ -27,7 +27,7 @@ export function sessionProjectionFaces(ctx: HostContext | null, sessionId: strin
 }
 
 /**
- * One session's figures as both faces of them print it (D112): the composer's
+ * One session's figures as both faces of them print it (D113): the composer's
  * line below the input and the session panel's two tables are read from this one entry,
  * so the page shows one set of numbers and not two that disagree.
  *

@@ -14,7 +14,7 @@ import type { StatsReading } from './stats-count'
 export { INLINE_PROBE_ATTR, INLINE_STATS_ATTR }
 
 /**
- * The composer's live statistics bar (D112): one unified line for both
+ * The composer's live statistics bar (D113): one unified line for both
  * placements — `footer` (toolbar when width permits, wrapping onto the dock
  * below when narrow) and `inline` (always on the dock line below). Both share
  * horizontal alignment, the six session-aggregate figure switches, the token

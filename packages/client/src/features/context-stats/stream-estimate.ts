@@ -26,7 +26,7 @@ import { estimateScale, recordSettlement, STREAM_UNDERESTIMATE } from './estimat
 /**
  * How old the last reading may be before the streamed text is read again: a full
  * reading walks every streaming container's text, and the figure is a meter, not
- * a ticker (#211). The first reading, a settlement and a session switch stay
+ * a ticker. The first reading, a settlement and a session switch stay
  * immediate.
  */
 const SCAN_MS = 800

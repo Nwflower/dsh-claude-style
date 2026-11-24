@@ -7,8 +7,7 @@ import { FOOTER_BLOCK_ATTR, FOOTER_MENU_ATTR, FOOTER_SEAT_ATTR, FOOTER_SEATS } f
  * action slot's entries and any card a plugin mounted beside them, classified
  * and hidden in place. The account popover's mirror (footer-mirror.ts) reads the
  * entry list this pass returns and the marks it writes; the row model and the
- * popover's own behaviour belong to account-footer.ts. Splitting the classification
- * from the mirroring keeps each file under the source stop line.
+ * popover's own behaviour belong to account-footer.ts.
  */
 
 /**
@@ -90,7 +89,7 @@ function seatOf(entry: Element) {
  * Whether an entry opens a menu — its own trigger or a control inside it — or
  * carries the host's sign-out glyph. Both the hiding pass and the mirror read
  * this one answer, so an entry the popover refuses to gather is never hidden
- * out of the sidebar (issue #417). A menu portals from its trigger's own box
+ * out of the sidebar. A menu portals from its trigger's own box
  * and returns focus to that trigger, so the trigger must keep painting where
  * the plugin put it: a mirrored copy's press would open the menu against a
  * hidden anchor. The sign-out control belongs to the account area the popover
@@ -206,8 +205,7 @@ export function createFooterVisibility() {
    *   - an entry that opens a menu (its own trigger or a control inside it) or
    *     carries the host's sign-out glyph keeps its place in the sidebar under
    *     FOOTER_MENU_ATTR: the menu portals from the trigger's own box and returns
-   *     focus to it, so the popover gathers no row and the takeover hides nothing
-   *     (issue #417).
+   *     focus to it, so the popover gathers no row and the takeover hides nothing.
    * Returns the live entry list for popover mirroring.
    */
   function sync(footArea: Element) {
@@ -227,7 +225,7 @@ export function createFooterVisibility() {
         // no unit to collapse: it keeps its whole box, and the takeover puts no
         // entry or hidden mark on it. An open modal dialog left visible stays
         // modal; hidden, the browser would hold the whole page inert behind an
-        // overlay that nothing paints (issue #97).
+        // overlay that nothing paints.
         entry.removeAttribute('data-dsh-claude-footer-entry')
         entry.removeAttribute('data-dsh-claude-footer-hidden')
         entry.removeAttribute(FOOTER_BLOCK_ATTR)
@@ -254,7 +252,7 @@ export function createFooterVisibility() {
         // no display rule onto the entry and footer-takeover.css gives the
         // footer's action box its size back for it. The popover gathers no row
         // (the mirror reads the same mark), so the entry is never hidden out of
-        // both places at once (issue #417). A hidden mark an earlier pass wrote
+        // both places at once. A hidden mark an earlier pass wrote
         // on a branch comes off, so a trigger that grew into an entry already
         // collapsed paints whole again.
         setAttributeIfChanged(entry, FOOTER_MENU_ATTR, '')

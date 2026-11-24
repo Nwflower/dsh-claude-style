@@ -4,7 +4,7 @@ import { copy } from './copy'
 
 const h = React.createElement
 
-/** What the host's panel factories take: the hover card's details and the list's fold control (D112). */
+/** What the host's panel factories take: the hover card's details and the list's fold control (D113). */
 export interface PanelDetails {
   title?: string
   lines?: readonly string[]
@@ -37,7 +37,7 @@ export interface PanelEntryProps {
 }
 
 /**
- * The component the skin hands one of the panel's slots (D112): it renders
+ * The component the skin hands one of the panel's slots (D113): it renders
  * nothing until the host names a session, and then its body for that session.
  * The factory renderer is read when a row asks for it; a panel that handed none
  * is a host this skin does not serve, and the row that asked says so.
@@ -56,7 +56,7 @@ export function panelEntry(Body: React.FunctionComponent<PanelEntryProps>) {
 }
 
 /**
- * One row in the host panel's shared row markup (D112): the host lays out
+ * One row in the host panel's shared row markup (D113): the host lays out
  * `data-session-panel-row` and its `data-row-part` children, so a skin row
  * stands in the icon, text and trailing columns every other section uses. The
  * row's words are one line — the title, then its detail in the quiet ink — and
@@ -85,7 +85,7 @@ export function Row(props: { mark?: React.ReactNode, title: string, detail?: str
 const FOLD_LIMIT = 5
 
 /**
- * A list folded the way the host panel folds its own (D112): the first five
+ * A list folded the way the host panel folds its own (D113): the first five
  * rows, then the panel's fold control as the last row. The list folds only when
  * that holds back two rows or more, since the control takes a row itself; the
  * rows arrive newest first, so the ones held back are the least current.
@@ -112,7 +112,7 @@ export function detailsCard(factories: RenderFactorySlot, details: PanelDetails)
 
 /**
  * A placeholder bar where a reading will be written once the host's fold
- * answers (D112): one line's height, so the row it stands in keeps the height
+ * answers (D113): one line's height, so the row it stands in keeps the height
  * the written row will have.
  */
 export function Skeleton({ width }: { width: string }) {

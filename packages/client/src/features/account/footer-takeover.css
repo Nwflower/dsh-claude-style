@@ -13,7 +13,7 @@
    stays and only the connection pill beside it goes. The host's version-update
    control stays in the row as well: it is the host's own button
    (DesktopUpdateIndicator), carrying its label, its progress and its press, and
-   the takeover has no copy of it to stand in its place (issue #197). That control
+   the takeover has no copy of it to stand in its place. That control
    is the only button in the row marked `aria-disabled`, which is what tells it
    apart from the settings trigger and the connection pill. The account menu and
    its sign-in dialog are portals and the settings panel is the row's sibling, so
@@ -93,7 +93,7 @@ body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-pa
    zeroes for its gathered entries takes its own size back while it holds one;
    the hold is kept by the pass (packages/engine/src/parts-table.ts). An entry
    that opens a menu keeps its place for the same reason and reads the same hold
-   (footer-mirror.ts, issue #417): the menu portals from the trigger's own box, so
+   (footer-mirror.ts): the menu portals from the trigger's own box, so
    the trigger must keep painting and the action box must keep its size. */
 body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-part~="foot-area"] > [data-dsh-claude-part~="footer-actions"][data-dsh-claude-holds~="footer-block"],
 body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-part~="foot-area"] > [data-dsh-claude-part~="footer-actions"][data-dsh-claude-holds~="footer-menu"] {
@@ -164,8 +164,7 @@ body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-pa
 }
 /* The rail's row is an icon alone; the pill has no room beside it. The control
    itself still has to be reachable there: a reader with an update waiting sees
-   it above the account row and reaches it without expanding the column
-   (issue #197). The pill's words and plate go, the plugin's own mark stays. */
+   it above the account row and reaches it without expanding the column. The pill's words and plate go, the plugin's own mark stays. */
 body[data-dsh-claude-style][data-dsh-claude-footer-takeover] [data-dsh-claude-part~="sidebar-root"][data-dsh-claude-part~="sidebar-collapsed"] .dsh-claude-footer-seat-copy {
   right: 12px;
   bottom: 44px;

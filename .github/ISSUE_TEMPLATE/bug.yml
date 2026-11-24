@@ -84,8 +84,8 @@ body:
   - type: textarea
     id: media
     attributes:
-      label: 截图、录屏或日志 / Screenshots, video or logs
-      description: 视觉问题请附浅色与深色截图，性能问题请附录屏 / For visual issues attach light and dark shots; for performance attach a video
+      label: 截图、录屏或日志（可选） / Screenshots, video or logs (optional)
+      description: 文本描述不便说明视觉或性能问题时可附上截图、录屏或日志 / Attach screenshots, video or logs when helpful for visual or performance issues
     validations:
       required: false
   - type: textarea

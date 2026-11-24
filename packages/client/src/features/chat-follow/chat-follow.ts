@@ -389,7 +389,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
    *
    * The column's height is not read here: this runs in the batch's own
    * callback, when the host has just mounted the whole tree, and an
-   * `offsetHeight` read forces that dirty tree to lay out again (#196). The
+   * `offsetHeight` read forces that dirty tree to lay out again. The
    * subscription's first report is the baseline instead.
    */
   const slideSync = () => {
@@ -441,7 +441,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
    * The host's own follow pins the end on every growth while its mark stands,
    * and a finger pressed on the screen sends no scroll of its own: nothing puts
    * the host into its sampling window, so nothing stands its pin down, and the
-   * position the reader held moves one growth per burst (#230). The slide is
+   * position the reader held moves one growth per burst. The slide is
    * refused while he holds, so this is the one writer left for it. A position
    * away from the end is the reader's own and stays where he put it.
    */
@@ -452,7 +452,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     if (foldBusy()) return
     // New travel since the previous growth belongs to the reader and is kept.
     // Otherwise restore the position the previous growth actually ended at:
-    // an older absolute record could belong to another layout epoch (#332).
+    // an older absolute record could belong to another layout epoch.
     const position = readerMoved ? readerScrollPosition(scroller) : previousScrollTop
     if (position === null) return
     writeScroll(scroller, position, 'reader')

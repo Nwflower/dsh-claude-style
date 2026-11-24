@@ -12,10 +12,10 @@ export const CHAT_FLOW_SELECTOR = '[data-chat-flow]'
 /**
  * The node a flow item renders its one message into. The host's flow rules
  * collapse an item whose node is empty, and the sodium rewrite keeps that
- * verdict as an attribute (D109).
+ * verdict as an attribute (D114).
  */
 export const CHAT_NODE_SELECTOR = '[data-slot="conversation.chat.node"]'
-/** The slot the chat column renders its flow into; its children and the column's are what the host's flow rules space (D109). */
+/** The slot the chat column renders its flow into; its children and the column's are what the host's flow rules space (D114). */
 export const CHAT_FLOW_SLOT_SELECTOR = '[data-slot="conversation.chat.flow"]'
 /**
  * On every row of a turn's process: all of a running turn's rows, and once the
@@ -170,7 +170,7 @@ export const FLOW_KIND_ATTRIBUTE = 'data-chat-flow-kind'
 /** The kind of an assistant step's row: its thinking or its output. */
 export const ASSISTANT_STEP_KIND = 'assistant-step'
 export const TOOL_CALL_KIND = 'tool-call'
-/** The kind of a turn's process group, which the host's widest flow gap follows (D109). */
+/** The kind of a turn's process group, which the host's widest flow gap follows (D114). */
 export const TURN_PROCESS_ROW_KIND = 'turn-process'
 /** A settled turn's tail row, which carries the answer's own action controls. */
 const TURN_TAIL_KIND = 'turn-tail'
@@ -430,7 +430,7 @@ export const DARK_THEME_ATTRIBUTE = 'data-ds-dark-theme'
 export const PEER_SHEET_SELECTOR = 'style[data-plugin-css="dsh-plugin-msg-nav/style.css"], style[data-plugin="dsh-plugin-msg-nav"][data-path="style.css"], style[data-plugin="dsh-plugin-msg-nav"][data-path$="/style.css"]'
 /** Every untagged stylesheet in `<head>`: the host's claim sweep would otherwise take a sibling's. */
 export const UNTAGGED_SHEET_SELECTOR = 'style:not([data-plugin])'
-/** Loader tags identify package and sheet path; sodium lookup depends on both (D109). */
+/** Loader tags identify package and sheet path; sodium lookup depends on both (D114). */
 export const PLUGIN_SHEET_SELECTOR = 'style[data-plugin]'
 export const PLUGIN_SHEET_OWNER_ATTRIBUTE = 'data-plugin'
 export const PLUGIN_SHEET_PATH_ATTRIBUTE = 'data-plugin-css'

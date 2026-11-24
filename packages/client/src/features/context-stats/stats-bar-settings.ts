@@ -24,7 +24,7 @@ import type { Prefs } from '../../constants'
 import type { SettingsRowView } from '../../core/feature'
 
 /**
- * Interactive settings controls for the composer statistics bar (D76, D112):
+ * Interactive settings controls for the composer statistics bar (D76, D113):
  * a header switch that folds the panel away while off, two live composer-layout
  * preview cards (`footer` vs `inline`) that reflect alignment, selected figures
  * and token units in real time, a horizontal-position segment control, and a
@@ -257,10 +257,7 @@ export function StatsBarPicker(props: SettingsRowView) {
     }),
     React.createElement(
       SettingsSubField,
-      {
-        title: copy('statsFooterAlignTitle'),
-        desc: copy('statsFooterAlignDesc'),
-      },
+      { title: copy('statsFooterAlignTitle') },
       React.createElement(ClaudeStyleSegmentGroup, { label: copy('statsFooterAlignTitle') }, alignButtons),
     ),
     React.createElement(

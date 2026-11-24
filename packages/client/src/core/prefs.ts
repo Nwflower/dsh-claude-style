@@ -71,7 +71,7 @@ export function readPrefs() {
 
 /**
  * Whether the preferences are the reader's own: a decision taken on the
- * reader's behalf (the sodium probe, D109) waits for this, since the defaults
+ * reader's behalf (the sodium probe, D114) waits for this, since the defaults
  * that hold until then say nothing about what the reader chose.
  */
 export function prefsFromForm() {

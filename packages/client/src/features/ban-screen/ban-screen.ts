@@ -372,13 +372,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       return banRoot !== null
     },
     /**
-     * Rebuild an OPEN overlay in place — the page is assembled once, so a
-     * copy change (the locale, the preferences or the model copy document)
-     * would otherwise only land the next time it is opened. A no-op while
-     * closed, and the hold timestamp is kept so a re-render never re-dates
-     * the page under the reader. The scheduler dispatches this for every
-     * copy source; the shipped code only did it for a preferences change,
-     * which is a no-op while closed and the more correct rebuild while open.
+     * Rebuild an open overlay in place when any copy source (locale,
+     * preferences, or model copy document) changes, preserving the original
+     * hold timestamp so the screen never re-dates under the reader.
      */
     onCopyChange() {
       if (banRoot === null) return

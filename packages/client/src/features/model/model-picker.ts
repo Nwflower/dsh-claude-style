@@ -153,11 +153,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
           pending.catch(() => { /* the store's error surface covers a failure */ })
         }
       }
-      // The body's own signature decides whether the rows repaint: with the
-      // catalog unchanged the open shows the painted rows and the rate badges
-      // refresh in place. Rebuilding every row on every open was the
-      // four-digit-catalog open lag (issue #151's own experiment C: the cost
-      // tracks the catalog's size).
+      // Repaint rows only when the catalog signature changes so large catalogs
+      // open without rebuilding unchanged DOM nodes; rate badges refresh in place.
       renderModelBody()
     },
     createSub() {
@@ -331,7 +328,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
       if (cards.footer()) {
         // "More models" carries what level 1 does not. A first level that
         // already lists every provider leaves it nothing to carry, so the row
-        // goes away with the last remaining provider (issue #286): the search
+        // goes away with the last remaining provider: the search
         // field is still reached by typing a key on level 1 (onKey below), and
         // the second level lists the whole catalog once it is opened that way.
         const showMore = modelRows.remainingGroups(groups, sections).length > 0
@@ -428,7 +425,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
 
     // A third-party winner holding the model seat takes the whole seat: the
     // skin's trigger and cards come down and the node the host renders for
-    // the winner stands unmarked and reachable (issue #218). The reasoning
+    // the winner stands unmarked and reachable. The reasoning
     // level's button lives in the same box, so it goes with this drop and
     // returns on the pass the seat comes back (features/effort/effort-picker.ts).
     if (thirdPartyHoldsSeat(slots)) {
@@ -465,13 +462,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     // context meter's ring stand in the same slot. It is hidden only while the
     // skin draws the effort slider: with that switch off the host's own seat —
     // and any third-party effort control mounted in this slot — stays visible
-    // and reachable (issue #183).
+    // and reachable.
     const hostRoot = slot.querySelector(`:scope > :not([${SLOT_NODE_ATTR}])`)
     if (hostRoot !== null) hostRoot.toggleAttribute('data-dsh-claude-model-host', readPrefs().effortSlider === true)
     seatBox = ensureSeatBox(slot, seatBox)
     // The home card stands outside the conversation region the trailing rules
     // read, so its seat takes the external-control gate the picker's own block
-    // styles: one line, capsule and height together (#371).
+    // styles: one line, capsule and height together.
     if (slot.closest(COMPOSER_CARD_SELECTOR)?.getAttribute(COMPOSER_VARIANT_ATTRIBUTE) === 'hero') {
       slot.setAttribute('data-dsh-claude-external-control', 'model-picker')
       heroMarkedSlot = slot

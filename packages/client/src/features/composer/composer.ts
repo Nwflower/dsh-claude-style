@@ -398,7 +398,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   /**
-   * Put the marks a mounted card needs on it before the browser paints (#188).
+   * Put the marks a mounted card needs on it before the browser paints.
    *
    * The scheduler's pass lands on the frame after the one a batch paints in,
    * and a batch the size of a session switch is dispatched after that frame's
@@ -407,7 +407,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * transition into its own look takes a few hundred milliseconds more.
    *
    * This subscription asks for `beforePaint`, so it runs inside every batch's
-   * own callback and writes what that frame paints (#189). The cards are taken
+   * own callback and writes what that frame paints. The cards are taken
    * off the batch's own records and not off `cards`: the registry behind
    * `observeMatches` listens without `beforePaint`, so on a large batch it
    * is a task late and the card this batch mounted is not in its list yet.

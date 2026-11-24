@@ -24,7 +24,7 @@ body[data-dsh-claude-style] [data-dsh-claude-meter-ring] > button {
   /* The row states 4px of its own padding at each end (features/composer/inline.css)
      and the left control's word lands on that edge. A symmetric 8px here would
      put the reading a second layer in from the right end and leave the line
-     looking short of one side (issue #272), so the cell keeps the row's own 4px
+     looking short of one side, so the cell keeps the row's own 4px
      on the left, where the reading stands, and states none on the right: the
      reading and the ring's arc both stop on the row's own edge. */
   padding: 1px 0 1px 4px;

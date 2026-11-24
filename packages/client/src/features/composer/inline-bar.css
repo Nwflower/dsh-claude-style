@@ -198,7 +198,7 @@ body[data-dsh-claude-style] [data-composer-stat] {
    has taken them out of it: ui-conversation's InputBar reserves one 22px row plus
    a 4px pad under the card, so the projections landing never move the composer.
    With the composer statistics bar off nothing stands in the dock, so that floor
-   collapses instead of leaving a blank line under the card (D112). */
+   collapses instead of leaving a blank line under the card (D113). */
 body[data-dsh-claude-style][data-dsh-claude-stats-position="off"] [data-dsh-claude-part~="composer-dock"] {
   min-height: 0;
   padding-top: 0;

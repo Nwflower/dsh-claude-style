@@ -32,7 +32,7 @@ function useBillingCurrency() {
 }
 
 /**
- * One session's figures, as both tables print them (D112).
+ * One session's figures, as both tables print them (D113).
  *
  * The tables print the statistics feature's live reading — the one the
  * composer's line prints — so the numbers beside the chat move with the numbers
@@ -79,7 +79,7 @@ function Figures({ rows }: { rows: readonly Figure[] }) {
       h('dd', null, row.value))))
 }
 
-/** A table before any reading answers (D112): the rows every session has, their values under placeholders. */
+/** A table before any reading answers (D113): the rows every session has, their values under placeholders. */
 function PendingFigures({ labels }: { labels: readonly CopyKey[] }) {
   return h(Figures, { rows: labels.map(label => ({ key: label, label: copy(label), value: h(Skeleton, { width: '40px' }) })) })
 }
@@ -93,7 +93,7 @@ export function speedText(stats: PanelStats) {
 }
 
 /**
- * How the session ran (D112): its turns and steps, its speed and its time.
+ * How the session ran (D113): its turns and steps, its speed and its time.
  *
  * The figures are written in the host's own words, through the same formatters
  * the composer's readout uses (shared/stats-format.ts): the panel is a second
@@ -119,7 +119,7 @@ export const StatsSection = panelEntry(function StatsBody({ sessionId }) {
 })
 
 /**
- * What the session spent (D112): its cost, its cache share and its token buckets.
+ * What the session spent (D113): its cost, its cache share and its token buckets.
  *
  * With billing off or a model no table prices, the cost row is left out.
  */

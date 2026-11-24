@@ -1,7 +1,7 @@
 /**
  * The smoke's session panel sections, in Node: the route the sections read, its
  * answer folded from a session's log and projections, and the fence and id
- * checks every read of the user's own session runs (D75, D112).
+ * checks every read of the user's own session runs (D75, D113).
  */
 import { resolve } from 'node:path'
 import { check } from './shared.mjs'

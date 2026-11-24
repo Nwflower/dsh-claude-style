@@ -2,9 +2,9 @@
 
 # DSH Claude Style
 
-**A theme plugin that brings the look and feel of Claude Code Desktop to the DeepSeek Harness Web GUI.**
+**A theme plugin that brings the look and feel of Claude Code Desktop to DeepSeek Harness.**
 
-> **Why settle for another Claude Code when your next Claude Code Desktop is here.**
+> **Your next Claude Code Desktop doesn't have to be Claude Code.**
 
 [![English](https://img.shields.io/badge/lang-English-blue.svg)](README.en.md)
 [![简体中文](https://img.shields.io/badge/lang-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-red.svg)](README.md)
@@ -16,56 +16,56 @@
 
 ## Preview
 
-Switch between the Claude and DeepSeek brands in settings; light and dark follow the system. Appearance offers six colour presets — Claude, DeepSeek, Parchment, Forest, Dusk and Rose — lets you edit them, and lets you create, duplicate, rename and delete colour schemes.
+Switch between Claude and DeepSeek styles under Theme style in plugin settings; light and dark modes follow the system. Appearance includes six built-in color presets — Claude, DeepSeek, Parchment, Forest, Dusk and Rose — and lets you edit presets or create, duplicate, rename and delete custom color schemes.
 
 ### Claude
 
 <table>
   <tr>
-    <td align="center" width="50%"><img src="./docs/screenshots/claude-home-light.png" alt="Claude brand, Code home — light" /></td>
-    <td align="center" width="50%"><img src="./docs/screenshots/claude-home-dark.png" alt="Claude brand, Code home — dark" /></td>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/Nwflower/dsh-claude-style/master/docs/screenshots/claude-home-light.png" alt="Claude style, Code home (light)" /></td>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/Nwflower/dsh-claude-style/master/docs/screenshots/claude-home-dark.png" alt="Claude style, Code home (dark)" /></td>
   </tr>
   <tr>
-    <td align="center" width="50%"><img src="./docs/screenshots/claude-conversation-light.png" alt="Claude brand, Markdown conversation — light" /></td>
-    <td align="center" width="50%"><img src="./docs/screenshots/claude-conversation-dark.png" alt="Claude brand, Markdown conversation — dark" /></td>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/Nwflower/dsh-claude-style/master/docs/screenshots/claude-conversation-light.png" alt="Claude style, conversation view (light)" /></td>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/Nwflower/dsh-claude-style/master/docs/screenshots/claude-conversation-dark.png" alt="Claude style, conversation view (dark)" /></td>
   </tr>
 </table>
 
-> Code home above, Markdown conversation below; light on the left, dark on the right.
+> Code home above, conversation view below; light on the left, dark on the right.
 
 ### DeepSeek
 
 <table>
   <tr>
-    <td align="center" width="50%"><img src="./docs/screenshots/deepseek-home-light.png" alt="DeepSeek brand, Code home — light" /></td>
-    <td align="center" width="50%"><img src="./docs/screenshots/deepseek-home-dark.png" alt="DeepSeek brand, Code home — dark" /></td>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/Nwflower/dsh-claude-style/master/docs/screenshots/deepseek-home-light.png" alt="DeepSeek style, Code home (light)" /></td>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/Nwflower/dsh-claude-style/master/docs/screenshots/deepseek-home-dark.png" alt="DeepSeek style, Code home (dark)" /></td>
   </tr>
   <tr>
-    <td align="center" width="50%"><img src="./docs/screenshots/deepseek-conversation-light.png" alt="DeepSeek brand, Markdown conversation — light" /></td>
-    <td align="center" width="50%"><img src="./docs/screenshots/deepseek-conversation-dark.png" alt="DeepSeek brand, Markdown conversation — dark" /></td>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/Nwflower/dsh-claude-style/master/docs/screenshots/deepseek-conversation-light.png" alt="DeepSeek style, conversation view (light)" /></td>
+    <td align="center" width="50%"><img src="https://raw.githubusercontent.com/Nwflower/dsh-claude-style/master/docs/screenshots/deepseek-conversation-dark.png" alt="DeepSeek style, conversation view (dark)" /></td>
   </tr>
 </table>
 
-> Deepy the pixel whale stands on the composer in eight states:
+> Deepy the pixel whale stands on the input box across eight states:
 
 <table>
   <tr>
-    <td align="center" width="25%"><img src="./docs/gifs/idle.gif" width="120" alt="Idle" /><br />Idle</td>
-    <td align="center" width="25%"><img src="./docs/gifs/thinking.gif" width="120" alt="Thinking" /><br />Thinking</td>
-    <td align="center" width="25%"><img src="./docs/gifs/typing.gif" width="120" alt="Answering and calling tools" /><br />Answering and calling tools</td>
-    <td align="center" width="25%"><img src="./docs/gifs/conducting.gif" width="120" alt="Conducting subagents" /><br />Conducting subagents</td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/Nwflower/dsh-claude-style/master/docs/gifs/idle.gif" width="120" alt="Idle" /><br />Idle</td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/Nwflower/dsh-claude-style/master/docs/gifs/thinking.gif" width="120" alt="Thinking" /><br />Thinking</td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/Nwflower/dsh-claude-style/master/docs/gifs/typing.gif" width="120" alt="Answering and calling tools" /><br />Answering and calling tools</td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/Nwflower/dsh-claude-style/master/docs/gifs/conducting.gif" width="120" alt="Conducting subagents" /><br />Conducting subagents</td>
   </tr>
   <tr>
-    <td align="center" width="25%"><img src="./docs/gifs/notification.gif" width="120" alt="Waiting on you" /><br />Waiting on you</td>
-    <td align="center" width="25%"><img src="./docs/gifs/error.gif" width="120" alt="Failed" /><br />Failed</td>
-    <td align="center" width="25%"><img src="./docs/gifs/happy.gif" width="120" alt="Finished" /><br />Finished</td>
-    <td align="center" width="25%"><img src="./docs/gifs/sleeping.gif" width="120" alt="Asleep" /><br />Asleep</td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/Nwflower/dsh-claude-style/master/docs/gifs/notification.gif" width="120" alt="Waiting on you" /><br />Waiting on you</td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/Nwflower/dsh-claude-style/master/docs/gifs/error.gif" width="120" alt="Failed" /><br />Failed</td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/Nwflower/dsh-claude-style/master/docs/gifs/happy.gif" width="120" alt="Finished" /><br />Finished</td>
+    <td align="center" width="25%"><img src="https://raw.githubusercontent.com/Nwflower/dsh-claude-style/master/docs/gifs/sleeping.gif" width="120" alt="Asleep" /><br />Asleep</td>
   </tr>
 </table>
 
 ## Installation
 
-From the official plugin page add the package below, or from a terminal:
+Add the package name from the official Plugins page, or install from a terminal:
 
 ```
 dsh-claude-style
@@ -76,25 +76,23 @@ dsh plugin --profile web add dsh-claude-style                    # npm package (
 dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub release branch
 ```
 
-Also available from the [plugin market](https://github.com/dsh-market/dsh-market) or the Skin Center of dsh-web-all. Keep one theme enabled at a time; dsh ≥ 0.2.2-rc.3 is required, and restart DeepSeek Harness after installing.
-
-The official DSH web and desktop frontends supply the browser module `@deepseek-ai/dsh-client-ui-primitives`. Profiles with pnpm’s `autoInstallPeers` disabled can use it without installing the package separately.
+Also available from the [plugin market](https://github.com/dsh-market/dsh-market) or the Skin Center of dsh-web-all. Enable one theme at a time; dsh ≥ 0.2.2-rc.3 is required, and restart DeepSeek Harness after installing.
 
 ## Fonts
 
-> The Anthropic fonts have no public release; this repository only offers [copies](https://github.com/Nwflower/dsh-claude-style/tree/master/packages/assets/src/fonts/anthropic) for download and study.
+> Anthropic Sans, Anthropic Serif and Anthropic Mono have no public release; this repository only offers personal-study [copies](https://github.com/Nwflower/dsh-claude-style/tree/master/packages/assets/src/fonts/anthropic).
 
-To enable them, install the `.ttf` files on your system, or copy them into `$DSH_HOME/dsh-claude-style/fonts/` (takes effect after a reload).
+To enable them, install the `.ttf` files on your system, or copy them into `$DSH_HOME/dsh-claude-style/fonts/` and reload the page.
 
 ## Documentation
 
 | Document | Contents |
 | --- | --- |
-| [Architecture](docs/ARCHITECTURE.md) | Repository layout, engine and half boundaries, cross-module invariants |
-| [Design tokens](docs/STYLE.md) | The palette, typography, shape, motion and layer rules |
-| [Architecture decisions](docs/adr/README.md) | One page per direction: background, decision, consequences, revisiting conditions |
+| [Architecture](https://github.com/Nwflower/dsh-claude-style/blob/master/docs/ARCHITECTURE.md) | Repository layout, engine and half boundaries, cross-module invariants |
+| [Design tokens](https://github.com/Nwflower/dsh-claude-style/blob/master/docs/STYLE.md) | Palette, typography, shape, motion and layer rules |
+| [Architecture decisions](https://github.com/Nwflower/dsh-claude-style/blob/master/docs/adr/README.md) | One page per direction: background, decision, consequences, revisiting conditions |
 | [Changelog](docs/CHANGELOG.md) | Version history |
-| [Contributing](CONTRIBUTING.md) | Fix-first contribution flow and change-fragment format |
+| [Contributing](https://github.com/Nwflower/dsh-claude-style/blob/master/CONTRIBUTING.md) | Contribution flow and change-fragment format |
 
 ## License
 
@@ -106,14 +104,14 @@ The Sodium rendering engine is licensed under the [PolyForm Shield License 1.0.0
 
 - "Sodium" (钠) is named after Minecraft's [Sodium](https://github.com/CaffeineMC/sodium) rendering mod; this plugin is not affiliated with it.
 - The message navigator follows SherUnlocked-4869's [dsh-plugin-msg-nav](https://github.com/SherUnlocked-4869/dsh-plugin-msg-nav) (MIT).
-- The animation frames of Deepy the pixel whale come from the Deepy whale theme pack drawn by calmly-eating-bugs ([@wp3171216237](https://github.com/wp3171216237)), and ship with the plugin by the author's permission; GIFs of all 20 animations are in [docs/gifs/](docs/gifs/).
+- The animation frames of Deepy the pixel whale come from the Deepy whale theme pack drawn by calmly-eating-bugs ([@wp3171216237](https://github.com/wp3171216237)), and ship with the plugin by the author's permission; GIFs of all 20 animations are in [docs/gifs/](https://github.com/Nwflower/dsh-claude-style/tree/master/docs/gifs).
 - The whale girl pixel emoji set came with issue #224.
-- The enhanced animations in the chat area are modified from [dsh-chat-ux](https://github.com/alm-allen/dsh-chat-ux) (MIT).
+- The enhanced animations in the conversation area are modified from [dsh-chat-ux](https://github.com/alm-allen/dsh-chat-ux) (MIT).
 - Clawd is a character of Anthropic. Its frames are not covered by the MIT license (see [LICENSE](LICENSE)). This plugin is an unofficial fan work, not affiliated with or endorsed by Anthropic.
 
 ## Related projects
 
-> Want to import your Claude Code / Codex session history into DSH and keep the conversation going? Try the author's other plugin, [dsh-chat-import](https://github.com/Nwflower/dsh-chat-import).
+> Want to import your Claude Code / Codex session history into DSH and keep the conversation going? Try [Nwflower/dsh-chat-import](https://github.com/Nwflower/dsh-chat-import).
 
 ## Star History
 

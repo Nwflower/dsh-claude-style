@@ -1,5 +1,5 @@
 /**
- * The outputs section's latest human-input round (D112).
+ * The outputs section's latest human-input round (D113).
  *
  * A host turn may start for a notification or an automatic continuation. Only
  * an appended user-sourced message starts a new reading round. Calls retain
@@ -54,7 +54,7 @@ function rememberOutput(state: PanelRoundState, path: string, origin: PanelOutpu
   state.outputs.push(output)
 }
 
-/** Fold round boundaries before attributing each event's own work (D112). */
+/** Fold round boundaries before attributing each event's own work (D113). */
 export function foldPanelRound(state: PanelRoundState, events: readonly PanelEvent[], directory: string | null) {
   for (const event of events) {
     const data = event.data

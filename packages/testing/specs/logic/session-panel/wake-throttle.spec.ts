@@ -1,5 +1,5 @@
 /**
- * The panel reading's frame wakes stay one ask per window (D112).
+ * The panel reading's frame wakes stay one ask per window (D113).
  * @capability session-panel
  * @features session-panel
  * @risk A streaming turn's figure frames wake one ask each, drop the signal that

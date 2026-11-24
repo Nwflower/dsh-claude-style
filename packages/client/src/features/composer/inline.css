@@ -33,17 +33,12 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-c
   overflow: visible;
   height: auto;
 }
-/* Do NOT override the host viewArea flex contract here. In the active
-   phase the host uses `flex: 1 0 auto; min-height: auto` so the viewArea
-   is content-sized and the sticky composerSeat pins to the scrollport
-   bottom. An earlier override (`flex: 1 1 auto; min-height: 0`) let the
-   viewArea shrink to exactly viewport-minus-composer, which put the
-   composer seat near the TOP of the scroll content — sticky bottom:0
-   cannot pull an element down past its normal position, so the composer
-   appeared mid-scroll and never followed message growth.
-   The one place the skin states that contract is the transcript's own mark
-   below (TRANSCRIPT_ATTR), where the host has withdrawn it: it repeats the
-   active phase's values and nothing else. */
+/* Keep the host viewArea flex contract (`flex: 1 0 auto; min-height: auto`) so
+   viewArea stays content-sized and the sticky composerSeat pins to the scrollport
+   bottom. Allowing viewArea to shrink (`flex: 1 1 auto; min-height: 0`) places
+   composerSeat near the top of scroll content where `sticky; bottom: 0` cannot
+   pull it down. Under TRANSCRIPT_ATTR below, the skin restates that active-phase
+   sizing where the host withdraws `data-phase="active"`. */
 body[data-dsh-claude-style] [data-dsh-claude-part~="composer-stack"]:not([data-composer-variant="hero"]) {
   flex: 0 0 auto;
   overflow: visible;

@@ -9,8 +9,9 @@
  * plugin, because a failed host fiber drops the client bundle from the module
  * graph and the whole skin with it.
  *
- * The routes live in routes.ts, the HDSL account contract in hdsl.ts, and the
- * settings surface in settings.ts; this file only mounts them.
+ * The routes live in routes.ts, widget capabilities in widget-usage.ts, and the
+ * settings surface in settings.ts; this file mounts them and shares one usage
+ * aggregator across them.
  */
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
 import { registerRoutes } from './routes.js'

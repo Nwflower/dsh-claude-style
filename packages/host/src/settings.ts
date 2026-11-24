@@ -13,18 +13,10 @@ import type { PrefKey } from '@dsh-claude-style/contracts/prefs'
 import type { DshContext, DshScope } from '@dsh-claude-style/engine/node/dsh'
 
 /**
- * The schemastery instance the HARNESS itself resolves.
- *
- * A `link:`-installed plugin resolves its realpath outside the profile tree, so
- * Node never walks the profile's `node_modules` and the plain import fails
- * outright; the copy the profile's interception layer would offer can belong to
- * a different installation (the Desktop bundle's 3.18.2, which has no
- * `.volatile()`). The harness always carries schemastery beside its own bin, and
- * that copy is the instance the settings domain validates forms against, so it
- * is asked for first; normal resolution is the fallback for a plainly installed
- * plugin.
- *
- * @returns the schema factory, or null when neither path resolves.
+ * Resolve the harness's own `@deepseek-ai/schemastery` instance first (via `process.argv[1]`),
+ * falling back to normal module resolution (D12). A `link:`-installed plugin resolves outside
+ * the profile's `node_modules` and may otherwise miss schemastery or pick up an older copy
+ * without `.volatile()`.
  */
 async function resolveSchemaFactory(): Promise<SchemaFactory | null> {
   try {
@@ -92,7 +84,7 @@ function prefsField(Schema: SchemaFactory, key: PrefKey) {
 /**
  * The declared Config: the preferences, each marked `.volatile()` only where
  * the installed factory provides the marker. The import is guarded and
- * top-level-awaited (D75), so a host that cannot resolve schemastery still
+ * top-level-awaited (D12, D75), so a host that cannot resolve schemastery still
  * loads the skin and only loses the settings form.
  *
  * Field types stay permissive: the accepted sets are enforced where they are

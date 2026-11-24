@@ -256,7 +256,7 @@ export function createModelRows(options: {
     // localized rather than stacked, so a row never carries two languages. The
     // line has its own switch under the picker's settings row, and a row built
     // without it is the same row with the copy block left as the name alone.
-    // A row the brand table does not claim keeps only its name (issue #351: a
+    // A row the brand table does not claim keeps only its name (a
     // subtitle without a mark reads as half a row). The rule waits for the
     // table itself: before the copy document arrives no model is claimed, and
     // stripping every line then would throw away what the catalog says.

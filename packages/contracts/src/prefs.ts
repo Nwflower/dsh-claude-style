@@ -148,7 +148,7 @@ export const ONGOING_SIDES = [ONGOING_SIDE_LEFT, ONGOING_SIDE_RIGHT] as const
 export const CHAT_ANIMATIONS_OFF = 'off'
 
 /**
- * Where the composer's live statistics bar stands (D112): off, seated in the
+ * Where the composer's live statistics bar stands (D113): off, seated in the
  * toolbar when width permits and wrapping below otherwise (`footer`), or always
  * on its own line below (`inline`). The context popover and the session panel
  * carry the full session numbers in every mode.
@@ -156,7 +156,7 @@ export const CHAT_ANIMATIONS_OFF = 'off'
 export const STATS_POSITION_OFF = 'off'
 export const STATS_POSITION_FOOTER = 'footer'
 export const STATS_POSITION_INLINE = 'inline'
-/** Legacy values from before D112: `context` meant no composer bar, `rail` meant own line. */
+/** Legacy values from before D113: `context` meant no composer bar, `rail` meant own line. */
 export const STATS_POSITION_CONTEXT_LEGACY = 'context'
 export const STATS_POSITION_RAIL_LEGACY = 'rail'
 export const STATS_POSITIONS = [STATS_POSITION_OFF, STATS_POSITION_FOOTER, STATS_POSITION_INLINE] as const
@@ -233,7 +233,7 @@ export const BACKGROUND_OPACITY_DEFAULT = '100'
 export const BACKGROUND_OPACITY_MIN = 0
 export const BACKGROUND_OPACITY_MAX = 100
 
-/** Sodium starts `undecided` and appears off; only the reader or first matching probe decides it (D109). */
+/** Sodium starts `undecided` and appears off; only the reader or first matching probe decides it (D114). */
 export const SODIUM_ON = 'on'
 export const SODIUM_OFF = 'off'
 export const SODIUM_UNDECIDED = 'undecided'
@@ -413,14 +413,14 @@ export const PREFS = {
   /** Whether the percentage stands beside that face. */
   contextNumbers: { type: 'boolean', default: true },
   statsFooterAlign: { type: 'choice', values: STATS_FOOTER_ALIGNS, default: 'center' },
-  /** Session-level figures shown on the composer statistics bar across both placements (D112). */
+  /** Session-level figures shown on the composer statistics bar across both placements (D113). */
   statsFooterCounts: { type: 'boolean', default: false },
   statsFooterSpeed: { type: 'boolean', default: false },
   statsFooterTtft: { type: 'boolean', default: false },
   statsFooterCache: { type: 'boolean', default: true },
   statsFooterCost: { type: 'boolean', default: true },
   statsFooterTotal: { type: 'boolean', default: true },
-  /** How the statistics bar, context popover and session panel write token figures (D112). */
+  /** How the statistics bar, context popover and session panel write token figures (D113). */
   statsFooterTokenFormat: { type: 'choice', values: FOOTER_TOKEN_FORMATS, default: FOOTER_TOKEN_UNITS },
   /** Which official price table the session's cost follows, or off for no figure at all. */
   billingCurrency: { type: 'choice', values: BILLING_CHOICES, default: CURRENCY_CNY },
@@ -451,7 +451,7 @@ export const PREFS = {
   viewTabs: { type: 'boolean', default: true },
   hideToolbarOutsideConversation: { type: 'boolean', default: true },
   headerBand: { type: 'boolean', default: true },
-  /** Whether the skin's sections join the host's session panel (D112). */
+  /** Whether the skin's sections join the host's session panel (D113). */
   sessionPanel: { type: 'boolean', default: true },
   /** The legacy choice `off` means off. */
   chatAnimations: { type: 'boolean', default: true, legacy: { [CHAT_ANIMATIONS_OFF]: false } },

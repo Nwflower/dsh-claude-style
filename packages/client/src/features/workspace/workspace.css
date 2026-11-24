@@ -1,8 +1,6 @@
 /* ---------- Workspace section: the 工作区 / 已归档 / 全部 view menu ---------- */
-/* The menu trigger and the archived row action dress the host's own
-   workspace browser under the marks packages/client/src/features/workspace/workspace-view.ts
-   writes; sidebar-adjacent, but split from theme/sidebar.css when that file
-   neared the 750-line stop line. */
+/* Styles the workspace view trigger and archived row action under the marks
+   packages/client/src/features/workspace/workspace-view.ts writes. */
 
 /* ---------- workspace section: the view menu in the heading's place ---------- */
 /* The section label gives way to a view menu trigger (the skin's own markup,

@@ -33,7 +33,7 @@ export interface FieldBlock {
   x: number
   y: number
   size: number
-  /** The lighter tone's share at the flash peak: the mix the stylesheet used to run as a 62%→40% apex share. */
+  /** Lighter tone's share at the flash peak (62% to 40% across the grid). */
   peak: number
   /** The flash cycle's offset and length, in seconds. */
   flashDelay: number

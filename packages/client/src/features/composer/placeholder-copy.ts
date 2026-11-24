@@ -27,9 +27,7 @@ const DRAWN_ATTR = 'data-dsh-claude-drawn'
  * Writing `textContent` on the hint drops every child, the anchor included,
  * and React then throws `NotFoundError: Failed to execute 'removeChild'` when
  * it unmounts the hint. That exception is raised inside the composer's own
- * render, so the whole `conversation.composer.bar` entry crashes and the
- * input area leaves the page until a reload — the reader loses the composer
- * right after sending, which is the report this fixes (#456).
+ * render, crashing the `conversation.composer.bar` slot entry until reload.
  *
  * So the words are written into the deepest first text node the hint holds,
  * and every element is left where React put it. A hint with no text node of

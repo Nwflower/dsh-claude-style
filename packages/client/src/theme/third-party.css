@@ -50,7 +50,7 @@ body[data-dsh-claude-style] :is(dialog.cm-stat-dialog, dialog.cm-fee-dialog) :is
    something to show only while a wallpaper plugin holds a layer behind the
    shell. The wallpaper plugin marks the body with `data-we-wallpaper` while one
    shows (theme/wallpaper.css); without that mark the control changes nothing a
-   reader can see, so the settings row stands down (issue #252). The mark belongs
+   reader can see, so the settings row stands down. The mark belongs
    to another plugin, so it stays out of the host contract table (D3). */
 body[data-dsh-claude-style]:not([data-we-wallpaper]) [data-dsh-claude-settings-row="backgroundOpacity"] {
   display: none;
@@ -61,7 +61,7 @@ body[data-dsh-claude-style]:not([data-we-wallpaper]) [data-dsh-claude-settings-r
    transform: translateX(var(--dsh-pe-seat-nudge, 7px)), a visual nudge tuned for
    the host's 8–12px toolbar gap: it stays inside that gap and never touches the
    neighbour. The skin keeps no column gap in the controls box (inline-bar.css),
-   so the same 7px paints the icon into the model seat (issue #438). The plugin
+   so the same 7px paints the icon into the model seat. The plugin
    exposes the variable for a theme to override; neutralize it where the skin
    removed the gap, and let the seat's own 4px leading inset (responsive.css)
    carry the spacing. The variable belongs to another plugin, so it stays out of

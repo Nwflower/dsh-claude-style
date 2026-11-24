@@ -1,12 +1,12 @@
 /**
- * The session overview inside the host's session panel (D112).
+ * The session overview inside the host's session panel (D113).
  *
  * The host owns the panel — where it docks, when it opens, its toggle and its
- * order — and the skin hands it four sections and two Environment rows. The
- * data comes from the host half's own route
- * (packages/host/src/session-panel.ts) and the statistics feature's live
- * reading; this module holds the registrations and the page mark the header and
- * the composer's statistics line follow while the panel shows.
+ * order — and the skin hands it four sections, their folded summary readings,
+ * two Environment rows, and DOM section-folding support. Data comes from the
+ * host half's route (packages/host/src/session-panel.ts) and the statistics
+ * feature's live reading; this module holds the slot registrations and the page
+ * mark the header follows while the panel shows.
  */
 import { SESSION_PANEL_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { observeMatches } from '@dsh-claude-style/engine/bus'
@@ -34,7 +34,7 @@ const ENVIRONMENT_ROW_SLOT = 'conversation.session.panel.environment.row'
 
 /**
  * One section. The id is also the key the host stores the reader's section
- * order under, so it never changes once shipped (D112).
+ * order under, so it never changes once shipped (D113).
  */
 function section(id: string, order: number, title: CopyKey, component: unknown): SlotEntry {
   return { options: { name: SECTION_SLOT, id, order, label() { return copy(title) } }, component }
@@ -75,7 +75,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const stopFold = installSectionFold()
   // The panel element stands only while the panel shows: the body carries that
   // as the skin's own mark, so the header's preset label and its work chips step
-  // aside with one attribute (D112).
+  // aside with one attribute (D113).
   function markShown() {
     if (panels.all().length > 0) setAttributeIfChanged(document.body, SESSION_PANEL_ATTR, '')
     else document.body.removeAttribute(SESSION_PANEL_ATTR)

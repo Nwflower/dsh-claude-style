@@ -73,14 +73,14 @@ body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-clau
 /* The host's slot anchors draw no box (`display: contents`), so their children
    sort in the column by the rules above; a wrapper that draws one instead has to
    take its place itself, or the composer card lands straight under the greeting
-   with the panel after it (#177). */
+   with the panel after it. */
 body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] :is([data-dsh-claude-holds~="home-dock"], [data-slot="conversation.input.dock"], .dsh-claude-home-seat) {
   order: 1;
 }
 
 /* Every wrapper between the hero stack and the card takes order 3, so an extra
    slot or plugin container around `conversation.composer.bar` cannot drop the
-   card back to order 0 under the greeting (#464). */
+   card back to order 0 under the greeting. */
 body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] :is([data-dsh-claude-holds~="composer-card"], [data-composer-card]) {
   order: 3;
 }
@@ -97,7 +97,7 @@ body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-clau
 }
 
 /* When the hero stack carries no context row, the composer card takes the auto
-   margin itself so it still rests on the bottom edge (#464). */
+   margin itself so it still rests on the bottom edge. */
 body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"]:not([data-dsh-claude-holds~="has-hero-workspace-row"]) :is([data-dsh-claude-holds~="composer-card"], [data-composer-card]) {
   margin-top: auto;
 }

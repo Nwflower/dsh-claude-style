@@ -176,10 +176,8 @@ export function createEffortControl(opts: {
   /** The knob's width and the track's, as the pass's read phase took them for the update in hand. */
   let passBox: EffortTrackBox | null = null
   /**
-   * The last reading the read phase took, and the track's left edge then. A
-   * gesture writes without reading layout: the release used to read
-   * `offsetWidth` right after the apex opened and paid for every pending style
-   * in the card.
+   * Last track geometry measured during the read phase. Drag and release write
+   * from this cached box without forcing synchronous layout mid-transition.
    */
   let measured: EffortTrackBox | null = null
   let trackLeft = 0

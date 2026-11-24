@@ -1,4 +1,4 @@
-/* The skin's sections inside the host's session panel (D112). The panel lays
+/* The skin's sections inside the host's session panel (D113). The panel lays
    out its sections, titles and rows (`data-session-panel-row` and its parts);
    these rules cover the docked card stack, the bar-less scroll, and what the
    panel has no part for: a row's inline detail and state word, the figures
@@ -7,7 +7,7 @@
    the skin's own body mark so a page without the skin never sees it. */
 
 /* Docked beside the transcript, the panel is a stack of cards, one per section,
-   standing on the chat's own canvas (D112). The overlay keeps the host's single
+   standing on the chat's own canvas (D113). The overlay keeps the host's single
    card: it floats over the transcript, and gaps between cards would let the
    text under it show through. */
 body[data-dsh-claude-style] [data-session-panel="docked"] {
@@ -20,7 +20,7 @@ body[data-dsh-claude-style] [data-session-panel="docked"] {
   box-shadow: none;
 }
 
-/* The panel scrolls without a bar, docked or as an overlay (D112): a bar at its
+/* The panel scrolls without a bar, docked or as an overlay (D113): a bar at its
    end edge reads as a second border beside the cards' own, and the panel is
    short enough that the wheel finds its end. The host reserves the bar's gutter
    and a transparent end border to hold it off the edge; both go with the bar,
@@ -177,7 +177,7 @@ body[data-dsh-claude-style] .dsh-claude-panel-chip {
   white-space: nowrap;
 }
 
-/* A placeholder where a reading will be written (D112): the stand-in ink the
+/* A placeholder where a reading will be written (D113): the stand-in ink the
    composer's placeholders use, breathing on the skin's shared pulse, with the
    count the animation choice sets (theme/chrome.css, D40). A bar stands one
    line's words high in the middle of that line, so the row keeps the height the
@@ -235,14 +235,14 @@ body[data-dsh-claude-style] .dsh-claude-panel-stat dd {
 
 /* The host's own background-work chips beside the title step aside while the
    session panel shows: the same work is the panel's subagents and background
-   jobs sections (D112). The subagent catalog's own root is the entry and leaves
+   jobs sections (D113). The subagent catalog's own root is the entry and leaves
    with its trigger; the jobs count keeps the same treatment. */
 body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] :is([data-subagent-action], button[aria-haspopup="tree"], button[aria-expanded]:not([aria-haspopup])) {
   display: none;
 }
 
 /* The preset's words stand in the panel's Environment section while the panel
-   shows (D112). The header band holds the label's `display` over the host's
+   shows (D113). The header band holds the label's `display` over the host's
    container query, so the label leaves the row by position and visibility. */
 body[data-dsh-claude-style][data-dsh-claude-session-panel] [data-dsh-claude-part~="header-actions"] [data-dsh-claude-part~="header-label"] {
   position: absolute;

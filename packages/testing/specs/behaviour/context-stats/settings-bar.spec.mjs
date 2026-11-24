@@ -2,7 +2,7 @@
  * The composer statistics bar row in settings folds its child controls away
  * while switched off, previews both placements with live sample figures while
  * enabled, remembers the last chosen placement across off/on toggles, and keeps
- * at least one figure chip active (D76, D112).
+ * at least one figure chip active (D76, D113).
  *
  * @capability context-stats
  * @features context-stats, settings

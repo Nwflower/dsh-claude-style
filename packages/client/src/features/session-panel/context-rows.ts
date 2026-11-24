@@ -1,4 +1,4 @@
-/** The context bar and legend share priced parts and ordering (D112, D104).
+/** The context bar and legend share priced parts and ordering (D113, D104).
  * Provider occupancy is authoritative; the host's source-attributed prices divide
  * that occupancy. Integer allocation keeps their sum exact. The fold's granular
  * tool, MCP and skill parts merge into one capability row whose label names whichever
@@ -39,7 +39,7 @@ export interface ContextRow {
 }
 
 /**
- * The context section's overview, known before its composition (D112).
+ * The context section's overview, known before its composition (D113).
  *
  * The occupancy is the provider's own reading and arrives as a projection frame,
  * so the section can state the percentage, the used/window figures and the room

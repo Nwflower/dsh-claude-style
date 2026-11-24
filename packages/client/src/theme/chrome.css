@@ -54,8 +54,7 @@ body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-we-wallp
 /* ---------- the window's chrome is not text ---------- */
 /* A press on the sidebar's rows or on the conversation header is a gesture at
    the window — on Windows the caption row is the shell's own drag region — and
-   the drag that follows must not paint a selection across the labels it passes
-   (issue #109). The transcript and the draft stand outside both boxes, so the
+   the drag that follows must not paint a selection across the labels it passes. The transcript and the draft stand outside both boxes, so the
    reader's own selection keeps its paints; a text field inside the chrome keeps
    its own, which Chromium grants an editing host under a locked ancestor. */
 body[data-dsh-claude-style] :is([data-slot="sidebar"], [data-slot="conversation.header"]) {
@@ -174,9 +173,8 @@ html:has(body[data-dsh-claude-style][data-dsh-claude-page-zoom]) {
    native `<dialog>` need carry neither, so the cap is matched by what the card
    is rather than by the attribute beside the role. A full-window layer is not a
    dialog card: dsh-video-skin's boot animation measures the window itself and
-   must keep the whole window at any scale (packages/contracts/src/table.ts,
-   issue #205), and the image preview's backdrop is the dialog the reader faces
-   while its own mask paints the dim fill (issue #278), so the cap steps aside
+   must keep the whole window at any scale (packages/contracts/src/table.ts), and the image preview's backdrop is the dialog the reader faces
+   while its own mask paints the dim fill, so the cap steps aside
    for both. Full-window host overlays also keep their own edges; only the
    dialog card inside one takes this cap. */
 body[data-dsh-claude-style] :is(dialog, [role="dialog"]):not(.dsvs-boot, [data-dsh-claude-part~="overlay"], [data-dsh-claude-part~="backdrop"]) {

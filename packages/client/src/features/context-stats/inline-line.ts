@@ -204,7 +204,7 @@ export function buildLine(): Line {
 }
 
 /**
- * Write the enabled session figures onto `shown` at detail rung `detail` (D112):
+ * Write the enabled session figures onto `shown` at detail rung `detail` (D113):
  * both placements (`footer` and `inline`) share the six figure switches and
  * the token unit choice.
  */

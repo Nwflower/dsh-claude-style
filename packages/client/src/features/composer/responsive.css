@@ -192,7 +192,7 @@ body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-comp
 /* With an independent control in the cluster, the name takes its natural width
    while the row has room and may ellipsize to its recognition floor, never to
    zero. The measured cluster floor makes the wrapping decision before the name
-   grows; clipping its box keeps that floor stable in Chromium and Firefox (#427). */
+   grows; clipping its box keeps that floor stable in Chromium and Firefox. */
 body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"])[data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] [data-dsh-claude-part~="composer-controls"],
 body[data-dsh-claude-style] [data-phase="active"] [data-composer-card][data-composer-variant]:is([data-dsh-claude-composer-layout="wide"], [data-dsh-claude-composer-layout="compact"])[data-dsh-claude-holds~="composer-right-filled"] [data-dsh-claude-composer-toolbar] .dsh-claude-model-seat {
   flex: 1 1 0;

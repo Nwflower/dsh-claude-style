@@ -361,8 +361,7 @@ export function createFooterMirror(options: {
         // its place in the sidebar (the visibility pass stamps FOOTER_MENU_ATTR
         // from the same answer the hiding pass reads): the menu portals from the
         // trigger's own box and returns focus to it, so a row here would press a
-        // hidden anchor, and the entry is never hidden out of both places at once
-        // (issue #417).
+        // hidden anchor, and the entry is never hidden out of both places at once.
         if (entry.hasAttribute(FOOTER_MENU_ATTR)) return
         // An entry that is itself an overlay is no footer control: it gets no
         // row, and a clone of it would carry the dialog's own `open` into the

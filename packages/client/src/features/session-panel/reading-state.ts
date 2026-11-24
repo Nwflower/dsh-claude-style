@@ -1,5 +1,5 @@
 /**
- * The reading the panel sections show, scoped to the session it belongs to (D112).
+ * The reading the panel sections show, scoped to the session it belongs to (D113).
  *
  * A session switch remounts the sections and opens the new session's reading;
  * the reading is kept with the session id that answered it, so a frame between

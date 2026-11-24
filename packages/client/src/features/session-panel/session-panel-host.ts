@@ -1,5 +1,5 @@
 /**
- * The panel sections' way back into the host (D112): the projections their
+ * The panel sections' way back into the host (D113): the projections their
  * readings follow, and the host's own preview a produced file opens in.
  *
  * The install hands its host context over for the lifetime of its slot

@@ -30,7 +30,7 @@ export function useOverview(sessionId: string, live = true) {
 }
 
 /**
- * The context window's occupancy, its composition, and the room left (D112).
+ * The context window's occupancy, its composition, and the room left (D113).
  *
  * The overview is the provider's own reading, so it stands on the frame the
  * section mounts; the composition is the host's fold, and while that has not
@@ -148,7 +148,7 @@ const PENDING_LEGEND_ROWS = 6
 
 /**
  * The legend before the host's fold answers: rows of the legend's own shape,
- * each a swatch and its three readings under placeholders (D112).
+ * each a swatch and its three readings under placeholders (D113).
  */
 function pendingLegend() {
   return h('dl', { className: 'dsh-claude-panel-legend', 'aria-hidden': true },

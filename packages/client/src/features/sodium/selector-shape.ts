@@ -2,7 +2,7 @@ import type { SelectorRewrite } from '@dsh-claude-style/engine/sheet-rewrite'
 
 /**
  * A whole selector the sodium table recognizes, and the one it writes in its
- * place (D109).
+ * place (D114).
  *
  * The template is the selector as the browser serializes it, with `{role}`
  * standing for one of the owner's hashed class names: the first occurrence of

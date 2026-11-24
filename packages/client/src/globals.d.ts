@@ -60,7 +60,7 @@ declare module '*.json' {
   export default value
 }
 
-/** A stylesheet's text, as the declared logic surface hands it to a spec (pure.ts, through Vite's `?raw`). */
+/** A stylesheet's text, as the declared mechanism surface hands it to a spec (mechanisms.ts, through Vite's `?raw`). */
 declare module '*.css?raw' {
   const text: string
   export default text

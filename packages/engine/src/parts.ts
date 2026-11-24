@@ -11,7 +11,7 @@ import { announceClasses, meetClass } from './part-classes'
  * The tables in packages/engine/src/parts-table.ts say which host class names
  * the skin reads and what it calls each one; this module walks the page once,
  * reads each host class name's local part exactly, and writes the skin's own
- * names for it onto the element as `data-dsh-claude-part`. The browser half's
+ * names for it onto the element under `vocabulary.part`. The browser half's
  * own queries and the relations below match that attribute whole, so a match
  * cannot take a neighbour that merely holds the same fragment and a host rename
  * leaves a reader quiet instead of wrong. No shipped rule reads the attribute:
@@ -24,11 +24,9 @@ import { announceClasses, meetClass } from './part-classes'
  * entered where its anchor matches, so the walk carries the regions in force
  * down and asks each element once.
  *
- * A rule that names an element because of what its subtree contains used to ask
- * the browser the same question on every change below it. The walk visits every
- * node anyway, so the relations in the same table are answered here and written
- * as `data-dsh-claude-holds`: one attribute read in the stylesheet, and the
- * count behind a mark moves only where a held node arrived, left, or changed.
+ * Relations naming an element from what its subtree contains are answered here
+ * during the same walk and written onto `vocabulary.holds`: one attribute read
+ * in the stylesheet, updated only where a held node arrived, left, or changed.
  */
 
 /** One region's lookup, compiled from its table. */
@@ -507,8 +505,8 @@ export function installParts(next: PartsVocabulary, onMarked?: () => void) {
     // and the hold marks it writes are what the sheet draws the frame with: the
     // prose's face and line height, the table's widths. A session switch mounts
     // its transcript in one large batch, and a pass that waited for the task
-    // after the paint drew that frame in the host's own type and then moved it
-    // (#178). The pass a batch asks for afterwards (`onMarked`) is the
+    // after the paint drew that frame in the host's own type and then moved it.
+    // The pass a batch asks for afterwards (`onMarked`) is the
     // features' schedule, and that one still waits for its frame.
     beforePaint: true,
   }, (records) => {

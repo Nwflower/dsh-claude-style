@@ -195,7 +195,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * Stand the ring in the card's row: after the seat box, which the model picker
    * keeps first in the slot; with the picker's own redraw off there is no seat
    * box, and the ring closes the slot instead of giving the row back to the
-   * host's meter (issue #162).
+   * host's meter.
    */
   function placeRing(face: RingFace, slot: HTMLElement, seat: HTMLElement | null) {
     const ring = face.ring
