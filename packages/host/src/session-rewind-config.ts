@@ -6,7 +6,7 @@ import {
   rewindStorageLimitBytes,
 } from '@dsh-claude-style/contracts/prefs'
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
-import { pluginPath } from './harness-home.js'
+import { pluginPath } from './paths.js'
 
 export type HostConfigSource = Record<string, unknown> | undefined
 

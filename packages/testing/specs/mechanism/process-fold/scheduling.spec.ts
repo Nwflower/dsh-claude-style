@@ -5,7 +5,7 @@
  * @risk Disabled folds still press host controls, manual decisions are lost, or a mounted turn scans its whole column for every row.
  */
 import { expect, test, vi } from 'vitest'
-import { createReasoningFold, createProcessFold } from '@dsh-claude-style/client/pure'
+import { createReasoningFold, createProcessFold } from '@dsh-claude-style/client/mechanisms'
 import { createProcessTurnReader } from '@dsh-claude-style/engine/host'
 import { ASSISTANT_STEP_KIND, CHAT_FLOW_SELECTOR, CHAT_TURN_ATTRIBUTE, COMPOSER_COMPOSING_ATTRIBUTE, COMPOSER_INPUT_SELECTOR, EXPANDED_ATTRIBUTE, FLOW_KIND_ATTRIBUTE, PROCESS_ACTIVITY_SELECTOR, PROCESS_BODY_SELECTOR, PROCESS_GROUP_SELECTOR, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { hostElement } from '../../fixtures/host-markup'

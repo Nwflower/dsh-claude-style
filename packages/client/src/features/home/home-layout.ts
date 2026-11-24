@@ -1,7 +1,7 @@
 import * as React from 'react'
 import * as ReactDOM from 'react-dom/client'
 import { PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
-import { HOME_HERO_ATTR, HOME_LAYOUT_ATTR, HOME_LAYOUT_STUDIO, PREF_DEFAULTS } from '../../constants'
+import { HOME_HERO_ATTR, HOME_LAYOUT_ATTR, HOME_LAYOUT_STUDIO, HOME_SEAT_CLASS, PREF_DEFAULTS } from '../../constants'
 import type { Prefs } from '../../constants'
 import { COMPOSER_STACK, cacheFirstMatch, registerSlotEntries } from '@dsh-claude-style/engine/host'
 import { readPrefs } from '../../core/prefs'
@@ -184,7 +184,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
     if (coldSeat !== null && coldSeat.stack === stack && coldSeat.element.parentElement === stack) return
     unmountColdSeat()
-    const element = buildElement('div', 'dsh-claude-home-seat')
+    const element = buildElement('div', HOME_SEAT_CLASS)
     stack.appendChild(element)
     const root = ReactDOM.createRoot(element)
     root.render(React.createElement(HomeUsagePanel))

@@ -12,7 +12,7 @@
 import { afterEach, beforeEach, expect, test } from 'vitest'
 import { page } from 'vitest/browser'
 import { SIDEBAR_HANDLE_SELECTOR, SIDEBAR_SLOT_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { inPageColumns, inPageLength, installFrameColumns } from '@dsh-claude-style/client/pure'
+import { inPageColumns, inPageLength, installFrameColumns } from '@dsh-claude-style/client/mechanisms'
 import { attach } from '../../fixtures/host-markup'
 import { surfaceAttribute } from '../../fixtures/surface'
 import { after, drawnAt, drawnScale, resetPage, settle } from './drawn-page'

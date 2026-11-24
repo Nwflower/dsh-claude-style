@@ -16,8 +16,7 @@ import { statSync } from 'node:fs'
 import { join } from 'node:path'
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
 import type { PriceDocument } from '@dsh-claude-style/contracts/prices'
-import { cachePath, readJsonDocument, writeJsonDocument } from './cache-file.js'
-import { packageRoot } from './package-root.js'
+import { cachePath, packageRoot, readJsonDocument, writeJsonDocument } from './paths.js'
 import { parsePriceDocument } from './prices-document.js'
 
 /** The snapshot's file name under packages/host/data/, and beside the bundle in lib/. */

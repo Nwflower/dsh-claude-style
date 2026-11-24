@@ -5,7 +5,7 @@
  * @risk A hint travels from its previous hidden position, measures the previous label, or keeps showing after pointer exit or keyboard blur.
  */
 import { afterEach, expect, test } from 'vitest'
-import { hidePointerHint, POINTER_HINT_SHOWN_ATTRIBUTE, showPointerHint } from '@dsh-claude-style/client/pure'
+import { hidePointerHint, POINTER_HINT_SHOWN_ATTRIBUTE, showPointerHint } from '@dsh-claude-style/client/mechanisms'
 
 afterEach(() => document.body.replaceChildren())
 test('the new label is read before placement and only hidden arrivals suppress travel', () => {

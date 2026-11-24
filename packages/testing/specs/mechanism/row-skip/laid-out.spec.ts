@@ -10,7 +10,7 @@
  */
 import { expect, test, vi } from 'vitest'
 import { CONVERSATION_SCROLL_SELECTOR, FLOW_KIND_ATTRIBUTE, ASSISTANT_STEP_KIND } from '@dsh-claude-style/contracts/dom'
-import { installRowSkip, WIDTH_SETTLE_MS } from '@dsh-claude-style/client/pure'
+import { installRowSkip, WIDTH_SETTLE_MS } from '@dsh-claude-style/client/mechanisms'
 import { cleanupWith, frames } from '../../fixtures/teardown'
 import { attach } from '../../fixtures/host-markup'
 import { surfaceAttribute } from '../../fixtures/surface'

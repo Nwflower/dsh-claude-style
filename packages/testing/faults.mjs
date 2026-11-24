@@ -182,7 +182,7 @@ function judge(dir, fault, suite, cleanBehaviour) {
   // moved, not because an assertion saw the defect; a build check refusing the
   // product's own sources is the static layer's catch, which both suites share.
   // Each is reported apart.
-  const surfaceBroke = (entry) => entry.endsWith('(did not load)') || entry.startsWith('(the lane') || (entry.startsWith('build (') && /pure\.ts|packages[\\/]testing[\\/]specs/.test(entry))
+  const surfaceBroke = (entry) => entry.endsWith('(did not load)') || entry.startsWith('(the lane') || (entry.startsWith('build (') && /(?:pure|mechanisms)\.ts|packages[\\/]testing[\\/]specs/.test(entry))
   const asserted = red.filter((entry) => !surfaceBroke(entry) && !entry.startsWith('build ('))
   const built = red.filter((entry) => entry.startsWith('build (') && !surfaceBroke(entry))
   const how = asserted.length > 0 ? 'assertion' : built.length > 0 ? 'build' : red.length > 0 ? 'load' : 'none'

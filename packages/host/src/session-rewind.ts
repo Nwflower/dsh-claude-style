@@ -21,7 +21,7 @@ import type {
 } from '@dsh-claude-style/contracts/session-rewind'
 import type { DshContext, DshSessionObservation } from '@dsh-claude-style/engine/node/dsh'
 import { readEvents } from '@dsh-claude-style/engine/node/session-events'
-import { pluginPath } from './harness-home.js'
+import { pluginPath } from './paths.js'
 import { rewindPeerActive } from './rewind-peer.js'
 import { readRewindConfig, type HostConfigSource, type RewindRuntimeConfig } from './session-rewind-config.js'
 import {

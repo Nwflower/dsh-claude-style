@@ -10,7 +10,7 @@
  * @risk A family the page cannot draw reads as present, so the settings page stops reporting a missing face and the reader never learns the text is drawn in a look-alike.
  */
 import { expect, test } from 'vitest'
-import { familyResolves } from '@dsh-claude-style/client/pure'
+import { familyResolves } from '@dsh-claude-style/client/mechanisms'
 
 test('a family nothing provides does not resolve', () => {
   expect(familyResolves(['__dsh-claude-absent-face__'])).toBe(false)

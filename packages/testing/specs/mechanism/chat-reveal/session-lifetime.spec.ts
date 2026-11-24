@@ -5,7 +5,7 @@
  * @risk Retained inactive DOM keeps fading, carries a reader hold into another session, or resumes old animation frames after teardown.
  */
 import { afterEach, expect, test } from 'vitest'
-import { createChatRevealEngine } from '@dsh-claude-style/client/pure'
+import { createChatRevealEngine } from '@dsh-claude-style/client/mechanisms'
 import { adoptSkin } from '@dsh-claude-style/engine/skin'
 import { joinScrollOwner, holdReader, readerHolds, readerScrollPosition, submissionHolds } from '@dsh-claude-style/engine/scroll-owner'
 import { isScrollEasing } from '@dsh-claude-style/engine/scroll-ease'

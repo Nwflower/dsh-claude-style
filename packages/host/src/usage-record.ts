@@ -22,8 +22,7 @@
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
 import { existsSync, renameSync } from 'node:fs'
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
-import { readJsonDocument, writeJsonDocument } from './cache-file.js'
-import { pluginPath } from './harness-home.js'
+import { pluginPath, readJsonDocument, writeJsonDocument } from './paths.js'
 import { BUCKET_KEYS, addBuckets, emptyBuckets } from './usage-ledger.js'
 import type { Buckets, DayBuckets } from './usage-ledger.js'
 

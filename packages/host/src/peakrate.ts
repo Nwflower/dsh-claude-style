@@ -19,8 +19,7 @@ import { statSync } from 'node:fs'
 import { join } from 'node:path'
 import type { PeakCatalog, RateProfile } from '@dsh-claude-style/contracts/peakrate'
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
-import { cachePath, readJsonDocument, writeJsonDocument } from './cache-file.js'
-import { packageRoot } from './package-root.js'
+import { cachePath, packageRoot, readJsonDocument, writeJsonDocument } from './paths.js'
 import { parseCatalog } from './peakrate-catalog.js'
 
 /** The catalog document the build copies beside the bundle (scripts/build/build.mjs). */

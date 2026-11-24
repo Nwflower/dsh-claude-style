@@ -4,7 +4,7 @@
  * @risk Running titles animate inaccessible or edited content, hide native labels, or lose the status fallback under motion and contrast preferences.
  */
 import { expect, test } from 'vitest'
-import { SIDEBAR_STATUS_SHEET } from '@dsh-claude-style/client/pure'
+import { SIDEBAR_STATUS_SHEET } from '@dsh-claude-style/client/mechanisms'
 import { DARK_THEME_ATTRIBUTE, SESSION_PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { surfaceAttribute } from '../../fixtures/surface'
 import { bodyAttribute, ENABLED, mount, nativeDot, painted, PART, removeAfterTest, sheetRules, STATUS } from './fixture'

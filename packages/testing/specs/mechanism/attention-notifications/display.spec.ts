@@ -5,7 +5,8 @@
  */
 import { expect, test } from 'vitest'
 import { cdp } from 'vitest/browser'
-import { createNotificationDisplay, notificationPermission } from '@dsh-claude-style/client/pure'
+import { notificationPermission } from '@dsh-claude-style/client/pure'
+import { createNotificationDisplay } from '@dsh-claude-style/client/mechanisms'
 
 test('site permission, notification clicks and cleanup use the browser Notification API', async () => {
   const session = cdp()

@@ -7,7 +7,7 @@
  * @risk A local swap moves the whole list, a host redraw loses row identity, a running row crosses a section, or equal timestamps reverse the host's order.
  */
 import { afterEach, expect, test } from 'vitest'
-import { moveElementsIntoOrder, orderDateSeats, sessionSeatSegments } from '@dsh-claude-style/client/pure'
+import { moveElementsIntoOrder, orderDateSeats, sessionSeatSegments } from '@dsh-claude-style/client/mechanisms'
 import { frames } from '../../fixtures/teardown'
 
 afterEach(() => document.body.replaceChildren())

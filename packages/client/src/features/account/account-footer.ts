@@ -1,5 +1,5 @@
 import { writeBodyProperty } from '@dsh-claude-style/engine/body-properties'
-import { ACCOUNT_ARMED_ATTR, AUTO_POPOVER_OFF } from '../../constants'
+import { ACCOUNT_ARMED_ATTR, ACCOUNT_HOST_ROW_ATTR, AUTO_POPOVER_OFF } from '../../constants'
 import { findFootArea, findHostModal } from '@dsh-claude-style/engine/host'
 import { readPrefs } from '../../core/prefs'
 import { createFooterMirror } from './footer-mirror'
@@ -47,7 +47,7 @@ export interface FooterHandle extends FeatureHandle {
  */
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The marker the stylesheet hangs the host account row's Claude shape on. */
-  const HOST_ROW_ATTR = 'data-dsh-claude-account-host-row'
+  const HOST_ROW_ATTR = ACCOUNT_HOST_ROW_ATTR
   /** The host row's own label, kept while the skin's name stands in its place. */
   const HOST_ROW_NAME_ATTR = 'data-dsh-claude-account-host-name'
   const profile = createAccountProfile(ctx, () => {

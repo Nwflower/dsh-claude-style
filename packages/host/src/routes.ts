@@ -21,11 +21,10 @@ import { brandRoutes } from './brand.js'
 import { appearanceOverlayRoutes } from './appearance-overlays.js'
 import type { DshContext, DshPeerScope, DshRequest, DshResponse, DshRoute, DshScope } from '@dsh-claude-style/engine/node/dsh'
 import { harnessPath } from '@dsh-claude-style/engine/node/harness-home'
-import { pluginPath } from './harness-home.js'
+import { packageRoot, pluginPath } from './paths.js'
 import { fenceRefused, methodRefused, readRequestBody, refusalOf, sendJson } from '@dsh-claude-style/engine/node/http'
 import { clampSoundVolume, isSoundName, playSystemSound, soundCapability } from './sound.js'
 import { createStaticFiles } from '@dsh-claude-style/engine/node/static-files'
-import { packageRoot } from './package-root.js'
 import { createPeakRate } from './peakrate.js'
 import { createPrices } from './prices.js'
 import { QUERY_MAX, createSessionSearch } from './search.js'
@@ -535,7 +534,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope, config?: HostCo
         const params = new URL(req.url ?? '/', 'http://local').searchParams
         // `?live=1` asks past the kept answer: the page wakes its reading on every
         // figure the host lands, and a cache hit would hand it the numbers the
-        // wake was meant to replace (D112).
+        // wake was meant to replace (D113).
         sendPayload(res, sessionPanel.get(sessionId, readBillingRows(params), params.get('live') === '1').then(value => ({ value })))
       },
     })

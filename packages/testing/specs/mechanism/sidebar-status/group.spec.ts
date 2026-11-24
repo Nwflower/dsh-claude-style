@@ -8,7 +8,7 @@
  * @risk A collapsed workspace gains no visible running mark, the mark covers the group's own actions or title, or it survives the session stopping and a preference change.
  */
 import { expect, test } from 'vitest'
-import { SIDEBAR_STATUS_SHEET, WorkspaceRunningMark } from '@dsh-claude-style/client/pure'
+import { SIDEBAR_STATUS_SHEET, WorkspaceRunningMark } from '@dsh-claude-style/client/mechanisms'
 import { surfaceAttribute, surfaceClass } from '../../fixtures/surface'
 import { bodyAttribute, PART, removeAfterTest, sheetRules } from './fixture'
 

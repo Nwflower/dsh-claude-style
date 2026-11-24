@@ -3,7 +3,7 @@ import { adoptPartClasses, finishSheet, onPartClasses } from '@dsh-claude-style/
 import type { SheetTemplate } from '@dsh-claude-style/engine/part-classes'
 import { mountStylesheet as mountSheet, parkForeignSheets as parkSheets, rewriteStylesheet } from '@dsh-claude-style/engine/stylesheet'
 import { STYLESHEET } from 'virtual:dsh-claude-style/generated'
-import { ABSENT_NAME, ACCOUNT_MENU_ATTR, FOREIGN_SHEET_TAG, HERO_MENU_ATTR, MORE_MENU_ATTR, PACKAGE_NAME, PART_ATTR, STAMPED_PARTS, STAMPED_PART_ATTR, STYLE_ID, STYLE_PLUGIN_CSS } from '../constants'
+import { ABSENT_NAME, ACCOUNT_MENU_ATTR, FOREIGN_SHEET_TAG, HERO_MENU_ATTR, MORE_MENU_ATTR, PACKAGE_NAME, PART_ATTR, SKIN_PART_MARKS, STAMPED_PARTS, STAMPED_PART_ATTR, STYLE_ID, STYLE_PLUGIN_CSS } from '../constants'
 
 /** Sibling sheets must be parked before the host's claim sweep and whenever one arrives later (D9). */
 export function parkForeignSheets() {
@@ -25,6 +25,7 @@ export function adoptPartVocabulary() {
   adoptPartClasses({
     part: PART_ATTR,
     regions: { account: ACCOUNT_MENU_ATTR, hero: HERO_MENU_ATTR, more: MORE_MENU_ATTR },
+    marks: SKIN_PART_MARKS,
     absent: ABSENT_NAME,
     stamp: STAMPED_PART_ATTR,
     stamped: STAMPED_PARTS,

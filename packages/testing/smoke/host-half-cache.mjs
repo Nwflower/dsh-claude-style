@@ -4,7 +4,7 @@
  * loose file or directory tightened by one write, and a failure degrading to no
  * cache with a single warning (D12). The mode bits are the permission boundary on
  * POSIX only; on Windows they carry no ACL meaning, so the bit assertions run on
- * POSIX and the write/degradation assertions run everywhere (bounty#1460).
+ * POSIX and the write/degradation assertions run everywhere.
  */
 import fs from 'node:fs'
 import path from 'node:path'
@@ -14,7 +14,7 @@ import { ROOT, HOST, check } from './shared.mjs'
 
 export async function hostCache() {
   console.log('\nhost half — cache file permissions')
-  const { cachePath, writeJsonDocument } = await import(pathToFileURL(path.join(path.dirname(HOST), 'cache-file.js')).href)
+  const { cachePath, writeJsonDocument } = await import(pathToFileURL(path.join(path.dirname(HOST), 'paths.js')).href)
   const home = runsPath(ROOT, 'smoke', 'home-cache')
   fs.rmSync(home, { recursive: true, force: true })
   const posix = process.platform !== 'win32'

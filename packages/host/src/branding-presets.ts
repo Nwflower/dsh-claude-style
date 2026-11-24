@@ -9,7 +9,7 @@ import { readFileSync, realpathSync, rmSync, statSync } from 'node:fs'
 import { join, resolve, sep } from 'node:path'
 import { IMAGE_HEADERS, imageBytesValid, readImageUpload, routeFailure, writeAtomicFile } from './brand-image-shared.js'
 import { fenceRefused, methodRefused, readRequestBody, sendJson } from '@dsh-claude-style/engine/node/http'
-import { pluginPath } from './harness-home.js'
+import { pluginPath } from './paths.js'
 import type { DshContext, DshPeerScope, DshRequest, DshResponse, DshRoute } from '@dsh-claude-style/engine/node/dsh'
 
 interface StoredImage {

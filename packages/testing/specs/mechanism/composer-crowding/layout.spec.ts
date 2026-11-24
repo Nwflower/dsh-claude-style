@@ -6,7 +6,7 @@
  */
 import { beforeAll, expect, test } from 'vitest'
 import { page } from 'vitest/browser'
-import { setSwappingText } from '@dsh-claude-style/client/pure'
+import { setSwappingText } from '@dsh-claude-style/client/mechanisms'
 import { pageCleanups } from '../../fixtures/page'
 import { surfaceAttribute, surfaceSelector } from '../../fixtures/surface'
 import { crowdingMount, frames, LAYOUT, TOOLBAR, type CrowdedComposer } from './fixture'

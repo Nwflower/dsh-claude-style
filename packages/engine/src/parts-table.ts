@@ -6,6 +6,14 @@ export interface PartsTableVocabulary {
   part: string
   /** The anchors the skin's own menus stand in, which the menu parts are read under. */
   regions: { account: string, hero: string, more: string }
+  /** Skin-owned class and attribute names read as the held side of hold relations (D73). */
+  marks: {
+    homeSeat: string
+    footerLine: string
+    accountHostRow: string
+    footerBlock: string
+    footerMenu: string
+  }
 }
 
 /**
@@ -292,10 +300,10 @@ export function partNames(vocabulary: PartsTableVocabulary): string[] {
 
 
 /**
- * The structural relations a stylesheet reads as a hold: a rule naming an element because of what its subtree contains (`A:has(B)`) reads `data-dsh-claude-holds` instead, and packages/engine/src/parts.ts keeps that mark current (D9). `holder` names the element that takes the mark (`*` for whichever ancestor holds the node); `scope` keeps the mark inside one box; `direct` is the `>` in `:has(> B)`; `attributes` are the names whose change can move the mark.
+ * The structural relations a stylesheet reads as a hold: a rule naming an element because of what its subtree contains (`A:has(B)`) reads the skin's holds attribute instead, and packages/engine/src/parts.ts keeps that mark current (D9). `holder` names the element that takes the mark (`*` for whichever ancestor holds the node); `scope` keeps the mark inside one box; `direct` is the `>` in `:has(> B)`; `attributes` are the names whose change can move the mark.
  */
 export interface HoldRelation {
-  /** The word a stylesheet reads in `[data-dsh-claude-holds~="…"]`. */
+  /** The word a stylesheet reads in the holds attribute. */
   name: string
   /** The element that takes the mark, or `*` for any ancestor that holds the node. */
   holder: string
@@ -328,7 +336,7 @@ export function holdRelations(vocabulary: PartsTableVocabulary): HoldRelation[] 
   // features/composer/card.css, features/home/home-panel.css: sort the boxes above the card.
   { name: 'composer-card', holder: '*', held: '[data-composer-card]', scope: part('composer-stack'), attributes: ['data-composer-card'] },
   // features/home/home-panel.css: keep the studio dock, context row and bottom anchor working across wrapper depths.
-  { name: 'home-dock', holder: '*', held: '[data-slot="conversation.input.dock"], .dsh-claude-home-seat', scope: part('composer-hero'), attributes: ['data-slot'] },
+  { name: 'home-dock', holder: '*', held: `[data-slot="conversation.input.dock"], .${vocabulary.marks.homeSeat}`, scope: part('composer-hero'), attributes: ['data-slot'] },
   { name: 'hero-workspace-row', holder: '*', held: part('hero-workspace-row'), scope: part('composer-hero'), attributes: [] },
   { name: 'has-hero-workspace-row', holder: part('composer-hero'), held: part('hero-workspace-row'), attributes: [] },
   // theme/wallpaper.css: the phase box holding the transcript paints the canvas.
@@ -345,9 +353,9 @@ export function holdRelations(vocabulary: PartsTableVocabulary): HoldRelation[] 
   {
     name: 'footer-below',
     holder: part('composer-dock'),
-    held: '[data-dsh-claude-footer-line="below"]',
+    held: `[${vocabulary.marks.footerLine}="below"]`,
     direct: true,
-    attributes: ['data-dsh-claude-footer-line'],
+    attributes: [vocabulary.marks.footerLine],
   },
   // features/composer/responsive.css: an occupied right slot keeps its control's
   // content width and gives the conversation row its min-content wrapping floor.
@@ -373,9 +381,9 @@ export function holdRelations(vocabulary: PartsTableVocabulary): HoldRelation[] 
   {
     name: 'account-row',
     holder: '*',
-    held: '[data-dsh-claude-account-host-row]',
+    held: `[${vocabulary.marks.accountHostRow}]`,
     scope: part('foot-area'),
-    attributes: ['data-dsh-claude-account-host-row'],
+    attributes: [vocabulary.marks.accountHostRow],
   },
   // features/account/footer-takeover.css: only the footer's action box that holds a
   // plugin's block keeps its size; the takeover zeroes it for the entries it
@@ -383,17 +391,17 @@ export function holdRelations(vocabulary: PartsTableVocabulary): HoldRelation[] 
   {
     name: 'footer-block',
     holder: part('footer-actions'),
-    held: '[data-dsh-claude-footer-block]',
-    attributes: ['data-dsh-claude-footer-block'],
+    held: `[${vocabulary.marks.footerBlock}]`,
+    attributes: [vocabulary.marks.footerBlock],
   },
   // features/account/footer-takeover.css: the footer's action box keeps its size for
   // an entry that opens a menu, which the takeover leaves in place in the sidebar
-  // rather than gathering into the account menu (issue #417).
+  // rather than gathering into the account menu.
   {
     name: 'footer-menu',
     holder: part('footer-actions'),
-    held: '[data-dsh-claude-footer-menu]',
-    attributes: ['data-dsh-claude-footer-menu'],
+    held: `[${vocabulary.marks.footerMenu}]`,
+    attributes: [vocabulary.marks.footerMenu],
   },
   // features/account/footer-takeover.css: the host mounts its own account menu on
   // <body>, outside the sidebar, so the collapsed rail's card width cannot be read

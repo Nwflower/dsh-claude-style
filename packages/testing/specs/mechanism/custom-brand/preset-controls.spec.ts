@@ -7,7 +7,8 @@
  */
 import { expect, test } from 'vitest'
 import { surfaceProperty, surfaceSelector } from '../../fixtures/surface'
-import { BRAND_CARDS_SHEET, BRAND_PROPERTIES, SETTINGS_BRAND_LOCKUP_SHEET } from '@dsh-claude-style/client/pure'
+import { BRAND_PROPERTIES } from '@dsh-claude-style/client/pure'
+import { BRAND_CARDS_SHEET, SETTINGS_BRAND_LOCKUP_SHEET } from '@dsh-claude-style/client/mechanisms'
 
 test('every brand-control selector has a rule in the shipped stylesheets', () => {
   const sheets = [SETTINGS_BRAND_LOCKUP_SHEET, BRAND_CARDS_SHEET].map((text) => {

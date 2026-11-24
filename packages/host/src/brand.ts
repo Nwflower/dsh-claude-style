@@ -14,7 +14,7 @@ import { BRAND_MARK_PATH, BRAND_PATH, BRAND_WORDMARK_PATH } from '@dsh-claude-st
 import { readFileSync, rmSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import type { DshContext, DshPeerScope, DshRequest, DshResponse, DshRoute } from '@dsh-claude-style/engine/node/dsh'
-import { pluginPath } from './harness-home.js'
+import { pluginPath } from './paths.js'
 import { IMAGE_HEADERS, readImageUpload, writeAtomicFile } from './brand-image-shared.js'
 import { brandingPresetRoutes } from './branding-presets.js'
 import { fenceRefused, methodRefused, readRequestBody, sendJson } from '@dsh-claude-style/engine/node/http'

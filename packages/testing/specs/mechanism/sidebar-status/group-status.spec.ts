@@ -9,7 +9,7 @@
  * @risk A closed workspace with a running session goes unmarked, an open or unrelated row gains a mark, a status change never repaints, or a torn-down host source takes the whole feature down.
  */
 import { expect, test } from 'vitest'
-import { WorkspaceGroupStatus, createAttentionFeed } from '@dsh-claude-style/client/pure'
+import { WorkspaceGroupStatus, createAttentionFeed } from '@dsh-claude-style/client/mechanisms'
 import { SESSION_ROW_KEY_ATTRIBUTE, WORKSPACE_ROW_EXPANDED_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import { surfaceAttribute } from '../../fixtures/surface'

@@ -8,7 +8,7 @@
  * @risk A narrow touch viewport inherits the desktop drawer's zero-pixel or rail's 56-pixel first track and the conversation loses its width.
  */
 import { expect, test } from 'vitest'
-import { PAGE_SCALE_SHEET } from '@dsh-claude-style/client/pure'
+import { PAGE_SCALE_SHEET } from '@dsh-claude-style/client/mechanisms'
 
 test('every narrow-frame fallback is gated to a hover-capable fine pointer', () => {
   const sheet = new CSSStyleSheet()

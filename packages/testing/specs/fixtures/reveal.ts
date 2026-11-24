@@ -4,7 +4,7 @@
  * with the paints it forces counted.
  */
 import { STREAMING_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
-import { createRevealScanner } from '@dsh-claude-style/client/pure'
+import { createRevealScanner } from '@dsh-claude-style/client/mechanisms'
 import type { RevealState } from '@dsh-claude-style/client/pure'
 
 /** A container marked as streaming, holding `text`. */

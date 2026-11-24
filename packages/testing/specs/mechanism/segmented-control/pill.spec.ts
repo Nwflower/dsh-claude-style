@@ -11,7 +11,7 @@
  * @risk After a press on a segmented control, the highlight stays under the choice the reader just left, so the control shows one choice while another is in force.
  */
 import { afterEach, expect, test, vi } from 'vitest'
-import { SLIDING_PILL_SHEET, createSlidingPill } from '@dsh-claude-style/client/pure'
+import { SLIDING_PILL_SHEET, createSlidingPill } from '@dsh-claude-style/client/mechanisms'
 import { surfaceAttribute } from '../../fixtures/surface'
 
 const ROOT = surfaceAttribute('skin.root')

@@ -6,7 +6,7 @@
  */
 import { beforeAll, beforeEach, expect, test } from 'vitest'
 import { page } from 'vitest/browser'
-import { composerResponsiveCss, createComposerResponsive } from '@dsh-claude-style/client/pure'
+import { composerResponsiveCss, createComposerResponsive } from '@dsh-claude-style/client/mechanisms'
 import { installParts } from '@dsh-claude-style/engine/parts'
 import {
   COMPOSER_CARD_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_CONTENT_SELECTOR,

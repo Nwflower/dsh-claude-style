@@ -8,7 +8,7 @@
  * @risk Handing the page to another owner leaves the skin's count sentence in the host's process header, a theme node on a page the theme no longer owns.
  */
 import { expect, test } from 'vitest'
-import { createProcessSummary, PROCESS_SUMMARY_ATTR, PROCESS_SUMMARY_CLASS, PROCESS_SUMMARY_REPLACED_ATTR } from '@dsh-claude-style/client/pure'
+import { createProcessSummary, PROCESS_SUMMARY_ATTR, PROCESS_SUMMARY_CLASS, PROCESS_SUMMARY_REPLACED_ATTR } from '@dsh-claude-style/client/mechanisms'
 import { ASSISTANT_STEP_KIND, CHAT_GROUP_PART_ATTRIBUTE, CHAT_GROUP_PART_REASONING, FLOW_KIND_ATTRIBUTE, PROCESS_ACTIVITY_SELECTOR, PROCESS_CONTENT_SELECTOR, PROCESS_GROUP_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { hostElement } from '../../fixtures/host-markup'
 import { frames } from '../../fixtures/frames'

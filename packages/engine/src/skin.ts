@@ -7,6 +7,8 @@
 export interface SkinSeam {
   /** The package the skin ships as: what a console line names it by. */
   packageName: string
+  /** Class-token prefix carried by skin-owned DOM nodes (D3). */
+  classPrefix: string
   /** The attribute on <body> whose presence says the skin owns the page. */
   stamp: string
   /** Skin bookkeeping attribute whose mutations must not wake page subscribers. */

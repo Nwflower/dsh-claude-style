@@ -1,5 +1,5 @@
 import { FOOTER_ACTIONS_SELECTOR, SLOT_ANCHOR_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { createFooterMirror } from '@dsh-claude-style/client/pure'
+import { createFooterMirror } from '@dsh-claude-style/client/mechanisms'
 import { attach } from './host-markup'
 
 /**

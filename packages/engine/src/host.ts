@@ -4,6 +4,7 @@ import type { HostAgentTeamsRemote, HostSidebarPins, HostAssistantStep, HostBund
 import { fileAddressFor } from '@deepseek-ai/dsh-util-workspace-path'
 import { observeMatches, subscribeMutations } from './bus'
 import { closestFrom, inlineStyleAbove, shown } from './dom'
+import { skin } from './skin'
 import { CHAT_TURN_ATTRIBUTE, CONVERSATION_HEADER_SELECTOR, CONVERSATION_MAIN_SLOT_SELECTOR, HEADER_CORNER_SELECTOR, HEADER_MORE_TRIGGER_SELECTOR, HEADER_TITLE_SELECTOR, HEADER_UTILITIES_SELECTOR, PROCESS_GROUP_SELECTOR, TURN_PROCESS_ANSWER_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
 /** A batch-scoped flow index: one group query and one answer query per container (D3, D40).
@@ -43,7 +44,7 @@ export interface HostContext {
   inject?(names: string[], callback: (scope: HostContext) => void): HostFiber
 }
 
-/** A value read off a host service or snapshot; the contract module types the ones the skin reads by name (D3, `contracts/services.ts`). */
+/** A value read off a host service or snapshot; the contract module types the ones the skin reads by name (D3, `packages/contracts/src/services.ts`). */
 export type HostValue = any
 
 /** A host locale namespace's translate seat (`locale.bind(namespace)`): a key and its parameters to text. */
@@ -97,25 +98,26 @@ export function closeHostSeats() {
 /**
  * The first match of `selector`, resolved once and kept while it stays the first match (D40): repeated batches reuse it, and the document is queried again only when the host replaced the element or mounted one before it. An answer of "nothing matched" is kept for the rest of the batch and retried after a later one; one body watch serves every cached seat, and closeHostSeats drops it with the generation. Exported for the seats one feature alone reads.
  */
-export function cacheFirstMatch<T extends Element>(selector: string) {
+export function cacheFirstMatch<T extends Element>(selector: string | (() => string)) {
   openMatchEpochWatch()
   let kept: T | null = null
   let answered = false
   let seenEpoch = matchEpoch
   return () => {
+    const query = typeof selector === 'function' ? selector() : selector
     if (seenEpoch !== matchEpoch) {
       if (kept === null) answered = false
       seenEpoch = matchEpoch
     }
-    if (kept !== null && stillFirstMatch(kept, selector)) return kept
+    if (kept !== null && stillFirstMatch(kept, query)) return kept
     if (kept === null && answered) return null
-    kept = document.querySelector<T>(selector)
+    kept = document.querySelector<T>(query)
     answered = true
     return kept
   }
 }
 
-function cacheFirst<T extends Element>(selector: string) {
+function cacheFirst<T extends Element>(selector: string | (() => string)) {
   return cacheFirstMatch<T>(selector)
 }
 
@@ -179,16 +181,16 @@ export function findRightbarToggle(): HTMLElement | null {
   return null
 }
 
-/** Host menu cards: the host portals menus to `<body>`, and every card the skin builds itself carries a `dsh-claude-` class (D3). A card with a search field answers `data-menu-popup` while its inner row container holds the role, so both marks name a card; the anchor pair below picks the card out of the two. The first one is kept until a menu opens or closes (D40). */
-const HOST_MENU_SELECTOR = `:is(${MENU_ROLE_SELECTOR}, ${MENU_POPUP_SELECTOR}):not([class*="dsh-claude-"])`
-const findFirstHostMenu = cacheFirst<HTMLElement>(HOST_MENU_SELECTOR)
+/** Host menu cards: the host portals menus to `<body>`, and every card the skin builds itself carries the skin's class prefix (D3, D73). A card with a search field answers `data-menu-popup` while its inner row container holds the role, so both marks name a card; the anchor pair below picks the card out of the two. The first one is kept until a menu opens or closes (D40). */
+const hostMenuSelector = () => `:is(${MENU_ROLE_SELECTOR}, ${MENU_POPUP_SELECTOR}):not([class*="${skin().classPrefix}"])`
+const findFirstHostMenu = cacheFirst<HTMLElement>(hostMenuSelector)
 
 /** The portaled card the host's menu `trigger` opened, or null. Several host menus can stand at once (a card the host keeps while it fades out, a panel's menu, another plugin's), so the first one in the document can be anyone's: the card is matched to its trigger through the anchor pair the host's Menu writes (MENU_ANCHOR_NAME_PROPERTY), and the kept first card is checked before the document is walked. */
 export function findHostMenuOf(trigger: Element | null): HTMLElement | null {
   const name = trigger === null ? '' : inlineStyleAbove(trigger, MENU_ANCHOR_NAME_PROPERTY)
   const first = name === '' ? null : findFirstHostMenu()
   if (first === null || first.style.getPropertyValue(MENU_POSITION_ANCHOR_PROPERTY) === name) return first
-  for (const card of document.querySelectorAll<HTMLElement>(HOST_MENU_SELECTOR)) {
+  for (const card of document.querySelectorAll<HTMLElement>(hostMenuSelector())) {
     if (card.style.getPropertyValue(MENU_POSITION_ANCHOR_PROPERTY) === name) return card
   }
   return null
@@ -686,7 +688,7 @@ export function hostUiWorkspace(lookup: HostServiceLookup | null | undefined): H
   return lookup?.get('uiWorkspace')
 }
 
-/** Open a file in the host's preview through its canonical resource address (D3, D112). */
+/** Open a file in the host's preview through its canonical resource address (D3, D113). */
 export function openHostFile(lookup: HostServiceLookup, sessionId: string, directory: string | undefined, path: string): void {
   const sidebar = lookup.get('sidebarRight') as { openResource(address: string): unknown } | undefined
   if (typeof sidebar?.openResource !== 'function') throw new Error('the host has no file preview controller')

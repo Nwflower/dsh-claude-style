@@ -1,3 +1,5 @@
+import { skin } from './skin'
+
 /** Build a skin element with optional class and text. */
 export function buildElement<K extends keyof HTMLElementTagNameMap>(tag: K, className?: string, text?: string | null) {
   const element = document.createElement(tag)
@@ -56,10 +58,11 @@ export function localClassName(token: string): string | null {
   return LOCAL_NAME.test(parts[1]) ? parts[1] : LOCAL_NAME.test(last) ? last : null
 }
 
-/** Whole-token `dsh-claude-` prefix distinguishes skin nodes from host and other plugins (D3). */
+/** Whole-token skin prefix distinguishes skin nodes from host and other plugins (D3, D73). */
 export function hasSkinClass(element: Element): boolean {
+  const prefix = skin().classPrefix
   for (const token of element.classList) {
-    if (token.startsWith('dsh-claude-')) return true
+    if (token.startsWith(prefix)) return true
   }
   return false
 }

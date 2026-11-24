@@ -15,7 +15,7 @@ const SRC = path.join(ROOT, 'packages', 'client', 'src')
 const PROBE_STATES = new Set(['any', 'hero', 'sending', 'streaming', 'conversation', 'menu', 'dark'])
 const PROBE_KINDS = new Set(['selector', 'attribute', 'property', 'computed', 'global', 'value', 'rail-geometry', 'none'])
 
-/** Refuse unreachable source files; manifests, contracts and pure.ts are intentional exceptions (D3, D92). */
+/** Refuse unreachable source files; manifests, contracts and spec surfaces are intentional exceptions (D3, D92). */
 export function checkListed(bundled, sheets) {
   const listed = new Set(sheets.map((sheet) => sheet.file))
   const walk = (dir) => fs.readdirSync(path.join(SRC, dir), { withFileTypes: true }).flatMap((entry) => {
@@ -25,7 +25,7 @@ export function checkListed(bundled, sheets) {
   })
   for (const file of walk('')) {
     if (file.endsWith('.css') && !listed.has(file)) throw new Error(`build: packages/client/src/${file} is in no list; add it to its feature's manifest or to THEME_SHEETS`)
-    if (file.endsWith('.manifest.ts') || file === 'pure.ts' || file.endsWith('.d.ts')) continue
+    if (file.endsWith('.manifest.ts') || file === 'pure.ts' || file === 'mechanisms.ts' || file.endsWith('.d.ts')) continue
     if (file.endsWith('.ts') && !bundled.has(file)) throw new Error(`build: packages/client/src/${file} is imported by no module the bundle reaches`)
   }
 }

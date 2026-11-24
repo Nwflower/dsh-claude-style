@@ -6,6 +6,7 @@ import { PLUGIN_ENTRY_UPDATE_SELECTOR } from '@dsh-claude-style/contracts/dom'
 export { PACKAGE_NAME }
 
 export const STYLE_ID = 'dsh-claude-style-style'
+export const SKIN_CLASS_PREFIX = 'dsh-claude-'
 /** The surface sheets' own element, which stays while ds-bot's surface has the page (D74). */
 export const SURFACE_STYLE_ID = 'dsh-claude-style-surface'
 /** Optional Anthropic faces are declared only here, so absent files cause no requests. */
@@ -60,6 +61,20 @@ export const FOOTER_SEATS = [
 export const FOOTER_BLOCK_ATTR = 'data-dsh-claude-footer-block'
 /** A footer entry that opens a menu — its own trigger or a control inside it — or carries the host's sign-out glyph: the takeover keeps it in place in the sidebar and the account popover gathers no row for it, because the menu portals from the trigger's own box and returns focus to that trigger (features/account/footer-mirror.ts, footer-takeover.css). */
 export const FOOTER_MENU_ATTR = 'data-dsh-claude-footer-menu'
+/** Marker placed on the host's sidebar account row while the skin repaints it. */
+export const ACCOUNT_HOST_ROW_ATTR = 'data-dsh-claude-account-host-row'
+/** Placement state on the composer statistics line (`toolbar` or `below`). */
+export const FOOTER_LINE_ATTR = 'data-dsh-claude-footer-line'
+/** Class name of the cold-start home panel seat inside the hero stack. */
+export const HOME_SEAT_CLASS = 'dsh-claude-home-seat'
+/** Skin-owned marks read as the held side of hold relations (D73). */
+export const SKIN_PART_MARKS = {
+  homeSeat: HOME_SEAT_CLASS,
+  footerLine: FOOTER_LINE_ATTR,
+  accountHostRow: ACCOUNT_HOST_ROW_ATTR,
+  footerBlock: FOOTER_BLOCK_ATTR,
+  footerMenu: FOOTER_MENU_ATTR,
+} as const
 
 /** The host frame's mark while the sidebar stands over the page from a hover (features/sidebar-peek): `open`, then `closing` for the slide back out.
  * The two custom properties carry the collapsed width the centre keeps clear of and the width the slide travels. */
@@ -180,7 +195,7 @@ export const STAMPED_PART_ATTR = 'data-dsh-claude-stamped-part'
 export const STAMPED_PARTS: readonly string[] = ['row']
 /** A class, id and tag no element carries (D101): what a written-out selector negates to stand at its list's weight, and the selector of a rule whose parts name no class on this page. */
 export const ABSENT_NAME = 'dsh-claude-absent'
-/** On a host element, naming the parts its own subtree holds (packages/engine/src/parts.ts, packages/engine/src/parts-table.ts). A rule that used to ask whether an element contains another (`A:has(B)`) reads this mark instead.
+/** On a host element, naming the parts its own subtree holds (packages/engine/src/parts.ts, packages/engine/src/parts-table.ts). Rules naming an element from what its subtree contains (`A:has(B)`) read this mark.
  * The marking pass already walks that subtree, so the answer costs one attribute read rather than a style pass over every candidate (D9); the values are the relation names declared in the parts table. */
 export const HOLDS_ATTR = 'data-dsh-claude-holds'
 /** On the body while the session overview is installed (features/session-panel): the stylesheet hides the host's background-work chips. It goes with the feature's seats, so its absence is the preference off. */

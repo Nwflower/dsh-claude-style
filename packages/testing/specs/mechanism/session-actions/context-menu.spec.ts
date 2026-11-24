@@ -4,7 +4,7 @@
  * @risk Right-click navigation selects the wrong session, duplicate menu activation closes a native popup, or editing and keyboard gestures lose their original handlers.
  */
 import { afterEach, expect, test } from 'vitest'
-import { installSessionContextMenu } from '@dsh-claude-style/client/pure'
+import { installSessionContextMenu } from '@dsh-claude-style/client/mechanisms'
 import { SIDEBAR_SLOT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { hostElement } from '../../fixtures/host-markup'
 import { surfaceAttribute } from '../../fixtures/surface'

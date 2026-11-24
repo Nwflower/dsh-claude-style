@@ -2,11 +2,11 @@ import { COMPOSER_DOCK_SELECTOR, COMPOSER_TRAILING_SELECTOR } from '@dsh-claude-
 import { observeSize } from '@dsh-claude-style/engine/bus'
 import { buildElement, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
 import { closestComposerCard, findComposerRowIn } from '@dsh-claude-style/engine/host'
+import { FOOTER_LINE_ATTR } from '../../constants'
 import { readPrefs } from '../../core/prefs'
 import { inPagePixels } from '../../shared/page-zoom'
 import type { DetailStep } from './inline-line'
 
-const FOOTER_LINE_ATTR = 'data-dsh-claude-footer-line'
 const FOOTER_ALIGN_ATTR = 'data-dsh-claude-footer-align'
 type FooterMode = '' | 'toolbar' | 'below'
 
@@ -16,7 +16,7 @@ const BELOW_STEPS: readonly DetailStep[] = [3, 2, 1, 0]
 /**
  * Seats the composer statistics line either in the toolbar flex slot when width
  * permits (`footer`) or directly on the dock line below (`inline` and narrow
- * `footer`), applying horizontal alignment to both seats (D43, D112).
+ * `footer`), applying horizontal alignment to both seats (D43, D113).
  */
 export function createFooterLayout(refit: () => void) {
   const slot = buildElement('span', 'dsh-claude-footer-slot')

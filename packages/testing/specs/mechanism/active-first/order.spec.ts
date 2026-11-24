@@ -5,7 +5,7 @@
  */
 import { beforeEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { ACTIVE_FIRST_SHEET, installActiveFirst } from '@dsh-claude-style/client/pure'
+import { ACTIVE_FIRST_SHEET, installActiveFirst } from '@dsh-claude-style/client/mechanisms'
 import { SESSION_ONGOING_STATE, SESSION_PHASE_ATTRIBUTE, SESSION_ROW_KEY_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import type { HostSessionGroupBy, HostSessionOrderBy } from '@dsh-claude-style/contracts/services'
 import type { HostContext } from '@dsh-claude-style/engine/host'

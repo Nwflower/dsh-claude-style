@@ -1,5 +1,5 @@
 import { afterEach, beforeEach } from 'vitest'
-import { RightSessionStatus, SIDEBAR_BASE_SHEET, SIDEBAR_STATUS_SHEET } from '@dsh-claude-style/client/pure'
+import { RightSessionStatus, SIDEBAR_BASE_SHEET, SIDEBAR_STATUS_SHEET } from '@dsh-claude-style/client/mechanisms'
 import { DARK_THEME_ATTRIBUTE, SESSION_PHASE_ATTRIBUTE, SESSION_STATUS_OUTLET_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { hostElement } from '../../fixtures/host-markup'
 import { literalThemeSheet } from '../../fixtures/theme-tokens'

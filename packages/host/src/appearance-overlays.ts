@@ -8,7 +8,7 @@ import { readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { routeFailure, writeAtomicFile } from './brand-image-shared.js'
 import { fenceRefused, methodRefused, readRequestBody, sendJson } from '@dsh-claude-style/engine/node/http'
-import { pluginPath } from './harness-home.js'
+import { pluginPath } from './paths.js'
 import type { DshContext, DshPeerScope, DshRequest, DshResponse, DshRoute } from '@dsh-claude-style/engine/node/dsh'
 
 const BODY_MAX = 64 * 1024

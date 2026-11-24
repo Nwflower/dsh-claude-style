@@ -1,4 +1,4 @@
-import { FOOTER_SEAT_ATTR } from '../../constants'
+import { ACCOUNT_HOST_ROW_ATTR, FOOTER_SEAT_ATTR } from '../../constants'
 
 /**
  * The footer entries the skin keeps in the sidebar (constants.ts, FOOTER_SEATS):
@@ -18,7 +18,7 @@ import { FOOTER_SEAT_ATTR } from '../../constants'
 export const SEAT_COPY_ATTR = 'data-dsh-claude-footer-seat-copy'
 
 /** The row a seated entry stands in: the skin's own button, or the host's row it repaints. */
-const ENTRY_ROW_SELECTOR = '.dsh-claude-account-btn, [data-dsh-claude-account-host-row]'
+const ENTRY_ROW_SELECTOR = `.dsh-claude-account-btn, [${ACCOUNT_HOST_ROW_ATTR}]`
 
 /** The marks the copy must not carry: the seat and hidden marks belong to the live entry. */
 const SKIN_MARKS = [

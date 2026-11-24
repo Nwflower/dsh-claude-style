@@ -6,7 +6,7 @@
  */
 import { afterEach, expect, test } from 'vitest'
 import { observeLayoutElements } from '@dsh-claude-style/engine/layout-elements'
-import { heldWrites, installBottomPanelFit, installRightbarFit } from '@dsh-claude-style/client/pure'
+import { heldWrites, installBottomPanelFit, installRightbarFit } from '@dsh-claude-style/client/mechanisms'
 import { BOTTOM_PANEL_SELECTOR, COMPOSER_SELECTOR, RIGHTBAR_COLUMN_SELECTOR, RIGHTBAR_PANEL_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { hostElement } from '../../fixtures/host-markup'
 import { surfaceAttribute } from '../../fixtures/surface'

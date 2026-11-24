@@ -13,6 +13,7 @@
     "types": [],
     "paths": {
       "@dsh-claude-style/client/pure": ["./packages/client/src/pure.ts"],
+      "@dsh-claude-style/client/mechanisms": ["./packages/client/src/mechanisms.ts"],
       "@dsh-claude-style/contracts/*": ["./packages/contracts/src/*"],
       "@dsh-claude-style/engine/*": ["./packages/engine/src/*"]
     }

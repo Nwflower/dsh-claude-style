@@ -12,6 +12,7 @@ export const MOTION_FULL = 'full'
 
 export const TEST_SKIN: SkinSeam = {
   packageName: 'dsh-test-skin',
+  classPrefix: 'test-skin-',
   stamp: STAMP_ATTR,
   quiet: QUIET_ATTR,
   readerHold: READER_HOLD_ATTR,
@@ -25,4 +26,11 @@ export const TEST_PARTS: PartsVocabulary = {
   part: PART_ATTR,
   holds: HOLDS_ATTR,
   regions: { account: 'data-test-account-menu', hero: 'data-test-hero-menu', more: 'data-test-more-menu' },
+  marks: {
+    homeSeat: 'test-home-seat',
+    footerLine: 'data-test-footer-line',
+    accountHostRow: 'data-test-account-host-row',
+    footerBlock: 'data-test-footer-block',
+    footerMenu: 'data-test-footer-menu',
+  },
 }

@@ -8,7 +8,7 @@ import { SyntaxKind, skipTrivia } from 'typescript/unstable/ast'
 import { API } from 'typescript/unstable/sync'
 
 /** The property names a hand-over object literal carries an attribute name under. */
-const HANDED_OVER = new Set(['quiet', 'readerHold', 'part', 'holds', 'account', 'hero'])
+const HANDED_OVER = new Set(['quiet', 'readerHold', 'part', 'holds', 'account', 'hero', 'more'])
 /** The engine's own accessors for the vocabulary the skin handed over. */
 const SEAM_READERS = new Set(['skin', 'vocabulary'])
 

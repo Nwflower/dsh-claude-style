@@ -11,8 +11,8 @@
  *   keeps asking.
  */
 import { expect, test } from 'vitest'
-import { createPanelPoller } from '@dsh-claude-style/client/pure'
-import type { PanelPoller, PanelPollerDeps } from '@dsh-claude-style/client/pure'
+import { createPanelPoller } from '@dsh-claude-style/client/mechanisms'
+import type { PanelPoller, PanelPollerDeps } from '@dsh-claude-style/client/mechanisms'
 import type { SessionPanelAnswer } from '@dsh-claude-style/contracts/session-panel'
 
 interface Harness {

@@ -1,7 +1,4 @@
-import {
-  composerInlineCss, composerInlineBarCss, composerResponsiveCss, composerModelCss,
-  composerVarsCss, composerSwappingCss, THIRD_PARTY_SHEET, createComposerResponsive, setSwappingText, releaseSwappingText,
-} from '@dsh-claude-style/client/pure'
+import { composerInlineCss, composerInlineBarCss, composerResponsiveCss, composerModelCss, composerVarsCss, composerSwappingCss, THIRD_PARTY_SHEET, createComposerResponsive, setSwappingText, releaseSwappingText } from '@dsh-claude-style/client/mechanisms'
 import {
   COMPOSER_CARD_SELECTOR, COMPOSER_SCROLL_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE, CONVERSATION_SCROLL_SELECTOR,
   MODEL_SLOT_SELECTOR as CONVERSATION_MODEL_SLOT_SELECTOR, CONVERSATION_INPUT_RIGHT_SLOT_SELECTOR, CONVERSATION_ACTIVITY_SLOT_SELECTOR,
@@ -40,7 +37,7 @@ export function crowdingFixture(options: { width: number; zoom?: number; directi
   `
   const productSheet = document.createElement('style')
   // The third-party sheet carries the prompt-rewriter seat-nudge repair, which
-  // governs the controls box spacing beside a foreign right-hand control (#438).
+  // governs the controls box spacing beside a foreign right-hand control.
   productSheet.textContent = [composerVarsCss, composerInlineCss, composerModelCss, composerInlineBarCss, composerSwappingCss, composerResponsiveCss, THIRD_PARTY_SHEET].join('\n')
   document.head.append(hostSheet, productSheet)
   const host = attach(document.body, CONVERSATION_SCROLL_SELECTOR)

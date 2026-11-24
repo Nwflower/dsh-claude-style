@@ -1,5 +1,5 @@
 /**
- * The sodium rewrite's mechanism (D109): a rule is rewritten where it stands and
+ * The sodium rewrite's mechanism (D114): a rule is rewritten where it stands and
  * written back exactly; a selector the sheet refuses leaves the sheet as its
  * owner wrote it; a rule another writer changed is handed back; the flow-child
  * mark stands on every child through every change; and the table's flow rewrite
@@ -12,7 +12,7 @@
 import { afterEach, expect, test } from 'vitest'
 import { CHAT_FLOW_SLOT_SELECTOR, CHAT_GROUP_PART_ATTRIBUTE, CHAT_GROUP_PART_RESPONSE, CHAT_NODE_SELECTOR, CHAT_RUNNING_SELECTOR, CHAT_STEERING_BATCH_SELECTOR, FLOW_BLOCK_SELECTOR, FLOW_KIND_ATTRIBUTE, PENDING_STEERING_SELECTOR, PLUGIN_SHEET_OWNER_ATTRIBUTE, PLUGIN_SHEET_PATH_ATTRIBUTE, PLUGIN_STYLE_PATH_ATTRIBUTE, SUBMISSION_ECHO_SELECTOR, TURN_PROCESS_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import { applyRewrite, planRewrite, restoreRewrite } from '@dsh-claude-style/engine/sheet-rewrite'
-import { SODIUM_MEMBERS, keepFlowChildMark, matchesAdapterSheet } from '@dsh-claude-style/client/pure'
+import { SODIUM_MEMBERS, keepFlowChildMark, matchesAdapterSheet } from '@dsh-claude-style/client/mechanisms'
 import { hostElement } from '../../fixtures/host-markup'
 
 const settle = () => new Promise(resolve => setTimeout(resolve, 0))

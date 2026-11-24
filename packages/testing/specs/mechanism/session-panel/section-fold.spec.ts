@@ -9,7 +9,7 @@
  *   conflicting skin marks behind instead of rolling back cleanly.
  */
 import { afterEach, beforeEach, expect, test } from 'vitest'
-import { installSectionFold, isSectionFoldActive, probeSectionContract, SECTION_FOLD_STORAGE_KEY } from '@dsh-claude-style/client/pure'
+import { installSectionFold, isSectionFoldActive, probeSectionContract, SECTION_FOLD_STORAGE_KEY } from '@dsh-claude-style/client/mechanisms'
 import {
   SESSION_PANEL_SECTION_ATTRIBUTE,
   SESSION_PANEL_SELECTOR,

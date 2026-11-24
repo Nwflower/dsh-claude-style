@@ -107,7 +107,7 @@ import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
 import { createHash } from 'node:crypto'
 import { Buffer } from 'node:buffer'
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
-import { cachePath, readJsonDocument, writeJsonDocument } from './cache-file.js'
+import { cachePath, readJsonDocument, writeJsonDocument } from './paths.js'
 import { readEvents } from '@dsh-claude-style/engine/node/session-events'
 
 /**
