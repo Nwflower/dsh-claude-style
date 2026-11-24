@@ -258,17 +258,33 @@
         lanes.forEach(function (one, at) { one.className = saved[at] })
         return { step: step, frames: frames }
       }
-      // The rotation: the loader opens on one motion and takes up another every
-      // ten seconds, never the one already standing. Its length is the
-      // product's own (D92: a duration that is the behaviour), so every frame is
-      // recorded with its moment until two changes have landed: the stretch one
-      // motion stood and the hand-over between two of them are both read off it.
-      // The lane arriving comes into play the moment a hand-over begins, so a
-      // change is counted then.
+      // The rotation: the loader holds its motion while the model outputs and
+      // takes another up only when an output ends past the minimum gap, never
+      // the one already standing. Drive alternating output/silent stretches so
+      // two output-ends land far enough apart to each lay down a motion, and
+      // record every frame with its moment until two changes have landed: the
+      // stretch one motion stood and the hand-over between two of them are both
+      // read off it. The lane arriving comes into play the moment a hand-over
+      // begins, so a change is counted then.
       var watchRotation = function () {
+        var host = window.__dshSmokeHost
+        // A running call is an output (readTurnActivity reads it as tools); no
+        // call and no running step is silence. Toggle the call to make output-ends.
+        host.turnFixtureRunning.steps = []
+        host.turnFixtureCalls.length = 0
+        host.turnFixtureCalls.push({ turn: 2 })
+        var lastToggle = performance.now()
+        var outputting = true
         return probe.until(function () {
+          var now = performance.now()
+          if (now - lastToggle > 2700) {
+            lastToggle = now
+            outputting = !outputting
+            host.turnFixtureCalls.length = 0
+            if (outputting) host.turnFixtureCalls.push({ turn: 2 })
+          }
           var reading = lineOf()
-          return { at: performance.now(), loader: reading === null ? null : reading.loader }
+          return { at: now, loader: reading === null ? null : reading.loader }
         }, function (frames) {
           var changes = 0
           var standing = null
@@ -278,7 +294,7 @@
             standing = frame.loader.motion
           })
           return changes >= 2
-        }, 'two changes of the loader rotation', 25000)
+        }, 'two output-end hand-overs of the loader', 16000)
       }
       // A tool call in flight is a state of its own, with no block streaming.
       window.__dshSmokeHost.turnFixtureRunning.steps = [{ data: { get: function (kind) { return kind === 'assistant-step' ? { status: 'settled', step: 1, blocks: [{ kind: 'reasoning' }, { kind: 'tool-call' }] } : undefined } } }]

@@ -10,7 +10,7 @@ import { motionMs } from '../../shared/motion'
 import { releaseSwappingText, setSwappingText } from '../../shared/swapping-text'
 import { activityWords, waitingWord, THINKING_KEY } from '../../shared/turn-activity'
 import { sessionProjectionFaces } from '../../shared/session-projections'
-import { startWaitLoader, releaseWaitLoader, resyncWaitLoader } from './wait-loader'
+import { startWaitLoader, releaseWaitLoader, resyncWaitLoader, setWaitLoaderOutputting } from './wait-loader'
 import { CHAT_FLOW_SELECTOR, CHAT_RUNNING_SELECTOR, CHAT_RUNNING_HOLDING_ATTRIBUTE, CHAT_RUNNING_TEXT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { openTurn, overtimeMargin, waitStart, wordForPass } from './wait-state'
 import { foreignRunningLineOwns } from './running-owner'
@@ -214,8 +214,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // unwritten every pass would put up another line and another set of dots
     // beside the words.
     lines.set(row, parts)
-    // The loader's motions rotate on their own clock, not on what the turn is
-    // doing: it is set going here, with the line, and lets go when the row does.
+    // The loader is set going here, with the line, and lets go when the row does.
+    // Its motion holds while the model outputs and hands over at an output-end
+    // past the minimum gap (setWaitLoaderOutputting, called each pass below).
     startWaitLoader(loader)
     return parts
   }
@@ -376,8 +377,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }, wording.get(key), now)
     wording.set(key, pass.row)
     setSwappingText(label, pass.word, true)
-    // The loader does not follow that wording: its three motions rotate on its
-    // own clock (wait-loader.ts), set going once with the line itself.
+    // The loader holds its motion while the model outputs and hands over when an
+    // output ends past the minimum gap (wait-loader.ts): activity is non-null
+    // exactly while the model thinks, calls a tool or writes its answer.
+    setWaitLoaderOutputting(loader, activity !== null)
     clock.hidden = turn === undefined || turn.start === undefined
     if (turn !== undefined && turn.start !== undefined) writeTextInPlace(clock, formatHostDuration(Math.max(1000, now - turn.start.time), t))
     let overtime = false

@@ -124,7 +124,9 @@ export default {
     const crossFrames = (wait.crossLane || { frames: [] }).frames || []
     const crossSpot = (frame, dot) => ({ x: numbers(frame.translate[dot])[0], y: numbers(frame.translate[dot])[1] })
     const crossDist = (p, q) => Math.hypot(p.x - q.x, p.y - q.y)
-    const crossMid = crossFrames.length > 24 ? [0, 1, 2].map((dot) => crossSpot(crossFrames[24], dot)) : []
+    // The centre crossing is a quarter period in (frame 12 at 25ms a step), not the
+    // far end at half a period: there the three dots brush past as a tight triangle.
+    const crossMid = crossFrames.length > 12 ? [0, 1, 2].map((dot) => crossSpot(crossFrames[12], dot)) : []
     const crossSides = crossMid.length === 3 ? [crossDist(crossMid[0], crossMid[1]), crossDist(crossMid[1], crossMid[2]), crossDist(crossMid[2], crossMid[0])] : []
     const crossStart = crossFrames.length > 0 ? [0, 1, 2].map((dot) => crossSpot(crossFrames[0], dot)) : []
     const crossEnd = crossFrames.length > 24 ? [0, 1, 2].map((dot) => crossSpot(crossFrames[24], dot)) : []
@@ -145,8 +147,8 @@ export default {
         crossFrames[0].duration === '1.2s' && (crossFrames[0].delays || []).every((one) => one === '0s') &&
         crossSides.length === 3 && crossSides.every((one) => Math.abs(one - 2.77) <= 0.1) && mirrored && crossRound,
       JSON.stringify({ readings: crossFrames.length, sides: crossSides.map((one) => Number(one.toFixed(2))), mirrored }))
-    // 轮换：一个动作站满 10 秒才换，换的是另一条轨道（不会换到自己）；交接一开始新的那条
-    // 就在场，所以从那一帧算换。
+    // 轮换：模型输出时动作不动，输出结束且交接已站满最小间隔（2.5s）才换，换的是另一条
+    // 轨道（不会换到自己）；交接一开始新的那条就在场，所以从那一帧算换。
     const rotation = (wait.rotation || []).filter((frame) => frame !== null && frame.loader !== null && frame.loader.motion !== null)
     const seen = rotation.map((frame) => ({ at: frame.at, motion: String(frame.loader.motion), loader: frame.loader }))
     const starts = seen.length === 0 ? [] : [0]
@@ -156,7 +158,7 @@ export default {
     // 换与换之间隔多久：只看相邻两次换之间的那一段，采样起点不算一次变化。
     const gaps = changes.slice(1).map((at, index) => seen[at].at - seen[changes[index]].at)
     const rotated = changes.map((at, index) => motionOf(at) !== motionOf(starts[index]))
-    check('加载点每 10 秒换一条轨道，换的不会是正站着的那一条',
+    check('加载点在模型输出结束且交接站满最小间隔时换一条轨道，换的不会是正站着的那一条',
       changes.length >= 2 &&
         gaps.every((one) => one >= bound('loaderRotateGapMinMs') && one <= bound('loaderRotateGapMaxMs')) &&
         rotated.every((one) => one === true),

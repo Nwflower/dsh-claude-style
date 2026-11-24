@@ -552,7 +552,7 @@ edit the JSON, not the table.
 | `--dsh-claude-duration-stagger` | `70ms` | how far behind the piece before it a staggered piece starts: the greeting's second line |
 | `--dsh-claude-period-dot-orbit` | `2400ms` | one turn of the waiting line's loader dots that swap corners: four quarter-turns of the two pairs, which leaves every dot where it started |
 | `--dsh-claude-period-dot-cross` | `1200ms` | one round trip of the waiting line's loader dots along three tangentially offset 120-degree axes in phase, brushing past each other at the centre |
-| `--dsh-claude-period-dot-rotate` | `10s` | how long one of the waiting line's loader motions stands before another takes its place, the next one picked so a motion never follows itself |
+| `--dsh-claude-duration-dot-handover-gap` | `2500ms` | the least stretch the waiting line's loader hand-over must stand before an output-end may lay down the next motion: the model outputting holds the motion, and only an output ending past this gap switches it, so quick outputs cannot flip the motion faster than this |
 | `--dsh-claude-duration-dot-morph` | `680ms` | how long a loader dot takes, once the motion it leaves has it standing still, to swirl in polar coordinates from that pose into the path of the motion taking over |
 | `--dsh-claude-duration-dot-settle` | `80ms` | the brief level-line hold after a synchronised swirl lands at the top of the wave before the dots ripple downward |
 | `--dsh-claude-duration-reduced` | `0.01ms` | every skin animation and transition under the Reduced animation choice (D40) |
@@ -953,7 +953,11 @@ swap the corners of a rectangle, one pair and then the other; three dots
 reciprocate in phase along three axes 120° apart, each axis shifted sideways
 from the centre by two fifths of a dot, so at the midpoint they brush past one
 another as a tight triangle instead of meeting in one point. The loader opens
-on one of the four at random and lets another take over on a slow clock. A
+on one of the four at random and holds it while the model outputs — thinking,
+calling a tool, writing its answer; another takes over only when an output ends
+and the hand-over in play has stood at least the minimum gap
+(`--dsh-claude-duration-dot-handover-gap`, 2.5s), so a run of quick outputs cannot
+flip the motion faster than that. A
 change never cuts and the box never empties: each dot of the motion leaving
 waits for its own still moment — a turning point of the wave, an end of a walk,
 a corner between two swaps, an outer triangle of the cross — and the dot it is

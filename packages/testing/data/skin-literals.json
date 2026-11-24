@@ -52,7 +52,7 @@
     "packages/testing/smoke/stand-in/context-panel.js": 4,
     "packages/testing/scenarios/stats-overlay.mjs": 1,
     "packages/testing/scenarios/stats-position.mjs": 10,
-    "packages/testing/scenarios/wait-line.mjs": 5,
+    "packages/testing/scenarios/wait-line.mjs": 4,
     "packages/testing/scenarios/wash-line.mjs": 5
   }
 }

@@ -2,10 +2,10 @@ import { motionReduced } from '../../core/prefs'
 import { motionEase, motionEaseAt, motionMs } from '../../shared/motion'
 
 /**
- * Rotate the waiting loader's four dot motions every token period, swirling
- * each dot in counter-clockwise polar coordinates from its still frame into the
- * arriving lane. Reduced motion snaps to the resting frame (D40). Lanes and
- * keyframes live in chat-wait.css.
+ * The waiting loader's four dot motions: it holds one while the model outputs
+ * and swirls each dot in counter-clockwise polar coordinates into the next when
+ * an output ends past the minimum gap (setWaitLoaderOutputting). Reduced motion
+ * snaps to the resting frame (D40). Lanes and keyframes live in chat-wait.css.
  */
 
 /** A motion the loader's dots play. */
@@ -55,10 +55,12 @@ type LaneTiming = {
 type LoaderState = {
   /** The motion in play, or on its way in while the one before it hands its dots over. */
   motion: WaitLoaderMotion
-  /** The rotation running out, so the next motion is laid down. */
-  timer: number | null
   /** How many hand-overs have begun, so one that has been overtaken stops. */
   handOvers: number
+  /** Whether the model was outputting on the last pass, to catch the moment it stops. */
+  outputting: boolean
+  /** When the last hand-over began, so the next one waits out the minimum gap. */
+  lastHandOverAt: number
 }
 
 /** A motion's own clock on one dot: its turn, whether every other turn runs backwards, and how far it has run. */
@@ -570,49 +572,54 @@ function nextMotion(motion: WaitLoaderMotion): WaitLoaderMotion {
   return others[Math.floor(Math.random() * others.length)].motion
 }
 
-/** Arm the rotation: when it runs out, one of the other motions takes over. */
-function rotate(loader: HTMLElement, state: LoaderState) {
-  if (state.timer !== null) window.clearTimeout(state.timer)
-  const period = motionMs('--dsh-claude-period-dot-rotate')
-  state.timer = window.setTimeout(() => {
-    state.timer = null
-    if (!loader.isConnected) return
-    handOver(loader, state, state.motion, nextMotion(state.motion))
-    rotate(loader, state)
-  }, period)
+/**
+ * Tell the loader whether the model is outputting right now (thinking, drawing
+ * up or running a call, writing its answer). The motion holds while the model
+ * outputs; the moment an output ends — the fall from outputting to silent — the
+ * next motion takes over, but only once the hand-over in play has stood for the
+ * minimum gap (`--dsh-claude-duration-dot-handover-gap`), so a run of quick
+ * outputs cannot flip the motion faster than that. An output-end inside the gap
+ * is passed over; the first one after it lays the next motion down.
+ */
+export function setWaitLoaderOutputting(loader: HTMLElement, outputting: boolean) {
+  const state = loaders.get(loader)
+  if (state === undefined) return
+  const was = state.outputting
+  state.outputting = outputting
+  if (!was || outputting) return
+  if (motionReduced() || !loader.isConnected) return
+  const now = timelineNow()
+  if (now - state.lastHandOverAt < motionMs('--dsh-claude-duration-dot-handover-gap')) return
+  state.lastHandOverAt = now
+  handOver(loader, state, state.motion, nextMotion(state.motion))
 }
 
 /**
- * Set one loader going: one of its motions at random at once, then a new one
- * every `--dsh-claude-period-dot-rotate`, never the one already standing.
+ * Set one loader going on one of its motions at random. It holds that motion
+ * while the model outputs and takes another up only when an output ends past
+ * the minimum gap (setWaitLoaderOutputting), never the one already standing.
  *
  * @param loader - the loader leading the line.
  */
 export function startWaitLoader(loader: HTMLElement) {
   if (loaders.has(loader)) return
   const opening = motionReduced() ? STILL_MOTION : LANES[Math.floor(Math.random() * LANES.length)].motion
-  const state: LoaderState = { motion: opening, timer: null, handOvers: 0 }
+  const state: LoaderState = { motion: opening, handOvers: 0, outputting: false, lastHandOverAt: timelineNow() }
   loaders.set(loader, state)
   handOver(loader, state, null, opening)
-  // Under the Reduced choice the loader holds one frame and never takes another
-  // up: a rotation would be a visible jump with nothing moving the dots.
-  if (!motionReduced()) rotate(loader, state)
 }
 
 /**
  * Put one loader on the animation choice the reader holds now: under the
- * Reduced choice it rests on the still frame and takes no other motion up, and
- * otherwise its rotation is armed again. The choice can flip while a line
- * stands, and a timer armed under the other answer would fold the next motion
- * in place with nothing moving the dots.
+ * Reduced choice it rests on the still frame and takes no other motion up,
+ * otherwise it keeps the motion in play. The next output-end lays another down
+ * (setWaitLoaderOutputting); the choice can flip while a line stands, and a
+ * hand-over armed under the other answer would fold the next motion in place
+ * with nothing moving the dots.
  */
 export function resyncWaitLoader(loader: HTMLElement) {
   const state = loaders.get(loader)
   if (state === undefined) return
-  if (state.timer !== null) {
-    window.clearTimeout(state.timer)
-    state.timer = null
-  }
   dropHandOver(loader)
   if (motionReduced()) {
     state.motion = STILL_MOTION
@@ -620,13 +627,9 @@ export function resyncWaitLoader(loader: HTMLElement) {
     return
   }
   place(loader, state.motion, null)
-  rotate(loader, state)
 }
 
-/** Let go of one loader: a row leaving the page takes no timer with it. */
+/** Let go of one loader: a row leaving the page takes no hand-over with it. */
 export function releaseWaitLoader(loader: HTMLElement) {
-  const state = loaders.get(loader)
-  if (state === undefined) return
-  if (state.timer !== null) window.clearTimeout(state.timer)
   loaders.delete(loader)
 }

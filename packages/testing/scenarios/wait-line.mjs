@@ -49,10 +49,10 @@ const APP = 'const first = 1\n'
 /**
  * The loader's motions, each with the lane it plays in, how many dots it draws,
  * the animation its first dot runs and that animation's own turn
- * (features/chat-wait/chat-wait.css). `wait-loader.ts` hands the row over from
- * one to the next every `--dsh-claude-period-dot-rotate`, so any of the four may
- * be the one standing when the head is read; the smoke case reads the same four
- * (cases/chat-wait.mjs).
+ * (features/chat-wait/chat-wait.css). `wait-loader.ts` holds a motion while the
+ * model outputs and hands the row over to another when an output ends past the
+ * minimum gap, so any of the four may be the one standing when the head is read;
+ * the smoke case reads the same four (cases/chat-wait.mjs).
  */
 const MOTIONS = [
   { lane: 'is-bounce', dots: 3, animation: 'dsh-claude-wait-dot', duration: '1.2s' },

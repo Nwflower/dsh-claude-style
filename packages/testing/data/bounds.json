@@ -138,13 +138,13 @@
     },
     {
       "name": "loaderRotateGapMinMs",
-      "value": 9900,
-      "reason": "The least stretch between two changes of the waiting line's loader motion. The rotation is a fixed 10s and a change is read the moment the arriving lane comes into play, which is when the hand-over begins; 10s less the frames of sampling on either end is the floor."
+      "value": 2400,
+      "reason": "The least stretch between two changes of the waiting line's loader motion. A change is laid down only by an output-end past the 2.5s minimum gap (--dsh-claude-duration-dot-handover-gap), read the moment the arriving lane comes into play; the gap less the frames of sampling on either end is the floor."
     },
     {
       "name": "loaderRotateGapMaxMs",
-      "value": 11500,
-      "reason": "The most the same stretch may come to: the fixed 10s, room for the rotation's timer firing late on a loaded machine, and room for a change landing between two frames of the probe's own reading."
+      "value": 9000,
+      "reason": "The most the same stretch may come to in the probe: it toggles output/silent every 2.7s, so two output-ends that each pass the gate land about 5.4s apart, with room for a change landing between two frames of the probe's own reading and a loaded machine."
     },
     {
       "name": "loaderHandOverStepPx",
