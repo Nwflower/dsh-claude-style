@@ -3,6 +3,7 @@ import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import { formatCompactTokens } from '../../shared/format'
 import { copy } from './copy'
 import { usePanelReading, useLiveOccupancy } from './session-panel-data'
+import { useSectionFolded } from './section-fold'
 import { contextRows, contextOverview } from './context-rows'
 import type { ContextOverview, ContextRow } from './context-rows'
 import { compactOffer, requestCompaction } from './compact-offer'
@@ -22,9 +23,9 @@ export function sharePercent(value: number, whole: number) {
 }
 
 /** The overview of one session: the provider's occupancy, else the route's fold. */
-export function useOverview(sessionId: string) {
+export function useOverview(sessionId: string, live = true) {
   const { value, failed } = usePanelReading(sessionId)
-  const occupancy = useLiveOccupancy(sessionId)
+  const occupancy = useLiveOccupancy(sessionId, live)
   return { context: value?.context ?? null, answered: value !== null, failed, overview: contextOverview(occupancy, value?.context ?? null) }
 }
 
@@ -39,7 +40,8 @@ export function useOverview(sessionId: string) {
  * the distance to it (D100).
  */
 export const ContextSection = panelEntry(function ContextBody({ sessionId }) {
-  const { context, answered, failed, overview } = useOverview(sessionId)
+  const folded = useSectionFolded('claude-style-context')
+  const { context, answered, failed, overview } = useOverview(sessionId, !folded)
   if (overview === null && failed && !answered) return h('p', { className: 'dsh-claude-panel-note' }, copy('unavailable'))
   if (overview === null && context !== null) return h('p', { className: 'dsh-claude-panel-note' }, copy('noContext'))
   if (overview === null) {

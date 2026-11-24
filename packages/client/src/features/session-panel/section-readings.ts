@@ -11,7 +11,7 @@ import { sharePercent, useOverview } from './context-section'
 import { speedText, useFigures, useTokenText } from './figures-sections'
 import { usePanelReading } from './session-panel-data'
 import { Skeleton, panelEntry } from './panel-rows'
-import { useSectionFoldActive } from './section-fold'
+import { useSectionFoldActive, useSectionFolded } from './section-fold'
 
 const h = React.createElement
 
@@ -21,7 +21,8 @@ function Reading({ children }: { children: React.ReactNode }) {
 
 export const ContextReading = panelEntry(function ContextReadingBody({ sessionId }) {
   const active = useSectionFoldActive()
-  const { context, answered, failed, overview } = useOverview(sessionId)
+  const folded = useSectionFolded('claude-style-context')
+  const { context, answered, failed, overview } = useOverview(sessionId, active && folded)
   if (!active) return null
   if (overview === null && failed && !answered) return null
   if (overview === null && context !== null) return null
@@ -35,7 +36,8 @@ export const ContextReading = panelEntry(function ContextReadingBody({ sessionId
 
 export const StatsReading = panelEntry(function StatsReadingBody({ sessionId }) {
   const active = useSectionFoldActive()
-  const { figures, failed } = useFigures(sessionId)
+  const folded = useSectionFolded('claude-style-stats')
+  const { figures, failed } = useFigures(sessionId, active && folded)
   if (!active || failed) return null
   if (figures === null) return h(Reading, null, h(Skeleton, { width: '48px' }))
   const speed = speedText(figures.stats)
@@ -44,7 +46,8 @@ export const StatsReading = panelEntry(function StatsReadingBody({ sessionId }) 
 
 export const TokensReading = panelEntry(function TokensReadingBody({ sessionId }) {
   const active = useSectionFoldActive()
-  const { figures, failed } = useFigures(sessionId)
+  const folded = useSectionFolded('claude-style-tokens')
+  const { figures, failed } = useFigures(sessionId, active && folded)
   const tokens = useTokenText()
   if (!active || failed) return null
   if (figures === null) return h(Reading, null, h(Skeleton, { width: '48px' }))

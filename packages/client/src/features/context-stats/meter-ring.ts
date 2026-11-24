@@ -5,9 +5,9 @@ import { closestComposerCard, findModelSlotIn, findPrimaryModelSlot, observeComp
 import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { removeStrayNodes } from '../../shared/popover'
 import { setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
-import { isContextDarkTheme, writeContextRamp } from './context-ramp'
+import { contextRampKey, isContextDarkTheme, writeContextRamp } from './context-ramp'
 import { composerCardOf, contextMeterOf, findContextMeter, markContextMeter, meterOccupancy } from './stats-panel'
-import { paintContextPie, readPieRest, releaseContextPie } from './context-meter-pie'
+import { fallbackPieRest, paintContextPie, readPieRest, readPieRestColor, releaseContextPie } from './context-meter-pie'
 import { METER_RING_RADIUS, METER_RING_SIZE, ringDash } from './context-meter-face'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { FeatureHandle } from '@dsh-claude-style/engine/scheduler'
@@ -74,8 +74,14 @@ interface RingFace {
   answered: number | null
   /** The percentage the ring was last drawn for, so an unmoved reading writes nothing. */
   shown: number | null
+  /** Last written context ramp key (`undefined` until first write), avoiding redundant DOM updates. */
+  rampKey: string | null | undefined
+  /** Last evaluated graphic RGB string corresponding to `rampKey`. */
+  graphicRgb: string | null
   /** The pie's unoccupied plate colour, read in a pass's own read phase (D40). */
   rest: PieRest | null
+  /** Theme polarity when `rest` was read. */
+  restDark: boolean | null
 }
 
 /** What the context statistics read off the ring (ui.meterRing). */
@@ -98,6 +104,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const faces = new Map<HTMLElement, RingFace>()
   /** The composer cards, kept current by the bus (D40): the pass reads the list rather than the document. */
   const cards = observeComposerCards()
+  /** Body-level `--dsh-claude-pie-rest` measured during the read phase, reused by newly built rings. */
+  let bodyRest: string | null = null
+  let bodyRestDark: boolean | null = null
 
   /**
    * The card the page's main composer draws: the one the skin's seat box stands
@@ -173,7 +182,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       stopExpandedWatch: null,
       answered: null,
       shown: null,
+      rampKey: undefined,
+      graphicRgb: null,
       rest: null,
+      restDark: null,
     }
     faces.set(card, face)
     return face
@@ -222,8 +234,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   /** Read the unoccupied plate colour in the pass's read phase (D40). */
-  function readRestFor(face: RingFace) {
+  function readRestFor(face: RingFace, dark: boolean) {
     face.rest = readPrefs().contextDisplay !== CONTEXT_DISPLAY_PIE ? null : readPieRest(face.ring)
+    face.restDark = face.rest === null ? null : dark
     return face.rest
   }
 
@@ -235,6 +248,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function paintRing(face: RingFace) {
     const percent = readingOf(face)
     const prefs = readPrefs()
+    const dark = isContextDarkTheme()
     // The ring stands in the card whose meter it hides, so the words it mirrors
     // are that card's trigger's: a docked conversation's meter is its own.
     const trigger = triggerOf(face)
@@ -244,9 +258,17 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
     mirrorExpanded(face)
     drawReading(face, percent)
-    const graphicRgb = writeContextRamp(face.ring, percent, prefs.contextRampMode, prefs.contextRamp, isContextDarkTheme())
+    const rampKey = contextRampKey(percent, prefs.contextRampMode, prefs.contextRamp, dark)
+    if (rampKey !== face.rampKey) {
+      face.rampKey = rampKey
+      face.graphicRgb = writeContextRamp(face.ring, percent, prefs.contextRampMode, prefs.contextRamp, dark)
+    }
     if (prefs.contextDisplay === CONTEXT_DISPLAY_PIE) {
-      paintContextPie(face.ring, percent, graphicRgb, face.rest ?? readPieRest(face.ring))
+      const measured = face.rest !== null && face.restDark === dark
+        ? face.rest
+        : (bodyRest !== null && bodyRestDark === dark ? { trigger: face.button, rest: bodyRest } : null)
+      if (measured === null) ui.schedule?.()
+      paintContextPie(face.ring, percent, face.graphicRgb, measured ?? fallbackPieRest(face.button, dark))
       return
     }
     releaseContextPie(face.ring)
@@ -345,10 +367,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // The ring's plate colour comes off the page's own styles, which a pass
     // reads in its read phase alone (D40).
     measure() {
+      const dark = isContextDarkTheme()
+      const pie = readPrefs().contextDisplay === CONTEXT_DISPLAY_PIE
+      bodyRest = pie ? readPieRestColor(document.body) : null
+      bodyRestDark = pie ? dark : null
       const main = primaryFace()
       let primary: PieRest | null = null
       for (const face of faces.values()) {
-        const rest = readRestFor(face)
+        const rest = readRestFor(face, dark)
         if (face === main) primary = rest
       }
       return primary

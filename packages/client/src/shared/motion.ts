@@ -27,13 +27,13 @@ export function motionEase(token: string): string {
   return value
 }
 
-/** The curves already parsed, by token: a curve is read at most once per token. */
+/** The curves already parsed, by easing string: each curve is parsed at most once. */
 const CURVES = new Map<string, readonly [number, number, number, number]>()
 
 /**
  * The keyword curves' control points, as CSS Easing Functions writes them: a
- * token may name a keyword, and a caller evaluating it needs the same points a
- * cubic-bezier token carries.
+ * token or keyframe easing may name a keyword, and a caller evaluating it needs
+ * the same points a cubic-bezier string carries.
  */
 const KEYWORD_CURVES: Record<string, readonly [number, number, number, number]> = {
   linear: [0, 0, 1, 1],
@@ -43,14 +43,14 @@ const KEYWORD_CURVES: Record<string, readonly [number, number, number, number]> 
   'ease-in-out': [0.42, 0, 0.58, 1],
 }
 
-/** A token's four control points, in the form the CSS function takes them. */
-function curveOf(token: string): readonly [number, number, number, number] {
-  const held = CURVES.get(token)
+/** A CSS easing string's four control points. */
+function parseCurve(easing: string, label: string): readonly [number, number, number, number] {
+  const value = easing.trim()
+  const held = CURVES.get(value)
   if (held !== undefined) return held
-  const value = motionEase(token)
   const keyword = KEYWORD_CURVES[value]
   if (keyword !== undefined) {
-    CURVES.set(token, keyword)
+    CURVES.set(value, keyword)
     return keyword
   }
   const match = /^cubic-bezier\(([^)]+)\)$/.exec(value)
@@ -58,10 +58,10 @@ function curveOf(token: string): readonly [number, number, number, number] {
   const [x1, y1, x2, y2] = parts
   if (parts.length !== 4 || x1 === undefined || y1 === undefined || x2 === undefined || y2 === undefined
     || ![x1, y1, x2, y2].every(Number.isFinite)) {
-    throw new Error(`shared/motion: ${token} is "${value}", which has no control points to evaluate`)
+    throw new Error(`shared/motion: ${label} is "${value}", which has no control points to evaluate`)
   }
   const points = [x1, y1, x2, y2] as const
-  CURVES.set(token, points)
+  CURVES.set(value, points)
   return points
 }
 
@@ -71,9 +71,13 @@ function bezierAt(t: number, first: number, second: number) {
   return 3 * rest * rest * t * first + 3 * rest * t * t * second + t * t * t
 }
 
-/** Solve `x(t) = progress` and return `y(t)`; bisection requires the token curves' monotonic x axis. */
-export function motionEaseAt(token: string, progress: number): number {
-  const [x1, y1, x2, y2] = curveOf(token)
+/** Evaluate a CSS easing string (`linear`, keyword or `cubic-bezier(...)`) at `progress`. */
+export function easeValueAt(easing: string, progress: number): number {
+  if (progress <= 0) return 0
+  if (progress >= 1) return 1
+  const value = easing.trim()
+  if (value === 'linear') return progress
+  const [x1, y1, x2, y2] = parseCurve(value, 'easing')
   let low = 0
   let high = 1
   // 24 halvings put the answer within a ten-millionth, past what a pixel of
@@ -84,4 +88,12 @@ export function motionEaseAt(token: string, progress: number): number {
     else high = middle
   }
   return bezierAt((low + high) / 2, y1, y2)
+}
+
+/** Solve `x(t) = progress` and return `y(t)`; bisection requires the token curves' monotonic x axis. */
+export function motionEaseAt(token: string, progress: number): number {
+  const value = motionEase(token)
+  // Validate under the token name so a bad token points to itself.
+  parseCurve(value, token)
+  return easeValueAt(value, progress)
 }

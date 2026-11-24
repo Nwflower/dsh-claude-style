@@ -41,6 +41,7 @@ export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let reading: ReturnType<typeof readRegions> | null = null
   let watchedHeader: HTMLElement | null = null
   let stopMenuWatch: (() => void) | null = null
+  let menuOpen = false
   let markedUtilities: Element[] = []
 
   function readRegions() {
@@ -74,13 +75,18 @@ export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       || reading.rightbar?.contains(target) === true || reading.rightbarHandle?.contains(target) === true
   }
 
-  /** Keep the toolbar up while any menu opened from the header stands on screen (D43). */
-  function headerMenuOpen() {
-    return reading?.header.querySelector(`${MENU_TRIGGER_SELECTOR}[aria-expanded="true"]`) != null
+  /** Refresh the cached open state of header menus so pointer moves avoid DOM queries (D43). */
+  function refreshMenuOpen(header: HTMLElement | null) {
+    menuOpen = header?.querySelector(`${MENU_TRIGGER_SELECTOR}[aria-expanded="true"]`) != null
+  }
+
+  function hovered() {
+    return reading?.header.matches(':hover') === true || reading?.content?.matches(':hover') === true
+      || reading?.rightbar?.matches(':hover') === true || reading?.rightbarHandle?.matches(':hover') === true
   }
 
   function write(inside: boolean) {
-    const shown = !readPrefs().hideToolbarOutsideConversation || inside || headerMenuOpen()
+    const shown = !readPrefs().hideToolbarOutsideConversation || inside || menuOpen
     stamp.mark(reading?.header ?? null, shown ? 'shown' : 'hidden')
   }
 
@@ -100,14 +106,29 @@ export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (watchedHeader !== header) {
       stopMenuWatch?.()
       watchedHeader = header
-      stopMenuWatch = header === null ? null : subscribeMutations(header, { subtree: true, attributeFilter: ['aria-expanded'] }, schedule)
+      stopMenuWatch = header === null
+        ? null
+        : subscribeMutations(
+          header,
+          { subtree: true, childList: true, attributeFilter: ['aria-expanded'] },
+          () => {
+            const wasOpen = menuOpen
+            refreshMenuOpen(watchedHeader)
+            if (menuOpen !== wasOpen) write(hovered())
+            schedule()
+          },
+        )
     }
-    write(reading?.header.matches(':hover') === true || reading?.content?.matches(':hover') === true
-      || reading?.rightbar?.matches(':hover') === true || reading?.rightbarHandle?.matches(':hover') === true)
+    refreshMenuOpen(header)
+    write(hovered())
   }
 
   function onPointer(event: PointerEvent) {
     if (event.pointerType === 'touch') return
+    if (!readPrefs().hideToolbarOutsideConversation || menuOpen) {
+      write(true)
+      return
+    }
     write(keepsToolbar(event.target))
   }
 

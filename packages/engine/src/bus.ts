@@ -517,7 +517,7 @@ export interface MarkerList<T extends Element> {
  * subscription watches the attribute names the selector reads and answers with
  * the elements carrying it, sorted by nothing the caller may depend on.
  */
-export function observeMarker<T extends Element>(selector: string): MarkerList<T> {
+export function observeMarker<T extends Element>(selector: string, onChange?: () => void): MarkerList<T> {
   const matches = new Set<Element>(document.querySelectorAll(selector))
   const stop = subscribeMutations(document.body, {
     childList: true,
@@ -525,23 +525,48 @@ export function observeMarker<T extends Element>(selector: string): MarkerList<T
     attributes: true,
     attributeFilter: markerAttributes(selector),
   }, records => {
+    let changed = false
     for (const record of records) {
       if (record.type === 'attributes') {
         const target = record.target
         if (!(target instanceof Element)) continue
-        if (target.matches(selector)) matches.add(target)
-        else matches.delete(target)
+        if (target.matches(selector)) {
+          if (!matches.has(target)) {
+            matches.add(target)
+            changed = true
+          }
+        } else if (matches.delete(target)) {
+          changed = true
+        }
         continue
       }
       // A removal drops the node now; what stood under it is dropped by the read
       // below, which keeps a subtree taken away from holding the transcript.
-      for (const node of record.removedNodes) if (node instanceof Element) matches.delete(node)
+      for (const node of record.removedNodes) {
+        if (!(node instanceof Element)) continue
+        if (matches.delete(node)) changed = true
+        for (const item of matches) {
+          if (node.contains(item)) {
+            matches.delete(item)
+            changed = true
+          }
+        }
+      }
       for (const node of record.addedNodes) {
         if (!(node instanceof Element)) continue
-        if (node.matches(selector)) matches.add(node)
-        for (const found of node.querySelectorAll(selector)) matches.add(found)
+        if (node.matches(selector) && !matches.has(node)) {
+          matches.add(node)
+          changed = true
+        }
+        for (const found of node.querySelectorAll(selector)) {
+          if (!matches.has(found)) {
+            matches.add(found)
+            changed = true
+          }
+        }
       }
     }
+    if (changed) onChange?.()
   })
   return {
     all() {

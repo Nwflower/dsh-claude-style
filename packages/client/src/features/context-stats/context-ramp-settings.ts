@@ -7,6 +7,7 @@ import {
   serializeContextRamp,
 } from '@dsh-claude-style/contracts/context-ramp'
 import { CONTEXT_DISPLAY_PIE } from '../../constants'
+import { pageHidden, subscribePageHidden } from '../../core/page-visibility'
 import { motionReduced } from '../../core/prefs'
 import { motionMs } from '../../shared/motion'
 import { contextPieImage } from './context-meter-pie'
@@ -24,8 +25,16 @@ import type { Prefs } from '../../constants'
 const HEX_COLOR_RE = /^#?[0-9a-f]{6}$/i
 const STATIC_PREVIEW_PERCENT = 68
 
-/** Animate preview occupancy smoothly from 1% up to 100% and back to 1%. */
-export function useAnimatedMeterPercent(disabled: boolean | undefined, motionPref: Prefs['motion']): number {
+/**
+ * Animate preview occupancy smoothly from 1% up to 100% and back to 1%,
+ * suspending the frame loop while the page is hidden or the preview container
+ * is scrolled outside the viewport (D40).
+ */
+export function useAnimatedMeterPercent(
+  disabled: boolean | undefined,
+  motionPref: Prefs['motion'],
+  containerRef?: React.RefObject<HTMLElement | null>,
+): number {
   const [percent, setPercent] = React.useState(() => (
     disabled === true || motionReduced() ? STATIC_PREVIEW_PERCENT : 1
   ))
@@ -35,25 +44,72 @@ export function useAnimatedMeterPercent(disabled: boolean | undefined, motionPre
       return
     }
     const period = motionMs('--dsh-claude-period-preview-meter')
-    const startedAt = performance.now()
+    let elapsed = 0
+    let resumedAt: number | null = null
     let lastShown = 1
-    setPercent(1)
     let frameId = 0
+    let hidden = pageHidden()
+    let visible = true
+    setPercent(1)
+
+    const stopLoop = () => {
+      if (frameId === 0) return
+      window.cancelAnimationFrame(frameId)
+      frameId = 0
+      if (resumedAt !== null) {
+        elapsed = (elapsed + Math.max(0, performance.now() - resumedAt)) % period
+        resumedAt = null
+      }
+    }
+
     const tick = (now: number) => {
-      if (!document.hidden) {
-        const phase = (((now - startedAt) % period) + period) % period / period
-        const wave = (1 - Math.cos(2 * Math.PI * phase)) / 2
-        const next = Math.min(100, Math.max(1, Math.round(1 + 99 * wave)))
-        if (next !== lastShown) {
-          lastShown = next
-          setPercent(next)
-        }
+      frameId = 0
+      if (hidden || !visible) return
+      if (resumedAt === null) resumedAt = now
+      const phase = (((elapsed + Math.max(0, now - resumedAt)) % period) + period) % period / period
+      const wave = (1 - Math.cos(2 * Math.PI * phase)) / 2
+      const next = Math.min(100, Math.max(1, Math.round(1 + 99 * wave)))
+      if (next !== lastShown) {
+        lastShown = next
+        setPercent(next)
       }
       frameId = window.requestAnimationFrame(tick)
     }
-    frameId = window.requestAnimationFrame(tick)
-    return () => window.cancelAnimationFrame(frameId)
-  }, [disabled, motionPref])
+
+    const syncLoop = () => {
+      if (hidden || !visible) {
+        stopLoop()
+        return
+      }
+      if (frameId !== 0) return
+      resumedAt = performance.now()
+      frameId = window.requestAnimationFrame(tick)
+    }
+
+    const stopVisibility = subscribePageHidden(nextHidden => {
+      hidden = nextHidden
+      syncLoop()
+    })
+
+    const target = containerRef?.current ?? null
+    let observer: IntersectionObserver | null = null
+    if (target !== null && typeof IntersectionObserver === 'function') {
+      observer = new IntersectionObserver(entries => {
+        const entry = entries[entries.length - 1]
+        if (entry === undefined) return
+        visible = entry.isIntersecting
+        syncLoop()
+      })
+      observer.observe(target)
+    }
+
+    syncLoop()
+    return () => {
+      stopLoop()
+      stopVisibility()
+      observer?.disconnect()
+    }
+  }, [containerRef, disabled, motionPref])
   return percent
 }
 
@@ -266,6 +322,7 @@ export function ContextRampEditor(props: {
   const canAdd = activeStops.length < CONTEXT_RAMP_MAX_STOPS && !disabled
   const canRemove = activeStops.length > CONTEXT_RAMP_MIN_STOPS
   const addHint = copy('contextRampAddHint').replace('{max}', String(CONTEXT_RAMP_MAX_STOPS))
+  const trackGradient = React.useMemo(() => contextRampGradientCss(activeStops), [activeStops])
 
   return React.createElement(
     'div',
@@ -277,7 +334,7 @@ export function ContextRampEditor(props: {
         className: 'dsh-claude-context-ramp-track',
         'data-can-add': canAdd ? '' : undefined,
         title: canAdd ? addHint : undefined,
-        style: { backgroundImage: contextRampGradientCss(activeStops) },
+        style: { backgroundImage: trackGradient },
         onClick(event: React.MouseEvent<HTMLDivElement>) {
           if (!canAdd || event.target !== event.currentTarget) return
           const at = percentFromPointer(event.clientX)

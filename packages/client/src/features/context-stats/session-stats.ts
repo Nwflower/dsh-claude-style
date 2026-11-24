@@ -13,9 +13,9 @@ import { createStatsCount } from './stats-count'
 import { createStreamEstimate } from './stream-estimate'
 import { adoptBillingRows, billingRows, createSessionCost, loadPrices, priceDocument, priceGeneration } from './session-cost'
 import { noteUnpricedModel } from './billing-editor'
-import { paintContextPie, readPieRest, releaseContextPie } from './context-meter-pie'
+import { fallbackPieRest, paintContextPie, readPieRest, releaseContextPie } from './context-meter-pie'
 import { CONTEXT_STATS_ATTR, CONTEXT_PANEL_ATTR, clearStrayContextNodes, contextMeters, contextPanel, findContextMeter, markContextMeter, meterOccupancy, releaseCardWatch, releaseDialogWatch } from './stats-panel'
-import { isContextDarkTheme, writeContextRamp } from './context-ramp'
+import { contextRampKey, isContextDarkTheme, writeContextRamp } from './context-ramp'
 import { priceFor, priceModelId, priceTierAt } from '@dsh-claude-style/contracts/prices'
 import { platformBilledProvider } from '../../shared/account-balance'
 import { overlayBilling } from '@dsh-claude-style/contracts/billing-table'
@@ -239,8 +239,10 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     scheduleNumbers()
   })
 
-  /** The unoccupied plate colour this frame's read phase took, until sync uses it. */
+  /** The unoccupied plate colour read during the pass's read phase (D40). */
   let pieRest: PieRest | null = null
+  let pieRestDark: boolean | null = null
+  let lastMeterRamp: { meter: HTMLElement, key: string | null, graphicRgb: string | null } | null = null
 
   /**
    * The occupancy a provider sample answered for the shown session, kept while
@@ -468,14 +470,30 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     if (skinRing !== null && ringRoot !== null) skinRing.setReading(occupancy)
     else if (meter !== null) {
       const prefs = readPrefs()
-      const graphicRgb = writeContextRamp(meter, occupancy, prefs.contextRampMode, prefs.contextRamp, isContextDarkTheme())
+      const dark = isContextDarkTheme()
+      const rampKey = contextRampKey(occupancy, prefs.contextRampMode, prefs.contextRamp, dark)
+      let graphicRgb: string | null
+      if (lastMeterRamp !== null && lastMeterRamp.meter === meter && lastMeterRamp.key === rampKey) {
+        graphicRgb = lastMeterRamp.graphicRgb
+      } else {
+        graphicRgb = writeContextRamp(meter, occupancy, prefs.contextRampMode, prefs.contextRamp, dark)
+        lastMeterRamp = { meter, key: rampKey, graphicRgb }
+      }
       if (prefs.contextDisplay !== CONTEXT_DISPLAY_PIE || peerPresent('dsh-chat-ux')) releaseContextPie(meter)
       else {
-        const stale = pieRest === null || pieRest.trigger !== meter.querySelector('button')
-        paintContextPie(meter, occupancy, graphicRgb, stale ? readPieRest(meter) : pieRest)
+        const trigger = meter.querySelector('button')
+        const measured = trigger instanceof HTMLElement && pieRest !== null && pieRest.trigger === trigger && pieRestDark === dark
+          ? pieRest
+          : null
+        if (measured === null && trigger instanceof HTMLElement) schedulePass()
+        paintContextPie(
+          meter,
+          occupancy,
+          graphicRgb,
+          measured ?? (trigger instanceof HTMLElement ? fallbackPieRest(trigger, dark) : null),
+        )
       }
     }
-    pieRest = null
     // The line of numbers is the panel's second trigger, bound on every pass in
     // either position, so switching back finds the same line driving the panel.
     const line = inline.root()
@@ -502,9 +520,9 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
       // Only a meter that keeps its place, drawn as a pie, is read here: the
       // skin's ring reads its own plate colour (meter-ring.ts).
       const skinRing = ring()
-      pieRest = skinRing?.root() != null || meter === null || peerPresent('dsh-chat-ux') || readPrefs().contextDisplay !== CONTEXT_DISPLAY_PIE
-        ? null
-        : readPieRest(meter)
+      const active = skinRing?.root() == null && meter !== null && !peerPresent('dsh-chat-ux') && readPrefs().contextDisplay === CONTEXT_DISPLAY_PIE
+      pieRest = active ? readPieRest(meter) : null
+      pieRestDark = pieRest === null ? null : isContextDarkTheme()
     },
     /** One pass: keep the numbers current on whichever surface the position names. */
     sync() {
@@ -535,6 +553,9 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     /** Drop the appends, the line, the projection subscriptions and the host-node bindings. */
     teardown() {
       numbersStopped = true
+      pieRest = null
+      pieRestDark = null
+      lastMeterRamp = null
       if (cancelNumbers !== null) cancelNumbers()
       cancelNumbers = null
       if (meterTextStop !== null) meterTextStop()

@@ -11,6 +11,16 @@ export const CONTEXT_INK_VAR = '--dsh-claude-context-ink'
 
 const ACHROMATIC_CHROMA = 0.005
 const MIN_CONTEXT_INK_CONTRAST = 3.5
+const RAMP_CACHE_LIMIT = 256
+
+const inkCache = new Map<string, string>()
+const evaluationCache = new Map<string, ContextRampReading>()
+
+function rememberBounded<Value>(cache: Map<string, Value>, key: string, value: Value): Value {
+  if (cache.size >= RAMP_CACHE_LIMIT) cache.clear()
+  cache.set(key, value)
+  return value
+}
 
 export interface ContextRampReading {
   readonly graphic: string
@@ -55,8 +65,13 @@ export function interpolateOklchHex(firstHex: string, secondHex: string, ratio: 
 /** Keep a custom stop's percentage text legible against the active canvas without shifting its hue. */
 export function readableContextInk(hex: string, dark: boolean): string {
   const normalized = hex.toLowerCase()
+  const key = `${dark ? 'd' : 'l'}:${normalized}`
+  const cached = inkCache.get(key)
+  if (cached !== undefined) return cached
   const canvas = dark ? INK_DARK : INK_LIGHT
-  if (contrastRatio(normalized, canvas) >= MIN_CONTEXT_INK_CONTRAST) return normalized
+  if (contrastRatio(normalized, canvas) >= MIN_CONTEXT_INK_CONTRAST) {
+    return rememberBounded(inkCache, key, normalized)
+  }
   const { l, c, h } = oklchOf(normalized)
   let low = dark ? l : 0
   let high = dark ? 1 : l
@@ -74,7 +89,7 @@ export function readableContextInk(hex: string, dark: boolean): string {
       else high = mid
     }
   }
-  return best
+  return rememberBounded(inkCache, key, best)
 }
 
 /** Evaluate an occupancy percentage against an ordered stop list. */
@@ -96,6 +111,16 @@ export function contextRampColorAt(percent: number, stops: readonly ContextRampS
   }
 }
 
+/** Stable value key identifying one evaluated ramp input tuple. */
+export function contextRampKey(
+  percent: number | null,
+  mode: ContextRampMode,
+  customRamp: string,
+  dark: boolean,
+): string | null {
+  return percent === null ? null : `${dark ? 1 : 0}|${mode}|${customRamp}|${percent}`
+}
+
 /** Evaluate one occupancy reading into graphic colour, RGB paint and contrast-checked text ink. */
 export function evaluateContextRamp(
   percent: number,
@@ -103,15 +128,18 @@ export function evaluateContextRamp(
   customRamp: string,
   dark: boolean,
 ): ContextRampReading {
+  const key = `${dark ? 1 : 0}|${mode}|${customRamp}|${percent}`
+  const cached = evaluationCache.get(key)
+  if (cached !== undefined) return cached
   const stops = resolveContextRampStops(mode, customRamp, dark)
   const { graphic, span } = contextRampColorAt(percent, stops)
   const ink = readableContextInk(graphic, dark)
-  return {
+  return rememberBounded(evaluationCache, key, {
     graphic,
     graphicRgb: hexToCssRgb(graphic),
     ink,
     span,
-  }
+  })
 }
 
 /** Build a `linear-gradient` CSS value matching `contextRampColorAt` across 0–100 %. */

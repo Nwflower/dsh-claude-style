@@ -46,6 +46,21 @@ export interface PieRest {
 }
 
 /**
+ * Read the unoccupied plate colour declared on `element` (read phase, D40).
+ */
+export function readPieRestColor(element: Element): string {
+  return getComputedStyle(element).getPropertyValue(REST_VAR).trim()
+}
+
+/** Static fallback matching `composer/vars.css` when a write runs before its read phase. */
+export function fallbackPieRest(trigger: HTMLElement, dark: boolean): PieRest {
+  return {
+    trigger,
+    rest: dark ? 'rgba(250, 249, 245, 0.18)' : 'rgba(20, 20, 19, 0.14)',
+  }
+}
+
+/**
  * Read the unoccupied plate colour the meter's pie takes, or null while the
  * meter has no trigger. Reading a computed style settles the page's styles, so
  * the caller takes this in the pass's read phase (D40).
@@ -57,7 +72,7 @@ export function readPieRest(meter: HTMLElement): PieRest | null {
   if (!(trigger instanceof HTMLElement)) return null
   return {
     trigger,
-    rest: getComputedStyle(trigger).getPropertyValue(REST_VAR).trim(),
+    rest: readPieRestColor(trigger),
   }
 }
 

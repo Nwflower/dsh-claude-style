@@ -45,12 +45,22 @@ const STORAGE_KEY = SECTION_FOLD_STORAGE_KEY
 const DEFAULT_FOLDED = new Set(['claude-style-stats', 'claude-style-tokens'])
 
 let foldActive = true
+let activeStored: Record<string, boolean> = {}
 const listeners = new Set<() => void>()
+
+function notifyListeners() {
+  for (const listener of listeners) listener()
+}
 
 function setFoldActive(next: boolean) {
   if (foldActive === next) return
   foldActive = next
-  for (const listener of listeners) listener()
+  notifyListeners()
+}
+
+function subscribeFoldState(listener: () => void) {
+  listeners.add(listener)
+  return () => { listeners.delete(listener) }
 }
 
 /** Whether the skin's section folding is currently active rather than yielded to the host. */
@@ -60,14 +70,13 @@ export function isSectionFoldActive() {
 
 /** React subscription to the active/yielded state, read by `section.actions` summary readings. */
 export function useSectionFoldActive() {
-  return React.useSyncExternalStore(
-    (listener) => {
-      listeners.add(listener)
-      return () => { listeners.delete(listener) }
-    },
-    () => foldActive,
-    () => foldActive,
-  )
+  return React.useSyncExternalStore(subscribeFoldState, () => foldActive, () => foldActive)
+}
+
+/** Whether section `id` is currently folded under active skin folding (D113). */
+export function useSectionFolded(id: string) {
+  const snapshot = () => foldActive && isFolded(id, activeStored)
+  return React.useSyncExternalStore(subscribeFoldState, snapshot, snapshot)
 }
 
 function readStoredFolded(): Record<string, boolean> {
@@ -164,10 +173,53 @@ function applySection(section: Element, folded: boolean) {
  */
 export function installSectionFold() {
   const stored = readStoredFolded()
+  activeStored = stored
+  notifyListeners()
+
+  let watchedPanels: HTMLElement[] = []
+  let stopPanelWatches: (() => void)[] = []
+
+  function clearPanelWatches() {
+    for (const stop of stopPanelWatches) stop()
+    stopPanelWatches = []
+    watchedPanels = []
+  }
+
+  /** Skip batches consisting solely of the skin's own `aria-expanded` writes on marked fold headers. */
+  function isSelfToggleBatch(records: MutationRecord[]) {
+    for (const record of records) {
+      if (record.type !== 'attributes' || record.attributeName !== 'aria-expanded') return false
+      const target = record.target
+      if (!(target instanceof Element) || !target.hasAttribute(SESSION_PANEL_FOLD_HEAD_ATTR)) return false
+      const section = target.parentElement
+      const id = section?.getAttribute(SESSION_PANEL_SECTION_ATTRIBUTE) ?? ''
+      if (id === '') return false
+      const expected = isFolded(id, stored) ? 'false' : 'true'
+      if (target.getAttribute('aria-expanded') !== expected) return false
+    }
+    return true
+  }
 
   function syncPanels() {
     const allPanels = panels.all()
+    const changed = allPanels.length !== watchedPanels.length || allPanels.some((panel, at) => panel !== watchedPanels[at])
+    if (changed) {
+      clearPanelWatches()
+      watchedPanels = [...allPanels]
+      // Scope mutation observation strictly to mounted panels so chat-stream
+      // mutations across document.body never wake section folding (D40).
+      stopPanelWatches = watchedPanels.map(panel => subscribeMutations(panel, {
+        subtree: true,
+        childList: true,
+        attributes: true,
+        attributeFilter: [...NATIVE_FOLD_ATTRS, SESSION_PANEL_SECTION_ATTRIBUTE],
+        skipQuiet: true,
+      }, records => {
+        if (!isSelfToggleBatch(records)) syncPanels()
+      }))
+    }
     if (allPanels.length === 0) return
+    const sectionsByPanel: Element[][] = []
     for (const panel of allPanels) {
       const sections = [...panel.querySelectorAll(SESSION_PANEL_SECTION_SELECTOR)]
       if (sections.length === 0) continue
@@ -176,10 +228,11 @@ export function installSectionFold() {
         setFoldActive(false)
         return
       }
+      sectionsByPanel.push(sections)
     }
     setFoldActive(true)
-    for (const panel of allPanels) {
-      for (const section of panel.querySelectorAll(SESSION_PANEL_SECTION_SELECTOR)) {
+    for (const sections of sectionsByPanel) {
+      for (const section of sections) {
         const id = section.getAttribute(SESSION_PANEL_SECTION_ATTRIBUTE)
         if (id === null || id === '') continue
         applySection(section, isFolded(id, stored))
@@ -203,6 +256,7 @@ export function installSectionFold() {
     stored[id] = next
     writeStoredFolded(stored)
     applySection(section, next)
+    notifyListeners()
     return true
   }
 
@@ -218,14 +272,6 @@ export function installSectionFold() {
   }
 
   const panels = observeMatches<HTMLElement>(SESSION_PANEL_SELECTOR, syncPanels)
-  const stopMutations = subscribeMutations(document.body, {
-    subtree: true,
-    childList: true,
-    attributes: true,
-    attributeFilter: [...NATIVE_FOLD_ATTRS, SESSION_PANEL_SECTION_ATTRIBUTE],
-  }, () => {
-    if (panels.all().length > 0) syncPanels()
-  })
   document.addEventListener('click', onClick)
   document.addEventListener('keydown', onKeyDown)
   syncPanels()
@@ -233,9 +279,11 @@ export function installSectionFold() {
   return () => {
     document.removeEventListener('click', onClick)
     document.removeEventListener('keydown', onKeyDown)
-    stopMutations()
+    clearPanelWatches()
     for (const panel of panels.all()) stripPanel(panel)
     panels.release()
+    activeStored = {}
     setFoldActive(true)
+    notifyListeners()
   }
 }

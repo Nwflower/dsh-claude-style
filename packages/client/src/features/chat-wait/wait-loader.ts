@@ -1,5 +1,8 @@
+import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { motionReduced } from '../../core/prefs'
 import { motionEase, motionEaseAt, motionMs } from '../../shared/motion'
+import { clockOf, originOf, samplerOf, waitFor } from './wait-loader-sampler'
+import type { DotSampler, MotionClock, Pose } from './wait-loader-sampler'
 
 /**
  * The waiting loader's four dot motions: it holds one while the model outputs
@@ -61,24 +64,8 @@ type LoaderState = {
   outputting: boolean
   /** When the last hand-over began, so the next one waits out the minimum gap. */
   lastHandOverAt: number
-}
-
-/** A motion's own clock on one dot: its turn, whether every other turn runs backwards, and how far it has run. */
-type MotionClock = {
-  motion: CSSAnimation
-  turn: number
-  alternate: boolean
-  active: number
-}
-
-/** A dot's loader-space pose: scale origin, untranslated position and size. */
-type Pose = {
-  x: number
-  y: number
-  originX: number
-  originY: number
-  scaleX: number
-  scaleY: number
+  /** Cancels a hand-over deferred to the next frame so it never runs mid-microtask after DOM writes (D40). */
+  cancelPending: (() => void) | null
 }
 
 const loaders = new WeakMap<HTMLElement, LoaderState>()
@@ -122,71 +109,6 @@ function timingOf(lane: Element): LaneTiming {
   const leaves = sharesOf(style, '--dsh-claude-dot-leaves')
   if (leaves.length === 0) throw new Error('chat-wait: a loader lane declares no moment its dots stand still (chat-wait.css)')
   return { arrives: sharesOf(style, '--dsh-claude-dot-arrives'), leaves, fade }
-}
-
-/** The motion the stylesheet runs on one dot, read off the animation itself. */
-function clockOf(dot: Element): MotionClock {
-  const motion = dot.getAnimations().find((one): one is CSSAnimation => one instanceof CSSAnimation)
-  const effect = motion === undefined ? null : motion.effect
-  const time = motion === undefined ? null : motion.currentTime
-  if (motion === undefined || effect === null || time === null) {
-    throw new Error('chat-wait: a loader dot carries no motion to hand over (chat-wait.css)')
-  }
-  const timing = effect.getTiming()
-  const turn = typeof timing.duration === 'number' ? timing.duration : 0
-  if (turn <= 0) throw new Error('chat-wait: a loader motion has no turn to hand over on (chat-wait.css)')
-  // The motion's own clock: its delay is the phase it was handed, negative.
-  return { motion, turn, alternate: timing.direction === 'alternate', active: Number(time) - Number(timing.delay ?? 0) }
-}
-
-/**
- * How far through its own keyframes a motion stands at `time`, as the share of
- * them it has reached: an `alternate` motion plays them backwards every other
- * turn.
- */
-function shareAt(turn: number, alternate: boolean, time: number): number {
-  const passed = Math.floor(time / turn)
-  const through = (time - passed * turn) / turn
-  return alternate && passed % 2 === 1 ? 1 - through : through
-}
-
-/**
- * How long until the motion next stands at one of these shares. The window is a
- * whole cycle, which is the longest a dot of any motion can be from one of its
- * own moments.
- */
-function waitFor(clock: MotionClock, shares: number[]): number {
-  const step = 1
-  const cycle = clock.turn * (clock.alternate ? 2 : 1)
-  for (let waited = 0; waited <= cycle; waited += step) {
-    const share = shareAt(clock.turn, clock.alternate, clock.active + waited)
-    if (shares.some((one) => Math.abs(share - one) <= step / clock.turn)) return waited
-  }
-  throw new Error(`chat-wait: a loader motion never reaches ${shares.join('/')} (chat-wait.css)`)
-}
-
-/**
- * Where a dot's motion will stand it `wait` from now. The motion is moved there
- * and back inside one task, so no frame is ever drawn at the moment read; the
- * dot carries none of the hand-over's own animations while it is read.
- */
-function poseAt(dot: HTMLElement, clock: MotionClock, wait: number): Pose {
-  const now = clock.motion.currentTime
-  clock.motion.currentTime = Number(now) + wait
-  const style = getComputedStyle(dot)
-  const translate = style.translate === 'none' ? [] : style.translate.split(' ').map(parseFloat)
-  const scale = style.scale === 'none' ? [] : style.scale.split(' ').map(parseFloat)
-  clock.motion.currentTime = now
-  const originX = dot.offsetLeft + dot.offsetWidth / 2
-  const originY = dot.offsetTop + dot.offsetHeight / 2
-  return {
-    x: originX + (translate[0] ?? 0),
-    y: originY + (translate[1] ?? 0),
-    originX,
-    originY,
-    scaleX: scale[0] ?? 1,
-    scaleY: scale[1] ?? scale[0] ?? 1,
-  }
 }
 
 /** Visual centre of the loader box, used as the pole of every swirl arc. */
@@ -355,8 +277,7 @@ function open(loader: HTMLElement, to: WaitLoaderMotion) {
  * synchronised arrival can rest on a level baseline before rippling into motion.
  */
 function arrivingSwirlKeyframes(
-  dot: HTMLElement,
-  clock: MotionClock,
+  sample: DotSampler,
   fromPos: Pose,
   toPos: Pose,
   center: { x: number; y: number },
@@ -375,7 +296,7 @@ function arrivingSwirlKeyframes(
     const t = wait + u * swirlSpan
     const offset = (t - wait) / total
     const target = u === 0 ? fromPos : u === 1 ? toPos : swirlAt(fromPolar, toPolar, delta, center, u)
-    const here = poseAt(dot, clock, t)
+    const here = sample(t)
     const dx = target.x - here.x
     const dy = target.y - here.y
     frames.push({
@@ -393,7 +314,7 @@ function arrivingSwirlKeyframes(
         frames.push({ offset, translate: '0px 0px' })
         continue
       }
-      const here = poseAt(dot, clock, t)
+      const here = sample(t)
       frames.push({
         offset,
         translate: `${(toPos.x - here.x).toFixed(2)}px ${(toPos.y - here.y).toFixed(2)}px`,
@@ -447,9 +368,11 @@ function morph(loader: HTMLElement, from: WaitLoaderMotion, to: WaitLoaderMotion
   const toEntry = laneEntry(to)
   const timing = timingOf(laneOf(loader, from))
   const leaving = dotsOf(loader, from)
+  const leavingOrigins = leaving.map(originOf)
   const leavingClocks = leaving.map(clockOf)
+  const leavingSamplers = leaving.map((dot, at) => samplerOf(dot, leavingClocks[at], leavingOrigins[at]))
   const moments = leavingClocks.map((clock) => waitFor(clock, timing.leaves))
-  const stood = leaving.map((dot, at) => poseAt(dot, leavingClocks[at], moments[at]))
+  const stood = leavingSamplers.map((sample, at) => sample(moments[at]))
   const maxMoment = Math.max(...moments)
   const sharedSwirlEnd = maxMoment + travel
   const waveSyncArrival = fromEntry.sync && to === 'bounce'
@@ -463,11 +386,13 @@ function morph(loader: HTMLElement, from: WaitLoaderMotion, to: WaitLoaderMotion
   // walk — so displacement begins promptly and asynchronously, with no wait at an end.
   place(loader, to, from)
   const arriving = dotsOf(loader, to)
+  const arrivingOrigins = arriving.map(originOf)
   const clocks = toEntry.sync
     ? anchor(arriving, start, sharedSwirlEnd, toEntry.landShare)
     : waveSyncArrival
       ? anchor(arriving, start, sharedSwirlEnd + settle, 0)
       : anchor(arriving, start)
+  const arrivingSamplers = arriving.map((dot, at) => samplerOf(dot, clocks[at], arrivingOrigins[at]))
   const swirlEnds = arriving.map((_, at) => {
     if (toEntry.sync || waveSyncArrival) return sharedSwirlEnd
     if (lineWalkArrival) return sharedSwirlEnd + at * lineStagger
@@ -478,11 +403,11 @@ function morph(loader: HTMLElement, from: WaitLoaderMotion, to: WaitLoaderMotion
     if (waveSyncArrival) return sharedSwirlEnd + settle + at * (clocks[at].turn / 6)
     return swirlEnds[at]
   })
-  const pairTargets = arriving.map((dot, at) => poseAt(dot, clocks[at], landEnds[at]))
+  const pairTargets = arrivingSamplers.map((sample, at) => sample(landEnds[at]))
   const pairs = pairDots(leaving.length, arriving.length, (one, two) => {
     const target = toEntry.sync || waveSyncArrival || lineWalkArrival
       ? pairTargets[two]
-      : poseAt(arriving[two], clocks[two], moments[one] + travel)
+      : arrivingSamplers[two](moments[one] + travel)
     return swirlCost(stood[one], target, center)
   })
   // The first of an arriving dot's partners to stand still is the one it takes
@@ -501,7 +426,7 @@ function morph(loader: HTMLElement, from: WaitLoaderMotion, to: WaitLoaderMotion
     if (partner === undefined) throw new Error('chat-wait: a loader dot was left out of the hand-over')
     const arrivingAt = partner[1]
     const endAt = toEntry.sync || waveSyncArrival ? sharedSwirlEnd : lineWalkArrival ? landEnds[arrivingAt] : moments[one] + travel
-    const meet = poseAt(arriving[arrivingAt], clocks[arrivingAt], waveSyncArrival || lineWalkArrival ? landEnds[arrivingAt] : endAt)
+    const meet = arrivingSamplers[arrivingAt](waveSyncArrival || lineWalkArrival ? landEnds[arrivingAt] : endAt)
     const dur = Math.max(1, endAt - moments[one])
     animations.push(handOverAnimation(
       dot,
@@ -516,11 +441,11 @@ function morph(loader: HTMLElement, from: WaitLoaderMotion, to: WaitLoaderMotion
     const wait = moments[lead]
     const swirlEnd = toEntry.sync || waveSyncArrival ? sharedSwirlEnd : lineWalkArrival ? swirlEnds[at] : wait + travel
     const landEnd = toEntry.sync ? sharedSwirlEnd : waveSyncArrival ? landEnds[at] : swirlEnd
-    const landed = poseAt(dot, clocks[at], landEnd)
+    const landed = arrivingSamplers[at](landEnd)
     animations.push(switchDot(dot, true, wait, start))
     animations.push(handOverAnimation(
       dot,
-      arrivingSwirlKeyframes(dot, clocks[at], stood[lead], landed, center, wait, swirlEnd, landEnd),
+      arrivingSwirlKeyframes(arrivingSamplers[at], stood[lead], landed, center, wait, swirlEnd, landEnd),
       { duration: Math.max(1, landEnd - wait), delay: wait, easing: 'linear', composite: 'add' },
       start,
     ))
@@ -572,14 +497,19 @@ function nextMotion(motion: WaitLoaderMotion): WaitLoaderMotion {
   return others[Math.floor(Math.random() * others.length)].motion
 }
 
+/** Drop any frame-queued hand-over on `state`. */
+function cancelPendingHandOver(state: LoaderState) {
+  if (state.cancelPending === null) return
+  state.cancelPending()
+  state.cancelPending = null
+}
+
 /**
  * Tell the loader whether the model is outputting right now (thinking, drawing
  * up or running a call, writing its answer). The motion holds while the model
  * outputs; the moment an output ends — the fall from outputting to silent — the
- * next motion takes over, but only once the hand-over in play has stood for the
- * minimum gap (`--dsh-claude-duration-dot-handover-gap`), so a run of quick
- * outputs cannot flip the motion faster than that. An output-end inside the gap
- * is passed over; the first one after it lays the next motion down.
+ * next motion takes over on the next frame (D40), once the hand-over in play
+ * has stood for the minimum gap (`--dsh-claude-duration-dot-handover-gap`).
  */
 export function setWaitLoaderOutputting(loader: HTMLElement, outputting: boolean) {
   const state = loaders.get(loader)
@@ -587,11 +517,19 @@ export function setWaitLoaderOutputting(loader: HTMLElement, outputting: boolean
   const was = state.outputting
   state.outputting = outputting
   if (!was || outputting) return
-  if (motionReduced() || !loader.isConnected) return
+  if (motionReduced() || !loader.isConnected || state.cancelPending !== null) return
   const now = timelineNow()
   if (now - state.lastHandOverAt < motionMs('--dsh-claude-duration-dot-handover-gap')) return
-  state.lastHandOverAt = now
-  handOver(loader, state, state.motion, nextMotion(state.motion))
+  // Schedule on the next frame so morph() never flushes style/layout inside a
+  // streaming microtask directly after DOM writes (D40).
+  state.cancelPending = requestFrame({
+    write() {
+      state.cancelPending = null
+      if (!loader.isConnected || loaders.get(loader) !== state || motionReduced()) return
+      state.lastHandOverAt = timelineNow()
+      handOver(loader, state, state.motion, nextMotion(state.motion))
+    },
+  })
 }
 
 /**
@@ -604,7 +542,7 @@ export function setWaitLoaderOutputting(loader: HTMLElement, outputting: boolean
 export function startWaitLoader(loader: HTMLElement) {
   if (loaders.has(loader)) return
   const opening = motionReduced() ? STILL_MOTION : LANES[Math.floor(Math.random() * LANES.length)].motion
-  const state: LoaderState = { motion: opening, handOvers: 0, outputting: false, lastHandOverAt: timelineNow() }
+  const state: LoaderState = { motion: opening, handOvers: 0, outputting: false, lastHandOverAt: timelineNow(), cancelPending: null }
   loaders.set(loader, state)
   handOver(loader, state, null, opening)
 }
@@ -620,6 +558,7 @@ export function startWaitLoader(loader: HTMLElement) {
 export function resyncWaitLoader(loader: HTMLElement) {
   const state = loaders.get(loader)
   if (state === undefined) return
+  cancelPendingHandOver(state)
   dropHandOver(loader)
   if (motionReduced()) {
     state.motion = STILL_MOTION
@@ -631,5 +570,7 @@ export function resyncWaitLoader(loader: HTMLElement) {
 
 /** Let go of one loader: a row leaving the page takes no hand-over with it. */
 export function releaseWaitLoader(loader: HTMLElement) {
+  const state = loaders.get(loader)
+  if (state !== undefined) cancelPendingHandOver(state)
   loaders.delete(loader)
 }

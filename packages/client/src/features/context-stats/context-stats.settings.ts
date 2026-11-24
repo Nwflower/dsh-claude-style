@@ -55,12 +55,19 @@ export const controls: SettingsControlsOf<typeof manifest> = {
   'billing-table': BillingTableRow,
 }
 
-function ContextDisplayPicker(props: SettingsRowView) {
-  const { prefs, write, disabled } = props
-  const dark = useDarkTheme()
-  const previewPercent = useAnimatedMeterPercent(disabled, prefs.motion)
-  const [draftStops, setDraftStops] = React.useState<ContextRampStop[] | null>(null)
-  const activeStops = draftStops ?? resolveContextRampStops(prefs.contextRampMode, prefs.contextRamp, dark)
+/** Preview cards isolated from the ramp editor so animated percentage ticks only redraw the two samples. */
+function ContextDisplayPreviewCards(props: {
+  value: Prefs['contextDisplay']
+  write(value: Prefs['contextDisplay']): void
+  disabled: boolean | undefined
+  motion: Prefs['motion']
+  stops: readonly ContextRampStop[]
+  showNumber: boolean
+  dark: boolean
+}) {
+  const { value, write, disabled, motion, stops, showNumber, dark } = props
+  const wrapRef = React.useRef<HTMLDivElement | null>(null)
+  const previewPercent = useAnimatedMeterPercent(disabled, motion, wrapRef)
 
   const options: PreviewOption<Prefs['contextDisplay']>[] = FACES.map(face => ({
     value: face.value,
@@ -73,8 +80,8 @@ function ContextDisplayPicker(props: SettingsRowView) {
         React.createElement(ContextMeterSample, {
           face: face.value,
           percent: previewPercent,
-          stops: activeStops,
-          showNumber: prefs.contextNumbers,
+          stops,
+          showNumber,
           dark,
         }),
       ),
@@ -85,6 +92,34 @@ function ContextDisplayPicker(props: SettingsRowView) {
       ),
     ],
   }))
+
+  return React.createElement(
+    'div',
+    { ref: wrapRef },
+    React.createElement(PreviewCards<Prefs['contextDisplay']>, {
+      cardClass: 'dsh-claude-context-display-card',
+      options,
+      value,
+      write,
+      disabled,
+      label: copy('contextDisplayTitle'),
+    }),
+  )
+}
+
+function ContextDisplayPicker(props: SettingsRowView) {
+  const { prefs, write, disabled } = props
+  const dark = useDarkTheme()
+  const [draftStops, setDraftStops] = React.useState<ContextRampStop[] | null>(null)
+  const resolvedStops = React.useMemo(
+    () => resolveContextRampStops(prefs.contextRampMode, prefs.contextRamp, dark),
+    [prefs.contextRampMode, prefs.contextRamp, dark],
+  )
+  const activeStops = draftStops ?? resolvedStops
+  const pickDisplay = React.useCallback(
+    (value: Prefs['contextDisplay']) => write({ contextDisplay: value }),
+    [write],
+  )
 
   const rampButtons = CONTEXT_RAMP_MODES.map(mode => React.createElement(
     'button',
@@ -115,13 +150,14 @@ function ContextDisplayPicker(props: SettingsRowView) {
   return React.createElement(
     'div',
     { className: 'dsh-claude-context-display-config' },
-    React.createElement(PreviewCards<Prefs['contextDisplay']>, {
-      cardClass: 'dsh-claude-context-display-card',
-      options,
+    React.createElement(ContextDisplayPreviewCards, {
       value: prefs.contextDisplay,
-      write: (value: Prefs['contextDisplay']) => write({ contextDisplay: value }),
+      write: pickDisplay,
       disabled,
-      label: copy('contextDisplayTitle'),
+      motion: prefs.motion,
+      stops: activeStops,
+      showNumber: prefs.contextNumbers,
+      dark,
     }),
     React.createElement(
       SettingsSubField,

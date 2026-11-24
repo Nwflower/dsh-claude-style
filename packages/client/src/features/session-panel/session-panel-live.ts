@@ -41,39 +41,68 @@ function figuresOf(sessionId: string): SessionFigures | null {
   return figures !== null && figures.sessionId === sessionId ? figures : null
 }
 
-/**
- * Follow the live reading of one session.
- * @param sessionId - the session the panel shows.
- * @returns the reading, or null while this session has none published.
- */
-export function useLiveFigures(sessionId: string): SessionFigures | null {
-  const read = React.useCallback(() => figuresOf(sessionId), [sessionId])
-  const [figures, setFigures] = React.useState<SessionFigures | null>(read)
-  React.useEffect(() => {
-    /** The subscription to the handle of the moment, while one answers. */
-    let stop: (() => void) | null = null
-    const detach = () => {
-      if (stop !== null) stop()
-      stop = null
-    }
-    const attach = () => {
-      const handle = registry?.contextStats
-      if (typeof handle?.onFigures === 'function') stop = handle.onFigures(() => { setFigures(read()) })
-      setFigures(read())
-    }
-    attach()
+/** Shared subscription over the statistics handle and its body mark so all panel surfaces share one bus watcher (D40). */
+const liveListeners = new Set<() => void>()
+let stopHandle: (() => void) | null = null
+let stopMark: (() => void) | null = null
+
+function notifyLiveListeners() {
+  for (const listener of liveListeners) listener()
+}
+
+function attachHandle() {
+  if (stopHandle !== null) {
+    stopHandle()
+    stopHandle = null
+  }
+  const handle = registry?.contextStats
+  if (typeof handle?.onFigures === 'function') {
+    stopHandle = handle.onFigures(notifyLiveListeners)
+  }
+}
+
+function subscribeLiveFigures(listener: () => void) {
+  liveListeners.add(listener)
+  if (liveListeners.size === 1) {
+    attachHandle()
     // The statistics feature is installed from a chunk of its own and can be
     // switched off under the tables (D76): its install stamps the body, and that
     // mark is what says the handle arrived or left. Without a handle the tables
     // print the route's folded figures again (session-panel-figures.ts).
-    const stopMark = subscribeMutations(document.body, { attributes: true, attributeFilter: [SESSION_STATS_ATTR] }, () => {
-      detach()
-      attach()
+    stopMark = subscribeMutations(document.body, { attributes: true, attributeFilter: [SESSION_STATS_ATTR] }, () => {
+      attachHandle()
+      notifyLiveListeners()
     })
-    return () => {
-      detach()
-      stopMark()
+  }
+  return () => {
+    liveListeners.delete(listener)
+    if (liveListeners.size > 0) return
+    if (stopHandle !== null) {
+      stopHandle()
+      stopHandle = null
     }
-  }, [read])
+    if (stopMark !== null) {
+      stopMark()
+      stopMark = null
+    }
+  }
+}
+
+/**
+ * Follow the live reading of one session. When `live` is false (the surface is
+ * folded away behind CSS), the caller keeps a static snapshot without waking on
+ * per-frame streaming ticks.
+ * @param sessionId - the session the panel shows.
+ * @param live - whether to subscribe to live per-frame updates.
+ * @returns the reading, or null while this session has none published.
+ */
+export function useLiveFigures(sessionId: string, live = true): SessionFigures | null {
+  const read = React.useCallback(() => figuresOf(sessionId), [sessionId])
+  const [figures, setFigures] = React.useState<SessionFigures | null>(read)
+  React.useEffect(() => {
+    setFigures(read())
+    if (!live) return undefined
+    return subscribeLiveFigures(() => { setFigures(read()) })
+  }, [live, read])
   return figures
 }

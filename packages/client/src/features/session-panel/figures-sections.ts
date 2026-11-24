@@ -11,6 +11,7 @@ import { usePanelReading } from './session-panel-data'
 import { panelFiguresOf } from './session-panel-figures'
 import type { PanelFigures } from './session-panel-figures'
 import { useLiveFigures } from './session-panel-live'
+import { useSectionFolded } from './section-fold'
 import { Skeleton, panelEntry } from './panel-rows'
 import type { PanelStats } from '@dsh-claude-style/contracts/session-panel'
 
@@ -39,12 +40,12 @@ function useBillingCurrency() {
  * until that reading speaks. Null while neither has answered, and `failed` once
  * the route failed with nothing to show.
  */
-export function useFigures(sessionId: string): { figures: PanelFigures | null, failed: boolean } {
+export function useFigures(sessionId: string, live = true): { figures: PanelFigures | null, failed: boolean } {
   const { value, failed } = usePanelReading(sessionId)
-  const live = useLiveFigures(sessionId)
+  const liveFigures = useLiveFigures(sessionId, live)
   const currency = useBillingCurrency()
   const settled = value?.stats ?? null
-  if (live !== null) return { figures: panelFiguresOf(live, settled), failed: false }
+  if (liveFigures !== null) return { figures: panelFiguresOf(liveFigures, settled), failed: false }
   if (settled !== null) return { figures: { stats: settled, cost: statsCostText(settled.cost, currency) }, failed: false }
   return { figures: null, failed: failed && value === null }
 }
@@ -99,7 +100,8 @@ export function speedText(stats: PanelStats) {
  * surface of one session, not a second set of numbers.
  */
 export const StatsSection = panelEntry(function StatsBody({ sessionId }) {
-  const { figures, failed } = useFigures(sessionId)
+  const folded = useSectionFolded('claude-style-stats')
+  const { figures, failed } = useFigures(sessionId, !folded)
   if (failed) return null
   if (figures === null) return h(PendingFigures, { labels: ['statsTurns', 'statsSteps', 'statsModelTime', 'statsToolTime'] })
   const stats = figures.stats
@@ -122,7 +124,8 @@ export const StatsSection = panelEntry(function StatsBody({ sessionId }) {
  * With billing off or a model no table prices, the cost row is left out.
  */
 export const TokensSection = panelEntry(function TokensBody({ sessionId }) {
-  const { figures, failed } = useFigures(sessionId)
+  const folded = useSectionFolded('claude-style-tokens')
+  const { figures, failed } = useFigures(sessionId, !folded)
   const tokens = useTokenText()
   if (failed) return null
   if (figures === null) return h(PendingFigures, { labels: ['statsUncachedInput', 'statsCacheRead', 'statsCacheWrite', 'statsOutput'] })

@@ -2,6 +2,7 @@ import * as React from 'react'
 import { DEPLOY_ROOT, assetUrlUnder } from '@dsh-claude-style/contracts/routes'
 import { CRAB_IDLE_SHEET_URL, DEEPY_SHEET_URLS, WHALE_GIRL_SHEET_URLS } from 'virtual:dsh-claude-style/generated'
 import { MASCOT_BRAND, MASCOT_CRAB, MASCOT_DEEPY, MASCOT_OFF, MASCOT_WHALEGIRL } from '../../constants'
+import { pageHidden, subscribePageHidden } from '../../core/page-visibility'
 import { resolveMascot } from '../../core/prefs'
 import { useMotionReduced } from '../../shared/page-state'
 import { PREVIEW_CARD_CLASS, PREVIEW_PICKER_CLASS, activateOnCardKey } from '../../shared/preview-cards'
@@ -66,6 +67,7 @@ function frameTranslate(spec: CharacterSpec, frame: number) {
 /** One character's idle sprite inside its preview stage, playing on WAAPI or pinned under reduced motion. */
 function MascotSpritePreview(props: { spec: CharacterSpec, reduced: boolean }) {
   const { spec, reduced } = props
+  const stageRef = React.useRef<HTMLSpanElement | null>(null)
   const stripRef = React.useRef<HTMLSpanElement | null>(null)
   const columns = spec.sheet.columns ?? 8
   const cellW = spec.sheet.box[2] + spec.gutter * 2
@@ -90,7 +92,33 @@ function MascotSpritePreview(props: { spec: CharacterSpec, reduced: boolean }) {
     }
     keyframes.push({ offset: 1, transform: frameTranslate(spec, 0) })
     const animation = strip.animate(keyframes, { duration, iterations: Infinity, fill: 'forwards' })
-    return () => { animation.cancel() }
+    let hidden = pageHidden()
+    let visible = true
+    const syncPlayback = () => {
+      if (hidden || !visible) animation.pause()
+      else animation.play()
+    }
+    const stopVisibility = subscribePageHidden(nextHidden => {
+      hidden = nextHidden
+      syncPlayback()
+    })
+    const stage = stageRef.current
+    let observer: IntersectionObserver | null = null
+    if (stage !== null && typeof IntersectionObserver === 'function') {
+      observer = new IntersectionObserver(entries => {
+        const entry = entries[entries.length - 1]
+        if (entry === undefined) return
+        visible = entry.isIntersecting
+        syncPlayback()
+      })
+      observer.observe(stage)
+    }
+    syncPlayback()
+    return () => {
+      stopVisibility()
+      observer?.disconnect()
+      animation.cancel()
+    }
   }, [spec, reduced])
 
   const windowStyle = {
@@ -108,7 +136,7 @@ function MascotSpritePreview(props: { spec: CharacterSpec, reduced: boolean }) {
 
   return React.createElement(
     'span',
-    { className: 'dsh-claude-mascot-card-stage', 'data-mascot': spec.id, 'aria-hidden': 'true' },
+    { ref: stageRef, className: 'dsh-claude-mascot-card-stage', 'data-mascot': spec.id, 'aria-hidden': 'true' },
     React.createElement(
       'span',
       { className: 'dsh-claude-mascot-card-window', style: windowStyle },

@@ -36,6 +36,11 @@ function occupancyFrom(face: HostSnapshotSource<unknown> | undefined) {
   return { used: Math.max(0, Math.min(window, used)), window }
 }
 
+function sameOccupancy(left: ContextOccupancy | null, right: ContextOccupancy | null) {
+  if (left === right) return true
+  return left !== null && right !== null && left.used === right.used && left.window === right.window
+}
+
 /**
  * Follow one session's occupancy (D112).
  *
@@ -44,9 +49,10 @@ function occupancyFrom(face: HostSnapshotSource<unknown> | undefined) {
  * section does not wait for that fold to say how full the window is. The
  * breakdown under the overview is the fold's, and takes its place when it answers.
  * @param sessionId - the session the panel shows.
+ * @param live - whether to subscribe to live projection frames while visible.
  * @returns the occupancy, or null while the projection names no window.
  */
-export function useLiveOccupancy(sessionId: string): ContextOccupancy | null {
+export function useLiveOccupancy(sessionId: string, live = true): ContextOccupancy | null {
   const read = React.useCallback(() => {
     const face = sessionProjectionFaces(panelHost(), sessionId, [OCCUPANCY_KEY])?.[OCCUPANCY_KEY]
     return occupancyFrom(face)
@@ -54,11 +60,16 @@ export function useLiveOccupancy(sessionId: string): ContextOccupancy | null {
   const [occupancy, setOccupancy] = React.useState<ContextOccupancy | null>(read)
   React.useEffect(() => {
     if (sessionId === '') return undefined
-    setOccupancy(read())
+    const refresh = () => {
+      const next = read()
+      setOccupancy(previous => (sameOccupancy(previous, next) ? previous : next))
+    }
+    refresh()
+    if (!live) return undefined
     const face = sessionProjectionFaces(panelHost(), sessionId, [OCCUPANCY_KEY])?.[OCCUPANCY_KEY]
     if (typeof face?.subscribe !== 'function') return undefined
-    return face.subscribe(() => { setOccupancy(read()) })
-  }, [read, sessionId])
+    return face.subscribe(refresh)
+  }, [live, read, sessionId])
   return occupancy
 }
 

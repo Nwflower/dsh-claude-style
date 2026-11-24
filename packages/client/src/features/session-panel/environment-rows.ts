@@ -22,17 +22,30 @@ export function ComputerRow() {
 function usePresetLabel() {
   const [preset, setPreset] = React.useState({ label: '', hint: '' })
   React.useEffect(() => {
-    const presets = observeMarker<HTMLElement>(PRESET)
+    let target: HTMLElement | null = null
+    let stopTarget: (() => void) | null = null
     const read = () => {
-      const node = presets.all()[0]
-      const label = (node?.textContent ?? '').trim()
-      const hint = (node?.getAttribute('title') ?? '').trim()
+      const label = (target?.textContent ?? '').trim()
+      const hint = (target?.getAttribute('title') ?? '').trim()
       setPreset(previous => (previous.label === label && previous.hint === hint ? previous : { label, hint }))
     }
-    const stop = subscribeMutations(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: [PART_ATTR, 'title'] }, read)
-    read()
+    // Watch text and title mutations only on the marked header-label element
+    // itself rather than observing characterData across document.body (D40).
+    const syncTarget = () => {
+      const next = presets.all()[0] ?? null
+      if (next !== target) {
+        stopTarget?.()
+        target = next
+        stopTarget = target === null
+          ? null
+          : subscribeMutations(target, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['title'] }, read)
+      }
+      read()
+    }
+    const presets = observeMarker<HTMLElement>(PRESET, syncTarget)
+    syncTarget()
     return () => {
-      stop()
+      stopTarget?.()
       presets.release()
     }
   }, [])
