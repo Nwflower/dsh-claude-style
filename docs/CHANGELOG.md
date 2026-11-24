@@ -2,6 +2,46 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.22.2] - 2026-11-24
+
+[中文](#cn-0.22.2) | [English](#en-0.22.2)
+
+<h3 id="cn-0.22.2">体验优化</h3>
+
+- 工作区标题处的「进行中 / 已归档」分段控件改为「工作区 / 已归档 / 全部」下拉菜单，默认工作区；触发按钮常驻替代标题文本，悬停底板环绕文字而不推移文字，菜单默认向下展开并与标题左对齐，全部一档由宿主列表混排已归档会话
+- 精简设置页与功能界面的冗余说明和内部术语，支持首页问候语随界面语言与品牌切换，修复消息回退弹窗在英文界面下的中文原因文本、单复数与零文件复选框问题。
+
+### 问题修复
+
+- 修复关闭重绘模型选择器时底栏宿主原生推理等级标签在长模型名称与促销徽章旁被截断为省略号的问题
+- 修复页面报告隐藏时菜单和侧栏可能保持透明、配色方案对话框无法关闭的问题，后台继续暂停皮肤的循环动画。
+- 将顶栏右侧工具与视图标签的自动显示范围调整为主会话列与宿主右侧面板，在顶栏菜单展开期间保持显示，移入左侧边栏、底部面板、顶栏空白拖拽带或窗口外部时隐藏，并连通桌面顶栏内标签与工具按钮间的 8px 横向间隙及底部边缘以消除移动闪退与从顶栏滑出窗口后的常显残留
+- 统一设置页卡片、分段器、圆盘色板、焦点环、禁用态、字号缩放与自定义计费表弹窗样式，修复计费表在非对话页丢失样式及品牌组合区边框与字体令牌失效的问题
+- 修复账号菜单弹层在同时存在内联或外部右偏移样式时被拉向窗口右边缘的问题
+- 修复开启页面缩放时插件管理页右上角刷新与安装按钮偏移并被顶栏裁剪的问题
+
+### 移除
+
+- 移除 HDSL 启动器账号契约与皮肤头像裁剪逻辑及宿主私有路由 `GET /dsh-claude-style/hdsl` 和 `GET /dsh-claude-style/hdsl-skin.png`
+
+<h3 id="en-0.22.2">Improvements</h3>
+
+- Replace the Active / Archived segments at the workspace heading with a Workspace / Archived / All dropdown defaulting to Workspace; the trigger permanently replaces the heading text with a hover plate that grows around the words without moving them, the card opens downward left-aligned with the heading, and All keeps archived rows among the others in the host's own list
+- Streamline redundant settings descriptions and internal jargon across the UI, localize home greetings by shell language and active brand, and fix Chinese-only rewind reasons, pluralization and empty-file checkboxes in the rewind confirmation modal.
+
+### Bug Fixes
+
+- Prevent the host model selector's reasoning effort label from truncating to an ellipsis beside long model names and promotion badges when the model picker restyle is off
+- Fix menus and sidebar content staying transparent and the colour scheme dialog failing to close while the page reports itself hidden. The skin still pauses its looping animations in the background.
+- Keep the right-hand toolbar and view tabs visible over the main conversation column and host right panel as well as while a header menu is open, fade them out over the left sidebar, bottom panel, blank caption drag strip and outside the window, and bridge the 8px gaps and lower margin across lifted caption controls so sliding between controls or out of the caption never flickers or leaves the toolbar stuck visible
+- Unify settings cards, segmented controls, colour discs, focus rings, disabled states, interface font scaling and the custom billing table modal, and fix missing billing styles outside active conversations and invalid brand lockup border and font tokens
+- Reset opposing right and bottom insets when positioning anchored popovers so the account menu stays aligned with its trigger
+- Counter-scale the plugin manager page's offscreen header measurement clone under page zoom so toolbar actions stay aligned without clipping
+
+### Removals
+
+- Remove the HDSL launcher account contract, skin head avatar cropping, and private host routes `GET /dsh-claude-style/hdsl` and `GET /dsh-claude-style/hdsl-skin.png`
+
 ## [0.22.1] - 2026-11-23
 
 [中文](#cn-0.22.1) | [English](#en-0.22.1)

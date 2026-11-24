@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-24",
-  "group": "removals",
-  "order": 0,
-  "external": true,
-  "zh": "移除 HDSL 启动器账号契约与皮肤头像裁剪逻辑及宿主私有路由 `GET /dsh-claude-style/hdsl` 和 `GET /dsh-claude-style/hdsl-skin.png`",
-  "en": "Remove the HDSL launcher account contract, skin head avatar cropping, and private host routes `GET /dsh-claude-style/hdsl` and `GET /dsh-claude-style/hdsl-skin.png`"
-}

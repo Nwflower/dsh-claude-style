@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-24",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "修复页面报告隐藏时菜单和侧栏可能保持透明、配色方案对话框无法关闭的问题，后台继续暂停皮肤的循环动画。",
-  "en": "Fix menus and sidebar content staying transparent and the colour scheme dialog failing to close while the page reports itself hidden. The skin still pauses its looping animations in the background."
-}
