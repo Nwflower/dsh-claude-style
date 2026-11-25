@@ -113,7 +113,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** How long a reading stands when the structure around its row did not move. */
   const REREAD_MS = 1000
   let stopped = false
-  let lastTickAt = 0
   /** The badge exits still playing; the teardown cancels every one of them. */
   const badgeTimers = new Set<number>()
 
@@ -451,7 +450,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (!row.hasAttribute(WAIT_ATTR)) row.setAttribute(WAIT_ATTR, '')
   }
 
-  /** The clock tick's only writes; the complete row pass retains its inputs. */
+  /** The seconds and the overtime badge, shared by the row pass and the clock tick. */
   function syncClockAndBadge(line: WaitLine, now: number, t: HostText) {
     line.clock.hidden = line.clockStart === null
     if (line.clockStart !== null) writeTextInPlace(line.clock, formatHostDuration(Math.max(1000, now - line.clockStart), t))
@@ -506,24 +505,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     row.removeAttribute(WAIT_ATTR)
   }
 
-  /** One clock frame: retain the tail geometry check, but avoid rebuilding every row's wording. */
-  function tickLines() {
-    if (stopped) return
-    const now = Date.now()
-    for (const [row, line] of lines) {
-      const held = wording.get(line.key)
-      const lockCrossed = held !== undefined && held.standing.until > lastTickAt && held.standing.until <= now
-      if (row.isConnected && line.hasTarget && !lockCrossed) continue
-      lastTickAt = now
-      syncLines()
-      return
-    }
-    lastTickAt = now
-    const t = hostChatSeat(ctx)
-    if (t === null) return
-    for (const line of lines.values()) syncClockAndBadge(line, now, t)
-  }
-
   function syncLines() {
     const t = hostChatSeat(ctx)
     const rows = t === null ? [] : runningRows.all()
@@ -568,7 +549,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
           read: readTails,
           write() {
             cancelTick = null
-            try { tickLines() } finally { writeTails() }
+            try { syncLines() } finally { writeTails() }
           },
         })
       }, CLOCK_MS)
