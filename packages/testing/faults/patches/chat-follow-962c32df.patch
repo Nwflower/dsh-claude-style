@@ -1,12 +1,12 @@
-diff --git a/packages/client/src/features/chat-follow/chat-follow.ts b/packages/client/src/features/chat-follow/chat-follow.ts
---- a/packages/client/src/features/chat-follow/chat-follow.ts
-+++ b/packages/client/src/features/chat-follow/chat-follow.ts
-@@ -277,7 +277,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
+diff --git a/packages/client/src/features/chat-follow/slide-motion.ts b/packages/client/src/features/chat-follow/slide-motion.ts
+--- a/packages/client/src/features/chat-follow/slide-motion.ts
++++ b/packages/client/src/features/chat-follow/slide-motion.ts
+@@ -181,7 +181,7 @@ const slideCarried = () => {
      // The curve the animation paints with, not the linear share of its
      // duration: with the two mixed up, every restart re-inflates the distance
      // the frame before it had already travelled (D95).
--    return slide.from * (1 - linear)
-+    return slide.from * (1 - motionEaseAt(GLIDE_TOKEN, linear))
+-    return state.slide.from * (1 - linear)
++    return state.slide.from * (1 - motionEaseAt(GLIDE_TOKEN, linear))
    }
  
    /**

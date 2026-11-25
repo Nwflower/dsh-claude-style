@@ -14,7 +14,8 @@ body[data-dsh-claude-style][data-dsh-claude-chat-follow] [data-step-process]:not
    is off: centred over the composer instead of the column's right edge, which
    the mascot stands on. Its
    two numbers are written per pass (chat-follow.ts): the button is fixed and the
-   column moves with the sidebars. */
+   column moves with the sidebars. The attribute in the selector below repeats the
+   literal FOLLOW_TAIL_ATTR writes; that constant (chat-follow.ts) is its only source. */
 body[data-dsh-claude-style][data-dsh-claude-chat-follow] [data-dsh-claude-follow-tail] {
   position: fixed !important;
   left: var(--dsh-claude-follow-tail-left) !important;
