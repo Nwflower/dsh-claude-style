@@ -1,6 +1,8 @@
 /* ---------- The settings page's pickers: one card per choice ---------- */
-/* Cards own their sample layout; settings.css owns the row shell. Named
-   choices can carry a visible label beside their preview. */
+/* This sheet owns the picker grid and the card shell, settings.css owns the row
+   shell, and a sample's own paint lives in the sheet of the feature it shows
+   (features/caret/caret.css, features/chat-wait/chat-wait.css). Named choices
+   can carry a visible label beside their preview. */
 
 body[data-dsh-claude-style] .dsh-claude-settings-row-block > .dsh-claude-preview-picker {
   align-self: stretch;
@@ -27,7 +29,9 @@ body[data-dsh-claude-style] .dsh-claude-settings-row-aside {
    the paint itself, which is why both read shared/motion.css; the caret's cards
    carry a sample line with the caret doing what the choice says; the reveal's
    carry a sample line whose characters arrive one after another; the ongoing
-   effect's carry a title followed by its status marker. The brand
+   effect's carry a title followed by its status marker. The waiting line's and
+   the caret's samples are painted by those features' own sheets; this one owns
+   the shell every card stands in. The brand
    marks are the same assets the sidebar and hero paint — Claude's clay
    starburst, DeepSeek's whale in brand blue — inlined as CSS data URIs, so they
    read in full colour on either theme: a new brand is one option in
@@ -139,148 +143,6 @@ body[data-dsh-claude-style] .dsh-claude-brand-card-lockup .dsh-combine-mark-mono
   display: none;
 }
 
-/* A paint card holds nothing but the words, centred: the card gives a preview
-   the room a line's words need, whatever the sample is. The sample stands on
-   the line's own metrics and never wraps, so the cards stay one height and a
-   longer sample is cut where the line cuts it. */
-body[data-dsh-claude-style] .dsh-claude-motion-card {
-  min-height: 64px;
-  padding: 14px 12px;
-  color: var(--dsw-alias-label-secondary);
-}
-
-/* A paint card's sample is the line's own wording taking turns: one wording
-   stands, leaves the way a wording leaves the line, and the other rises in its
-   place, on a loop. Both stand in one grid cell, so the box is as wide as the
-   longer wording and neither the card nor the clock's place beside it would
-   move when they change (settings-tab-motion.ts writes the two). */
-body[data-dsh-claude-style] .dsh-claude-motion-sample {
-  display: grid;
-  font-size: calc(14px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 24px;
-  white-space: nowrap;
-}
-
-/* One turn of the cycle per wording: it stands for a little under half of it,
-   leaves upward through the blur in a twentieth, waits out of sight, and rises
-   from below at the end — the swap's own travel, blur and curve
-   (shared/motion.css), on the preset card's period. The second wording is
-   offset half a turn, so the two are never on the card together. */
-body[data-dsh-claude-style] .dsh-claude-motion-word {
-  grid-area: 1 / 1;
-  justify-self: center;
-  animation: dsh-claude-motion-word var(--dsh-claude-period-preview-swap) var(--dsh-claude-swap-ease) infinite var(--dsh-claude-loop-play-state, running);
-}
-
-body[data-dsh-claude-style] .dsh-claude-motion-word + .dsh-claude-motion-word {
-  animation-delay: calc(-0.5 * var(--dsh-claude-period-preview-swap));
-}
-
-@keyframes dsh-claude-motion-word {
-  0%, 45% { opacity: 1; filter: blur(0); transform: translateY(0); }
-  50% { opacity: 0; filter: blur(var(--dsh-claude-swap-blur)); transform: translateY(calc(-1 * var(--dsh-claude-swap-distance))); }
-  95% { opacity: 0; filter: blur(var(--dsh-claude-swap-blur)); transform: translateY(var(--dsh-claude-swap-distance)); }
-  100% { opacity: 1; filter: blur(0); transform: translateY(0); }
-}
-
-/* A caret card previews the choice itself: one line is typed out, character by
-   character, with the caret following it — on glides to each new place, off
-   arrives there at once. The padding at the line's head is where a caret before
-   the first character stands. */
-body[data-dsh-claude-style] .dsh-claude-caret-card {
-  min-height: 64px;
-  padding: 14px 12px;
-  color: var(--dsw-alias-label-secondary);
-}
-
-body[data-dsh-claude-style] .dsh-claude-caret-sample {
-  position: relative;
-  display: inline-block;
-  font-size: calc(14px * var(--dsh-claude-interface-font-scale, 1));
-  line-height: 24px;
-  white-space: nowrap;
-}
-
-body[data-dsh-claude-style] .dsh-claude-caret-sample-text {
-  padding-left: 6px;
-}
-
-/* A character that has not been typed yet holds its place in the line, so the
-   line does not reflow as it is typed and the caret's own measure stays put. */
-body[data-dsh-claude-style] .dsh-claude-caret-piece {
-  visibility: hidden;
-}
-
-body[data-dsh-claude-style] .dsh-claude-caret-piece[data-in] {
-  visibility: visible;
-}
-
-/* The caret stands where the last typed character ends: the card's own measure
-   of that edge, written on the picker by settings-tab-motion.ts, and the head of
-   the line while nothing has been typed. */
-body[data-dsh-claude-style] .dsh-claude-caret-sample-bar {
-  position: absolute;
-  top: 3px;
-  bottom: 3px;
-  left: 0;
-  width: 2px;
-  border-radius: 1px;
-  background: currentColor;
-  transform: translateX(var(--dsh-claude-caret-x, 0px));
-  /* The native caret's own cycle (caret.css's keyframes), running while the line
-     stands whole. The drawn caret switches its blink back on with every move
-     (features/caret/caret.ts), so the animation is off for the whole time the
-     line is being typed and the caret is lit while it moves. */
-  animation: dsh-claude-caret-blink var(--dsh-claude-period-blink) step-end infinite var(--dsh-claude-loop-play-state, running);
-}
-
-body[data-dsh-claude-style] .dsh-claude-caret-sample-bar[data-typing] {
-  animation: none;
-}
-
-/* The glide between two places: the on card takes the drawn caret's own
-   duration, the off card's caret arrives at once the way the host's does. */
-body[data-dsh-claude-style] .dsh-claude-caret-sample-bar.dsh-claude-caret-typing {
-  transition: transform var(--dsh-claude-duration-instant) var(--dsh-claude-ease-standard);
-}
-
-body[data-dsh-claude-style] .dsh-claude-caret-sample-bar.dsh-claude-caret-off {
-  transition: none;
-}
-
-/* The reader's animation choice, resolved onto <body> (core/prefs.ts, D40): the
-   paint is held still, and the two wordings still take turns — the line keeps
-   changing its wording on this setting, writing the new words at once
-   (shared/swapping-text.ts), so the card cuts from one to the other. The cut is
-   handed over by the picker's own attribute rather than by an animation of its
-   own, because chrome.css presses every skin animation to a single 0.01 ms pass
-   on this setting and a loop here would never come round again. Both wordings
-   keep their cell, so the card is the same size in every setting. */
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-motion-word {
-  animation: none;
-}
-
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-motion-word + .dsh-claude-motion-word {
-  visibility: hidden;
-}
-
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-word-alt] .dsh-claude-motion-word {
-  visibility: hidden;
-}
-
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-word-alt] .dsh-claude-motion-word + .dsh-claude-motion-word {
-  visibility: visible;
-}
-
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-caret-piece {
-  visibility: visible;
-}
-
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-caret-sample-bar {
-  animation: none;
-  transform: none;
-}
-
 /* A reveal card holds one sample line whose characters arrive one after
    another, centred and never wrapped. The fade card fades each character in as
    it is handed its turn; the other hands it over with nothing between, which is
@@ -324,25 +186,6 @@ body[data-dsh-claude-style] .dsh-claude-reveal-card[data-fade] .dsh-claude-revea
 body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-reveal-piece {
   opacity: 1;
   animation: none;
-}
-
-/* The precise status line writes the specifics one at a time, so the card holds
-   one wording at a time, and the card runs the line's own two halves for each
-   swap: the word leaving rises with a blur, the one arriving rises in from
-   below (shared/motion.css), the picker re-keying the pair every turn. The
-   reader's animation choice above keeps its own say. */
-body[data-dsh-claude-style] [data-dsh-claude-precise] .dsh-claude-motion-word,
-body[data-dsh-claude-style] [data-dsh-claude-precise] .dsh-claude-motion-word + .dsh-claude-motion-word {
-  animation: none;
-  visibility: visible;
-}
-
-body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"]) [data-dsh-claude-precise] .dsh-claude-word-out {
-  animation: dsh-claude-swap-out var(--dsh-claude-swap-duration) var(--dsh-claude-swap-ease) forwards;
-}
-
-body[data-dsh-claude-style]:not([data-dsh-claude-motion="reduced"]) [data-dsh-claude-precise] .dsh-claude-word-in {
-  animation: dsh-claude-swap-in var(--dsh-claude-swap-duration) var(--dsh-claude-swap-ease) both;
 }
 
 /* A message-entrance card holds a two-row conversation of the reader's own
@@ -505,37 +348,6 @@ body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] :is(.dsh-claude-mo
   opacity: 0.72;
 }
 
-/* The sweep's band parked across the middle of the words; the wash already
-   holds its own first frame. */
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-motion-card .dsh-claude-sweep-band {
-  display: block;
-  transform: none;
-  animation: none;
-}
-
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-motion-card .dsh-claude-sweep-glyphs {
-  transform: none;
-  animation: none;
-}
-
-/* The caret stands at the end of the line; the glide's card trails the caret
-   with the distance it has just covered, the other's caret has none. */
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-caret-sample-bar {
-  left: auto;
-  right: 0;
-}
-
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-caret-sample-bar.dsh-claude-caret-typing::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  right: 100%;
-  width: 18px;
-  background: linear-gradient(to left, currentColor, transparent);
-  opacity: 0.35;
-}
-
 /* The fade's last characters on the faintest steps of their arrival; the other
    card's line is whole. */
 body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-reveal-card[data-fade] .dsh-claude-reveal-piece:nth-last-child(1) {
@@ -562,10 +374,4 @@ body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-enter-
 
 body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-enter-card[data-enter="flight"] .dsh-claude-enter-bubble:not([data-standing]) {
   transform: translateY(10px) scale(0.92);
-}
-
-/* The precise card keeps both wordings in the box so the swap can play between
-   them; with no swap to play only the arriving one stands. */
-body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-precise] .dsh-claude-motion-word:not(:last-child) {
-  visibility: hidden;
 }

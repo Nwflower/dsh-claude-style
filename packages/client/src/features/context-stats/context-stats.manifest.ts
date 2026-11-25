@@ -11,6 +11,7 @@ export default {
   reads: ['meterRing', 'model'],
   ungated: '上下文弹层统计、会话面板实时读数与费用聚合在对话期间常驻运行',
   stylesheets: [
+    { file: 'inline-bar.css', rank: 104, gate: true },
     { file: 'footer-layout.css', rank: 106, gate: true },
     { file: 'stats-bar-settings.css', rank: 318 },
     { file: 'context-ramp-settings.css', rank: 324 },

@@ -51,7 +51,7 @@ export function createFooterSeats() {
   }
 
   /** A copy of one entry, standing in the row and pressing the entry behind it. */
-  function buildCopy(entry: Element, seat: string) {
+  function buildCopy(seat: string) {
     const copy = document.createElement('span')
     copy.className = 'dsh-claude-footer-seat-copy'
     copy.setAttribute(SEAT_COPY_ATTR, seat)
@@ -86,7 +86,7 @@ export function createFooterSeats() {
       const html = entry.outerHTML
       const live = copies.get(seat)
       if (live === undefined) {
-        const node = buildCopy(entry, seat)
+        const node = buildCopy(seat)
         row.appendChild(node)
         copies.set(seat, { node, entry, html: '' })
       }

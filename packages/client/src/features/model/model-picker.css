@@ -225,20 +225,6 @@ body[data-dsh-claude-style] .dsh-claude-model-group-section {
   min-width: 0;
 }
 
-body[data-dsh-claude-style] .dsh-claude-model-group-row {
-  position: sticky;
-  top: 0;
-  z-index: 6;
-  align-self: stretch;
-  margin: 0;
-  padding: 3px 7px 0 7px;
-  background: var(--dsw-alias-bg-overlay, #ffffff);
-}
-
-body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-model-group-row {
-  background: var(--dsh-claude-card);
-}
-
 body[data-dsh-claude-style] .dsh-claude-model-group {
   display: inline-flex;
   align-items: center;

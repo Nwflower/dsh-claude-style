@@ -27,13 +27,41 @@ export interface ModelCopyIndex {
   brandRules: BrandRule[]
 }
 
+/** One `match`/`text` rule of the copy document, before its regexp is built (D79). */
+interface CopyRuleDocument {
+  match: string
+  text?: CopyPair
+}
+
+/** One `match`/`brand` rule: the lockup a model claims (D79). */
+interface BrandRuleDocument {
+  match: string
+  brand: string
+}
+
+/**
+ * The copy document's shape, as packages/client/data/model-descriptions.schema.json
+ * validates it before it ships (scripts/build/model-copy.mjs, D5). Every block is
+ * optional here because the fetched document is not trusted to be the build's
+ * own: a block that is missing indexes as empty.
+ */
+interface ModelCopyDocument {
+  fallback?: string
+  families?: CopyRuleDocument[]
+  tiers?: CopyRuleDocument[]
+  brands?: {
+    providers?: Record<string, string>
+    models?: BrandRuleDocument[]
+  }
+}
+
 /**
  * Model & settings localized copy.
  *
  * The copy document ships as `model-descriptions.json` beside the bundle.
  * Both the model picker (packages/client/src/features/model/model-picker.ts) and the settings section
- * (packages/client/src/features/settings/settings.ts) consume this copy, so the state lives in the shared context.
- * where both zones can reach it.
+ * (packages/client/src/features/settings/settings.ts) consume this copy, so the state
+ * lives in the shared context where both zones can reach it.
  *
  * The build loads this module in a Node sandbox (peakrate/match.ts folds ids
  * through normalizeModelId), so it must not value-import the page's runtime:
@@ -73,39 +101,43 @@ export function loadModelCopy() {
  */
 export function indexModelCopy(doc: HostAnswer): ModelCopyIndex | null {
   if (!doc || typeof doc !== 'object') return null
-  // The build validated the document's shape before it shipped (D5); a block
-  // that is missing reads as empty.
-  const table = <T>(value: unknown) => (value && typeof value === 'object' ? value : {}) as Record<string, T>
-  const brands = table<any>(doc.brands)
-  const index: ModelCopyIndex = {
-    fallback: typeof doc.fallback === 'string' && doc.fallback ? doc.fallback : MODEL_COPY_FALLBACK_LOCALE,
-    families: [],
-    tiers: [],
-    providerBrands: table(brands.providers),
-    brandRules: [],
+  // Narrowed once: the build validated this shape before the document shipped
+  // (scripts/build/model-copy.mjs, D5), so the readers below trust it and only
+  // an absent block falls back to empty.
+  const parsed = doc as unknown as ModelCopyDocument
+  const brands = parsed.brands ?? {}
+  return {
+    fallback: typeof parsed.fallback === 'string' && parsed.fallback ? parsed.fallback : MODEL_COPY_FALLBACK_LOCALE,
+    families: compileCopyRules(parsed.families),
+    tiers: compileCopyRules(parsed.tiers),
+    providerBrands: brands.providers ?? {},
+    brandRules: compileBrandRules(brands.models),
   }
-  const compile = (rules: any) => {
-    const out: CopyRule[] = []
-    for (let i = 0; i < (rules || []).length; i++) {
-      const rule = rules[i]
-      if (!rule || typeof rule.match !== 'string') continue
-      // The build compiles every rule before it ships the document.
-      out.push({ re: new RegExp(rule.match, 'i'), text: rule.text })
-    }
-    return out
+}
+
+/** Compile one `{ match, text }` list into the regexps the lookups try (D79). */
+function compileCopyRules(rules: CopyRuleDocument[] = []): CopyRule[] {
+  const out: CopyRule[] = []
+  for (let i = 0; i < rules.length; i++) {
+    const rule = rules[i]
+    if (!rule || typeof rule.match !== 'string') continue
+    out.push({ re: new RegExp(rule.match, 'i'), text: rule.text })
   }
-  index.families = compile(doc.families)
-  index.tiers = compile(doc.tiers)
-  // Brand rules carry no copy, only the mark's id; the build has already
-  // checked every id against the vendored marks.
-  const brandRules: BrandRule[] = []
-  for (let b = 0; b < (brands.models || []).length; b++) {
-    const brandRule = brands.models[b]
-    if (!brandRule || typeof brandRule.match !== 'string' || typeof brandRule.brand !== 'string') continue
-    brandRules.push({ re: new RegExp(brandRule.match, 'i'), brand: brandRule.brand })
+  return out
+}
+
+/**
+ * Compile the brand rule list: the rules carry no copy, only the lockup's id,
+ * which the build already checked against the vendored marks.
+ */
+function compileBrandRules(rules: BrandRuleDocument[] = []): BrandRule[] {
+  const out: BrandRule[] = []
+  for (let i = 0; i < rules.length; i++) {
+    const rule = rules[i]
+    if (!rule || typeof rule.match !== 'string' || typeof rule.brand !== 'string') continue
+    out.push({ re: new RegExp(rule.match, 'i'), brand: rule.brand })
   }
-  index.brandRules = brandRules
-  return index
+  return out
 }
 
 /**

@@ -3,6 +3,7 @@ import { currentSessionId, hostModelDirectories } from '@dsh-claude-style/engine
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostModelCatalogSnapshot, HostModelDirectory, HostModelEntry, HostModelGroup, HostModelReasoning } from '@dsh-claude-style/contracts/services'
 import { notifyAll } from '@dsh-claude-style/engine/notify'
+import { dropHostRejection } from '../../shared/host-rejection'
 
 /** One provider the catalog lists, with how many models it carries. */
 export interface CatalogProvider {
@@ -178,15 +179,12 @@ export function createModelCatalog(options: { ctx: HostContext, schedule?: () =>
    * the popover's own `load()` becomes a no-op instead of a second request.
    *
    * Failures are the store's to report — the popover shows the error and the
-   * host offers a retry — so this only has to avoid throwing into a pass.
+   * host offers a retry — and the rejection is claimed, not thrown into a pass.
    */
   function warm() {
     if (modelWarmRequested || modelDir === null || typeof modelDir.load !== 'function') return
     modelWarmRequested = true
-    const pending = modelDir.load()
-    if (pending && typeof pending.catch === 'function') {
-      pending.catch(() => { /* surfaced by the store, not here */ })
-    }
+    dropHostRejection(modelDir.load())
   }
 
   /** The current selection resolved to its group + model entries. */

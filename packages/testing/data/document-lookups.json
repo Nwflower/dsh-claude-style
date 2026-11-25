@@ -1,5 +1,5 @@
 {
-  "note": "Per-file ceiling of whole-document lookups outside the sanctioned cached accessors (packages/engine/src/host.ts, bus.ts, stylesheet.ts, chat-dom.ts). Queries by id are uncounted; counts only shrink.",
+  "note": "Per-file ceiling of whole-document lookups outside the sanctioned cached accessors (packages/engine/src/host-seats.ts, bus.ts, stylesheet.ts, chat-dom.ts). Queries by id are uncounted; counts only shrink.",
   "files": {
     "packages/client/src/features/hero-menu/hero-menu.ts": {
       "count": 1,
@@ -17,7 +17,7 @@
       "count": 2,
       "reason": "The two cards' instance-scoped sweep during refresh and when they are dropped or torn down."
     },
-    "packages/client/src/features/account/account-footer.ts": {
+    "packages/client/src/features/account/footer-geometry.ts": {
       "count": 2,
       "reason": "The takeover's teardown sweeps the rows it injected and the marks it put on the host's entries."
     },

@@ -1,23 +1,18 @@
-import { SLOT_NODE_ATTR } from '../../constants'
 import { MODEL_OFFICIAL_GROUP } from './model-labels'
 import { modelGroupName } from './provider-name'
 import { activeLocale } from '../../core/i18n'
-import { ensureSeatBox, ensureSeatPart } from './seat-box'
+import { ensureSeatPart } from './seat-box'
 import type { SeatPart } from './seat-box'
-import { loadModelCopy } from './model-copy'
 import { readPrefs } from '../../core/prefs'
-import { findPrimaryModelSlot, withSlots } from '@dsh-claude-style/engine/host'
+import { withSlots } from '@dsh-claude-style/engine/host'
 import { createModelCatalog } from './catalog'
-import { MODEL_SLOT_KEY, thirdPartyHoldsSeat } from './seat-ledger'
 import { createModelSubMenu } from './sub-menu'
 import { createModelRows, modelComparator } from './rows'
-import { releaseTag } from './release-tag'
-import { buildElement, closestFrom, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
-import { removeStrayNodes, pressKeepsPopoverOpen } from '../../shared/popover'
-import { releaseSwappingText, setSwappingText } from '../../shared/swapping-text'
+import { buildElement, closestFrom } from '@dsh-claude-style/engine/dom'
+import { dropHostRejection } from '../../shared/host-rejection'
 import type { HostContext } from '@dsh-claude-style/engine/host'
-import { COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
-import type { HostModelDirectory, HostModelEntry, HostModelGroup, HostSlotsService } from '@dsh-claude-style/contracts/services'
+import { COMPOSER_INPUT_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import type { HostModelDirectory, HostModelGroup, HostSlotsService } from '@dsh-claude-style/contracts/services'
 import type { CloseReason, FeatureHandle } from '@dsh-claude-style/engine/scheduler'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './model-picker.manifest'
@@ -25,13 +20,7 @@ import type { CatalogProvider, ModelCatalog } from './catalog'
 import { copy } from './copy'
 import { createModelCards } from './model-cards'
 import { createModelFooter } from './model-footer'
-
-/**
- * The mark naming the model in force on <body>. A reader's own tooling reads it
- * to know which model the session is on; the value is the catalog's
- * `provider/id`, the pair the copy rules read (features/model/model-copy.ts).
- */
-const MODEL_ATTR = 'data-dsh-claude-model'
+import { createSeatLabels } from './seat-labels'
 
 /** What the effort picker and the settings page read off the model picker (ui.model). */
 export interface ModelHandle extends FeatureHandle {
@@ -78,13 +67,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
    * open, close, dwell and placement are the cards module's
    * (features/model/model-cards.ts).
    */
-  let modelBtn: HTMLButtonElement | null = null
-  /** The box the model's text and the effort level's share inside the host slot (seat-box.ts). */
-  let seatBox: HTMLElement | null = null
-  /** The host slot the seat lives in; the effort picker anchors there too. */
-  let modelSlot: HTMLElement | null = null
-  /** The hero slot this instance marked as an external seat; the mark is ours to take back. */
-  let heroMarkedSlot: HTMLElement | null = null
   /**
    * The slot registry the yield decision reads, from the scope that injected
    * it: the plugin's own context hands no registry out (D75), so the seat's
@@ -111,27 +93,31 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
       schedule() { if (ui.schedule) ui.schedule() }
   })
 
-  function pickModel(provider: string, modelId: string) {
+  /**
+   * Hand one selection to the session's directory: the store the seat, the
+   * rows and the effort slider all read, so nothing is written locally.
+   * @returns whether a directory was there to take the selection.
+   */
+  function commitSelection(selection: { provider: string, model: string, reasoningEffort?: string }) {
     const dir = modelCatalog.directory()
-    if (dir === null) return
-    // select() is async and rejects on a failed selection, which the host's
-    // toast reports; the rejection is dropped the way the host's own seat
-    // wrapper drops it.
-    const pending = dir.select({ provider, model: modelId })
-    if (pending && typeof pending.catch === 'function') pending.catch(() => {})
+    if (dir === null) return false
+    dropHostRejection(dir.select(selection))
+    return true
+  }
+
+  /** Commit one model seat, then fold both cards. */
+  function pickModel(provider: string, modelId: string) {
+    if (!commitSelection({ provider, model: modelId })) return
     cards.closeAll()
   }
 
   /** Commit one reasoning level. The slider stays open for the next nudge. */
   function pickEffort(effort: string | undefined) {
-    const dir = modelCatalog.directory()
     const snap = modelCatalog.snapshot()
-    if (dir === null || !snap || snap.current === null) return
+    if (snap === null || snap.current === null) return
     const selection: { provider: string, model: string, reasoningEffort?: string } = { provider: snap.current.provider, model: snap.current.model }
     if (effort !== undefined) selection.reasoningEffort = effort
-    // A rejected selection is reported by the host's toast (see pickModel).
-    const pending = dir.select(selection)
-    if (pending && typeof pending.catch === 'function') pending.catch(() => {})
+    commitSelection(selection)
   }
 
   /**
@@ -145,14 +131,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     owner: mount.owner,
     onOpen() {
       const dir = modelCatalog.directory()
-      // load() is async — the host itself guards with .catch(() => {}); a bare
-      // try/catch cannot see its rejection.
-      if (dir && typeof dir.load === 'function') {
-        const pending = dir.load()
-        if (pending && typeof pending.catch === 'function') {
-          pending.catch(() => { /* the store's error surface covers a failure */ })
-        }
-      }
+      if (dir && typeof dir.load === 'function') dropHostRejection(dir.load())
       // Repaint rows only when the catalog signature changes so large catalogs
       // open without rebuilding unchanged DOM nodes; rate badges refresh in place.
       renderModelBody()
@@ -165,8 +144,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
         signature: subSignature,
       })
     },
-    anchor() { return seatBox ?? modelBtn },
-    trigger() { return modelBtn },
+    anchor() { return labels.seatBox() ?? labels.trigger() },
+    trigger() { return labels.trigger() },
   })
 
   /**
@@ -207,21 +186,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     slots: () => slots,
     schedule() { if (ui.schedule) ui.schedule() },
     dismiss() { cards.closeAll() },
-    restoreFocus() { modelBtn?.focus() },
+    restoreFocus() { labels.trigger()?.focus() },
     locked() { return modelCatalog.inFlight() },
   })
-
-  /**
-   * Swap both cards' rate meters for the current ones (rows.ts owns the rows
-   * and their identity). The badge is the one minute-sensitive part of a row
-   * (the countdown to the rate switch), and the card open, the minute
-   * rollover and an arriving catalog call this instead of the full paint: a
-   * page that reloads paints its rows before the catalog lands, and rebuilding
-   * them for the badges would flash the whole list.
-   */
-  function refreshRateBadges() {
-    modelRows.refreshRates()
-  }
 
   /**
    * What a group's rows read as, in one string the render signatures carry: a
@@ -362,211 +329,20 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
   }
 
   /**
-   * Let a label's swap go before its node leaves the page. The swap keeps a
-   * frame, a timer and a size subscription of its own (shared/swapping-text.ts);
-   * none of them follows the node out, and the size registry holds them by
-   * strong reference, so a trigger rebuilt or dropped without this leaves its
-   * sizer and its subscription behind for the page's lifetime.
+   * The seat half (features/model/seat-labels.ts): the trigger, its label and
+   * the model mark. Read from the cards' callbacks and the handle below, all of
+   * which run after this assignment.
    */
-  function releaseModelLabels(scope: ParentNode = document) {
-    const labels = scope.querySelectorAll<HTMLElement>('.dsh-claude-model-btn-label')
-    for (let i = 0; i < labels.length; i++) releaseSwappingText(labels[i])
-  }
-
-  /**
-   * Hand the host's own model seat and menu back: unmark the seat, remove the
-   * skin's trigger and popovers, drop the catalog subscription.
-   */
-  function dropModelControl() {
-    const allHosts = (modelSlot ?? document).querySelectorAll('[data-dsh-claude-model-host]')
-    for (let h = 0; h < allHosts.length; h++) {
-      allHosts[h].removeAttribute('data-dsh-claude-model-host')
-    }
-    releaseModelLabels()
-    removeStrayNodes(modelSlot ?? document, '.dsh-claude-model-seat', [])
-    seatBox = null
-    if (heroMarkedSlot !== null) {
-      heroMarkedSlot.removeAttribute('data-dsh-claude-external-control')
-      heroMarkedSlot = null
-    }
-    removeStrayNodes(modelSlot ?? document, '.dsh-claude-model-btn', [])
-    modelBtn = null
-    cards.dropNodes()
-    modelBodySig = ''
-    modelCatalog.reset()
-    markSeatModel(null)
-  }
-
-  /**
-   * Name the model in force on <body>: its `provider/id`, which separates two
-   * providers' same-named models. The mark carries the catalog's data and no
-   * judgement drawn from it — the family, the brand and the display name stay in
-   * the picker. One model sits in force at a time, so a seat that names none (no
-   * session, a catalog still answering, an id its groups do not hold) leaves the
-   * mark off.
-   */
-  function markSeatModel(current: { group: HostModelGroup, model: HostModelEntry } | null) {
-    if (current === null) {
-      document.body.removeAttribute(MODEL_ATTR)
-      return
-    }
-    setAttributeIfChanged(document.body, MODEL_ATTR, `${current.group.id}/${current.model.id}`)
-  }
-
-  /** Build/refresh the trigger, its label and the popover rows. */
-  function syncModelControl() {
-    // The picker's own switch tears this feature down, so the composer restyle
-    // is the one way left to be off the page: it hands the host's own model
-    // seat and menu back through the same sweep.
-    if (mount.slot === undefined && ui.composer?.isActive() !== true) {
-      dropModelControl()
-      return
-    }
-
-    // A third-party winner holding the model seat takes the whole seat: the
-    // skin's trigger and cards come down and the node the host renders for
-    // the winner stands unmarked and reachable. The reasoning
-    // level's button lives in the same box, so it goes with this drop and
-    // returns on the pass the seat comes back (features/effort/effort-picker.ts).
-    if (thirdPartyHoldsSeat(slots)) {
-      dropModelControl()
-      return
-    }
-
-    // The copy document is fetched on first paint of the picker rather than
-    // at install, so a session that never opens it never pays for it.
-    loadModelCopy()
-    modelCatalog.directory()
-    modelCatalog.warm()
-    // The seat stands in the page's main composer: a sub-agent's docked
-    // conversation draws a card of its own, and the shell the reader types in
-    // must not lose its model seat to one (engine/host.ts::findPrimaryModelSlot).
-    const slot = mount.slot ?? findPrimaryModelSlot()
-    modelSlot = slot
-    if (slot === null) {
-      // A page with no composer seat in it names no model either.
-      markSeatModel(null)
-      return
-    }
-    // Hide the host's own seat (React owns the node; re-mark on swap).
-    // Idempotent against a torn-down-less reload, like the account footer:
-    // client HMR drops the old fiber's disposals, so a previous generation's
-    // trigger and popovers are still in the DOM while this fresh scope starts
-    // from null. Sweep the strays, or the seat renders twice. The popovers'
-    // own sweep runs once at install: it walks the whole document, and this
-    // path runs every pass.
-    removeStrayNodes(slot, '.dsh-claude-model-seat', [seatBox])
-    removeStrayNodes(slot, '.dsh-claude-model-btn', [modelBtn])
-    // The host's own seat root, not the nodes the skin appended beside it: a
-    // swap can put React's node after ours, and the effort level and the
-    // context meter's ring stand in the same slot. It is hidden only while the
-    // skin draws the effort slider: with that switch off the host's own seat —
-    // and any third-party effort control mounted in this slot — stays visible
-    // and reachable.
-    const hostRoot = slot.querySelector(`:scope > :not([${SLOT_NODE_ATTR}])`)
-    if (hostRoot !== null) hostRoot.toggleAttribute('data-dsh-claude-model-host', readPrefs().effortSlider === true)
-    seatBox = ensureSeatBox(slot, seatBox)
-    // The home card stands outside the conversation region the trailing rules
-    // read, so its seat takes the external-control gate the picker's own block
-    // styles: one line, capsule and height together.
-    if (slot.closest(COMPOSER_CARD_SELECTOR)?.getAttribute(COMPOSER_VARIANT_ATTRIBUTE) === 'hero') {
-      slot.setAttribute('data-dsh-claude-external-control', 'model-picker')
-      heroMarkedSlot = slot
-    } else if (heroMarkedSlot !== null) {
-      heroMarkedSlot.removeAttribute('data-dsh-claude-external-control')
-      heroMarkedSlot = null
-    }
-    const modelPart = ensureSeatPart(seatBox, 'model')
-    if (modelBtn === null || modelBtn.parentElement !== modelPart) {
-      // The old trigger carries the old label: its swap goes before the node does.
-      if (modelBtn !== null) releaseModelLabels(modelBtn)
-      if (modelBtn !== null && modelBtn.parentElement !== null) modelBtn.parentElement.removeChild(modelBtn)
-      modelBtn = document.createElement('button')
-      modelBtn.type = 'button'
-      modelBtn.className = 'dsh-claude-model-btn'
-      modelBtn.setAttribute('aria-haspopup', 'menu')
-      modelBtn.innerHTML = '<span class="dsh-claude-model-btn-label"></span>'
-      // Same contract as the account trigger: hover under the "All" scope,
-      // click-only otherwise.
-      modelBtn.addEventListener('mouseenter', () => {
-        if (cards.hoverOn()) cards.scheduleOpenMain()
-      })
-      modelBtn.addEventListener('mouseleave', () => {
-        if (cards.hoverOn()) cards.scheduleClose()
-      })
-      modelBtn.addEventListener('click', e => {
-        e.stopPropagation()
-        // Is the card up because the dwell opened it, with the pointer still
-        // on this trigger? Then the press keeps it up
-        // (shared/popover.ts::pressKeepsPopoverOpen) and the leave closes it.
-        const open = cards.mainOpen()
-        if (pressKeepsPopoverOpen(cards.hoverOn(), open)) return
-        if (open) cards.closeAll()
-        else cards.openMain()
-      })
-      // First part of the box: the model's name; the effort picker appends its
-      // own button into the second part.
-      modelPart.appendChild(modelBtn)
-    }
-    // Fresh chrome is empty chrome: the body the last paint built is gone, so
-    // the next paint rebuilds the rows into the new one.
-    if (cards.ensureChrome() === true) modelBodySig = ''
-
-    const snap = modelCatalog.snapshot()
-    const current = modelCatalog.current(snap)
-    // The seat in force is the one fact the mark carries: written here, where the
-    // name below is taken from the same reading, so the two never disagree.
-    markSeatModel(current)
-    const label = current ? current.model.name : copy('fallbackLabel')
-    const labelEl = modelBtn.querySelector('.dsh-claude-model-btn-label')
-    if (labelEl) {
-      // The name swaps in place on the way from one model to the next, the way
-      // the wait line's own words do (shared/swapping-text.ts): the copy leaving
-      // rises through a blur while the arriving copy comes up from below. The
-      // helper writes nothing when the words stand already, so a pass costs no
-      // mutation — which is what keeps the scheduler's observer quiet.
-      setSwappingText(labelEl as HTMLElement, label)
-      // The dimmed tone means "no seat to name yet". A re-enumeration no longer
-      // counts: the catalogue stands on the last seat it named (catalog.ts), so
-      // the words in the box are the seat in force and keep the normal tone.
-      labelEl.classList.toggle('dsh-claude-model-btn-loading', current === null)
-    }
-    // The official Flash model's release tag rides beside the seat's name, the
-    // way the host's own label draws it (release-tag.ts). The label's swap
-    // touches the label element alone, so the tag stands beside it and follows
-    // the model in force.
-    const seatTag = current === null ? null : releaseTag(current.group.id, current.model)
-    let seatTagEl = modelBtn.querySelector<HTMLElement>('.dsh-claude-model-tag')
-    if (seatTag === null) {
-      seatTagEl?.remove()
-    } else {
-      if (seatTagEl === null) {
-        seatTagEl = buildElement('span', 'dsh-claude-model-tag')
-        modelBtn.appendChild(seatTagEl)
-      }
-      if (seatTagEl.textContent !== seatTag) seatTagEl.textContent = seatTag
-    }
-    // The level is NOT part of this trigger any more: it has its own button
-    // beside it (packages/client/src/features/effort/effort-picker.ts). A stale "· High" span from
-    // an older generation is swept rather than reused.
-    const staleEffortEl = modelBtn.querySelector('.dsh-claude-model-btn-effort')
-    if (staleEffortEl !== null) staleEffortEl.remove()
-    // The tag is part of the model's name for a screen reader too, the way the
-    // host's own label reads the badge beside the words.
-    const triggerAria = copy('triggerLabel', { model: label }) + (seatTag === null ? '' : ` ${seatTag}`)
-    setAttributeIfChanged(modelBtn, 'aria-label', triggerAria)
-    modelBtn.disabled = mount.disabled === true
-
-    renderModelBody()
-    modelFooter.refresh()
-    if (cards.subOpen()) {
-      const modelSub = cards.sub()
-      if (modelSub !== null) modelSub.render()
-      cards.position()
-    } else if (cards.mainOpen()) {
-      cards.position()
-    }
-  }
+  const labels = createSeatLabels({
+    mount,
+    ui,
+    cards,
+    modelCatalog,
+    modelFooter,
+    slots: () => slots,
+    invalidateBody() { modelBodySig = '' },
+    renderBody: renderModelBody,
+  })
 
   /**
    * The ledger's own change signal (the host's slots/changed event): a plugin
@@ -586,7 +362,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
   cards.sweep()
 
   ui.model = {
-    sync: syncModelControl,
+    sync: labels.sync,
     // Who the session routes to: the statistics read it to tell the platform's
     // own billing from a provider that settles elsewhere.
     provider() {
@@ -635,13 +411,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
      * catalog every call, so a level the host echoes back lands on the knob
      * without either fragment pushing it.
      */
-    seatBox() { return seatBox !== null && seatBox.isConnected ? seatBox : null },
+    seatBox: labels.seatBox,
     seatPart(part) {
-      if (seatBox === null || !seatBox.isConnected) return null
-      return ensureSeatPart(seatBox, part)
+      const box = labels.seatBox()
+      return box === null ? null : ensureSeatPart(box, part)
     },
     /** The skin's model trigger while it is in the document, else null. */
-    trigger() { return modelBtn !== null && modelBtn.isConnected ? modelBtn : null },
+    trigger: labels.trigger,
     effort() { return modelCatalog.effort(modelCatalog.snapshot()) },
     /**
      * Whether the catalog can match the current selection to a group and
@@ -653,7 +429,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     pickEffort,
     owns(target: Node) {
       if (!target) return false
-      return (modelBtn !== null && modelBtn.contains(target)) ||
+      const trigger = labels.trigger()
+      return (trigger !== null && trigger.contains(target)) ||
              (cards.popover() !== null && cards.popover()!.contains(target)) ||
              (cards.subPopover() !== null && cards.subPopover()!.contains(target))
     },
@@ -680,10 +457,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     // packages/client/src/entry.ts) keeps the stylesheet around it, so the seat has to be
     // handed back here rather than by the stylesheet going away.
     teardown() {
-      dropModelControl()
+      labels.drop()
       modelCatalog.resetWarm()
-      modelSlot = null
-      seatBox = null
       cards.dispose()
       modelFooter.dispose()
       if (slotsFiber !== null) slotsFiber.dispose()

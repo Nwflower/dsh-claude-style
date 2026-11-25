@@ -66,3 +66,103 @@ body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] [data-dsh-claude-c
   transition: none;
   animation: none;
 }
+
+/* ---------- the settings page's caret cards ---------- */
+/* The caret's two answers as the settings row shows them (caret.settings.ts).
+   The card sits in the settings picker grid, whose shell is
+   settings-cards.css; this sheet owns the sample, so the card names the picker
+   to outrank that shell's shared card rule — this sheet is ranked before it. */
+
+/* A caret card previews the choice itself: one line is typed out, character by
+   character, with the caret following it — on glides to each new place, off
+   arrives there at once. The padding at the line's head is where a caret before
+   the first character stands. */
+body[data-dsh-claude-style] .dsh-claude-preview-picker .dsh-claude-caret-card {
+  min-height: 64px;
+  padding: 14px 12px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-caret-sample {
+  position: relative;
+  display: inline-block;
+  font-size: calc(14px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 24px;
+  white-space: nowrap;
+}
+
+body[data-dsh-claude-style] .dsh-claude-caret-sample-text {
+  padding-left: 6px;
+}
+
+/* A character that has not been typed yet holds its place in the line, so the
+   line does not reflow as it is typed and the caret's own measure stays put. */
+body[data-dsh-claude-style] .dsh-claude-caret-piece {
+  visibility: hidden;
+}
+
+body[data-dsh-claude-style] .dsh-claude-caret-piece[data-in] {
+  visibility: visible;
+}
+
+/* The caret stands where the last typed character ends: the card's own measure
+   of that edge, written on the picker by caret.settings.ts, and the head of the
+   line while nothing has been typed. */
+body[data-dsh-claude-style] .dsh-claude-caret-sample-bar {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 0;
+  width: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  transform: translateX(var(--dsh-claude-caret-x, 0px));
+  /* The native caret's own cycle (the keyframes above), running while the line
+     stands whole. The drawn caret switches its blink back on with every move
+     (features/caret/caret.ts), so the animation is off for the whole time the
+     line is being typed and the caret is lit while it moves. */
+  animation: dsh-claude-caret-blink var(--dsh-claude-period-blink) step-end infinite var(--dsh-claude-loop-play-state, running);
+}
+
+body[data-dsh-claude-style] .dsh-claude-caret-sample-bar[data-typing] {
+  animation: none;
+}
+
+/* The glide between two places: the on card takes the drawn caret's own
+   duration, the off card's caret arrives at once the way the host's does. */
+body[data-dsh-claude-style] .dsh-claude-caret-sample-bar.dsh-claude-caret-typing {
+  transition: transform var(--dsh-claude-duration-instant) var(--dsh-claude-ease-standard);
+}
+
+body[data-dsh-claude-style] .dsh-claude-caret-sample-bar.dsh-claude-caret-off {
+  transition: none;
+}
+
+/* The reader's animation choice (core/prefs.ts, D40): the line stands whole with
+   the caret at its end, a still frame of the glide. */
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-caret-piece {
+  visibility: visible;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-caret-sample-bar {
+  animation: none;
+  transform: none;
+}
+
+/* The caret stands at the end of the line; the glide's card trails the caret
+   with the distance it has just covered, the other's caret has none. */
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-caret-sample-bar {
+  left: auto;
+  right: 0;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-caret-sample-bar.dsh-claude-caret-typing::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 100%;
+  width: 18px;
+  background: linear-gradient(to left, currentColor, transparent);
+  opacity: 0.35;
+}
