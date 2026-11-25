@@ -11,7 +11,7 @@
  */
 import { afterEach, expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { HEAT_CELL_SELECTOR, HEAT_HINT_CLASS, HEAT_HINT_SHOWN_ATTR, HEAT_HINT_SIDE_ATTR, HEAT_HINT_TEXT_CLASS, HEAT_TIP_ATTR, HEAT_TIP_GAP, HOME_OVERVIEW_SHEET, hideHeatTip, placeHeatTip, showHeatTip, POINTER_HINT_CLASS, POINTER_HINT_SHEET } from '@dsh-claude-style/client/mechanisms'
+import { HEAT_CELL_SELECTOR, HEAT_HINT_CLASS, HEAT_HINT_SHOWN_ATTR, HEAT_HINT_SIDE_ATTR, HEAT_HINT_TEXT_CLASS, HEAT_TIP_GAP, HOME_OVERVIEW_SHEET, hideHeatTip, placeHeatTip, showHeatTip, POINTER_HINT_CLASS, POINTER_HINT_SHEET } from '@dsh-claude-style/client/mechanisms'
 import { surfaceAttribute, surfaceClass } from '../../fixtures/surface'
 
 const ROOT = surfaceAttribute('skin.root')

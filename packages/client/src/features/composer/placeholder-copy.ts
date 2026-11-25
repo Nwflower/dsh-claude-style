@@ -1,5 +1,3 @@
-import { COMPOSER_PLACEHOLDER_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
-import { findComposerInput } from '@dsh-claude-style/engine/host'
 import type { MatchList } from '@dsh-claude-style/engine/bus'
 import { activeLocale, copyIn, COPY_FALLBACK_LOCALE } from '../../core/i18n'
 import type { CopyEntries } from '../../core/i18n'
@@ -143,17 +141,6 @@ export function createPlaceholderCopy(cards: MatchList<HTMLElement>, placeholder
       if (text.indexOf(HINT_SOURCES[j]) === 0) return true
     }
     return false
-  }
-
-  /**
-   * Whether the card's field declares a shipped hint in the shell's language:
-   * the field in the attachment form says the same sentence the host draws as a
-   * placeholder, and its other sentences say why the field is closed.
-   */
-  function declaresShippedHint(input: HTMLElement) {
-    const words = (input.getAttribute(COMPOSER_PLACEHOLDER_ATTRIBUTE) || '').trim()
-    if (activeLocale().startsWith('zh')) return words !== '' && words === copyIn(ENTRIES, 'defaultHint', 'zh')
-    return isShippedHint(words)
   }
 
   /** The words the skin's hint shows, in the shell's language. */

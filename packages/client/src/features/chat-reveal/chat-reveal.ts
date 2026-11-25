@@ -3,9 +3,6 @@ import { mountStylesheet } from '../../core/stylesheet'
 import { keepMotionEngine } from '../../shared/motion-engine'
 import { createChatRevealEngine } from './reveal-engine'
 import { FEATURE_STYLESHEETS } from 'virtual:dsh-claude-style/generated'
-import type { HostContext } from '@dsh-claude-style/engine/host'
-import type { FeatureUi } from '../../core/feature'
-import type manifest from './chat-reveal.manifest'
 
 /**
  * The token reveal's installer, ported from dsh-chat-ux: new characters fade
@@ -24,7 +21,7 @@ import type manifest from './chat-reveal.manifest'
  * are the one part of the skin whose rules the browser re-matches over every
  * element of a streaming answer, so a page that shows no fade carries none.
  */
-export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
+export function install() {
   const steps = FEATURE_STYLESHEETS['reveal-steps']
   if (steps === undefined) throw new Error('the build shipped no reveal step rules (D108)')
   return keepMotionEngine(CHAT_REVEAL_ATTR, () => {

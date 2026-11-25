@@ -14,7 +14,7 @@ import { followTailButton, scrollOwnerSuite } from '../../fixtures/scroll-owner'
 
 adoptSkin(TEST_SKIN)
 const wanted = () => true
-const { scrollBox, join, setMotion, cleanups } = scrollOwnerSuite()
+const { scrollBox, join, setMotion } = scrollOwnerSuite()
 
 function touch(target: Element, type: 'touchstart' | 'touchmove' | 'touchend', clientY: number) {
   const contact = new Touch({ identifier: 7, target, clientX: 8, clientY })

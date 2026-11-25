@@ -25,7 +25,7 @@ export interface PeakRateHandle extends FeatureHandle {
   teardown(): void
 }
 
-export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
+export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /**
    * The catalog is the host half's (packages/host/src/peakrate.ts): it fetches
    * the source, caches it on disk and serves it over the plugin's own route.

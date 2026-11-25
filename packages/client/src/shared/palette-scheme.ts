@@ -1,4 +1,4 @@
-import { BRAND_DEFAULT_PRESETS, INLINE_CODE_COLOR_PALETTE, PALETTE_COLORING_BRAND, PALETTE_COLORING_CUSTOM, PALETTE_PRESETS } from '../constants'
+import { BRAND_DEFAULT_PRESETS, INLINE_CODE_COLOR_PALETTE, PALETTE_COLORING_BRAND, PALETTE_PRESETS } from '../constants'
 import { PALETTE_SCHEME_LIMIT, findPaletteScheme, parsePaletteScheme, serializePaletteScheme } from '@dsh-claude-style/contracts/palette-schemes'
 import type { PaletteScheme } from '@dsh-claude-style/contracts/palette-schemes'
 import type { Prefs } from '../constants'

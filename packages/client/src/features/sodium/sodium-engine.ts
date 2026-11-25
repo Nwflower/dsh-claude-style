@@ -3,7 +3,6 @@ import { applyRewrite, planRewrite, restoreRewrite } from '@dsh-claude-style/eng
 import type { RewrittenRule } from '@dsh-claude-style/engine/sheet-rewrite'
 import { SODIUM_MEMBERS } from './members'
 import type { SodiumAdapter, SodiumMember } from './members'
-import { publishLost, publishRules } from './sodium-state'
 
 /** One sheet the rewrite holds, under the adapter that rewrote it. */
 interface HeldSheet {
@@ -47,21 +46,14 @@ export function createSodiumEngine() {
   const keepers = new Map<SodiumAdapter, { key: string, stop: () => void }>()
 
   /**
-   * Report what the rewrite holds. A table that held rules on a sheet and holds
-   * none of them now was overtaken by its owner's change, which the page shows
-   * nowhere else: the loss is named once.
+   * Name a sheet the table held and holds no rules on now: its owner's change
+   * overtook it, which the page shows nowhere else, so the loss is named once.
    */
-  function publish() {
-    const rules = held.flatMap(({ member, adapter, rules }) => rules.map((entry) => ({
-      member: member.id,
-      sheet: adapter.sheet,
-      declarations: entry.rule.style.cssText,
-    })))
-    publishRules(rules)
-    const lost = on && rules.length === 0 && lastSheets.length > 0
+  function reportLost() {
+    const ruleCount = held.reduce((count, entry) => count + entry.rules.length, 0)
+    const lost = on && ruleCount === 0 && lastSheets.length > 0
     if (lost && !reportedLoss) reportError(new Error(`sodium: ${lastSheets.join(', ')} no longer carry the rules the table rewrites`))
     reportedLoss = lost
-    publishLost(lost ? lastSheets : [])
     lastSheets = [...new Set(held.map(({ adapter }) => adapter.sheet))]
   }
 
@@ -72,7 +64,7 @@ export function createSodiumEngine() {
    */
   function reportWrite(error: unknown) {
     reportError(error)
-    publish()
+    reportLost()
   }
 
   /** Start, restart or stop each adapter's keeper for the classes its rules captured, by role. */
@@ -127,7 +119,7 @@ export function createSodiumEngine() {
     // Each sheet is held as it is written: a sheet the browser refuses takes its
     // own rules back, and the sheets taken before it stay restorable.
     for (const entry of fresh) held.push({ ...entry, rules: applyRewrite(entry.rules) })
-    publish()
+    reportLost()
   }
 
   return {
@@ -157,7 +149,7 @@ export function createSodiumEngine() {
       const stranded = held.flatMap(({ adapter, rules }) => restoreRewrite(rules).map((entry) => `${adapter.sheet} · ${entry.rewritten}`))
       held = []
       keep([])
-      publish()
+      reportLost()
       if (stranded.length > 0) reportError(new Error(`sodium: ${stranded.join('; ')} no longer read as the rewrite left them and stay written`))
     },
     /** How many rules the rewrite would take on the page as it stands. */

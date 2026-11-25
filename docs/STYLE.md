@@ -12,7 +12,7 @@ Six built-in colour presets (`claude`, `deepseek`, `parchment`, `forest`, `dusk`
 
 - Never use pure `#000000` or cold untinted grays; surfaces, inks and borders derive from each card's seed ladder.
 - Keep accent fills under roughly 10% of visible chrome.
-- Rules that override host palette tokens or paint frame backgrounds must carry the `[data-dsh-claude-palette]` gate so turning `palette` to `host` yields cleanly to the host or wallpaper plugins. Every private `--dsh-claude-*` colour token declares a `hostAlias` in `tokens.json`.
+- Rules that override host palette tokens or paint frame backgrounds must carry the `[data-dsh-claude-palette]` gate so turning `palette` to `host` yields cleanly to the host or wallpaper plugins. Every private `--dsh-claude-*` colour token declares a `host` in `tokens.json`.
 - Context window categories use eight fixed semantic tokens (`--dsh-claude-context-system`, `-tools`, `-messages`, `-assistant`, `-tool-call`, `-tool-result`, `-attachment`, `-fixed`, D104).
 
 <!-- generated:tokens (packages/client/src/theme/tokens.json) -->

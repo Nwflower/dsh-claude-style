@@ -1,6 +1,6 @@
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { observeSize } from '@dsh-claude-style/engine/bus'
-import { MODEL_EFFORT_DEFAULT, MODEL_EFFORT_FASTER, MODEL_EFFORT_LABEL, MODEL_EFFORT_NONE, MODEL_EFFORT_SMARTER } from '../model/model-labels'
+import { MODEL_EFFORT_DEFAULT, MODEL_EFFORT_NONE } from '../model/model-labels'
 import { effortSteps } from './ladder'
 import type { EffortStep } from './ladder'
 import { createEffortMatrix } from './matrix'

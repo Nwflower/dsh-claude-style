@@ -11,8 +11,8 @@
  */
 import { expect, test } from 'vitest'
 import {
-  BAND_H, FLASH_S, FLOW_S, SURFACE_S, arrivalGlow, arrivalPhase, arrivalRise, cellFade, cellUnit,
-  composeBlockColour, flashAt, flashEnvelope, flowAt, flowEnvelope, flowStrength, solveField,
+  BAND_H, FLASH_S, FLOW_S, SURFACE_S, arrivalGlow, arrivalPhase, arrivalRise, cellFade,
+  composeBlockColour, flashAt, flashEnvelope, flowAt, flowEnvelope, solveField,
 } from '@dsh-claude-style/client/pure'
 import type { Channels, FieldBlock } from '@dsh-claude-style/client/pure'
 

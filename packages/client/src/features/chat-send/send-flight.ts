@@ -6,9 +6,9 @@ import { startMorph } from './send-morph'
 import { currentRow, lastUserRow, takeFreshEcho, touchesUserRow } from './send-rows'
 import { watchGrowEnter } from './send-grow'
 import { CHAT_FLIGHT_MS, CHAT_LANDING_MS } from './send-shape'
-import { CHAT_SEND_GHOST_ATTR, snapshotComposer } from './send-snapshot'
-import { CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_KIND_ATTRIBUTE, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
-import { CHAT_USER_ROW_SELECTOR, userBubble } from '@dsh-claude-style/engine/chat-dom'
+import { snapshotComposer } from './send-snapshot'
+import { CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, CONVERSATION_SCROLL_SELECTOR, SUBMISSION_ECHO_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { userBubble } from '@dsh-claude-style/engine/chat-dom'
 import { motionEase } from '../../shared/motion'
 import { inPageBox, pageViewport } from '../../shared/page-zoom'
 import type { HostContext } from '@dsh-claude-style/engine/host'
@@ -102,7 +102,7 @@ export interface ChatSendHandle extends FeatureHandle {
 /* Capture before React clears the draft, observe the echo/real-row swap synchronously, and hide
    the destination without removing its layout box. No captured origin or offscreen endpoints means
    no flight; rescue and teardown must always restore hidden rows. */
-export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
+export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The origin captured last. */
   let origin: SendOrigin | null = null
   /** The echo rows already dealt with; the ones lying on the page at install time are included (a restored session has them). */
@@ -432,9 +432,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /**
    * Whether the reader's message is still taking its place: a flight is in the
    * air (through its landing fade) or the row is growing where it landed. The
-   * follow reads this where it used to wait out a window timed from the row's
-   * arrival (features/chat-follow): the slide stands down exactly while this
-   * entrance reads the row's own box, and not a moment longer.
+   * follow (features/chat-follow) reads this: the slide stands down exactly
+   * while this entrance reads the row's own box, and not a moment longer.
    */
   ui.chatSend = {
     isEntering: () => flight !== null || grow.entering(),

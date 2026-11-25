@@ -1,7 +1,6 @@
 import { SODIUM_ON, SODIUM_UNDECIDED } from '../../constants'
 import { prefsFromForm, readPrefs, savePrefs, subscribePrefs } from '../../core/prefs'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
-import type { HostContext } from '@dsh-claude-style/engine/host'
 import { createSodiumEngine } from './sodium-engine'
 
 /**
@@ -15,7 +14,7 @@ import { createSodiumEngine } from './sodium-engine'
  * alone. `<head>` is watched for the sheets coming and going: a sheet injected
  * again is a new object carrying none of the rewrite.
  */
-export function install(ctx: HostContext) {
+export function install() {
   const engine = createSodiumEngine()
   let disposed = false
   /** A probe's write is on its way: the next look waits for the form to answer. */

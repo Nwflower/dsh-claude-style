@@ -1,4 +1,4 @@
-import { conversationSessionId, findConversationSession, hostSessions, observeSession } from '@dsh-claude-style/engine/host'
+import { conversationSessionId, findConversationSession, observeSession } from '@dsh-claude-style/engine/host'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { sessionProjectionFaces } from '../../shared/session-projections'

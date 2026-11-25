@@ -45,7 +45,7 @@ export interface ComposerHandle extends FeatureHandle {
  * follows the card when it changes height. The idle hint's own words live
  * here too — they read the same card state this reading produces.
  */
-export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
+export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** Whether the page shows the hero composer, as of the last reading. */
   let hero = false
   /** Whether the composer restyle applies to the page shown, as of the last reading. */

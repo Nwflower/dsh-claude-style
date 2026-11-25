@@ -7,13 +7,10 @@ import { callArgsOf } from '../../shared/call-args'
 import { motionReduced } from '../../core/prefs'
 import { createStamp } from '@dsh-claude-style/engine/dom'
 import { motionMs } from '../../shared/motion'
-import { fileToolOperation } from '../../shared/file-tool'
-import type { FileReadCard, FileRowState } from './file-row-model'
+import type { FileRowState } from './file-row-model'
 import type { FileToolOperation } from '../../shared/file-tool'
 import type { HostContext, HostFiber, HostText } from '@dsh-claude-style/engine/host'
 import type { HostChatBlock } from '@dsh-claude-style/contracts/services'
-import type { FeatureUi } from '../../core/feature'
-import type manifest from './chat-files.manifest'
 import { hostSlots } from '@dsh-claude-style/engine/host'
 
 /** The seat's owner payload for a file tool row, plus the seat's copy. */
@@ -39,7 +36,7 @@ const SWAP_MS = motionMs('--dsh-claude-duration-swap')
  * shared primitives and merging one file's calls per process group. Three keyed
  * seats are claimed together at priority -1; dsh-chat-ux yields this feature.
  */
-export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
+export function install(ctx: HostContext) {
   const h = React.createElement
 
   /** The rows of one file read together; one install owns one registry */

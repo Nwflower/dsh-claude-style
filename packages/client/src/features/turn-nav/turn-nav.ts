@@ -82,9 +82,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   const host = createTurnNavHost(ctx)
 
-  /** The skin's rail, the track its marks ride on, and the host rail it stands over. */
-  let rail: HTMLElement | null = null
-  let track: HTMLElement | null = null
+  /** The skin's rail with the track its marks ride on, built as one pair; and the host rail it stands over. */
+  let mounted: { rail: HTMLElement, track: HTMLElement } | null = null
   let hostRail: HTMLElement | null = null
   /** The turns the rail's marks show, mark for mark, and how far the track is scrolled. */
   let drawnItems: TurnItem[] | null = null
@@ -128,23 +127,34 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /* ---------- the rail ---------- */
 
-  /** @returns the skin's rail, built the first time. */
+  /** @returns the skin's rail and track, built the first time. */
   function ensureRail() {
-    if (rail !== null) return rail
-    const built = buildElement('div', 'dsh-claude-turn-rail')
-    built.setAttribute('aria-hidden', 'true')
+    if (mounted !== null) return mounted
+    const rail = buildElement('div', 'dsh-claude-turn-rail')
+    rail.setAttribute('aria-hidden', 'true')
     // The marks change with the reading position; none of that is news to a pass.
-    built.setAttribute(QUIET_ATTR, '')
-    track = buildElement('div', 'dsh-claude-turn-rail-track')
-    built.appendChild(track)
-    built.addEventListener('pointerenter', openCard)
-    rail = built
-    return built
+    rail.setAttribute(QUIET_ATTR, '')
+    const track = buildElement('div', 'dsh-claude-turn-rail-track')
+    rail.appendChild(track)
+    rail.addEventListener('pointerenter', openCard)
+    mounted = { rail, track }
+    return mounted
   }
 
-  /** Stand the skin's rail beside the host's, in the host's slot, and hide the host's. */
+  /**
+   * Stand the skin's rail beside the host's, in the host's slot, and hide the
+   * host's.
+   * @returns whether the skin's rail has a seat; a host rail without a parent
+   *   is not on the page, so the skin's rail comes down and the next pass
+   *   looks again.
+   */
   function mountRail(found: HTMLElement) {
-    const mounted = ensureRail()
+    const slot = found.parentElement
+    if (slot === null) {
+      unmountRail()
+      return false
+    }
+    const built = ensureRail()
     if (hostRail !== found) {
       if (hostRail !== null) hostRail.removeAttribute(TURN_NAV_REPLACED_ATTR)
       hostRail = found
@@ -153,8 +163,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       railMaxHeight = -1
       current = -1
     }
-    // The host's rail sits in its slot.
-    if (mounted.parentElement !== found.parentElement) found.parentElement!.appendChild(mounted)
+    if (built.rail.parentElement !== slot) slot.appendChild(built.rail)
+    return true
   }
 
   /** Take the skin's rail away and give the host's back. */
@@ -162,7 +172,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     closeCard()
     if (hostRail !== null) hostRail.removeAttribute(TURN_NAV_REPLACED_ATTR)
     hostRail = null
-    if (rail !== null && rail.parentElement !== null) rail.remove()
+    mounted?.rail.remove()
     drawnItems = null
     currentReading = null
     railMaxHeight = -1
@@ -170,11 +180,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     current = -1
   }
 
-  /** One mark per turn; a turn outside the loaded window is drawn fainter, as the host draws it. */
-  /** Runs only while the rail is mounted. */
+  /**
+   * One mark per turn, a turn outside the loaded window drawn fainter, as the
+   * host draws it. Runs only while the rail is built.
+   */
   function drawMarks(items: TurnItem[]) {
     if (drawnItems === items) return
     drawnItems = items
+    const { rail, track } = mountedRail()
     const marks = document.createDocumentFragment()
     for (let i = 0; i < items.length; i++) {
       const mark = buildElement('span', 'dsh-claude-turn-rail-mark')
@@ -182,9 +195,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       if (!items[i].loaded) mark.setAttribute('data-unloaded', '')
       marks.appendChild(mark)
     }
-    track!.replaceChildren(marks)
-    track!.style.height = `${items.length * TURN_NAV_PITCH}px`
-    rail!.style.setProperty('--dsh-claude-turn-rail-height', `${items.length * TURN_NAV_PITCH}px`)
+    track.replaceChildren(marks)
+    track.style.height = `${items.length * TURN_NAV_PITCH}px`
+    rail.style.setProperty('--dsh-claude-turn-rail-height', `${items.length * TURN_NAV_PITCH}px`)
     current = -1
     currentReading = null
   }
@@ -216,14 +229,15 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const most = railMost()
     if (most === null) return
     offset = Math.round(Math.min(Math.max(value, 0), most))
-    track!.style.transform = `translateY(${-offset}px)`
-    rail!.toggleAttribute('data-fade-top', offset > 0)
-    rail!.toggleAttribute('data-fade-bottom', offset < most)
+    const { rail, track } = mountedRail()
+    track.style.transform = `translateY(${-offset}px)`
+    rail.toggleAttribute('data-fade-top', offset > 0)
+    rail.toggleAttribute('data-fade-bottom', offset < most)
   }
 
   /** Bring the current mark into view, centred, when it is not well inside it. */
   function follow() {
-    if (current < 0 || open || rail === null) return
+    if (current < 0 || open || mounted === null) return
     const height = railHeight()
     if (height === null) return
     const top = current * TURN_NAV_PITCH
@@ -239,14 +253,15 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     currentReading = reading
     const next = reading.index
     if (next === current) return false
-    setCurrentRow(track!, current, next)
+    setCurrentRow(mountedRail().track, current, next)
     if (open) setCurrentRow(list!, current, next)
     current = next
     return true
   }
 
   function applyReading(reading: NavigationReading, redrawn = false) {
-    const maxHeight = reading.ownRail === rail && rail !== null && rail.parentElement === reading.slot ? reading.maxHeight : -1
+    const own = mounted === null ? null : mounted.rail
+    const maxHeight = own !== null && reading.ownRail === own && own.parentElement === reading.slot ? reading.maxHeight : -1
     const resized = railMaxHeight !== maxHeight
     railMaxHeight = maxHeight
     if (redrawn || resized) setOffset(offset)
@@ -287,10 +302,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /* ---------- the card ---------- */
 
-  /** The rail, while a host rail it stands beside is found (the card opens from it). */
+  /** The rail and the track its marks ride on, while the rail is built (the card opens from it). */
   function mountedRail() {
-    if (rail === null) throw new Error('dsh-claude-style: the turn rail is not built')
-    return rail
+    if (mounted === null) throw new Error('dsh-claude-style: the turn rail is not built')
+    return mounted
   }
 
   /** The card, once ensureCard built it. */
@@ -354,7 +369,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    */
   function placeCard() {
     // Only while the card is open: the rail is mounted in its slot and the card is built.
-    const rail = mountedRail()
+    const rail = mountedRail().rail
     const card = builtCard()
     const list = card.querySelector<HTMLElement>(':scope > .dsh-claude-turn-nav-list')!
     const slot = rail.parentElement!
@@ -382,7 +397,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     ensureCard()
     renderRows(list!, drawnItems, chat)
     open = true
-    mountedRail().setAttribute(TURN_NAV_OPEN_ATTR, '')
+    mountedRail().rail.setAttribute(TURN_NAV_OPEN_ATTR, '')
     builtCard().setAttribute('data-open', 'true')
     placeCard()
   }
@@ -396,8 +411,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       cancelPointerFrame = null
     }
     builtCard().setAttribute('data-open', 'false')
-    if (rail !== null) {
-      rail.removeAttribute(TURN_NAV_OPEN_ATTR)
+    if (mounted !== null) {
+      mounted.rail.removeAttribute(TURN_NAV_OPEN_ATTR)
       follow()
     }
   }
@@ -419,7 +434,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     cancelPointerFrame = requestFrame({
       read() {
         // Raw viewport pixels on both sides: the ratio is the share whatever the page zoom is.
-        const box = mountedRail().getBoundingClientRect()
+        const box = mountedRail().rail.getBoundingClientRect()
         if (box.height <= 0 || pointer.x > box.right) return
         const span = box.height - 2 * TURN_NAV_STEER_INSET_PX
         if (span <= 0) return
@@ -574,12 +589,13 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (session === null || sessionId === null || found === null) return null
     const items = host.turnItems(sessionId)
     const current = host.readCurrent(found, items, currentReading)
+    const own = mounted === null ? null : mounted.rail
     let maxHeight = -1
-    if (rail !== null && rail.isConnected && hostRail === found && rail.parentElement === found.parentElement) {
-      const limit = Number.parseFloat(getComputedStyle(rail).maxHeight)
+    if (own !== null && own.isConnected && hostRail === found && own.parentElement === found.parentElement) {
+      const limit = Number.parseFloat(getComputedStyle(own).maxHeight)
       maxHeight = Number.isFinite(limit) ? limit : Infinity
     }
-    return { session, sessionId, found, slot: found.parentElement, items, current, ownRail: rail, maxHeight }
+    return { session, sessionId, found, slot: found.parentElement, items, current, ownRail: own, maxHeight }
   }
 
   function matchesNavigation(reading: NavigationReading) {
@@ -603,10 +619,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       const chat = host.chatText()
       if (found === null || sessionId === null || chat === null) {
         unmountRail()
+      } else if (!mountRail(found)) {
+        // The host rail has no seat this pass, so nothing is drawn on it and
+        // the next pass (scheduled below) looks again.
+        railMaxHeight = -1
+        scheduleRefresh()
       } else {
         const items = host.turnItems(sessionId)
         const ready = measured !== null && measured.found === found && measured.items === items && matchesNavigation(measured)
-        mountRail(found)
         const redrawn = drawnItems !== items
         drawMarks(items)
         if (ready) applyReading(measured, redrawn)
@@ -622,7 +642,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       stampLanding()
     },
     owns(target: Node) {
-      return (card !== null && card.contains(target)) || (rail !== null && rail.contains(target))
+      return (card !== null && card.contains(target)) || (mounted !== null && mounted.rail.contains(target))
     },
     close() {
       closeCard()
@@ -646,8 +666,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (cancelRefreshFrame !== null) cancelRefreshFrame()
     cancelRefreshFrame = null
     unmountRail()
-    rail = null
-    track = null
+    mounted = null
     clearLanded()
     landing = null
     if (card !== null) card.remove()

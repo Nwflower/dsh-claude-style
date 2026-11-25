@@ -57,7 +57,7 @@ export interface BanHandle extends FeatureHandle {
  * the band from (chrome.css), and is taken back on close. The top bar is the
  * window's drag region, since the overlay covers the host's own.
  */
-export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
+export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let banRoot: HTMLElement | null = null
   /** The overlay the reader dismissed, still playing its way out (dismissBanScreen). */
   let leavingRoot: HTMLElement | null = null

@@ -111,7 +111,7 @@ dsh plugin --profile web add Nwflower/dsh-claude-style#dist      # GitHub 发布
 
 ## 友链
 
-> 想把 Claude Code / Codex 等外部代理的会话历史导入 DSH 接着聊？推荐作者的另一个插件 [dsh-chat-import](https://github.com/Nwflower/dsh-claude-style/blob/master/README.md#友链) — [Nwflower/dsh-chat-import](https://github.com/Nwflower/dsh-chat-import)。
+> 想把 Claude Code / Codex 等外部代理的会话历史导入 DSH 接着聊？推荐作者的另一个插件 [dsh-chat-import](https://github.com/Nwflower/dsh-chat-import) — [Nwflower/dsh-chat-import](https://github.com/Nwflower/dsh-chat-import)。
 
 ## Star History
 

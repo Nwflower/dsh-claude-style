@@ -1,4 +1,4 @@
-import { DS_BOT_ACCOUNT_SELECTOR, DS_BOT_AGENT_ITEM_SELECTOR, DS_BOT_RETURN_SELECTOR, DS_BOT_SIDEBAR_TOP_SELECTOR, SIDEBAR_BRAND_SELECTOR, SIDEBAR_ROOT_SELECTOR, SIDEBAR_TOGGLE_SELECTOR, WINDOWS_MENU_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { DS_BOT_ACCOUNT_SELECTOR, DS_BOT_AGENT_ITEM_SELECTOR, DS_BOT_RETURN_SELECTOR, DS_BOT_SIDEBAR_TOP_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { SURFACE_STYLESHEET } from 'virtual:dsh-claude-style/generated'
 import { QUIET_ATTR, SURFACE_PLUGIN_CSS, SURFACE_STYLE_ID } from '../../constants'
 import { observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'

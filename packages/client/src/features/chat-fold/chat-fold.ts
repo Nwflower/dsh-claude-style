@@ -18,7 +18,7 @@ export interface ChatFoldHandle extends FeatureHandle {
 
 /* One preference controls every fold behaviour. Install only while dsh-chat-ux is absent (D76);
    ui.chatFold lets the follow guard exclude an active glide and disappears on teardown. */
-export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
+export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   document.body.setAttribute(CHAT_FOLD_ATTR, '')
   const stream = createReasoningStream()
   const stopReasoning = createReasoningFold(rows => {

@@ -43,7 +43,7 @@ export interface EffortPickerMount {
   disabled?: boolean
 }
 
-export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount: EffortPickerMount = {}) {
+export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>, mount: EffortPickerMount = {}) {
   const popoverKey = mount.popoverKey ?? 'effort'
   const owner = mount.owner ?? 'composer'
   const popoverSelector = `.dsh-claude-effort-popover[data-dsh-claude-model-owner="${owner}"]`

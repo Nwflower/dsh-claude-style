@@ -1,6 +1,5 @@
 import * as React from 'react'
-import { billingRowEntry, parseBillingTable, splitBillingRow } from '@dsh-claude-style/contracts/billing-table'
-import type { BillingRow } from '@dsh-claude-style/contracts/billing-table'
+import { billingRowEntry, parseBillingTable } from '@dsh-claude-style/contracts/billing-table'
 import { PRICE_ROWS_MAX } from '../../constants'
 import { createModalHost, ModalFrame } from '../../shared/modal-host'
 import { Glyph } from '../../shared/settings-glyphs'
@@ -246,16 +245,4 @@ const billingModal = createModalHost<BillingModalProps>('billing-table', Billing
 
 export function openBillingEditor(entries: readonly string[], currency: string, write: BillingTableWrite) {
   billingModal.open({ entries, currency, write })
-}
-
-export function closeBillingEditor() {
-  billingModal.close()
-}
-
-export function billingRowsOfEntries(entries: readonly string[]): BillingRow[] {
-  return parseBillingTable(entries)
-}
-
-export function billingRowFields(entry: string) {
-  return splitBillingRow(entry)
 }

@@ -6,7 +6,6 @@ import { QUIET_ATTR } from '../../constants'
 import { copy } from './copy'
 import { watchSidebar } from '../../shared/sidebar-watch'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
-import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostTooltip } from '../../shared/host-tooltip'
 
 /**
@@ -40,7 +39,7 @@ function quiet(node: HTMLElement) {
   node.setAttribute(QUIET_ATTR, '')
 }
 
-export function install(ctx: HostContext) {
+export function install() {
   /** 铃铛的盒子；标题行重建或窄栏时会被摘下来，下一遍再挂回去。 */
   let actions: HTMLElement | null = null
   /** 铃铛本身。 */

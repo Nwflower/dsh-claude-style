@@ -142,7 +142,7 @@ export function createReasoningStream() {
   }
 
   /** Resolved cap in pixels, clamped inside a capped process body so the thinking row's header clears `.fadeTop`. */
-  function capOf(row: Element, state: WindowState, style: CSSStyleDeclaration, stepPx: number) {
+  function capOf(row: Element, style: CSSStyleDeclaration, stepPx: number) {
     const baseCap = tokenNumber(style.getPropertyValue('--dsh-claude-reason-window-cap'), FALLBACKS.cap)
     const groupBody = row.closest<HTMLElement>(PROCESS_BODY_SELECTOR)
     if (groupBody === null) return Math.round(baseCap)
@@ -160,7 +160,7 @@ export function createReasoningStream() {
 
   /** What a text measures now: its own height under the cap, and how far it can still rise there. */
   function measureOf(row: Element, state: WindowState, style = getComputedStyle(state.window), stepPx = stepPxOf(state, style)): Measure {
-    const capPx = capOf(row, state, style, stepPx)
+    const capPx = capOf(row, style, stepPx)
     const textHeight = state.text.offsetHeight
     const height = Math.min(textHeight, capPx)
     return {
