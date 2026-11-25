@@ -105,7 +105,7 @@ export function createChatProcessFollow() {
         const body = target.closest(PROCESS_BODY_SELECTOR)
         if (body !== null) {
           syncBody(body)
-          return
+          continue
         }
       }
       for (const node of record.addedNodes) {
