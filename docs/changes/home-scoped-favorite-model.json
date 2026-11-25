@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-25",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "修复首页统计范围为活跃会话或工作区时最常用模型显示为空的问题",
-  "en": "Fix the favorite model tile staying empty for active-session and workspace home statistics"
-}

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-25",
-  "group": "improvements",
-  "order": 0,
-  "external": true,
-  "zh": "主窗口对话区移除「对话栏宽度」功能与「重绘消息导航」开关（消息导航保持默认常驻开启），并将「消息操作行」选项更名为「对话编辑与回退」",
-  "en": "Remove Conversation width and the Redraw the message navigator toggle (keeping the message navigator always on), and rename Message actions to Conversation edit and rewind"
-}

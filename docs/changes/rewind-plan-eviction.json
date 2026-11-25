@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-25",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "修复待确认回退计划达到数量上限时被全部清空的问题，现在按创建时间淘汰最旧的一条",
-  "en": "Fix every pending rewind confirmation being discarded once the plan limit was reached; the oldest plan is now evicted by creation time"
-}

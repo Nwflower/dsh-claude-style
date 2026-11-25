@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-25",
-  "group": "improvements",
-  "order": 0,
-  "external": true,
-  "zh": "外观页字体设置升级为正文、界面、代码三栏可视化预览卡片，支持置顶排序、搜索选择完整字体家族与图标一键恢复默认",
-  "en": "Rebuild typeface settings with three visual preview cards for Prose, Interface and Code, supporting reorderable pinned font stacks, searchable system font selection and one-click icon reset"
-}

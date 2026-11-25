@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-25",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "修复模型选择器内部分第三方插件选项行（例如使用 useProjection 读取会话投影的 dsh-pstack「Poteto 工作流」开关）因缺少宿主会话标准属性而被隐藏的问题",
-  "en": "Fix third-party model menu option rows that read session projections through useProjection (such as dsh-pstack's Poteto workflow switch) being hidden in the restyled model picker"
-}

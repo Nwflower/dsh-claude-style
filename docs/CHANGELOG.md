@@ -2,6 +2,52 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.22.3] - 2026-11-25
+
+[中文](#cn-0.22.3) | [English](#en-0.22.3)
+
+<h3 id="cn-0.22.3">体验优化</h3>
+
+- 新增输入框 Markdown 实时预览开关，在草稿下方安全渲染标题、列表、代码、链接、表格等格式
+- 主窗口对话区移除「对话栏宽度」功能与「重绘消息导航」开关（消息导航保持默认常驻开启），并将「消息操作行」选项更名为「对话编辑与回退」
+- 弹层放置并入帧管线，设置预览在后台标签页暂停且光标预览不再逐拍测量布局，等待行秒数改为每秒刷新，搜索语料磁盘缓存在内容未变化时跳过重复写入并按时间淘汰，画布底色选择器不再触发全文档匹配
+- 观察总线按批次类型预筛选订阅、避免无变化时重挂观察器，尺寸订阅按目标路由并支持动态共享；调度器按已安装钩子索引派发，页面级功能跳过正文流式批次；等待行时钟与完整同步拆分，消息折叠共享尺寸订阅，搜索与首页及归档列表复用快照计算，文件行按组复用合并结果
+- 外观页字体设置升级为正文、界面、代码三栏可视化预览卡片，支持置顶排序、搜索选择完整字体家族与图标一键恢复默认
+- 流式输出中出现工具调用、思考结束或新内容块时，聊天区不再替读者按下系统的回到底部按钮，跟随完全交给系统自己保持
+
+### 问题修复
+
+- 修复混合变更批次中进程区域删除顺序导致的尺寸订阅残留
+- 修复编辑侧栏等弹窗关闭后遮罩残留、界面无法点击的问题
+- 恢复首页问候语为 Claude Code 原版英文文案
+- 修复首页统计范围为活跃会话或工作区时最常用模型显示为空的问题
+- 修复模型选择器内部分第三方插件选项行（例如使用 useProjection 读取会话投影的 dsh-pstack「Poteto 工作流」开关）因缺少宿主会话标准属性而被隐藏的问题
+- 回退保留确认期间的文件编辑，按轮次起点及分岔边界恢复文件，后台检查配额时保护进行中的备份，版本历史随会话删除更新
+- 修复待确认回退计划达到数量上限时被全部清空的问题，现在按创建时间淘汰最旧的一条
+- 修复自定义费率切换币种后费用仍按旧币种计算的问题，费用请求在会话切换与费率编辑期间保持完整
+- 修复多个页面保存外观设置互相覆盖的问题，跟随宿主字体后恢复宿主原有声明
+
+<h3 id="en-0.22.3">Improvements</h3>
+
+- Add an opt-in live Markdown preview below the composer, safely rendering headings, lists, code, links, tables and more
+- Remove Conversation width and the Redraw the message navigator toggle (keeping the message navigator always on), and rename Message actions to Conversation edit and rewind
+- Route popover placement through the frame pipeline, pause settings previews in hidden tabs and stop per-tick layout reads in the caret preview, refresh the waiting line's seconds once a second, skip rewrites of unchanged search corpus cache documents and prune the directory by age, and drop document-wide relational-selector matching from canvas rules
+- Prefilter mutation subscriptions by batch shape, retain unchanged observer attachments, route size entries by target with dynamic shared groups, and index scheduler hooks; skip page-level features for content-only batches, split waiting-line clock ticks from full syncs, share message-fold size observation, reuse snapshot-derived search, home and archive computations, and cache unchanged file-group merges
+- Rebuild typeface settings with three visual preview cards for Prose, Interface and Code, supporting reorderable pinned font stacks, searchable system font selection and one-click icon reset
+- Stop pressing the host's back-to-end button when a tool call, a finished thought or a new block arrives during a stream, and leave the follow to the host, which now keeps it through those moments
+
+### Bug Fixes
+
+- Fix retained process size subscriptions when a mixed mutation batch delivers a change before another group's removal
+- Fix dialogs such as Edit sidebar leaving a mask that blocks the page after closing
+- Restore the home page greetings to Claude Code's original English lines
+- Fix the favorite model tile staying empty for active-session and workspace home statistics
+- Fix third-party model menu option rows that read session projections through useProjection (such as dsh-pstack's Poteto workflow switch) being hidden in the restyled model picker
+- Preserve edits made during rewind confirmation, restore turn-start files within fork boundaries, protect active backups during background quota checks, and update history when sessions disappear
+- Fix every pending rewind confirmation being discarded once the plan limit was reached; the oldest plan is now evicted by creation time
+- Fix session cost staying priced in the old currency after a custom-rate currency switch, and keep cost asks intact across session switches and rate edits
+- Fix concurrent appearance edits from multiple pages overwriting each other, and restore the host's own font declaration after following the host typeface
+
 ## [0.22.2] - 2026-11-24
 
 [中文](#cn-0.22.2) | [English](#en-0.22.2)

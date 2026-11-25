@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-25",
-  "group": "fixes",
-  "order": 2,
-  "external": false,
-  "zh": "修复多个页面保存外观设置互相覆盖的问题，跟随宿主字体后恢复宿主原有声明",
-  "en": "Fix concurrent appearance edits from multiple pages overwriting each other, and restore the host's own font declaration after following the host typeface"
-}

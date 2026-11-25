@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-25",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "弹层放置并入帧管线，设置预览在后台标签页暂停且光标预览不再逐拍测量布局，等待行秒数改为每秒刷新，搜索语料磁盘缓存在内容未变化时跳过重复写入并按时间淘汰，画布底色选择器不再触发全文档匹配",
-  "en": "Route popover placement through the frame pipeline, pause settings previews in hidden tabs and stop per-tick layout reads in the caret preview, refresh the waiting line's seconds once a second, skip rewrites of unchanged search corpus cache documents and prune the directory by age, and drop document-wide relational-selector matching from canvas rules"
-}

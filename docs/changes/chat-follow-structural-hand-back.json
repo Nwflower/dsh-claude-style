@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-25",
-  "group": "improvements",
-  "order": 1,
-  "external": false,
-  "zh": "流式输出中出现工具调用、思考结束或新内容块时，聊天区不再替读者按下系统的回到底部按钮，跟随完全交给系统自己保持",
-  "en": "Stop pressing the host's back-to-end button when a tool call, a finished thought or a new block arrives during a stream, and leave the follow to the host, which now keeps it through those moments"
-}

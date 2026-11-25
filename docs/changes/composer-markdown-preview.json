@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-25",
-  "group": "improvements",
-  "order": 0,
-  "external": true,
-  "zh": "新增输入框 Markdown 实时预览开关，在草稿下方安全渲染标题、列表、代码、链接、表格等格式",
-  "en": "Add an opt-in live Markdown preview below the composer, safely rendering headings, lists, code, links, tables and more"
-}

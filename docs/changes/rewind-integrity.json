@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-25",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "回退保留确认期间的文件编辑，按轮次起点及分岔边界恢复文件，后台检查配额时保护进行中的备份，版本历史随会话删除更新",
-  "en": "Preserve edits made during rewind confirmation, restore turn-start files within fork boundaries, protect active backups during background quota checks, and update history when sessions disappear"
-}

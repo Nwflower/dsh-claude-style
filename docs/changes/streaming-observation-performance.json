@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-25",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "观察总线按批次类型预筛选订阅、避免无变化时重挂观察器，尺寸订阅按目标路由并支持动态共享；调度器按已安装钩子索引派发，页面级功能跳过正文流式批次；等待行时钟与完整同步拆分，消息折叠共享尺寸订阅，搜索与首页及归档列表复用快照计算，文件行按组复用合并结果",
-  "en": "Prefilter mutation subscriptions by batch shape, retain unchanged observer attachments, route size entries by target with dynamic shared groups, and index scheduler hooks; skip page-level features for content-only batches, split waiting-line clock ticks from full syncs, share message-fold size observation, reuse snapshot-derived search, home and archive computations, and cache unchanged file-group merges"
-}

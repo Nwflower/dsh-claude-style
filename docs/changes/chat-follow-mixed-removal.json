@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-25",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "修复混合变更批次中进程区域删除顺序导致的尺寸订阅残留",
-  "en": "Fix retained process size subscriptions when a mixed mutation batch delivers a change before another group's removal"
-}

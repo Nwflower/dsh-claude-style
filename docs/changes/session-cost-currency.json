@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-25",
-  "group": "fixes",
-  "order": 1,
-  "external": false,
-  "zh": "修复自定义费率切换币种后费用仍按旧币种计算的问题，费用请求在会话切换与费率编辑期间保持完整",
-  "en": "Fix session cost staying priced in the old currency after a custom-rate currency switch, and keep cost asks intact across session switches and rate edits"
-}
