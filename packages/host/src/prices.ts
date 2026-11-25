@@ -7,17 +7,17 @@
  * a day, and keeps it on disk. The packaged copy is what a machine with no reach
  * judges by, so the meter works on a first run with no network at all.
  *
- * The refresh follows `peakrate.ts`: a timer that starts with the first reader,
- * stands down when nobody has asked for two days, and keeps the current document
- * whenever the fetch or the parse fails.
+ * The refresh timing lives in `refresh-loop.ts`: a timer that starts with the
+ * first reader, stands down when nobody has asked for two days, and keeps the
+ * current document whenever the fetch or the parse fails.
  */
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
-import { statSync } from 'node:fs'
 import { join } from 'node:path'
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
 import type { PriceDocument } from '@dsh-claude-style/contracts/prices'
 import { cachePath, packageRoot, readJsonDocument, writeJsonDocument } from './paths.js'
 import { parsePriceDocument } from './prices-document.js'
+import { createRefreshLoop } from './refresh-loop.js'
 
 /** The snapshot's file name under packages/host/data/, and beside the bundle in lib/. */
 export const PRICES_FILE = 'prices.json'
@@ -70,11 +70,9 @@ export function createPrices(ctx: DshContext): PriceStore {
   let origin: 'remote' | 'bundled' = 'bundled'
   let fetchedAt = 0
   let loaded = false
-  let timer: ReturnType<typeof setInterval> | undefined
   let inFlight: AbortController | null = null
   /** Set by dispose: a source answer that lands afterwards must not write the cache. */
   let disposed = false
-  let lastAskedAt = 0
   const listeners = new Set<() => void>()
   const warn = (message: string) => ctx.logger?.warn?.(message)
 
@@ -136,7 +134,7 @@ export function createPrices(ctx: DshContext): PriceStore {
   }
 
   /** Fetch the snapshot from the repository, falling back to the raw file. */
-  async function refresh(): Promise<boolean> {
+  async function fetchSnapshot(): Promise<boolean> {
     let next: PriceDocument | null = null
     for (const url of PRICES_URLS) {
       // Disposed while the previous source was being asked: nothing below runs
@@ -168,36 +166,25 @@ export function createPrices(ctx: DshContext): PriceStore {
     return true
   }
 
+  const loop = createRefreshLoop({ refreshMs: PRICES_REFRESH_MS, idleMs: PRICES_IDLE_MS, fetch: fetchSnapshot, fetchedAt: () => fetchedAt, disposed: () => disposed })
+
   function ensure(): void {
     load()
-    lastAskedAt = Date.now()
-    if (timer !== undefined) return
-    timer = setInterval(() => {
-      if (Date.now() - lastAskedAt > PRICES_IDLE_MS) {
-        stopTimer()
-        return
-      }
-      void refresh()
-    }, PRICES_REFRESH_MS)
-    timer.unref?.()
-  }
-
-  function stopTimer(): void {
-    if (timer === undefined) return
-    clearInterval(timer)
-    timer = undefined
+    loop.ensure()
   }
 
   return {
     ensure,
-    refresh,
+    refresh: loop.refresh,
     document() {
+      loop.refreshIfStale()
       return document
     },
     version() {
       return document === null ? '' : `${document.updatedAt}:${document.capturedAt ?? ''}`
     },
     payload() {
+      loop.refreshIfStale()
       return {
         document,
         ...(fetchedAt === 0 ? {} : { fetchedAt: new Date(fetchedAt).toISOString() }),
@@ -210,7 +197,7 @@ export function createPrices(ctx: DshContext): PriceStore {
     },
     dispose() {
       disposed = true
-      stopTimer()
+      loop.stop()
       listeners.clear()
       if (inFlight !== null) {
         inFlight.abort()

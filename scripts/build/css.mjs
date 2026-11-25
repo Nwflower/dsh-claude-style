@@ -63,15 +63,25 @@ function negated(node) {
   return false
 }
 
-/** Find body scope compounds outside :not(); document rules enter through html:has(…). */
-function scopeCompounds(selector, scopeAttribute = SCOPE_ATTRIBUTE) {
+/** Find the scope compounds for one root tag outside :not(); a document rule enters through the mirror the browser half keeps on <html>. */
+function scopeCompounds(selector, scopeAttribute = SCOPE_ATTRIBUTE, scopeTag = SCOPE_TAG) {
   const found = []
   selector.walkAttributes((attribute) => {
     if (attribute.attribute !== scopeAttribute || negated(attribute)) return
     const compound = compoundOf(attribute)
-    if (compound.some((node) => node.type === 'tag' && node.value === SCOPE_TAG)) found.push({ attribute, compound })
+    if (compound.some((node) => node.type === 'tag' && node.value === scopeTag)) found.push({ attribute, compound })
   })
   return found
+}
+
+/**
+ * Find a document root compound carrying the scope attribute. A rule that paints
+ * <html> cannot hang off body, and the marks it reads are mirrored onto the root
+ * (packages/client/src/core/root-mirror.ts); the root's own compound is the scope
+ * of that rule.
+ */
+function documentScopes(selector, scopeAttribute = SCOPE_ATTRIBUTE) {
+  return scopeCompounds(selector, scopeAttribute, DOCUMENT_TAG)
 }
 
 /** Whether a selector's scope compound carries `[attribute="value"]`. */
@@ -235,7 +245,11 @@ function processSheet(sheet, text, gates, names, read, parts, relations, keyfram
     const stamp = markerEnd !== null && rule.source.start.offset > markerEnd
     for (const selector of selectors.nodes) {
       const scopes = scopeCompounds(selector, scopeAttribute)
-      if (scopes.length === 0) throw new Error(`build: ${where} selector "${selector.toString().trim()}" is not under ${SCOPE_TAG}[${scopeAttribute}]`)
+      const roots = documentScopes(selector, scopeAttribute)
+      // A gated rule is stamped on its body compound, so a rule that only reaches
+      // the document root would silently escape the composer gate.
+      if (stamp && scopes.length === 0) throw new Error(`build: ${where} paints the document root in a gated sheet; a gated rule needs ${SCOPE_TAG}[${scopeAttribute}]`)
+      if (scopes.length === 0 && roots.length === 0) throw new Error(`build: ${where} selector "${selector.toString().trim()}" is not under ${SCOPE_TAG}[${scopeAttribute}] or ${DOCUMENT_TAG}[${scopeAttribute}]`)
       checkHasPlacement(where, selector)
       checkHasMarks(where, selector)
       const written = recordKey(selector.toString())

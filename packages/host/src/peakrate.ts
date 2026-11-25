@@ -21,6 +21,7 @@ import type { PeakCatalog, RateProfile } from '@dsh-claude-style/contracts/peakr
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
 import { cachePath, packageRoot, readJsonDocument, writeJsonDocument } from './paths.js'
 import { parseCatalog } from './peakrate-catalog.js'
+import { createRefreshLoop } from './refresh-loop.js'
 
 /** The catalog document the build copies beside the bundle (scripts/build/build.mjs). */
 export const PEAKRATE_CATALOG_FILE = 'peakrate-catalog.json'
@@ -91,7 +92,6 @@ export function createPeakRate(ctx: DshContext): PeakRateStore {
   let origin: 'remote' | 'bundled' = 'bundled'
   let fetchedAt = 0
   let loaded = false
-  let timer: ReturnType<typeof setInterval> | undefined
   /**
    * The source read in flight, so a disposal can stop it: the answer would
    * otherwise land after the routes are gone and write the cache file.
@@ -99,8 +99,6 @@ export function createPeakRate(ctx: DshContext): PeakRateStore {
   let inFlight: AbortController | null = null
   /** Set by dispose: a source answer that lands afterwards must not write the cache. */
   let disposed = false
-  /** When the route last asked: what tells a reader-driven timer from an idle one. */
-  let lastAskedAt = 0
   const warn = (message: string) => ctx.logger?.warn?.(message)
 
   /** The copy shipped in the package, which is what a machine with no reach has to judge by. */
@@ -154,7 +152,7 @@ export function createPeakRate(ctx: DshContext): PeakRateStore {
   }
 
   /** Fetch the repository's copy once and adopt the answer. */
-  async function refresh(): Promise<boolean> {
+  async function fetchCatalog(): Promise<boolean> {
     let raw: unknown
     for (const url of PEAKRATE_CATALOG_URLS) {
       // Disposed while the previous source was being asked: nothing below runs
@@ -201,6 +199,8 @@ export function createPeakRate(ctx: DshContext): PeakRateStore {
     return true
   }
 
+  const loop = createRefreshLoop({ refreshMs: PEAKRATE_REFRESH_MS, idleMs: PEAKRATE_IDLE_MS, fetch: fetchCatalog, fetchedAt: () => fetchedAt, disposed: () => disposed })
+
   /** Store the fetched document, so a restart does not have to reach the source again. */
   function writeCache(): void {
     if (disposed) return
@@ -211,29 +211,11 @@ export function createPeakRate(ctx: DshContext): PeakRateStore {
   /** Keep a long-running host current: the timer starts with the first request. */
   function ensure(): void {
     load()
-    lastAskedAt = Date.now()
-    if (timer !== undefined) return
-    timer = setInterval(() => {
-      // Nothing has asked for two days: the meter is off or the page is gone,
-      // and the source is no longer reached on its behalf The next
-      // request starts the timer again.
-      if (Date.now() - lastAskedAt > PEAKRATE_IDLE_MS) {
-        stopTimer()
-        return
-      }
-      void refresh()
-    }, PEAKRATE_REFRESH_MS)
-    timer.unref?.()
-  }
-
-  /** Stand the refresh timer down; a later request re-arms it. */
-  function stopTimer(): void {
-    if (timer === undefined) return
-    clearInterval(timer)
-    timer = undefined
+    loop.ensure()
   }
 
   function payload(): PeakRatePayload {
+    loop.refreshIfStale()
     const profiles = catalog?.profiles ?? []
     return {
       profiles,
@@ -245,11 +227,11 @@ export function createPeakRate(ctx: DshContext): PeakRateStore {
 
   return {
     ensure,
-    refresh,
+    refresh: loop.refresh,
     payload,
     dispose() {
       disposed = true
-      stopTimer()
+      loop.stop()
       // A read still in flight is stopped here: its answer would write the
       // cache file for a plugin that is no longer installed.
       if (inFlight !== null) {

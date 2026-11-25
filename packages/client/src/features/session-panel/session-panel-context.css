@@ -55,6 +55,11 @@ body[data-dsh-claude-style] .dsh-claude-panel-segment {
   /* Each part ends on a 2px cut in the host panel's own fill, so neighbouring
      parts read as separate pieces the way Claude's bar draws them. */
   box-shadow: inset -2px 0 var(--dsw-alias-bg-layer-1);
+  /* The part's length is its share of the window, written as a layout width on
+     every reading (features/session-panel/context-section.ts); a scaleX would
+     need that share as a unitless ratio the writer does not have, and would
+     draw the rounded end and the 2px cut squashed. The part is a few pixels
+     tall and moves only when the session's numbers change. */
   transition: width var(--dsh-claude-duration-reveal) var(--dsh-claude-ease-out);
 }
 

@@ -3,6 +3,7 @@ import { readPrefs } from '../../core/prefs'
 import { closestFrom } from '@dsh-claude-style/engine/dom'
 import { POPOVER_MARGIN, POPOVER_OPEN_DELAY, closeOtherPopovers, createHoverIntent, createPointerWatch, positionAnchoredPopover, registerPopover, removeStrayNodes, setMenuPopoverOpen, unregisterPopover } from '../../shared/popover'
 import { pageViewport } from '../../shared/page-zoom'
+import { releaseCardHeight } from '../../shared/card-resize'
 import { createModelSubMenu } from './sub-menu'
 
 /**
@@ -287,10 +288,11 @@ export function createModelCards(options: {
       pointerWatch.unbind()
       cancelCloseModel()
     },
-    /** Leave the shared popover registry, with no dwell left waiting to open a card. */
+    /** Leave the shared popover registry, with no dwell left waiting to open a card, and stop a travel whose animation would outlive this generation. */
     dispose() {
       subIntent.cancel()
       unregisterPopover(popoverKey)
+      releaseCardHeight()
     },
   }
 }

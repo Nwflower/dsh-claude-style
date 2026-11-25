@@ -5,7 +5,7 @@ import { localized } from '../../core/i18n'
 import { buildModelLabel, modelBrand } from './brand'
 import { modelCopy, resolveModelCopy } from './model-copy'
 import { releaseTag } from './release-tag'
-import { buildElement, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
+import { buildElement } from '@dsh-claude-style/engine/dom'
 import { POPOVER_CHECK_SVG, buildPopoverItem } from '../../shared/popover'
 import { hostTooltip } from '../../shared/host-tooltip'
 import { travelCardHeight } from '../../shared/card-resize'
@@ -14,7 +14,7 @@ import type { createHoverIntent } from '../../shared/popover'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostModelEntry, HostModelGroup } from '@dsh-claude-style/contracts/services'
 import type { Prefs } from '@dsh-claude-style/contracts/prefs'
-import { byModelId, modelComparator as compareModelOrder } from './model-order'
+import { modelComparator as compareModelOrder } from './model-order'
 
 /**
  * Model picker rows: the row/cell builders and the two level-1 list selectors,

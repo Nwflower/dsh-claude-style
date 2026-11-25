@@ -11,6 +11,12 @@ body[data-dsh-claude-style] [data-dsh-claude-pill]::before {
   height: var(--dsh-claude-pill-h, 0px);
   transform: translate(var(--dsh-claude-pill-x, 0px), var(--dsh-claude-pill-y, 0px));
   pointer-events: none;
+  /* The box is the active item's measured rectangle, written whole on every
+     pass (shared/sliding-pill.ts): its size arrives as lengths, not as ratios a
+     scale could take, and the feature sheets give the pill a 5–8px radius the
+     scale would squash at its ends. The travel the reader watches runs on
+     transform above; the size follows the same duration so a wrapped item's
+     pill grows into place without a second beat. */
   transition: transform var(--dsh-claude-duration-slide) var(--dsh-claude-ease-glide), width var(--dsh-claude-duration-slide) var(--dsh-claude-ease-glide), height var(--dsh-claude-duration-slide) var(--dsh-claude-ease-glide);
 }
 /* The items paint above the pill, which is the control's first painted box. */

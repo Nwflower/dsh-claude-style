@@ -10,8 +10,9 @@ import {
   toggleFontInStack,
 } from '@dsh-claude-style/contracts/typeface'
 import type { FontRole } from '@dsh-claude-style/contracts/typeface'
+import { observeSize } from '@dsh-claude-style/engine/bus'
 import { readPrefs, savePrefs, subscribePrefs } from '../../core/prefs'
-import { anchorSpace, closeOtherPopovers, POPOVER_MARGIN, positionAnchoredPopover, registerPopover, unregisterPopover } from '../../shared/popover'
+import { anchorSpace, clampToViewport, closeOtherPopovers, POPOVER_MARGIN, registerPopover, resolveAnchoredPosition, unregisterPopover } from '../../shared/popover'
 import { Glyph } from '../../shared/settings-glyphs'
 import { loadSystemFontFamilies } from '../../shared/typeface'
 import { copy } from './copy'
@@ -36,6 +37,97 @@ interface ActivePopover {
 let active: ActivePopover | null = null
 const listeners = new Set<() => void>()
 
+/** The scheduler wake a card size change asks for; the settings handle supplies it while installed. */
+let wake: (() => void) | null = null
+/** The open card's placement, while the popover stands. */
+let placement: TypefacePlacement | null = null
+
+/** A font card's placement, its two phases kept apart for the scheduler. */
+interface TypefacePlacement {
+  /** The handle's read phase: the anchor's box, the window's room and the card's size. */
+  measure(): void
+  /** The handle's write phase: `max-height` and the card's place, written only on a change. */
+  place(): void
+  /** Stop watching the card's size. */
+  release(): void
+}
+
+/** The settings handle's read phase: the font card's boxes, before any feature writes. */
+export function measureTypefacePopover() {
+  placement?.measure()
+}
+
+/** The settings handle's write phase: `max-height` and the card's place. */
+export function placeTypefacePopover() {
+  placement?.place()
+}
+
+/** Connect the wake a card's own size change asks for; null when the settings feature leaves. */
+export function setTypefacePopoverWake(next: (() => void) | null) {
+  wake = next
+}
+
+/**
+ * Split the font card's placement into the frame's two phases (D40). The
+ * anchor's box, the window's room, the card's size and the resolved
+ * `max-height` and place are read in `measure`; `place` writes them without
+ * reading a box back, so no write forces the layout under it.
+ */
+function attachTypefacePlacement(card: HTMLElement, anchor: HTMLElement, close: () => void): TypefacePlacement {
+  /** The air between the preview card and its picker: the host Menu's own gap. */
+  const gap = 6
+  let target: { maxHeight: number, x: number, y: number } | null = null
+  /** Whether the last read found the anchor gone: the write that follows closes the card. */
+  let detached = false
+
+  function measure() {
+    detached = !anchor.isConnected
+    if (detached) return
+    const { rect, viewport } = anchorSpace(anchor)
+    const roomBelow = viewport.height - rect.bottom - gap - POPOVER_MARGIN
+    const roomAbove = rect.top - gap - POPOVER_MARGIN
+    const bestRoom = Math.max(roomBelow, roomAbove)
+    const maxHeight = Math.min(340, Math.max(180, Math.floor(bestRoom)))
+    const width = card.offsetWidth
+    // The box the card will have once the write lands: its content's height
+    // held to the `max-height` about to be written. A stale, smaller
+    // `max-height` still on the card can under-read this height; the size the
+    // write settles on arrives as the card's next observed size, and the pass
+    // that follows places it from that size.
+    const height = Math.min(card.offsetHeight, maxHeight)
+    const anchored = resolveAnchoredPosition(rect, width, height, { side: 'below-left', gap, viewport })
+    const position = clampToViewport(anchored, width, height, viewport, POPOVER_MARGIN)
+    target = { maxHeight, x: position.x, y: position.y }
+  }
+
+  function place() {
+    // The anchor left the page with its settings page: the card has nothing to
+    // sit against, so the write retires it rather than leaving it behind.
+    if (detached || !anchor.isConnected) {
+      close()
+      return
+    }
+    if (target === null) return
+    const maxHeight = `${target.maxHeight}px`
+    if (card.style.maxHeight !== maxHeight) card.style.maxHeight = maxHeight
+    const left = `${Math.round(target.x)}px`
+    const top = `${Math.round(target.y)}px`
+    if (card.style.left !== left) card.style.left = left
+    if (card.style.top !== top) card.style.top = top
+    if (card.style.right !== 'auto') card.style.right = 'auto'
+    if (card.style.bottom !== 'auto') card.style.bottom = 'auto'
+  }
+
+  // The card is mounted in a layout effect before paint, so the first placement
+  // runs here rather than waiting a frame and painting at the host's place.
+  measure()
+  place()
+  // Its own size changes when the pinned rows, the search field or the results
+  // change; the shared size observer asks for a pass, whose phases place it.
+  const stopSize = observeSize(card, () => { wake?.() })
+  return { measure, place, release() { stopSize() } }
+}
+
 function notify() {
   for (const listener of [...listeners]) listener()
 }
@@ -56,6 +148,12 @@ export function closeTypefacePopover() {
   if (active === null) return
   const closing = active
   active = null
+  // The write phases stop with the popover: the card is unmounted a microtask
+  // later, and nothing should place it in between.
+  if (placement !== null) {
+    placement.release()
+    placement = null
+  }
   unregisterPopover(POPOVER_NAME)
   notify()
   queueMicrotask(() => {
@@ -110,34 +208,20 @@ function TypefacePopoverBody(props: { role: FontRole, anchor: HTMLElement, close
     searchRef.current?.focus({ preventScroll: true })
   }, [])
 
-  // Keep anchored below or above the card without covering the live preview cards.
+  // Keep anchored below or above the card without covering the live preview
+  // cards. The anchor and the open state alone rebuild this watch: the card's
+  // own size changes ask the scheduler for a pass, whose read and write phases
+  // place it (D40), so typing and reordering no longer recreate the watch.
   React.useLayoutEffect(() => {
     const card = cardRef.current
     if (card === null) return
-    const place = () => {
-      if (!anchor.isConnected) {
-        close()
-        return
-      }
-      const gap = 6
-      const { rect, viewport } = anchorSpace(anchor)
-      const roomBelow = viewport.height - rect.bottom - gap - POPOVER_MARGIN
-      const roomAbove = rect.top - gap - POPOVER_MARGIN
-      const bestRoom = Math.max(roomBelow, roomAbove)
-      card.style.maxHeight = `${Math.min(340, Math.max(180, Math.floor(bestRoom)))}px`
-      positionAnchoredPopover(anchor, card, { side: 'below-left', gap })
-    }
-    place()
-    const observer = new ResizeObserver(place)
-    observer.observe(card)
-    window.addEventListener('scroll', place, true)
-    window.addEventListener('resize', place)
+    const attached = attachTypefacePlacement(card, anchor, close)
+    placement = attached
     return () => {
-      observer.disconnect()
-      window.removeEventListener('scroll', place, true)
-      window.removeEventListener('resize', place)
+      if (placement === attached) placement = null
+      attached.release()
     }
-  }, [anchor, close, selected.length, query, systemFonts.length])
+  }, [anchor, close])
 
   // Dismiss on outside click or Escape.
   React.useEffect(() => {
@@ -213,16 +297,23 @@ function TypefacePopoverBody(props: { role: FontRole, anchor: HTMLElement, close
     const startY = startEvent.clientY
     let activeDrag = false
     let currentOver = index
+    // The rows keep their boxes while the drag only repaints their own states
+    // (data-dragging, data-over), so their midpoints are read once here: a
+    // pointermove compares numbers instead of reading every row's box (D40).
+    const container = pinnedListRef.current
+    const midpoints = container === null
+      ? []
+      : (Array.from(container.children) as HTMLElement[]).map(row => {
+        const rect = row.getBoundingClientRect()
+        return rect.top + rect.height / 2
+      })
 
     const computeTarget = (clientY: number) => {
-      const container = pinnedListRef.current
-      if (container === null) return index
-      const rows = Array.from(container.children) as HTMLElement[]
-      for (let i = 0; i < rows.length; i++) {
-        const rect = rows[i].getBoundingClientRect()
-        if (clientY < rect.top + rect.height / 2) return i
+      if (midpoints.length === 0) return index
+      for (let i = 0; i < midpoints.length; i++) {
+        if (clientY < midpoints[i]) return i
       }
-      return Math.max(0, rows.length - 1)
+      return Math.max(0, midpoints.length - 1)
     }
 
     const onMove = (event: PointerEvent) => {
@@ -239,6 +330,9 @@ function TypefacePopoverBody(props: { role: FontRole, anchor: HTMLElement, close
       document.removeEventListener('pointermove', onMove, true)
       document.removeEventListener('pointerup', onUp, true)
       document.removeEventListener('pointercancel', onCancel, true)
+      // The listeners hold the read boxes until the drag ends; drop them here
+      // so an ended drag keeps no row references alive.
+      midpoints.length = 0
       setDragging(null)
       if (applyMove && activeDrag && currentOver !== index) moveRow(index, currentOver)
     }

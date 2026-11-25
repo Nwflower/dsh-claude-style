@@ -3,6 +3,7 @@ import { CARET_MOTION_OFF, CARET_MOTION_TYPING } from '../../constants'
 import { motionMs } from '../../shared/motion'
 import { inPagePixels } from '../../shared/page-zoom'
 import { PreviewCards } from '../../shared/preview-cards'
+import { usePreviewLoop } from '../../shared/use-preview-loop'
 import { copy } from './copy'
 import type { PreviewOption } from '../../shared/preview-cards'
 import type { Prefs } from '../../constants'
@@ -23,7 +24,7 @@ import type manifest from './caret.manifest'
  *
  * Both cards carry the same line in the same box, so the first card's measure of
  * the last typed character's edge places both carets; the bar's rule reads it as
- * `--dsh-claude-caret-x` (features/settings/settings-cards.css).
+ * `--dsh-claude-caret-x` (features/caret/caret.css).
  */
 export const controls: SettingsControlsOf<typeof manifest> = {
   'caret-preview': CaretPicker,
@@ -43,38 +44,66 @@ function CaretPicker(props: SettingsRowView) {
   const [at, setAt] = React.useState(0)
   const pickerRef = React.useRef<HTMLDivElement | null>(null)
   const lineRef = React.useRef<HTMLSpanElement | null>(null)
-  React.useEffect(() => {
-    // A card that takes no input holds its sample still (settings-controls.ts
-    // greys the row while the parent it belongs to is off).
-    if (props.disabled) return
-    const period = motionMs('--dsh-claude-period-preview-caret')
-    const typing = Math.round(period * CARET_PREVIEW_TYPING_SHARE)
-    const gap = Math.max(1, Math.round(typing / pieces.length))
-    // The ticks the line stands whole before it clears: the rest of the
-    // period, which is what gives the caret time to blink and the reader time
-    // to read the line.
-    const ticks = pieces.length + Math.max(0, Math.round((period - typing) / gap))
-    let next = 0
-    setAt(0)
-    const timer = window.setInterval(() => {
-      next = next + 1 >= ticks ? 0 : next + 1
-      setAt(Math.min(next, pieces.length))
-    }, gap)
-    return () => window.clearInterval(timer)
-  }, [sample, props.disabled])
+  /**
+   * The right edge of every typed character, in viewport pixels from the line's
+   * own left edge; index 0 is the head of the line. Measured when the card
+   * mounts and when the sample changes, so a tick writes the caret's place from
+   * the table rather than reading two boxes per character.
+   */
+  const edges = React.useRef<readonly number[]>([0])
+  /** Bumped after a measure, so the caret is placed again once the fonts land. */
+  const [measured, setMeasured] = React.useState(0)
+  const period = motionMs('--dsh-claude-period-preview-caret')
+  const typing = Math.round(period * CARET_PREVIEW_TYPING_SHARE)
+  const gap = Math.max(1, Math.round(typing / pieces.length))
+  // The ticks the line stands whole before it clears: the rest of the
+  // period, which is what gives the caret time to blink and the reader time
+  // to read the line.
+  const ticks = pieces.length + Math.max(0, Math.round((period - typing) / gap))
+  /** The tick the line is on; the loop starts it over with the phase. */
+  const next = React.useRef(0)
+  usePreviewLoop({
+    everyMs: gap,
+    disabled: props.disabled,
+    restart: () => {
+      next.current = 0
+      setAt(0)
+    },
+    tick: () => {
+      next.current = next.current + 1 >= ticks ? 0 : next.current + 1
+      setAt(Math.min(next.current, pieces.length))
+    },
+  })
+  // The sample's own measure, taken while the layout is fresh: the two cards
+  // carry the same line, so the typing card's reading places both carets.
+  React.useLayoutEffect(() => {
+    const line = lineRef.current
+    if (line === null) {
+      edges.current = [0]
+      return
+    }
+    let mounted = true
+    const measure = () => {
+      // The fonts' promise outlives the card when the row leaves the page.
+      if (!mounted) return
+      const left = line.getBoundingClientRect().left
+      edges.current = [0, ...Array.from(line.children, piece => piece.getBoundingClientRect().right - left)]
+      setMeasured(value => value + 1)
+    }
+    measure()
+    // A webfont landing after the mount widens every character without moving
+    // the line's own box: the one change the measured edges cannot see.
+    if (document.fonts.status !== 'loaded') void document.fonts.ready.then(measure)
+    return () => { mounted = false }
+  }, [sample])
+  const shown = Math.min(at, pieces.length)
   React.useLayoutEffect(() => {
     const picker = pickerRef.current
-    const line = lineRef.current
-    if (picker === null || line === null) return
-    const last = at === 0 ? null : line.children[at - 1]
+    if (picker === null) return
     // The caret's place inside the sample line, in the pixels the property is
     // read in (shared/page-zoom.ts).
-    const lineLeft = line.getBoundingClientRect().left
-    const edge = last === null || last === undefined
-      ? lineLeft
-      : last.getBoundingClientRect().right
-    picker.style.setProperty('--dsh-claude-caret-x', `${inPagePixels(edge - lineLeft)}px`)
-  }, [at, sample])
+    picker.style.setProperty('--dsh-claude-caret-x', `${inPagePixels(edges.current[shown] ?? 0)}px`)
+  }, [shown, measured])
   const cardSample = (option: Prefs['caretMotion']) => React.createElement(
     'span',
     { className: 'dsh-claude-caret-sample', 'aria-hidden': 'true' },
@@ -88,7 +117,7 @@ function CaretPicker(props: SettingsRowView) {
         'span',
         // A character that has not been typed yet holds its place in the
         // line, so the line does not reflow as it is typed.
-        { key: `${index}-${piece}`, className: 'dsh-claude-caret-piece', 'data-in': index < at ? '' : undefined },
+        { key: `${index}-${piece}`, className: 'dsh-claude-caret-piece', 'data-in': index < shown ? '' : undefined },
         piece,
       )),
     ),
@@ -96,7 +125,7 @@ function CaretPicker(props: SettingsRowView) {
       className: `dsh-claude-caret-sample-bar dsh-claude-caret-${option}`,
       // The blink is switched off for the whole time the line is being
       // typed, so the caret is lit while it moves.
-      'data-typing': at < pieces.length ? '' : undefined,
+      'data-typing': shown < pieces.length ? '' : undefined,
     }),
   )
   const options: PreviewOption<Prefs['caretMotion']>[] = [

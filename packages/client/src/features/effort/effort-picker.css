@@ -165,6 +165,11 @@ body[data-dsh-claude-style] .dsh-claude-effort-fill {
   border-radius: 8px 0 0 8px;
   corner-shape: round;
   background: color-mix(in srgb, var(--dsw-alias-label-primary, #161616) 26%, transparent);
+  /* The fill ends at the knob's centre, measured in the track's own pixels
+     (features/effort/slider.ts writes the length). A scaleX would need that
+     length as a ratio and would deform the rounded left cap that meets the
+     groove's corner. The fill is 26px tall and follows the reader's hand, so a
+     layout transition on one element costs nothing measurable. */
   transition: width var(--dsh-claude-duration-move) var(--dsh-claude-ease-glide), opacity var(--dsh-claude-duration-move) var(--dsh-claude-ease-standard);
   pointer-events: none;
 }

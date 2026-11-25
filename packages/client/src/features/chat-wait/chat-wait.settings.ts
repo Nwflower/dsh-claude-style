@@ -6,6 +6,7 @@ import { motionMs } from '../../shared/motion'
 import { SWEEP_BAND_CLASS, SWEEP_GLYPHS_CLASS } from '../../shared/sweep-band'
 import { waitingWord } from '../../shared/turn-activity'
 import { PreviewCards } from '../../shared/preview-cards'
+import { usePreviewLoop } from '../../shared/use-preview-loop'
 import { copy } from './copy'
 import type { PreviewOption } from '../../shared/preview-cards'
 import type { Prefs } from '../../constants'
@@ -27,17 +28,19 @@ export const controls: SettingsControlsOf<typeof manifest> = {
 function StatusMotionPicker(props: SettingsRowView) {
   const pickerRef = React.useRef<HTMLDivElement | null>(null)
   const [alt, setAlt] = React.useState(false)
-  React.useEffect(() => {
+  /** Which of the two wordings stands; the still page's hand-over follows it. */
+  const phase = React.useRef(false)
+  usePreviewLoop({
+    everyMs: motionMs('--dsh-claude-period-preview-swap') / 2,
     // A card that takes no input holds its sample still (settings-controls.ts
     // greys the row while the line's own switch is off).
-    if (props.disabled) return
-    let phase = false
-    const timer = window.setInterval(() => {
-      phase = !phase
-      setAlt(phase)
-    }, motionMs('--dsh-claude-period-preview-swap') / 2)
-    return () => window.clearInterval(timer)
-  }, [props.disabled])
+    disabled: props.disabled,
+    restart: () => { phase.current = false },
+    tick: () => {
+      phase.current = !phase.current
+      setAlt(phase.current)
+    },
+  })
   React.useLayoutEffect(() => {
     const picker = pickerRef.current
     if (picker === null) return
@@ -55,7 +58,7 @@ function StatusMotionPicker(props: SettingsRowView) {
   // the card takes turns between the three shapes those arrive in — a file
   // being read, a tree being checked out, the model thinking — one at a time,
   // because three wordings cannot share the two-word paint loop
-  // (features/settings/settings-cards.css reads data-dsh-claude-precise).
+  // (features/chat-wait/chat-wait.css reads data-dsh-claude-precise).
   const preciseWords = [
     copy('statusDetailSampleRead'),
     copy('statusDetailSampleCheckout'),
@@ -66,17 +69,15 @@ function StatusMotionPicker(props: SettingsRowView) {
     copy('chatWaitTools'),
   ]
   const [preciseTurn, setPreciseTurn] = React.useState(0)
-  React.useEffect(() => {
-    if (!props.prefs.statusDetail || props.disabled) return
-    const timer = window.setInterval(() => {
-      setPreciseTurn(turn => (turn + 1) % preciseWords.length)
-    }, motionMs('--dsh-claude-period-preview-swap') / preciseWords.length)
-    return () => window.clearInterval(timer)
-  }, [props.prefs.statusDetail, preciseWords.length, props.disabled])
+  usePreviewLoop({
+    everyMs: motionMs('--dsh-claude-period-preview-swap') / preciseWords.length,
+    disabled: props.disabled || !props.prefs.statusDetail,
+    tick: () => setPreciseTurn(turn => (turn + 1) % preciseWords.length),
+  })
   // The precise line swaps one specific for the next, so the card runs the
-  // line's own two halves (settings-cards.css): the word leaving rises with a
-  // blur while the one arriving rises in from below. Both are rendered, and
-  // re-keyed each turn so the halves play again.
+  // line's own two halves (chat-wait.css): the word leaving rises with a blur
+  // while the one arriving rises in from below. Both are rendered, and re-keyed
+  // each turn so the halves play again.
   const words = props.prefs.statusDetail
     ? [
       preciseWords[(preciseTurn + preciseWords.length - 1) % preciseWords.length] ?? preciseWords[0],

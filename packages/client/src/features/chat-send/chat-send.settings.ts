@@ -4,6 +4,7 @@ import { motionReduced } from '../../core/prefs'
 import { motionMs } from '../../shared/motion'
 import { withoutTransition } from '../../shared/transition'
 import { PreviewCards } from '../../shared/preview-cards'
+import { usePreviewLoop } from '../../shared/use-preview-loop'
 import { copy } from './copy'
 import type { PreviewOption } from '../../shared/preview-cards'
 import type { Prefs } from '../../constants'
@@ -34,11 +35,12 @@ function MessageEnterPicker(props: SettingsRowView) {
   // the ones already there keep theirs.
   const [shown, setShown] = React.useState([0, 1])
   const nextId = React.useRef(shown.length)
-  React.useEffect(() => {
+  usePreviewLoop({
+    everyMs: motionMs('--dsh-claude-period-preview-enter'),
     // A card that takes no input holds its messages still (settings-controls.ts
     // greys the row while the entrance's own switch is off).
-    if (props.disabled) return
-    const timer = window.setInterval(() => {
+    disabled: props.disabled,
+    tick: () => {
       // The reader's animation choice is read each turn (D40): on a still page
       // the card stands on the messages already there, the way the line writes
       // its words at once, instead of a new message appearing without its
@@ -47,9 +49,8 @@ function MessageEnterPicker(props: SettingsRowView) {
       const id = nextId.current
       nextId.current += 1
       setShown(previous => previous.length >= 3 ? [...previous.slice(1), id] : [...previous, id])
-    }, motionMs('--dsh-claude-period-preview-enter'))
-    return () => window.clearInterval(timer)
-  }, [props.disabled])
+    },
+  })
   // The lift: appending a message has already moved the column up a row, so
   // the column is pushed back down first and then slides to where it belongs
   // — the same flip the conversation's own entrance needs, without which the

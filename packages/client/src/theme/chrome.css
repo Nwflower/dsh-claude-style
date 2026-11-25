@@ -157,9 +157,10 @@ body[data-dsh-claude-style][data-dsh-claude-page-zoom] {
 
 /* The document element's own 8px is read the same way and clipped by nothing the
    body states, so it goes too; the page drawn at a factor is the window's size,
-   and the document then has no scroll of its own to give the reader. The body's
-   mark is what this reads, the way the token layer reads the palette card. */
-html:has(body[data-dsh-claude-style][data-dsh-claude-page-zoom]) {
+   and the document then has no scroll of its own to give the reader. The page's
+   scale is written on the body; core/root-mirror.ts copies that mark onto
+   <html>, because a rule on the document cannot read the body's attributes. */
+html[data-dsh-claude-style][data-dsh-claude-page-zoom] {
   padding: 0;
   overflow: hidden;
 }
@@ -421,8 +422,13 @@ body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-we-wallp
 /* The document element's own canvas is the one opaque wall between the page
    and the window behind it: under an opacity it steps aside, the way a card's
    own background does, so the share the reader asked for is the share that
-   reaches the window. */
-html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-background-opacity]):not([data-ds-dark-theme]) {
+   reaches the window. The host states its theme on <body>, which a rule on the
+   document cannot read; the wall this rule removes stands between the window
+   and the body's fill whatever the theme, so no theme test rides it. The card's
+   own mark rides the selector so this rule outranks the canvases theme/tokens.css
+   paints at equal importance: whichever card paints the document, an opacity
+   steps it aside. */
+html[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card][data-dsh-claude-background-opacity] {
   background-color: transparent;
 }
 

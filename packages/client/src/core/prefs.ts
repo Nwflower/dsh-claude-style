@@ -14,6 +14,7 @@ import { notifyAll } from '@dsh-claude-style/engine/notify'
 import { createSettingsBinding } from '@dsh-claude-style/engine/settings-binding'
 import { pageOwner } from '../shared/visual-owner'
 import { paletteCardOf } from '../shared/palette-scheme'
+import { clearDocumentMarks, installDocumentMarks, mirrorDocumentMarks } from './root-mirror'
 
 /** Record fields whose UI edits always use the overlay, independent of their storage layer. */
 const RECORD_FIELDS = new Set<PrefKey>(['paletteSchemes', 'paletteColors', 'brandingPresets', 'brandingPreset'])
@@ -156,6 +157,9 @@ const MIRRORS = [
 /** Every attribute the mirror writes, plus the animation answer `writeMotionAttribute` resolves. */
 const MIRROR_ATTRS: readonly string[] = [...MIRRORS.map(mirror => mirror.attr), MOTION_ATTR]
 
+/** The host-theme subscription of the document element's mirror, opened with the first write (core/root-mirror.ts). */
+let stopDocumentMarks: (() => void) | null = null
+
 /** Update state even while yielded, but write attributes only on our page; notify after mirroring (D74). */
 export function adoptPrefs(next: Prefs) {
   prefs = next
@@ -174,6 +178,12 @@ export function adoptPrefs(next: Prefs) {
     projectBackgroundOpacity()
     projectCustomTypefaces(next)
     writeMotionAttribute(next.motion)
+    // After the body marks: a rule painting the document reads the copy on
+    // <html> (core/root-mirror.ts). The sheet mounts after this call (entry.ts),
+    // so the copy stands before the generation's first paint; the host flips its
+    // own theme attribute under the same subscription.
+    if (stopDocumentMarks === null) stopDocumentMarks = installDocumentMarks()
+    else mirrorDocumentMarks()
   }
   notifyAll(prefsListeners, next)
 }
@@ -181,6 +191,13 @@ export function adoptPrefs(next: Prefs) {
 /** Take back every attribute adoptPrefs mirrors onto the document: the page goes back to the host (entry.ts). */
 export function clearPrefsAttributes() {
   for (const name of MIRROR_ATTRS) document.body.removeAttribute(name)
+  // The document element's copy is the same marks, so it goes with them; the
+  // host's theme watch belongs to this generation and ends here.
+  if (stopDocumentMarks !== null) {
+    stopDocumentMarks()
+    stopDocumentMarks = null
+  }
+  clearDocumentMarks()
   writeBodyProperty(PAGE_ZOOM_VAR, null)
   writeBodyProperty(INTERFACE_FONT_SIZE_VAR, null)
   writeBodyProperty(BACKGROUND_OPACITY_VAR, null)

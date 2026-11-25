@@ -7,30 +7,33 @@ body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-
   background-color: var(--dsh-claude-canvas);
 }
 
-/* The document element sits above the body and cannot read its tokens, so each
-   colour card states its canvas here. It stays painted under a wallpaper: the
-   layer sits above this canvas and below the shell. */
-html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="claude"]:not([data-ds-dark-theme])) {
+/* The document element sits above the body and cannot read its attributes or
+   its tokens, so each colour card states its canvas here. It stays painted
+   under a wallpaper: the layer sits above this canvas and below the shell.
+   core/root-mirror.ts copies the palette marks and the host's light/dark
+   answer onto <html>, because asking through `html:has(body[…])` made every
+   mutation under the body a candidate for invalidating the document's style. */
+html[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="claude"]:not([data-dsh-claude-dark]) {
   background-color: #ffffff;
 }
 
-html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="deepseek"]:not([data-ds-dark-theme])) {
+html[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="deepseek"]:not([data-dsh-claude-dark]) {
   background-color: #ffffff;
 }
 
-html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="parchment"]:not([data-ds-dark-theme])) {
+html[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="parchment"]:not([data-dsh-claude-dark]) {
   background-color: #f7f1e3;
 }
 
-html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="forest"]:not([data-ds-dark-theme])) {
+html[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="forest"]:not([data-dsh-claude-dark]) {
   background-color: #f7fbf7;
 }
 
-html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="dusk"]:not([data-ds-dark-theme])) {
+html[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="dusk"]:not([data-dsh-claude-dark]) {
   background-color: #faf8ff;
 }
 
-html:has(body[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="rose"]:not([data-ds-dark-theme])) {
+html[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="rose"]:not([data-dsh-claude-dark]) {
   background-color: #fdf1f2;
 }
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]):not([data-we-wallpaper]) #root {

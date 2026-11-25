@@ -14,6 +14,7 @@ import { openPanelFromAction } from '../../shared/panel-actions'
 import { createHostToast } from '../../shared/host-toast'
 import { createDialogRoot } from '../../shared/dialog-root'
 import { placeBesideLauncher } from './more-placement'
+import type { LauncherPlacement } from './more-placement'
 
 /**
  * The sidebar's panel list as Claude's app keeps it: the reader picks which
@@ -78,6 +79,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const dialog = createDialogRoot()
   /** The slot registry, once the host has served it to the injected scope. */
   let slots: HostSlotsService | null = null
+  /** The open More card's placement, while its row is mounted; the scheduler's hooks read it. */
+  let placement: LauncherPlacement | null = null
 
   /** Every registered panel's id and label, as the host labels its row now. */
   function registeredPanels() {
@@ -179,6 +182,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function sync() {
     keepGlyphs()
     followPins()
+    // The write half of the More card's placement: its read ran in this pass's
+    // measure phase, and a pass that follows a host style write or a size change
+    // carries the card by the same two custom properties (more-placement.ts).
+    placement?.place()
   }
 
   /** A copy of a panel row's icon; the panel's own component needs the sidebar's kit, which only its row has. */
@@ -251,7 +258,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       const card = seat.current?.closest(MENU_ROLE_SELECTOR) ?? null
       if (!(card instanceof HTMLElement)) return
       card.setAttribute(MORE_MENU_ATTR, '')
-      const releasePlace = placeBesideLauncher(card)
+      // The card is mounted before paint; the controller measures and places here
+      // and then only asks for passes, which the handle's hooks run in their
+      // read and write phases (D40).
+      const releasePlace = placeBesideLauncher(card, () => { ui.schedule?.() })
+      placement = releasePlace
       const labels = unpinnedLabels === '' ? [] : unpinnedLabels.split('\n')
       let hostRow = false
       for (const item of card.querySelectorAll<HTMLElement>('[role="menuitem"]')) {
@@ -261,7 +272,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       setHostLists(hostRow)
       return () => {
         setHostLists(false)
-        releasePlace()
+        if (placement === releasePlace) placement = null
+        releasePlace.release()
         card.removeAttribute(MORE_MENU_ATTR)
       }
     }, [unpinnedLabels])
@@ -345,7 +357,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     { options: { name: ACTIONS_SLOT, id: 'claude-style-edit-sidebar', order: 10 }, component: EditSidebarRow },
   ], 'dsh-claude-style: sidebar entries')
 
-  ui.sidebarEntries = { sync, skipOnContentOnly: true }
+  ui.sidebarEntries = {
+    sync,
+    /** The read half of the More card's placement, before this pass's writes. */
+    measure() { placement?.measure() },
+    /** A page scroll or resize re-reads the launcher and the card before the write. */
+    measureReposition() { placement?.measure() },
+    /** The viewport write phase, in the same frame as measureReposition. */
+    reposition(reason) { if (reason === 'viewport') placement?.place() },
+    skipOnContentOnly: true,
+  }
 
   return () => {
     if (rowsFiber !== null) rowsFiber.dispose()

@@ -155,6 +155,10 @@ body[data-dsh-claude-style] [data-dsh-claude-question-surface] [role="radiogroup
   background: transparent;
   color: transparent;
   font-size: 0;
+  /* The chosen mark thickens into a 5px ring, and that thickness is read as the
+     border's width (behaviour/composer). The width transition re-lays out this
+     20px mark on each frame, cheap at this size; a shadow ring would change
+     what the measurement reads. */
   transition: border-color var(--dsh-claude-timing-feedback), border-width var(--dsh-claude-timing-feedback);
 }
 

@@ -1,10 +1,10 @@
 import { SESSION_ONGOING_SELECTOR, SESSION_PHASE_ATTRIBUTE, SESSION_ROW_KEY_ATTRIBUTE, SESSION_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
-import { hostSnapshot, hostWorkspaceView, hostWorkspaces } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import { PART_ATTR } from '../../constants'
 import { sessionSeatSegments } from '../../shared/element-order'
+import { createWorkspaceRunning } from '../../shared/workspace-running'
 
 const GROUP = '[' + PART_ATTR + '~="group-section"]'
 const LIST = '[' + PART_ATTR + '~="list"], ' + GROUP
@@ -12,8 +12,6 @@ const DATE_MODE = 'data-dsh-claude-date-groups'
 const ACTIVE_LIST = 'data-dsh-claude-active-first'
 const ORDER = '--dsh-claude-active-first-order'
 const SEAT = 'data-dsh-claude-active-first-seat'
-
-type Source = { subscribe?(listener: () => void): () => void }
 
 /** The host owns every seat. Only a shown workspace list supports this layout (D3, D43). */
 function visualOrder(list: HTMLElement, seats: Map<Element, HTMLElement>, pins: ReadonlySet<string>) {
@@ -43,7 +41,6 @@ export function install(ctx: HostContext) {
   // Native sequential focus navigation follows this same visual order. Older
   // browsers retain their host's list and its keyboard order together.
   if (!CSS.supports('reading-flow', 'flex-visual')) return () => {}
-  const subscriptions = new Map<Source, () => void>()
   // 按行：仅保留下次刷新或拆卸时需要清理的列表与直接子节点。
   let applied = new Map<HTMLElement, HTMLElement[]>()
   let cancelFrame: (() => void) | null = null
@@ -74,28 +71,17 @@ export function install(ctx: HostContext) {
   }
 
   function refresh() {
-    const view = hostWorkspaceView(ctx)
-    const workspaces = hostWorkspaces(ctx)?.list
-    const sources = new Set<Source>()
-    if (view !== null) sources.add(view)
-    if (workspaces !== undefined) sources.add(workspaces)
-    for (const [source, release] of subscriptions) {
-      if (sources.has(source)) continue
-      release()
-      subscriptions.delete(source)
-    }
-    for (const source of sources) {
-      if (!subscriptions.has(source) && typeof source.subscribe === 'function') {
-        subscriptions.set(source, source.subscribe(schedule))
-      }
-    }
+    const reading = workspaceRunning.read()
+    const view = reading.view
     // 按行：本次刷新生成当前需要显示排序的列表。
     const next = new Map<HTMLElement, HTMLElement[]>()
-    if (view?.subscribe && view.getSnapshot().orderBy === 'updated' && !document.body.hasAttribute(DATE_MODE)) {
-      const snapshot = hostSnapshot(workspaces)
-      if (snapshot?.phase !== 'pending' && Array.isArray(snapshot?.pinnedSessionIds) && Array.isArray(snapshot.archivedSessionIds)) {
-        const archived = new Set(snapshot.archivedSessionIds)
-        const pins = new Set(snapshot.pinnedSessionIds.filter(id => !archived.has(id)).map(id => 'session:' + id))
+    // The host's view store is followed by the shared reader: its subscription
+    // still decides whether this layout applies (only the rendered instance
+    // publishes mode changes), while the grouping and pins come from the same
+    // reading the group mark uses.
+    if (view !== null && typeof view.subscribe === 'function' && reading.viewSnapshot?.orderBy === 'updated' && !document.body.hasAttribute(DATE_MODE)) {
+      const pins = reading.pinnedKeys
+      if (pins !== null) {
         // 按行：本次刷新内按父节点收集宿主当前的座位。
         const lists = new Map<HTMLElement, Map<Element, HTMLElement>>()
         for (const row of rows.all()) {
@@ -120,6 +106,10 @@ export function install(ctx: HostContext) {
     cancelFrame = requestFrame({ write() { cancelFrame = null; refresh() } })
   }
 
+  // The lists and the view store are followed once for this generation; a
+  // source event asks for this layout's pass like any other change (D40).
+  const workspaceRunning = createWorkspaceRunning(ctx, schedule)
+
   const rows = observeMatches<HTMLElement>(SESSION_ROW_SELECTOR, schedule)
   const stopDate = subscribeMutations(document.body, { attributeFilter: [DATE_MODE] }, schedule)
   const stopRows = subscribeMutations(document.body, {
@@ -139,8 +129,7 @@ export function install(ctx: HostContext) {
     stopRows()
     stopDate()
     rows.release()
-    for (const release of subscriptions.values()) release()
-    subscriptions.clear()
+    workspaceRunning.dispose()
     cancelFrame?.()
     render(new Map())
   }

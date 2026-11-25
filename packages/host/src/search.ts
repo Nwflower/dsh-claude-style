@@ -13,6 +13,16 @@
  * is built unless the palette asks for a search or a prewarm.
  */
 
+import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
+import { Buffer } from 'node:buffer'
+import { createHash } from 'node:crypto'
+import { readdirSync, statSync, unlinkSync } from 'node:fs'
+import { join } from 'node:path'
+import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
+import { readEvents } from '@dsh-claude-style/engine/node/session-events'
+import type { HostLiveSession, HostSessionPersistence, HostSessionsService } from './host-services.js'
+import { cachePath, readJsonDocument, writeJsonDocument } from './paths.js'
+
 /** UTF-16 code units held as original message text; oversized sessions are read for one pass only. */
 export const CORPUS_CACHE_CHARS = 8_000_000
 /** Sessions the answer lists, newest hit first. */
@@ -33,6 +43,12 @@ const LIST_INTERVAL_MS = 2000
 /** The corpus cache document's version: a document from another build is discarded. */
 const CACHE_VERSION = 1
 /**
+ * Cache files kept on disk. A session deleted from the host leaves its file
+ * behind, so the directory is trimmed by modification time once per generation
+ * and only the sessions read most recently keep one.
+ */
+const CACHE_FILES_KEPT = 32
+/**
  * Characters of lowercased text kept across sessions. A search reads every
  * corpus, so keeping all of them lowercased would double the memory the
  * corpora themselves take; the sessions a search just read stay at the end of
@@ -41,9 +57,8 @@ const CACHE_VERSION = 1
 export const LOWER_CACHE_CHARS = 4_000_000
 
 /**
- * The host services this module reads, and the shapes it keeps between reads.
- * The host ships no types for them, so each is declared with the members the
- * reader touches.
+ * The log events this module folds, and the shapes it keeps between reads. The
+ * host service shapes it reads are declared once in host-services.ts.
  */
 interface LogEvent {
   type: string
@@ -64,22 +79,17 @@ interface ContentBlock {
 }
 
 /** The persistence service: one snapshot per stored session, with its revision. */
-interface PersistenceService {
-  list(): Promise<{ header: { id: string, origin?: string }, revision: string | number }[]>
-}
+type PersistenceService = HostSessionPersistence<{ header: { id: string, origin?: string }, revision: string | number }>
 
-/** One live session, as far as the tail read needs it. */
-interface LiveSession {
-  id: string
+/** One live session, as far as the tail read needs it: the shared shape plus the log events this fold reads. */
+interface LiveSession extends HostLiveSession<LogEvent> {
   seq: number
-  header: { origin?: string }
+  header?: { origin?: string }
   snapshotEvents(fromSeq?: number, toSeqExclusive?: number): readonly LogEvent[]
 }
 
 /** The sessions service: the sessions the host holds open right now. */
-interface SessionsService {
-  list(): LiveSession[]
-}
+type SessionsService = HostSessionsService<LiveSession>
 
 /** One searchable message. */
 interface SearchMessage {
@@ -102,13 +112,6 @@ interface SessionTarget {
   revision: string
   live: LiveSession | null
 }
-
-import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
-import { createHash } from 'node:crypto'
-import { Buffer } from 'node:buffer'
-import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
-import { cachePath, readJsonDocument, writeJsonDocument } from './paths.js'
-import { readEvents } from '@dsh-claude-style/engine/node/session-events'
 
 /**
  * The query service's own text rule (dsh-session-query `compileSessionTextFilter`):
@@ -183,12 +186,60 @@ function isStoredMessage(value: unknown): value is SearchMessage {
 }
 
 /**
+ * Trim the search cache directory to the files written most recently.
+ *
+ * A session the host no longer lists keeps a file nothing reads; the trim runs
+ * once per plugin generation, before the first fold, so the directory cannot
+ * grow with every session the user has ever opened.
+ */
+function pruneCacheFiles(ctx: DshContext): void {
+  const directory = cachePath(ctx, 'search')
+  let names: string[]
+  try {
+    names = readdirSync(directory)
+  } catch (error) {
+    // A directory that does not exist yet is the first run's answer, not a
+    // fault; any other read failure must reach the caller (D12).
+    if ((error as { code?: unknown }).code === 'ENOENT') return
+    throw error
+  }
+  const rows: { path: string, writtenAt: number }[] = []
+  for (const name of names) {
+    if (!name.endsWith('.json')) continue
+    const path = join(directory, name)
+    try {
+      rows.push({ path, writtenAt: statSync(path).mtimeMs })
+    } catch (error) {
+      // One entry removed between the listing and the stat is already gone;
+      // a real stat failure on one file must not stop the sweep (D12).
+      if ((error as { code?: unknown }).code !== 'ENOENT') {
+        ctx.logger?.warn?.(`${PACKAGE_NAME}: session search cache entry not read: ${(error as { message?: string }).message}`)
+      }
+    }
+  }
+  if (rows.length <= CACHE_FILES_KEPT) return
+  rows.sort((a, b) => b.writtenAt - a.writtenAt)
+  for (const row of rows.slice(CACHE_FILES_KEPT)) {
+    try {
+      unlinkSync(row.path)
+    } catch (error) {
+      // One entry another process holds is isolated: the next generation
+      // retries it, and the sweep still trims everything it can (D12).
+      ctx.logger?.warn?.(`${PACKAGE_NAME}: session search cache entry not removed: ${(error as { message?: string }).message}`)
+    }
+  }
+}
+
+/**
  * The search the palette's route serves.
  *
  * @param ctx - host plugin context.
  * @returns `{ search(query), warm(), dispose() }`.
  */
 export function createSessionSearch(ctx: DshContext) {
+  // A session deleted since the last run leaves a cache file nothing reads;
+  // trimming before the first fold keeps the directory in step with the store.
+  pruneCacheFiles(ctx)
   /** Session id → its corpus. */
   const cache = new Map<string, CachedSession>()
   const sizes = new Map<string, number>()
@@ -205,6 +256,8 @@ export function createSessionSearch(ctx: DshContext) {
   let lowerChars = 0
   /** When each session's cache file was last written, for the write throttle. */
   const writtenAt = new Map<string, number>()
+  /** The revision and last sequence each session's disk document already holds, written here or read back. */
+  const writtenState = new Map<string, string>()
   /** One session read at a time across all requests bounds transient full-log ownership (D12). */
   let serial: Promise<void> = Promise.resolve()
   let warming: Promise<void> | null = null
@@ -235,6 +288,7 @@ export function createSessionSearch(ctx: DshContext) {
       if (!isStoredMessage(value)) return null
       messages.push({ seq: Number(value.seq), time: Number(value.time), role: value.role, text: value.text })
     }
+    writtenState.set(sessionId, document.revision + ':' + document.lastSeq)
     return { revision: document.revision, lastSeq: Number(document.lastSeq), messages }
   }
 
@@ -249,7 +303,14 @@ export function createSessionSearch(ctx: DshContext) {
     forgetLower(sessionId)
     const now = Date.now()
     if (!force && now - (writtenAt.get(sessionId) ?? 0) < CACHE_WRITE_INTERVAL_MS) return
+    // The disk document is what lets the next instance reconstruct an evicted
+    // corpus without reading the log again, so even a corpus past the memory
+    // budget is written. Rewriting an unchanged document is the waste to skip:
+    // the state already on disk (written here or read back) answers the same.
+    const state = entry.revision + ':' + entry.lastSeq
+    if (writtenState.get(sessionId) === state) return
     writtenAt.set(sessionId, now)
+    writtenState.set(sessionId, state)
     writeJsonDocument(ctx, cacheFile(sessionId), 'session search cache', {
       version: CACHE_VERSION,
       revision: entry.revision,
@@ -274,7 +335,8 @@ export function createSessionSearch(ctx: DshContext) {
     forgetLower(sessionId)
   }
 
-  function hold(sessionId: string, entry: CachedSession) {
+  /** Hold one session's corpus in memory; a corpus past the budget is read for one pass only. */
+  function hold(sessionId: string, entry: CachedSession): void {
     let size = 0
     for (const message of entry.messages) size += message.text.length
     releaseCorpus(sessionId)

@@ -24,7 +24,13 @@ body[data-dsh-claude-style] .dsh-claude-swap-label {
      pins the box at the width it stands at and writes the one it heads for, and
      this carries it there. Between two `auto` widths no transition can run,
      which is why the pin exists — the words standing take the box back the
-     moment the move is over. */
+     moment the move is over.
+
+     The width is a layout length because the box pushes what stands after it: a
+     transform would leave the clock where it was. The script measures the widest
+     wording once, through the sizer's ResizeObserver, and writes the target once
+     per move, so this transition always runs between two written lengths, and
+     nothing measures the box mid-move. */
   transition: width var(--dsh-claude-duration-slide) var(--dsh-claude-ease-glide);
 }
 
