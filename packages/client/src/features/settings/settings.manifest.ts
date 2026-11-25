@@ -17,6 +17,7 @@ export default {
     { file: 'palette-schemes.css', rank: 321 },
     { file: 'palette-editor.css', rank: 322 },
     { file: 'brand-cards.css', rank: 323 },
+    { file: 'typeface-cards.css', rank: 327 },
     { file: 'theme-flip.css', rank: 370 },
   ],
   cases: ['settings', 'late-forms', 'host-palette', 'skin-center-handoff', 'skin-center-arrival'],

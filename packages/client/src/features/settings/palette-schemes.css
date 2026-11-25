@@ -20,7 +20,7 @@ body[data-dsh-claude-style] .dsh-claude-palette-card-actions {
 }
 
 /* The smallest type, for card tags, record limits and table hints. */
-body[data-dsh-claude-style] :is(.dsh-claude-palette-card-tag, .dsh-claude-preview-card-tag, .dsh-claude-scheme-limit, .dsh-claude-billing-units, .dsh-claude-billing-row-head, .dsh-claude-billing-limit, .dsh-claude-billing-hint) {
+body[data-dsh-claude-style] :is(.dsh-claude-palette-card-tag, .dsh-claude-preview-card-tag, .dsh-claude-typeface-summary, .dsh-claude-typeface-section-title, .dsh-claude-typeface-group-label, .dsh-claude-scheme-limit, .dsh-claude-billing-units, .dsh-claude-billing-row-head, .dsh-claude-billing-limit, .dsh-claude-billing-hint) {
   color: var(--dsw-alias-label-tertiary);
   font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 16px;

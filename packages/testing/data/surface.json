@@ -190,6 +190,16 @@
     { "id": "stats.ramp-stage", "selector": ".dsh-claude-context-ramp-stage", "feature": "context-stats", "sees": "the custom OKLCH colour-ramp editor card unfolded only while the `custom` segment is active" },
     { "id": "stats.ramp-stop", "selector": ".dsh-claude-context-ramp-stop", "feature": "context-stats", "sees": "one draggable colour-stop handle along the 0–100 % custom context-ramp gradient bar" },
     { "id": "stats.ramp-remove", "selector": ".dsh-claude-context-ramp-remove", "feature": "context-stats", "sees": "the button removing the selected colour stop while more than two stops stand on the custom ramp" },
-    { "id": "chat-wait.lane-cross", "selector": ".dsh-claude-chat-wait-lane.is-cross", "feature": "chat-wait", "sees": "the loader lane whose three dots reciprocate in phase along three tangentially offset axes, brushing past one another at the centre" }
+    { "id": "chat-wait.lane-cross", "selector": ".dsh-claude-chat-wait-lane.is-cross", "feature": "chat-wait", "sees": "the loader lane whose three dots reciprocate in phase along three tangentially offset axes, brushing past one another at the centre" },
+    { "id": "typeface.card", "selector": ".dsh-claude-typeface-card", "feature": "settings", "sees": "one of the three independent typography preview cards (prose, interface, code) in the Appearance tab" },
+    { "id": "typeface.role-attr", "attribute": "data-role", "feature": "settings", "sees": "the typography role identifier (`prose`, `ui` or `code`) on a typeface preview card" },
+    { "id": "typeface.customized-attr", "attribute": "data-customized", "feature": "settings", "sees": "present on a typeface preview card while the user has pinned one or more custom families" },
+    { "id": "typeface.sample", "selector": ".dsh-claude-typeface-sample", "feature": "settings", "sees": "the miniature live typography preview window inside a typeface card" },
+    { "id": "typeface.primary", "selector": ".dsh-claude-typeface-primary", "feature": "settings", "sees": "the primary active font family name shown in the footer of a typeface card" },
+    { "id": "typeface.count", "selector": ".dsh-claude-typeface-count", "feature": "settings", "sees": "the compact overflow count badge shown beside the primary font when more than one custom family is pinned" },
+    { "id": "typeface.reset", "selector": ".dsh-claude-typeface-card-reset", "feature": "settings", "sees": "the icon-only refresh button resetting a customized typography role back to its preset default" },
+    { "id": "skin.font-prose", "selector": "body", "property": "--dsh-claude-font-prose", "feature": "core", "sees": "the prose font-family custom property projected onto body when the user customizes prose fonts" },
+    { "id": "skin.font-serif", "selector": "body", "property": "--dsh-claude-font-serif", "feature": "core", "sees": "the display serif font-family custom property projected alongside prose custom fonts" },
+    { "id": "skin.font-code", "selector": "body", "property": "--dsh-claude-font-code", "feature": "core", "sees": "the code font-family custom property projected onto body when the user customizes code fonts" }
   ]
 }

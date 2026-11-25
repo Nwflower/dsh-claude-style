@@ -92,6 +92,8 @@ export { clampToViewport, createHoverIntent, resolveAnchoredPosition, setMenuPop
 export { ACTIVITY_THINKING, activityWords, waitingWord } from './shared/turn-activity'
 export { pageZoomOf, pageZoomPercent, pageZoomText } from './shared/page-zoom'
 export { interfaceFontSizeOf, interfaceFontSizePercent } from './shared/interface-font-size'
+export { collectSystemFamilies, composeCustomFontValue } from './shared/typeface'
+export { clampFontStack, formatFontFamily, formatFontFamilyList, normalizeFontFamily, reorderFontStack, toggleFontInStack } from '@dsh-claude-style/contracts/typeface'
 export { unavailableWebfonts, webfontRules } from './shared/webfont-rules'
 export { ARCHIVED_PAGE_SIZE, archivedOrder, createArchivedList } from './features/workspace/archived-list'
 export type { ArchivedList, ArchivedListActions, ArchivedListDeps, ArchivedListHost } from './features/workspace/archived-list'

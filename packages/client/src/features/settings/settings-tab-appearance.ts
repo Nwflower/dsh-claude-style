@@ -5,6 +5,7 @@ import { webfontsUnavailable } from '../../shared/webfonts'
 import { brandRows } from './settings-brand'
 import { paletteCardsRow, paletteManageButton } from './palette-cards'
 import { PercentControl } from './settings-percent-control'
+import { TypefaceCards } from './typeface-cards'
 import { copy } from './copy'
 import { noteDesc } from './settings-controls'
 import type { Prefs } from '../../constants'
@@ -92,11 +93,15 @@ export function createSettingsAppearanceTab(): SettingsTab {
           'typeface',
           copy('typefaceTitle'),
           typefaceDesc(prefs),
-          controls.segment([
-            { value: TYPEFACE_CLAUDE, label: copy('typefaceClaude') },
-            { value: TYPEFACE_SYSTEM, label: copy('typefaceSystem') },
-            { value: TYPEFACE_HOST, label: copy('typefaceHost') },
-          ], prefs.typeface, value => { write({ typeface: value }) }),
+          React.createElement(TypefaceCards, { prefs, write }),
+          {
+            block: true,
+            aside: controls.segment([
+              { value: TYPEFACE_CLAUDE, label: copy('typefaceClaude') },
+              { value: TYPEFACE_SYSTEM, label: copy('typefaceSystem') },
+              { value: TYPEFACE_HOST, label: copy('typefaceHost') },
+            ], prefs.typeface, value => { write({ typeface: value }) }),
+          },
         ),
       },
     ]

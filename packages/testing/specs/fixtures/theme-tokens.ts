@@ -1,11 +1,17 @@
 import source from '../../../client/src/theme/tokens.json?raw'
 
 interface LiteralTokens {
+  typeface: { token: string; claude?: string; system?: string; host?: string }[]
   palette: { tokens: { token: string; literal?: { light: string; dark: string } }[] }
   motion: { token: string; value: string }[]
   apex: { token: string; light: string; dark: string }[]
 }
 const tokens: LiteralTokens = JSON.parse(source)
+
+/** Typeface declarations from the shipped source of truth. */
+export function typefaceTokens() {
+  return tokens.typeface
+}
 
 /** Literal palette and motion declarations from the shipped source of truth, for stylesheet mechanisms. */
 export function literalThemeSheet(scope: string, darkAttribute: string) {

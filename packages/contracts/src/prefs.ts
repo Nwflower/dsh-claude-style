@@ -22,6 +22,7 @@ export {
   CONTEXT_RAMP_MODE_DEFAULT,
 } from './context-ramp'
 import { SOUND_LEVELS, SOUND_LEVEL_OFF } from './sound'
+import { clampFontStack, FONT_NAME_MAX, FONT_STACK_MAX } from './typeface'
 
 /* ---------- the value vocabulary ---------- */
 
@@ -381,6 +382,10 @@ export const PREFS = {
   /** The background fill's opacity as a percentage, between BACKGROUND_OPACITY_MIN and BACKGROUND_OPACITY_MAX. */
   backgroundOpacity: { type: 'text', default: BACKGROUND_OPACITY_DEFAULT, max: 3 },
   typeface: { type: 'choice', values: TYPEFACES, default: TYPEFACE_CLAUDE },
+  /** Prioritized custom font families prepended to each typography role; empty follows `typeface`. */
+  fontProse: { type: 'list', default: [], max: FONT_STACK_MAX, entryMax: FONT_NAME_MAX, drop: [] },
+  fontUi: { type: 'list', default: [], max: FONT_STACK_MAX, entryMax: FONT_NAME_MAX, drop: [] },
+  fontCode: { type: 'list', default: [], max: FONT_STACK_MAX, entryMax: FONT_NAME_MAX, drop: [] },
   conversationWidth: { type: 'choice', values: CONVERSATION_WIDTHS, default: CONVERSATION_WIDTH_FULL },
   composerBottomGap: { type: 'choice', values: COMPOSER_GAPS, default: COMPOSER_GAP_THEME },
   /** The mascot on the composer; the resolved one rides the document. */
@@ -537,6 +542,9 @@ export function clampPrefs(value: unknown): Prefs {
   }
   const out: Record<string, unknown> = {}
   for (const [key, spec] of Object.entries(PREFS) as [PrefKey, PrefSpec][]) out[key] = clampPref(spec, section[key])
+  out.fontProse = clampFontStack(section.fontProse)
+  out.fontUi = clampFontStack(section.fontUi)
+  out.fontCode = clampFontStack(section.fontCode)
   out.contextRamp = normalizeContextRamp(out.contextRamp)
   if (section.contextDisplay === CONTEXT_DISPLAY_RING_BAND_LEGACY && section.contextRampMode === undefined) {
     out.contextRampMode = CONTEXT_RAMP_MODE_CLASSIC

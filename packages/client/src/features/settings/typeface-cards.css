@@ -1,0 +1,381 @@
+/* ---------- Typography: three-column preview cards and stack picker ---------- */
+/* Three independent role cards (Prose, Interface, Code) laid out like the home
+   layout cards (features/home/home-preview.css). Each card paints a miniature
+   live sample in its own font token, shows the primary family with a compact
+   overflow count, and opens an anchored popover on body for stack editing. */
+
+body[data-dsh-claude-style] .dsh-claude-typeface-cards {
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+body[data-dsh-claude-style][data-dsh-claude-page-under-600] .dsh-claude-typeface-cards {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+/* Shell border, radius, background, hover and open accent ring come from settings-cards.css. */
+body[data-dsh-claude-style] .dsh-claude-typeface-card {
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-card:focus-visible {
+  outline: 2px solid var(--dsw-focus-ring-color, var(--dsw-alias-state-business-primary));
+  outline-offset: 1px;
+}
+
+/* Single-line truncation shared across card labels, samples and pinned rows. */
+body[data-dsh-claude-style] :is(.dsh-claude-typeface-name, .dsh-claude-typeface-primary, .dsh-claude-typeface-pinned-name, .dsh-claude-typeface-sample-title, .dsh-claude-typeface-sample-sub) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Miniature live preview stage inside each card. */
+body[data-dsh-claude-style] .dsh-claude-typeface-sample {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  height: 88px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 7px;
+  background: var(--dsw-alias-bg-base);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-sample[data-role="prose"] {
+  font-family: var(--dsh-claude-font-prose);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-sample[data-role="ui"] {
+  font-family: var(--dsw-font-family);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-sample[data-role="code"] {
+  font-family: var(--dsh-claude-font-code);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-sample-title {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--dsw-alias-label-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-sample[data-role="code"] .dsh-claude-typeface-sample-title {
+  font-size: 15px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-sample-sub {
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--dsw-alias-label-secondary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-sample[data-role="code"] .dsh-claude-typeface-sample-sub {
+  font-size: 14px;
+}
+
+/* Card footer: role title, optional icon-only reset, and compact family summary. */
+body[data-dsh-claude-style] .dsh-claude-typeface-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 2px;
+  min-width: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 22px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-summary {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-primary {
+  flex: 1;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-card[data-customized] .dsh-claude-typeface-primary {
+  color: var(--dsw-alias-label-secondary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-count {
+  flex: none;
+  padding: 0 5px;
+  border-radius: 8px;
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-secondary);
+  font-size: calc(10px * var(--dsh-claude-interface-font-scale, 1));
+  font-variant-numeric: tabular-nums;
+  line-height: 15px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-chevron {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  transition: transform var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-chevron svg {
+  width: 14px;
+  height: 14px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-card[data-open] .dsh-claude-typeface-chevron {
+  transform: rotate(180deg);
+  color: var(--dsw-alias-brand-primary, #d97757);
+}
+
+/* Bare icon buttons shared by card reset and popover pinned rows. */
+body[data-dsh-claude-style] .dsh-claude-typeface-icon-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+  cursor: pointer;
+  transition:
+    background-color var(--dsh-claude-timing-feedback),
+    color var(--dsh-claude-timing-feedback),
+    opacity var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-icon-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-icon-btn:hover:not(:disabled) {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-icon-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ---------- Anchored stack picker popover ---------- */
+
+body[data-dsh-claude-style] .dsh-claude-typeface-popover {
+  position: fixed;
+  width: 296px;
+  max-width: calc(100vw - 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  overflow: hidden;
+  font-family: var(--dsw-font-family);
+  transform-origin: top left;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-pinned {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 6px;
+  border-bottom: 0.5px solid var(--dsh-claude-divider, var(--dsw-alias-border-l1));
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+  min-height: 22px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-section-title,
+body[data-dsh-claude-style] .dsh-claude-typeface-group-label {
+  font-weight: 500;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-group-label {
+  padding: 6px 7px 2px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-group-label:first-child {
+  padding-top: 2px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-pinned-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 112px;
+  overflow-y: auto;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-pinned-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 2px 4px 2px 5px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--dsw-alias-label-primary) 4%, transparent);
+  color: var(--dsw-alias-label-primary);
+  cursor: grab;
+  transition:
+    background-color var(--dsh-claude-timing-feedback),
+    box-shadow var(--dsh-claude-timing-feedback),
+    opacity var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-pinned-row:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-pinned-row[data-dragging] {
+  opacity: 0.45;
+  cursor: grabbing;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-pinned-row[data-over] {
+  box-shadow: inset 0 2px 0 0 var(--dsw-alias-brand-primary, #d97757);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-grip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  color: var(--dsw-alias-label-caption);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-grip svg {
+  width: 14px;
+  height: 14px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-order {
+  flex: none;
+  min-width: 14px;
+  font-size: calc(10.5px * var(--dsh-claude-interface-font-scale, 1));
+  font-variant-numeric: tabular-nums;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-pinned-name {
+  flex: 1;
+  font-size: calc(12.5px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 18px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-pinned-actions {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  opacity: 0.72;
+  transition: opacity var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-pinned-row:is(:hover, :focus-within) .dsh-claude-typeface-pinned-actions {
+  opacity: 1;
+}
+
+/* Search field */
+body[data-dsh-claude-style] .dsh-claude-typeface-search {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 8px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-layer-1);
+  transition: border-color var(--dsh-claude-timing-feedback);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-search:focus-within {
+  border-color: var(--dsw-focus-ring-color, var(--dsw-alias-border-l3));
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-search-icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-search-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: calc(12.5px * var(--dsh-claude-interface-font-scale, 1));
+  line-height: 18px;
+  outline: none;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-search-input::placeholder {
+  color: var(--dsw-alias-label-caption);
+}
+
+/* Dropdown list */
+body[data-dsh-claude-style] .dsh-claude-typeface-dropdown {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 204px;
+  overflow-y: auto;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-option[data-chosen] {
+  color: var(--dsw-alias-label-primary);
+  font-weight: 500;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-option:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-add {
+  color: var(--dsw-alias-brand-primary, #d97757);
+}
+
+body[data-dsh-claude-style] .dsh-claude-typeface-add .dsh-claude-popover-item-icon {
+  color: inherit;
+}

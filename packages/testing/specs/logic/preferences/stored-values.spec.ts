@@ -134,16 +134,23 @@ test('quick providers keep distinct ids in order, without the official group, wi
   expect(clampPrefs({ quickProviders: many }).quickProviders).toHaveLength(QUICK_PROVIDERS_MAX)
 })
 
-test('the typeface, reasoning and interface font choices survive storage', () => {
+test('the typeface, custom font stacks, reasoning and interface font choices survive storage', () => {
   const stored = clampPrefs({
     typeface: 'system',
+    fontProse: ['LXGW WenKai', 'lxgw wenkai', 'bad;css', 'Georgia'],
+    fontUi: ['PingFang SC'],
+    fontCode: ['Fira Code', 'JetBrains Mono'],
     reasoningDisplay: 'stepped',
     interfaceFontSize: ' 125 ',
   })
   expect(stored.typeface).toBe('system')
+  expect(stored.fontProse).toEqual(['LXGW WenKai', 'Georgia'])
+  expect(stored.fontUi).toEqual(['PingFang SC'])
+  expect(stored.fontCode).toEqual(['Fira Code', 'JetBrains Mono'])
   expect(stored.reasoningDisplay).toBe('stepped')
   expect(stored.interfaceFontSize).toBe('125')
   expect(clampPrefs({ typeface: 'other' }).typeface).toBe(PREF_DEFAULTS.typeface)
+  expect(clampPrefs({ fontProse: 'Inter' }).fontProse).toEqual([])
   expect(clampPrefs({ reasoningDisplay: 'other' }).reasoningDisplay).toBe(PREF_DEFAULTS.reasoningDisplay)
   expect(clampPrefs({}).interfaceFontSize).toBe('100')
 })

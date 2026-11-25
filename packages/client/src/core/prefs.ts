@@ -3,6 +3,7 @@ import { BACKGROUND_OPACITY_ATTR, BACKGROUND_OPACITY_MAX, BACKGROUND_OPACITY_VAR
 import { backgroundOpacityOf, projectBackgroundOpacity } from '../shared/background-opacity'
 import { interfaceFontSizeOf, projectInterfaceFontSize } from '../shared/interface-font-size'
 import { pageZoomOf, pageZoomText, projectPageZoomFactor } from '../shared/page-zoom'
+import { clearCustomTypefaces, projectCustomTypefaces } from '../shared/typeface'
 import type { PrefKey, Prefs } from '../constants'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import { clampPrefs, migrationWriteBack, PALETTE_PRESETS } from '@dsh-claude-style/contracts/prefs'
@@ -171,6 +172,7 @@ export function adoptPrefs(next: Prefs) {
     // The canvas fills' opacity rides the same channel: the property is written
     // from the attribute here, like the scale above.
     projectBackgroundOpacity()
+    projectCustomTypefaces(next)
     writeMotionAttribute(next.motion)
   }
   notifyAll(prefsListeners, next)
@@ -182,6 +184,7 @@ export function clearPrefsAttributes() {
   writeBodyProperty(PAGE_ZOOM_VAR, null)
   writeBodyProperty(INTERFACE_FONT_SIZE_VAR, null)
   writeBodyProperty(BACKGROUND_OPACITY_VAR, null)
+  clearCustomTypefaces()
 }
 
 /** Whether the operating system asks for reduced motion right now. */
