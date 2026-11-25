@@ -123,6 +123,8 @@ export interface HostSlotsService {
   entriesOfSlot(key: string): HostSlotRegistration[]
   inject(key: string, callback: () => (() => void) | void): () => void
   register(options: HostSlotOptions, component: unknown): () => void
+  /** Subscribe to registration changes for one slot key; absent on stand-in doubles that never mutate it. */
+  subscribe?(key: string, listener: () => void): () => void
 }
 
 /** One entry's own declaration: the slot it fills, the key or id it stands under, and where it stands among the others. */
@@ -152,7 +154,11 @@ export interface HostSlotRegistration {
   locale?: string
   store?: { create(): HostSlotStore }
   /** The registrant's business face; a session-scoped slot hands it the session id, and the sidebar's carries its pin list. */
-  inject?(sessionId?: string): Record<string, unknown> & { setPinned?: unknown, hooks?: { entryPins?: unknown } }
+  inject?(sessionId?: string): Record<string, unknown> & {
+    setPinned?: unknown
+    hooks?: Record<string, unknown> & { entryPins?: unknown }
+    keyedHooks?: Record<string, unknown>
+  }
 }
 
 /** One customizable panel, as the sidebar's More menu hands it to its rows; Plugins is never one. */
@@ -439,15 +445,11 @@ export interface HostUiSessionService {
   sessionStatus?: HostSessionStatusService
 }
 
-/** ui-workspace's session menu slot props. */
-export interface HostSessionMenuProps {
-  sessionId: string
-  useMenuOpenState?(): readonly [boolean, (open: boolean) => void]
-}
-
-/** The shell's `uiWorkspace`: open one session as a single UI navigation action. */
+/** The shell's `uiWorkspace`: open one session, or start a new one in a workspace, as a single UI navigation action. */
 export interface HostUiWorkspaceService {
   openSession(id: string): void
+  /** Start a new session, in `workspaceId` when one is named; the search palette's project row and its new-session action press it. */
+  startSession(workspaceId?: string): void
 }
 
 /** The shell's `uiConversation`: one session's conversation binding. */

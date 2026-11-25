@@ -216,13 +216,13 @@ if (copies.status !== 0) {
 // (D9): a lookup inside a refresh pass or a frame callback costs the page's own size on
 // every frame of a long conversation. A query by an element's id is not counted, and the
 // sanctioned readers are the accessors and registries that cache their answer — the
-// engine's host.ts, bus.ts and chat-dom.ts, and the sheet stylesheet.ts mounts. Every other
+// engine's host-seats.ts, bus.ts and chat-dom.ts, and the sheet stylesheet.ts mounts. Every other
 // site is recorded in packages/testing/data/document-lookups.json with its reason: a file's
 // count has to match its entry, an entry whose count reaches zero comes out, and
 // scripts/ci/ci-scope.mjs --ledgers holds the total against the base. A unit test stands outside the rule.
 const LOOKUP = /document\.(?:querySelectorAll|querySelector)(?:<[^>]*>)?\s*\(|document\.body\.(?:querySelectorAll|querySelector)(?:<[^>]*>)?\s*\(|removeStrayNodes\(\s*document\b/g
 const LOOKUP_OWNERS = new Set([
-  'packages/engine/src/host.ts',
+  'packages/engine/src/host-seats.ts',
   'packages/engine/src/bus.ts',
   'packages/engine/src/stylesheet.ts',
   'packages/engine/src/chat-dom.ts',

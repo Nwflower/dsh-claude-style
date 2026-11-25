@@ -1,5 +1,5 @@
 import { holdRelations, partRegions } from './parts-table'
-import type { HoldRelation, PartTable, PartsTableVocabulary } from './parts-table'
+import type { HoldRelation, PartsTableVocabulary } from './parts-table'
 import { localClassName, setAttributeIfChanged } from './dom'
 import { batchAdditions, subscribeMutations } from './bus'
 import { announceClasses, meetClass } from './part-classes'
@@ -440,8 +440,8 @@ export function markPartsWithin(root: Element) {
   announceClasses()
 }
 
-/** Take every part and hold mark off, for the teardown. */
-export function clearParts(root: ParentNode = document) {
+/** Take every part and hold mark off, for the teardown; only the installed pass's own teardown calls it. */
+function clearParts(root: ParentNode = document) {
   for (const element of root.querySelectorAll(`[${vocabulary().part}], [${vocabulary().holds}]`)) {
     element.removeAttribute(vocabulary().part)
     element.removeAttribute(vocabulary().holds)
