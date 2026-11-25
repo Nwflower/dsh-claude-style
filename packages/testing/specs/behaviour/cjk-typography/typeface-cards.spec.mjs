@@ -82,7 +82,7 @@ export default spec({ page: 'settings' }, ({ test }) => {
     await t.prefs({ typeface: 'claude', fontProse: [], fontUi: [], fontCode: [] })
     const initial = await readTypefaceCards(t)
     t.expectThat.equal(initial.map(card => card.role), ['prose', 'ui', 'code'], 'three independent cards render in Prose, Interface, Code order')
-    t.expectThat.equal(initial.every(card => card.sample === 'DeepSeek探索未知之境' && !card.customized && card.reset === null), true, 'default state shows the fixed DeepSeek sample and hides reset icons')
+    t.expectThat.equal(initial.every(card => card.sample === 'DeepSeek探索未至之境' && !card.customized && card.reset === null), true, 'default state shows the fixed DeepSeek sample and hides reset icons')
     t.expectThat.equal(initial.map(card => card.primary), ['Anthropic Serif', 'Anthropic Sans', 'Anthropic Mono'], 'each card names its active preset primary family')
 
     await t.prefs({

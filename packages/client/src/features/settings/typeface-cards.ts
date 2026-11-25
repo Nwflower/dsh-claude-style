@@ -33,7 +33,7 @@ const ROLE_TITLES: Readonly<Record<FontRole, CopyKey>> = {
 
 /** Fixed bilingual preview lines shown across all three role cards for direct visual comparison. */
 const SAMPLE_TITLE = 'DeepSeek'
-const SAMPLE_SUBTITLE = '探索未知之境'
+const SAMPLE_SUBTITLE = '探索未至之境'
 
 /** Primary display name shown on a card when no custom family stack is configured. */
 function defaultFamilyLabel(typeface: Prefs['typeface'], role: FontRole): string {
