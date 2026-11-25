@@ -218,8 +218,8 @@ const COMPOSER_CARD = COMPOSER_CARD_SELECTOR
 const COMPOSER_PLACEHOLDER = COMPOSER_PLACEHOLDER_SELECTOR
 
 /** The composer cards, kept current by the bus instead of queried every pass (D40). */
-export function observeComposerCards() {
-  return observeMatches<HTMLElement>(COMPOSER_CARD)
+export function observeComposerCards(onChange?: () => void) {
+  return observeMatches<HTMLElement>(COMPOSER_CARD, onChange)
 }
 
 /** The composer placeholders, kept current by the bus (D40); the skin's synthetic one is a match too. */

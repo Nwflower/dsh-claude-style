@@ -1,0 +1,5 @@
+{
+  "composerMarkdownTitle": { "zh": "Markdown 实时预览", "en": "Live Markdown preview" },
+  "composerMarkdownDesc": { "zh": "在输入框下方实时渲染草稿的 Markdown 预览。", "en": "Render a live Markdown preview of the draft below the input box." },
+  "composerMarkdownLabel": { "zh": "Markdown 预览", "en": "Markdown preview" }
+}

@@ -2,6 +2,22 @@
 
 This package includes material from the projects below. Each keeps its own license; the MIT license of this package does not relicense it.
 
+## Marked
+
+The composer Markdown preview bundles Marked to parse GitHub-flavoured Markdown.
+
+Source: <https://github.com/markedjs/marked>
+
+License: MIT. The copyright and license notices are shipped in `packages/client/src/features/composer-markdown/LICENSE-marked`.
+
+## DOMPurify
+
+The composer Markdown preview bundles DOMPurify to sanitize the parsed HTML before it enters the page.
+
+Source: <https://github.com/cure53/DOMPurify>
+
+License: Apache License 2.0. The license is shipped in `packages/client/src/features/composer-markdown/LICENSE-dompurify`.
+
 ## dsh-chat-ux
 
 The chat area's folding (`packages/client/src/features/chat-fold/`), the token reveal (`packages/client/src/features/chat-reveal/`), the send flight (`packages/client/src/features/chat-send/`), the enhanced follow and the capped process group's follow (`packages/client/src/features/chat-follow/`) and the composer caret (`packages/client/src/features/caret/`) are ported from dsh-chat-ux. The ported source files name it in their headers, and each of those features stands down while that plugin is on the page.

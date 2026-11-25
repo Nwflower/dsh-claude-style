@@ -20,6 +20,7 @@ import type { ViewTabsHandle } from '../features/view-tabs/view-tabs'
 export interface Handles {
   brand: FeatureHandle
   composer: ComposerHandle
+  composerMarkdown: FeatureHandle
   questionCard: FeatureHandle
   homeLayout: FeatureHandle
   homeRipple: FeatureHandle

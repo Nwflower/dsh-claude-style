@@ -46,6 +46,7 @@ export { default as SIDEBAR_STATUS_SHEET } from './features/sidebar-status/sideb
 export { default as SIDEBAR_BASE_SHEET } from './theme/sidebar.css?raw'
 export { installSessionContextMenu } from './features/session-actions/context-menu'
 export { createComposerResponsive } from './features/composer/responsive'
+export { install as installComposerMarkdown, renderComposerMarkdown } from './features/composer-markdown/composer-markdown'
 export { default as composerInlineCss } from './features/composer/inline.css?raw'
 export { default as composerInlineBarCss } from './features/composer/inline-bar.css?raw'
 export { default as composerResponsiveCss } from './features/composer/responsive.css?raw'
