@@ -38,6 +38,7 @@ export function createModelFooter(options: {
     slots: options.slots,
     locked: options.locked,
     dismiss: options.dismiss,
+    schedule: options.schedule,
   })
 
   return {

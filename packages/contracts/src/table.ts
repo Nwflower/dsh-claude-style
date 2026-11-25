@@ -47,6 +47,7 @@ interface HostDomEntry {
 }
 
 export const HOST_DOM: HostDomEntry[] = [
+  { id: 'model.plugin-option-id', value: dom.MODEL_PLUGIN_OPTION_ID_ATTRIBUTE, probe: { state: 'any', kind: 'none' }, use: 'the option id a third-party model menu row carries, written by the picker so the row and its portal target stay matched (D76)' },
   { id: 'workspace.leading-outlet', value: dom.SESSION_STATUS_OUTLET_SELECTOR, probe: { state: 'conversation', kind: 'selector', min: 0 }, use: 'native idle leading outlet; third-party decoration in this outlet stays leading rather than treated as a status' },
   { id: 'chat.flow-block', value: dom.FLOW_BLOCK_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'a flow block: a direct call\u2019s own block is the box its row takes in the list; the flow children the sodium rewrite buckets its gap rules on (D114)' },
   { id: 'chat.flow', value: dom.CHAT_FLOW_SELECTOR, probe: { state: 'conversation', kind: 'selector' }, use: 'the chat column: the root every chat-area behaviour scopes to' },

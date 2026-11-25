@@ -278,6 +278,8 @@ export const PERMISSION_TRIGGER_SELECTOR = `${PERMISSION_SLOT_SELECTOR} button:n
 export const CONVERSATION_ACTIVITY_SLOT_SELECTOR = '[data-slot="conversation.input.activity"]'
 /** One model slot per composer card, including docked conversations; resolve within the target card. */
 export const MODEL_SLOT_SELECTOR = '[data-slot="conversation.input.model"]'
+/** The option id one third-party model menu row carries, written by the picker so the row and its portal target stay matched (D76). */
+export const MODEL_PLUGIN_OPTION_ID_ATTRIBUTE = 'data-option-id'
 /** A host button that opens a dialog: the model and effort pickers in the composer stack. */
 export const DIALOG_TRIGGER_SELECTOR = 'button[aria-haspopup="dialog"]'
 /** The sidebar footer block; the skin's account entry lives inside it. */

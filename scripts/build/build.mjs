@@ -94,7 +94,7 @@ const PACKAGE = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf
 const PACKAGE_ID = PACKAGE.name
 
 /** The packages the host's loader hands the factory's `require`; never bundled. */
-const HOST_PACKAGES = ['react', 'react-dom/client', '@deepseek-ai/dsh-client-ui-primitives']
+const HOST_PACKAGES = ['react', 'react-dom', 'react-dom/client', '@deepseek-ai/dsh-client-ui-primitives']
 
 /** Retain old assets only for linked live pages; published and CI builds carry exactly their own (D76). */
 const RETAIN_ASSETS = process.env.DSH_CLAUDE_STYLE_DEBUG === '1' && process.env.CI === undefined

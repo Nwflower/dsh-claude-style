@@ -7,7 +7,7 @@ export default {
   reads: ['composer', 'peakrate'],
   // The seat stands in the page's main composer card; a sub-agent's docked
   // conversation draws one of its own (engine/host.ts::findPrimaryModelSlot).
-  contracts: ['composer.model-slot', 'sidebar.chat'],
+  contracts: ['composer.model-slot', 'sidebar.chat', 'model.plugin-option-id'],
   pref: 'modelPicker',
   stylesheets: [{ file: 'model-picker.css', rank: 260 }],
   settingsRows: [{

@@ -45,6 +45,7 @@
     // The model picker's plugin rows stand inside an error boundary, which only
     // a class component can be; the page renders none, so the class is inert.
     Component: function Component(props) { this.props = props },
+    Fragment: function Fragment(props) { return props.children },
   }
   window.__react = react
   // The host's ui-primitives, as far as the skin uses them: the components its
@@ -140,10 +141,14 @@
       return root
     },
   }
+  var reactDomPortal = {
+    createPortal: function (children) { return children },
+  }
   window.__ModuleLoader__ = {
     load: function (def) {
       window.__skin = def.factory(function (name) {
         if (name === 'react') return react
+        if (name === 'react-dom') return reactDomPortal
         if (name === 'react-dom/client') return reactDom
         if (name === '@deepseek-ai/dsh-client-ui-primitives') return primitives
         throw new Error('no module ' + name)
