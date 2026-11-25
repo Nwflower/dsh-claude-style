@@ -35,16 +35,6 @@ export default {
     // walk checks below is that the position got there by walking. The two walks
     // are the page's own recordings of their frames (smoke/probe/chat-follow.js).
     const AT_END_PX = bound('followAtEndPx')
-    // A position above the end is where the reader reads: the host restores a
-    // saved position inside the last screen when the reader returns to a
-    // conversation, and the hand-back stands the follow up only from the end
-    // (scroll-owner.ts's handBackFollow, D40, D95).
-    check('a structural moment leaves a position above the end where the reader left it',
-      follow.before === 60 && follow.after === 60,
-      JSON.stringify({ before: follow.before, after: follow.after }))
-    check('a reader who scrolled away himself is left where he is',
-      follow.readerBefore === 60 && follow.readerAfter === 60,
-      JSON.stringify({ before: follow.readerBefore, after: follow.readerAfter }))
     const catchUp = follow.catchUp || []
     const catchUpSteps = walkedSteps(catchUp, AT_END_PX)
     check('the capped body walks to its end instead of jumping: the recording starts far off, every frame closes on it, and the last one is at the end',

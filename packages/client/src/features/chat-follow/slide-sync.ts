@@ -58,16 +58,13 @@ export function createSlideSync(motion: SlideMotion, options: { foldBusy: () => 
    * callback, when the host has just mounted the whole tree, and an
    * `offsetHeight` read forces that dirty tree to lay out again. The
    * subscription's first report is the baseline instead.
-   *
-   * @returns whether the watched column changed: the tail is read again for a
-   *     new column or for content arriving in this transcript.
    */
   const slideSync = () => {
     // The column is kept by packages/engine/src/chat-dom.ts: asking the document
     // for it on every frame of a stream forced a style pass over the whole page
     // (D9).
     const column = conversationColumn()
-    if (column === state.slideColumn) return false
+    if (column === state.slideColumn) return
     if (state.stopSlideSize !== null) state.stopSlideSize()
     state.stopSlideSize = null
     motion.stopSlide()
@@ -76,14 +73,12 @@ export function createSlideSync(motion: SlideMotion, options: { foldBusy: () => 
     state.slideHeight = 0
     state.slideScrollTop = null
     state.slideReaderRevision = 0
-    state.seenAtTail = false
     // A new column is a new conversation: the pace the old one streamed at is
     // no reading of how fast this one's pieces arrive (D95).
     state.grewAt = 0
     state.grewEvery = 0
-    if (column === null) return true
+    if (column === null) return
     state.stopSlideSize = observeSize(column, onSlideResize, { afterHost: true })
-    return true
   }
 
   /**
@@ -166,7 +161,6 @@ export function createSlideSync(motion: SlideMotion, options: { foldBusy: () => 
       }
     }
     const scroller = column?.closest(CONVERSATION_SCROLL_SELECTOR) ?? null
-    motion.noteTailIfNear(scroller)
     const scrollTop = scroller?.scrollTop ?? null
     const previousScrollTop = state.slideScrollTop
     const revision = scroller === null ? 0 : readerScrollRevision(scroller)

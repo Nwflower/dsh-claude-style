@@ -1,8 +1,7 @@
 /**
- * The follow hand-back and the stream glide (packages/client/src/features/chat-follow/):
- * a structural moment hands the host's follow back from the end, a position above
- * the end and a reader who took the scroll over himself are left where they are,
- * and the growth a fast answer brings is slid to rest instead of jumping a frame (D95).
+ * The capped body's catch-up and the stream glide (packages/client/src/features/chat-follow/):
+ * the capped body walks to its end, and the growth a fast answer brings is slid
+ * to rest instead of jumping a frame (D95).
  */
 (function () {
   var probe = window.__dshSmokeProbe
@@ -72,10 +71,8 @@
       window.__pushForm({ messageEnter: 'flight' })
       await probe.settle()
     })
-    // The ported chat-follow feature (packages/client/src/features/chat-follow/): a structural
-    // moment hands the host's follow back from the end, a position above the end
-    // stays where the reader left it, and a reader who took the scroll over
-    // himself is left where he is.
+    // The ported chat-follow feature (packages/client/src/features/chat-follow/):
+    // the capped body's catch-up and the stream slide.
     await probe.onlyFor(['chat-follow'], async function () {
       var followScroller = document.querySelector('[data-conversation-scroll]')
       var followColumn = document.querySelector('[data-chat-flow]')
@@ -129,41 +126,11 @@
       var bodyWalking = function () {
         return cappedBody !== null && cappedBody.scrollHeight - cappedBody.clientHeight - cappedBody.scrollTop > 6
       }
-      var structuralMoment = async function () {
-        var node = document.createElement('div')
-        node.setAttribute('data-chat-flow-key', 'probe')
-        node.style.display = 'none'
-        followColumn.appendChild(node)
-        // Two hand-backs never land closer than the follow's own interval
-        // (FOLLOW_MIN_INTERVAL_MS, a fifth of a second): the moment is held past
-        // it, which is the product's clock, before it is taken away again.
-        await probe.sleep(250)
-        followColumn.removeChild(node)
-        await probe.settle()
-      }
       r.chatFollow = {
         marked: document.body.hasAttribute('data-dsh-claude-chat-follow'),
         overflowX: cappedBody === null ? null : getComputedStyle(cappedBody).overflowX,
         expandedOverflowX: expandedBody === null ? null : getComputedStyle(expandedBody).overflowX,
       }
-      // At the end, so any reader-took-over the guard is holding is dropped.
-      followScroller.scrollTop = followScroller.scrollHeight
-      await probe.settle()
-      await structuralMoment()
-      // 60px off the end, the way the host restores a saved position inside the
-      // last screen when the reader returns to a conversation.
-      followScroller.scrollTop = Math.max(0, followScroller.scrollHeight - followScroller.clientHeight - 60)
-      await probe.settle()
-      r.chatFollow.before = endGap()
-      await structuralMoment()
-      r.chatFollow.after = endGap()
-      // A wheel of the reader's own: the hand-back stops until he returns.
-      followScroller.dispatchEvent(new WheelEvent('wheel', { bubbles: true }))
-      followScroller.scrollTop = Math.max(0, followScroller.scrollHeight - followScroller.clientHeight - 60)
-      await probe.settle()
-      r.chatFollow.readerBefore = endGap()
-      await structuralMoment()
-      r.chatFollow.readerAfter = endGap()
       // The capped body's catch-up is walked in on a curve, not written in one
       // frame (scroll-ease.ts): grow the content well past the catch-up
       // threshold and record every frame of the walk out of it.

@@ -578,9 +578,9 @@ export function handBackFollow(options?: { stillWanted?: () => boolean, onSettle
   // above it is no sign of a follow that fell behind: the host restores the
   // saved position of a conversation inside the last screen whenever the reader
   // returns to it, and walking that place to the end would move what he went
-  // back to read (D40 leaves the move to the reader, D95 hands the follow back
-  // at a structural moment). The hand-back stands the follow up from the end;
-  // a reader above it keeps the host's button to come down himself.
+  // back to read (D40 leaves the move to the reader). The hand-back stands the
+  // follow up from the end; a reader above it keeps the host's button to come
+  // down himself.
   if (scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop > 0.5) {
     if (onSettled !== null) onSettled()
     return

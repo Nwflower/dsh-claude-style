@@ -1,4 +1,4 @@
-import { CHAT_RUNNING_SELECTOR, DISCLOSURE_HEADER_SELECTOR, DISCLOSURE_ROW_SELECTOR, EXPANDED_ATTRIBUTE, FOLLOWING_TAIL_SELECTOR, FOLLOW_THRESHOLD_PX, PROCESS_BODY_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE, SHIMMER_SELECTOR, STREAMING_SELECTOR, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CHAT_RUNNING_SELECTOR, DISCLOSURE_HEADER_SELECTOR, DISCLOSURE_ROW_SELECTOR, EXPANDED_ATTRIBUTE, FOLLOWING_TAIL_SELECTOR, PROCESS_BODY_SELECTOR, PROCESS_EXPANDED_MODE_ATTRIBUTE, SHIMMER_SELECTOR, STREAMING_SELECTOR, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { observeMarker, observeMatches } from '@dsh-claude-style/engine/bus'
 import { conversationColumn } from '@dsh-claude-style/engine/chat-dom'
 import { SCROLL_EASE_LEAD_PX } from '@dsh-claude-style/engine/scroll-owner'
@@ -36,8 +36,6 @@ export interface SlideState {
   slideScrollTop: number | null
   /** The held position's revision at that batch: new travel alone may use the owner's absolute position. */
   slideReaderRevision: number
-  /** Whether the current conversation column has ever stood at or followed the tail. */
-  seenAtTail: boolean
   /** The slide running now: the column's, the counter-slides on stuck chrome, the distance they started from, and their duration. */
   slide: { column: Animation, counters: Animation[], from: number, duration: number } | null
   /** The column the hold mark (FOLLOW_HOLD_ATTR) is on, or null while no door holds it. */
@@ -54,33 +52,25 @@ export interface SlideMotion {
   state: SlideState
   stopSlide(): void
   slideWanted(column: HTMLElement): boolean
-  noteTailIfNear(scroller: Element | null): void
   blockSize(entry: ResizeObserverEntry): number
   startSlide(column: HTMLElement, scroller: Element | null, grew: number): void
 }
 
 /** The slide as the guard side asks for it: no variable of the slide is readable or writable from outside this file. */
 export interface StreamSlide {
-  /** Bring the size subscription onto the current column; whether that column changed. */
-  sync(): boolean
+  /** Bring the size subscription onto the current column. */
+  sync(): void
   /** End the running slide where it is, before its offset outlives the state it was measured in. */
   stop(): void
   /** Keep or drop the door's hold mark for the height change now in flight. */
   holdCheck(): void
-  /** Record that the conversation stood at or follows its tail, from the position a read phase took. */
-  noteTail(scroller: Element | null): void
-  /** Whether this conversation column has ever stood at or followed the tail. */
-  seenAtTail(): boolean
-  /** Whether the host's streaming mark is inside the message column right now. */
-  streaming(): boolean
   release(): void
 }
 
 /**
  * Build the stream slide and the sync under it, behind one seam.
  *
- * The guard side reads the streaming mark and the tail through this object;
- * every piece of slide state stays in this closure, so the guard never holds a
+ * Every piece of slide state stays in this closure, so the guard never holds a
  * variable that slide-sync.ts also writes.
  *
  * @param options.foldBusy - whether a fold glide is animating a height right now.
@@ -97,7 +87,6 @@ export function createStreamSlide(options: { foldBusy: () => boolean, submission
     slideHeight: 0,
     slideScrollTop: null,
     slideReaderRevision: 0,
-    seenAtTail: false,
     slide: null,
     heldColumn: null,
     slideArmed: false,
@@ -129,11 +118,7 @@ export function createStreamSlide(options: { foldBusy: () => boolean, submission
     return runningMarks.all().some((mark) => column.contains(mark))
   }
 
-  /**
-   * Whether this growth is slid. The gate is the streaming mark itself rather
-   * than the guard's wider "work in progress" window: the structural moments
-   * that window exists for are the hand-back's business.
-   */
+  /** Whether this growth is slid: the streaming mark is the gate. */
   const slideWanted = (column: HTMLElement) => {
     // The reader's animation choice means "no animation": nothing to slide.
     if (motionReduced()) return false
@@ -156,15 +141,6 @@ export function createStreamSlide(options: { foldBusy: () => boolean, submission
     state.slide.column.cancel()
     for (const counter of state.slide.counters) counter.cancel()
     state.slide = null
-  }
-
-  /** Whether the conversation scroller currently stands at or follows its tail. */
-  const noteTailIfNear = (scroller: Element | null) => {
-    if (state.seenAtTail || scroller === null) return
-    if (scroller.querySelector(FOLLOWING_TAIL_SELECTOR) !== null
-      || scroller.scrollHeight - scroller.clientHeight - scroller.scrollTop <= FOLLOW_THRESHOLD_PX) {
-      state.seenAtTail = true
-    }
   }
 
   /** The distance the running slide still carries, off its own clock and curve: no style is read. */
@@ -264,15 +240,12 @@ export function createStreamSlide(options: { foldBusy: () => boolean, submission
     return size !== undefined && size.length > 0 ? size[0].blockSize : entry.contentRect.height
   }
 
-  const sync = createSlideSync({ state, stopSlide, slideWanted, noteTailIfNear, blockSize, startSlide }, { foldBusy, readerAway })
+  const sync = createSlideSync({ state, stopSlide, slideWanted, blockSize, startSlide }, { foldBusy, readerAway })
 
   const slide: StreamSlide = {
     sync: sync.sync,
     stop: stopSlide,
     holdCheck: sync.holdCheck,
-    noteTail: noteTailIfNear,
-    seenAtTail: () => state.seenAtTail,
-    streaming,
     release() {
       // The subscription and the hold mark go with the sync; a slide still
       // running is cancelled in this same pass, so no frame writes after the

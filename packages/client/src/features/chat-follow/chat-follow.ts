@@ -11,15 +11,13 @@ import type { FeatureUi } from '../../core/feature'
 import type manifest from './chat-follow.manifest'
 
 /*
- * Enhanced follow and the capped process group's follow, ported from
- * dsh-chat-ux. Both ride one preference, as they do upstream: they are the
- * two halves of the same hand-back.
+ * The stream slide and the capped process group's follow, ported from
+ * dsh-chat-ux. Both ride one preference, as they do upstream.
  *
- * The guard that watches for the moments that lose the host's follow is in
- * follow-guard.ts; the stream slide it consults is in slide-motion.ts and
- * slide-sync.ts; the hand-back itself and every position write are the scroll
- * owner's (packages/engine/src/scroll-owner.ts, D40); the catch-up inside a
- * capped body is in process-follow.ts.
+ * The watch that drives the stream slide is in follow-guard.ts; the slide
+ * itself is in slide-motion.ts and slide-sync.ts; every position write is the
+ * scroll owner's (packages/engine/src/scroll-owner.ts, D40); the catch-up
+ * inside a capped body is in process-follow.ts.
  */
 /** The host's own back-to-end button, marked for the stylesheet that places it. */
 const FOLLOW_TAIL_ATTR = 'data-dsh-claude-follow-tail'
