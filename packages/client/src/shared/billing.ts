@@ -15,7 +15,7 @@ let billing: { rows: readonly BillingRow[], currency: string | null } = { rows: 
 /** Adopt the reader's rows from the preferences; the answer to hand back is whether they moved. */
 export function adoptBillingRows(entries: readonly string[], currency: string | null) {
   const rows = parseBillingTable(entries)
-  const same = rows.length === billing.rows.length
+  const same = currency === billing.currency && rows.length === billing.rows.length
     && rows.every((row, i) => entryOf(row) === entryOf(billing.rows[i]))
   billing = { rows, currency }
   return !same

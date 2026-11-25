@@ -157,11 +157,14 @@ export function createPrices(ctx: DshContext): PriceStore {
     }
     // A disposal during the fetch must not leave this answer in the cache.
     if (disposed) return false
+    // A source that answers the document already held changes no price; the
+    // folds priced from it stay warm, and only a new table re-prices them.
+    const changed = document === null || next.updatedAt !== document.updatedAt || next.capturedAt !== document.capturedAt
     document = next
     origin = 'remote'
     fetchedAt = Date.now()
     writeJsonDocument(ctx, cacheFile, 'price cache', { fetchedAt, document: next })
-    announce()
+    if (changed) announce()
     return true
   }
 

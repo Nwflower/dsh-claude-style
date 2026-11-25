@@ -38,6 +38,10 @@ export interface BillingRows {
 
 export const NO_BILLING: BillingRows = { rows: [], currency: null }
 
+export function billingKeyOf(billing: BillingRows): string {
+  return billing.currency === null ? '' : JSON.stringify([billing.currency, billing.rows])
+}
+
 /** The rows one request carries, read from the stored text entries. */
 export function billingRowsOf(entries: readonly string[], currency: 'CNY' | 'USD' | null): BillingRows {
   const rows = parseBillingTable(entries)
@@ -202,13 +206,15 @@ export function createSessionCost(ctx: DshContext, prices: PriceStore): SessionC
   let billingSignature = ''
   /** When each total was last advanced, by a live event or by a fold. */
   const touchedAt = new Map<string, number>()
-  const pending = new Map<string, Promise<SessionCostAnswer | null>>()
+  /** In-flight folds, keyed by session and the billing rows they price with. */
+  const pending = new Map<string, { billing: BillingRows, work: Promise<SessionCostAnswer | null> }>()
   let stopEvents: (() => void) | null = null
   const offPriceChange = prices.onChange(() => {
     // The next ask re-prices the log against the table now in force.
     states.clear()
     nextSeqs.clear()
     touchedAt.clear()
+    pending.clear()
   })
 
   function trim() {
@@ -251,14 +257,13 @@ export function createSessionCost(ctx: DshContext, prices: PriceStore): SessionC
 
   async function get(sessionId: string, billing: BillingRows = NO_BILLING): Promise<SessionCostAnswer | null> {
     prices.ensure()
-    const signature = billing.currency === null ? '' : billing.rows.map(row => `${row.model}|${row.cacheMiss}|${row.cacheHit}|${row.output}`).join(';')
+    const signature = billingKeyOf(billing)
     if (signature !== billingSignature) {
       billingSignature = signature
       liveBilling = billing
       states.clear()
       nextSeqs.clear()
       touchedAt.clear()
-      pending.clear()
     }
     const document = prices.document()
     const held = states.get(sessionId)
@@ -288,23 +293,24 @@ export function createSessionCost(ctx: DshContext, prices: PriceStore): SessionC
       }
     }
     const running = pending.get(sessionId)
-    if (running !== undefined) return running
+    if (running !== undefined && billingKeyOf(running.billing) === signature) return running.work
     if (document === null) return null
     const work = readEvents<UsageEvent>(ctx, PACKAGE_NAME, sessionId, 'the session cost')
       .then((events) => {
-        pending.delete(sessionId)
         if (events === null) return null
-        const state = foldSessionCost(events, document, liveBilling)
+        const state = foldSessionCost(events, document, billing)
+        // An ask priced with other rows displaced this fold; its answer still
+        // reaches its own caller and leaves the cache to the newer rows.
+        if (pending.get(sessionId)?.work !== work) return answer(state)
         states.set(sessionId, state)
         nextSeqs.set(sessionId, nextSeqOf(events))
         touchedAt.set(sessionId, Date.now())
         trim()
         return answer(state)
-      }, (error: unknown) => {
-        pending.delete(sessionId)
-        throw error
+      }).finally(() => {
+        if (pending.get(sessionId)?.work === work) pending.delete(sessionId)
       })
-    pending.set(sessionId, work)
+    pending.set(sessionId, { billing, work })
     return work
   }
 

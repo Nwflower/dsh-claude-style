@@ -21,7 +21,7 @@ import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
 import { homedir } from 'node:os'
 import { resolve } from 'node:path'
 import type { PanelContextProjections, PanelStats, SessionPanelValue } from '@dsh-claude-style/contracts/session-panel'
-import type { BillingRows } from './session-cost.js'
+import { billingKeyOf, type BillingRows } from './session-cost.js'
 import type { PanelEvent } from './session-panel-event.js'
 import { createPanelContext, foldPanelContext, panelContextOf } from './session-panel-context.js'
 import { compactionThresholdOf } from './session-compact.js'
@@ -186,12 +186,6 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
     }
   }
 
-  function billingKeyOf(billing: BillingRows): string {
-    return billing.currency === null
-      ? ''
-      : billing.currency + ':' + billing.rows.map(row => `${row.model}|${row.cacheMiss}|${row.cacheHit}|${row.output}`).join(';')
-  }
-
   function liveSeqOf(sessionId: string): number | null {
     const sessions = ctx.get('sessions') as { get?(id: string): { seq?: unknown } | undefined } | null | undefined
     const seq = sessions?.get?.(sessionId)?.seq
@@ -239,7 +233,10 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
     const held = entries.get(sessionId)
     if (held !== undefined) {
       held.touchedAt = Date.now()
-      if (held.loading !== null) return held.loading
+      if (held.loading !== null) {
+        const value = await held.loading
+        return held.billingKey === billingKey ? value : get(sessionId, billing, fresh)
+      }
       if (!fresh && held.at > 0 && held.billingKey === billingKey) {
         if (Date.now() - held.at < ANSWER_TTL_MS) return held.value
         const liveSeq = liveSeqOf(sessionId)

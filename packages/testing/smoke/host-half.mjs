@@ -284,6 +284,20 @@ async function hostHalf() {
     JSON.stringify(catalogBody?.value ?? catalogBody))
 
   await hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHome })
+
+  for (const currency of ['CNY', 'USD']) {
+    const priced = await request(costHost, '/dsh-claude-style/session-cost?id=session-catalog&cur=' + currency
+      + '&b=' + encodeURIComponent('k3-256k|||7'), 'GET', '', browser)
+    check('custom rates follow a switch to ' + currency, JSON.parse(priced.body).value?.[currency.toLowerCase()] === 7_000_000, priced.body)
+  }
+  const overlay = '/dsh-claude-style/appearance-overlays'
+  const saves = await Promise.all([
+    request(costHost, overlay, 'PUT', JSON.stringify({ paletteColorsOverride: 'brand' }), browser),
+    request(costHost, overlay, 'PUT', JSON.stringify({ brandingPresetOverride: 'deepseek' }), browser),
+  ])
+  const overlayRead = JSON.parse((await request(costHost, overlay, 'GET', '', browser)).body).value
+  check('independent appearance edits from two pages both persist', saves.every(save => save.status === 200)
+    && overlayRead?.paletteColorsOverride === 'brand' && overlayRead.brandingPresetOverride === 'deepseek', JSON.stringify(overlayRead))
   await hostRewind({ mod, fakeHost, request, browser, crossSite })
 
   // The routed assets, on the public prefix route: the manifest the

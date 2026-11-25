@@ -3,7 +3,10 @@
  * answer folded from a session's log and projections, and the fence and id
  * checks every read of the user's own session runs (D75, D113).
  */
-import { resolve } from 'node:path'
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { join, resolve } from 'node:path'
+import { runsPath } from '../../../scripts/shared/debug-paths.mjs'
+import { ROOT } from './shared.mjs'
 import { check } from './shared.mjs'
 import { hostPanelRound } from './host-half-panel-round.mjs'
 
@@ -121,6 +124,17 @@ async function hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHo
 
   // Live session-cost and session-panel skip redundant full reads while live.seq is unchanged or tail-readable.
   {
+    // The lane owns its home: the shared scratch home is wiped by later sections,
+    // and a price cache written there would not survive to the first ask.
+    const liveHome = runsPath(ROOT, 'smoke', 'panel-live-home')
+    rmSync(liveHome, { recursive: true, force: true })
+    // The warm-cache lane judges incremental folds, so it starts from the table
+    // this build ships, held as a fresh cache: no fetch runs mid-lane, and a
+    // table arriving mid-lane would re-price every fold with a full read by design.
+    const shippedPrices = JSON.parse(readFileSync(new URL('../../../lib/prices.json', import.meta.url), 'utf8'))
+    const priceCacheDir = join(liveHome, 'cache', 'dsh-claude-style')
+    mkdirSync(priceCacheDir, { recursive: true })
+    writeFileSync(join(priceCacheDir, 'prices.json'), JSON.stringify({ fetchedAt: Date.now(), document: shippedPrices }))
     const liveEvents = [
       { seq: 0, type: 'session/start', time: 1_700_000_000_000, data: { header: { cwd: '/panel/live' } } },
       { seq: 1, type: 'assistant/message', time: 1_700_000_000_100, data: { turn: 1, step: 0, usage: { inputTokens: 1000, outputTokens: 100 }, message: { source: { model: 'kimi-k3' } } } },
@@ -129,7 +143,7 @@ async function hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHo
     const tails = []
     const liveHost = fakeHost(mod, {
       fenced: true,
-      home: scratchHome,
+      home: liveHome,
       listen: true,
       live: ['session-live'],
       events: { 'session-live': liveEvents },

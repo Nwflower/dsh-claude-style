@@ -1,6 +1,6 @@
 import { PRICES_PATH, SESSION_COST_PATH } from '@dsh-claude-style/contracts/routes'
 import type { PriceDocument, SessionCostAnswer } from '@dsh-claude-style/contracts/prices'
-import { billingQuery, billingRows } from '../../shared/billing'
+import { billingQuery } from '../../shared/billing'
 import { createHostRequest } from '@dsh-claude-style/engine/resource'
 
 /**
@@ -57,6 +57,10 @@ export function createSessionCost() {
   let answer: SessionCostAnswer | null = null
   let askedAt = 0
   let stopped = false
+  /** Bumped when follow or stop releases the session, so a settled ask knows it is old. */
+  let lifetime = 0
+  /** A forced ask arrived while one was in flight; it fires when that one settles. */
+  let reask = false
   const listeners = new Set<() => void>()
   // Per session: follow and stop release the old session's request (D12, D91).
   const request = createHostRequest(data => data as { ok?: boolean, value?: SessionCostAnswer | null } | null, body => {
@@ -73,6 +77,8 @@ export function createSessionCost() {
     sessionId = id
     answer = null
     askedAt = 0
+    lifetime += 1
+    reask = false
     request.reset()
   }
 
@@ -87,11 +93,23 @@ export function createSessionCost() {
    * @param force - ask even inside the interval (a new price table).
    */
   function ask(now: number, force = false) {
-    if (stopped || sessionId === '' || request.busy()) return
+    if (stopped || sessionId === '') return
+    if (request.busy()) {
+      // A new price table or new billing rows must still reach the host: the
+      // answer on the way was priced before the edit. The re-ask rides behind
+      // that answer, keeping one ask per session in flight; follow() drops it
+      // when the reader leaves before it fires.
+      if (force) reask = true
+      return
+    }
     if (!force && askedAt !== 0 && now - askedAt < ASK_MS) return
     askedAt = now
+    reask = false
+    const started = lifetime
     // A transport failure keeps the last total until the next settlement (D12).
-    void request.load(`${SESSION_COST_PATH}?id=${encodeURIComponent(sessionId)}${billingQuery()}`, {}, () => {})
+    void request.load(`${SESSION_COST_PATH}?id=${encodeURIComponent(sessionId)}${billingQuery()}`, {}, () => {}).then(() => {
+      if (reask && started === lifetime && !stopped && sessionId !== '') ask(Date.now(), true)
+    })
   }
 
   return {
@@ -108,6 +126,8 @@ export function createSessionCost() {
     },
     stop() {
       stopped = true
+      lifetime += 1
+      reask = false
       request.reset()
       answer = null
       listeners.clear()
