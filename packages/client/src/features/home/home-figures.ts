@@ -360,7 +360,10 @@ export function homePanelData(state: HomeUsageState, listSummary: ListSummary | 
       }
     }
   }
-  if (model === null && ready && typeof value.model === 'string') model = value.model
+  if (model === null && ready) {
+    if (typeof value.model === 'string') model = value.model
+    else if (Array.isArray(value.models) && value.models.length > 0) model = value.models[0].id
+  }
   // The yardstick line reads the window's own total, like the tiles above it.
   // The panel draws its book once; a window that has not passed that book
   // yet steps down to the longest book it has passed, so switching ranges

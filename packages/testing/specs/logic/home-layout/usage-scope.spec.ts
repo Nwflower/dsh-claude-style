@@ -28,7 +28,7 @@ for (const scope of ['workspace', 'active'] as const) {
     expect(unloaded).toMatchObject({ known: false, model: null, models: null })
     const empty = homePanelData({ ...pending, scope, value: emptyReport }, allSessions, 'all', 0)
     expect(empty).toMatchObject({ known: true, tokens: 0, sessions: 1, model: null, models: [] })
-    const report = { ...emptyReport, model: 'scoped-model', models: [{ id: 'scoped-model', tokens: 25 }] }
+    const report = { ...emptyReport, models: [{ id: 'scoped-model', tokens: 25 }] }
     const scoped = homePanelData({ ...pending, scope, value: report }, allSessions, 'all', 0)
     expect(scoped.model).toBe('scoped-model')
     expect(scoped.models?.map(model => model.id)).toEqual(['scoped-model'])
