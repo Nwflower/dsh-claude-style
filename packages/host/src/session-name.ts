@@ -7,6 +7,14 @@
  * to the host half. A code unit outside `A-Za-z0-9._-` becomes `~XXXX`, `.` and
  * `..` included, so a plugin-generated id (`im:<channel>:dm:<user>:<token>@<domain>`)
  * has a name of its own.
+ *
+ * The restatement is load-bearing on the storage's exact rule. If the host
+ * changes what it escapes, `deleteSession` in routes.ts looks for a directory
+ * the storage never wrote (so a deleted session stays behind), and usage-fold.ts
+ * reads usage by a stored name that resolves to a different session id, so the
+ * figures count the wrong directories. Compare this file against the host
+ * implementation whenever the host package is upgraded, and keep the two in
+ * step.
  */
 
 /** One escaped code unit: the four uppercase hex digits the storage writes. */

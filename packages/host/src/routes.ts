@@ -31,7 +31,8 @@ import { QUERY_MAX, createSessionSearch } from './search.js'
 import { billingRowsOf, createSessionCost } from './session-cost.js'
 import { createSessionPanel } from './session-panel.js'
 import { compactSession } from './session-compact.js'
-import { sessionDirectoryName } from './session-name.js'
+import { SESSION_ID_RE, sessionDirectoryName } from './session-name.js'
+import type { HostSessionEntry, HostSessionsService, HostWorkspaceRegistry } from './host-services.js'
 import { createUsage, type UsageService } from './usage.js'
 import type { HostConfigSource } from './session-rewind-config.js'
 import { SessionRewind } from './session-rewind.js'
@@ -123,14 +124,6 @@ const DELETE_BODY_MAX = 4096
 const SOUND_BODY_MAX = 1024
 
 /**
- * An id the deletion route takes: the characters a plugin-generated id carries
- * (`:`, `@`), and none that could name a place of its own. The stored name
- * escapes `/`, `\` and `~`, so an id carrying one is refused here rather than
- * silently resolved through the escape.
- */
-const SESSION_ID_RE = /^[A-Za-z0-9._\-:@]{1,200}$/
-
-/**
  * Whether the host holds this session open right now.
  *
  * A live session's log is being appended to, so its directory must not be removed
@@ -138,7 +131,7 @@ const SESSION_ID_RE = /^[A-Za-z0-9._\-:@]{1,200}$/
  * answers "live": an unreadable set cannot authorize the deletion.
  */
 function sessionIsLive(ctx: DshContext, sessionId: string): boolean {
-  const sessions = ctx.get('sessions')
+  const sessions = ctx.get('sessions') as HostSessionsService<string | HostSessionEntry> | null | undefined
   // A host with no sessions service holds nothing open.
   if (sessions === null || sessions === undefined) return false
   if (typeof sessions.get === 'function') {
@@ -163,7 +156,7 @@ function sessionIsLive(ctx: DshContext, sessionId: string): boolean {
  * stays, and the next delete retries.
  */
 async function unarchiveSession(ctx: DshContext, sessionId: string) {
-  const registry = ctx.get('workspaceRegistry')
+  const registry = ctx.get('workspaceRegistry') as HostWorkspaceRegistry | null | undefined
   if (typeof registry?.unarchiveSession !== 'function') return
   await registry.unarchiveSession(sessionId)
 }

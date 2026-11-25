@@ -33,6 +33,8 @@ async function resolveSchemaFactory(): Promise<SchemaFactory | null> {
     const factory = resolved?.default ?? resolved?.Schema ?? null
     return factory !== null && factory !== undefined && typeof factory.object === 'function' ? factory as SchemaFactory : null
   } catch {
+    // Normal resolution carries no schemastery either: the skin loads without a
+    // settings form (D75).
     return null
   }
 }
@@ -109,10 +111,22 @@ export const Config = SchemaFactory === null
  * @param ctx - host plugin context.
  */
 export function registerSettings(ctx: DshContext) {
-  if (typeof ctx.inject !== 'function') return
+  /** The report shape routes.ts uses: the message and the reason the host left the member out. */
+  const report = (message: string, error: unknown) =>
+    ctx.logger?.warn?.(`${PACKAGE_NAME}: ${message}: ${(error as { message?: string } | null)?.message ?? String(error)}`)
+  // A skipped registration is reported like a route the web server refused
+  // (routes.ts): the skin still loads, and the reason it has no settings form
+  // is in the host log.
+  if (typeof ctx.inject !== 'function') {
+    report('settings registration skipped', new Error('the host context offers no inject'))
+    return
+  }
   ctx.inject(['settings'], (scope: DshScope) => {
     const settings = scope.settings
-    if (typeof settings?.configure !== 'function') return
+    if (typeof settings?.configure !== 'function') {
+      report('settings registration skipped', new Error('the settings service offers no configure'))
+      return
+    }
     scope.effect(
       () => settings.configure({ auto: false }, ctx.fiber),
       `${PACKAGE_NAME}: settings presentation`,

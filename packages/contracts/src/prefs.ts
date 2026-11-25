@@ -531,6 +531,8 @@ export function clampPrefs(value: unknown): Prefs {
     if (!Array.isArray(list)) continue
     section[key] = list.map(entry => {
       if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) return entry
+      // An entry no serializer can carry comes back as itself, and clampPref's
+      // list case keeps strings only: the stored list drops this entry.
       try { return JSON.stringify(entry) } catch { return entry }
     })
   }
