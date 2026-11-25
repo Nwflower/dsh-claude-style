@@ -13,6 +13,14 @@
 const ESCAPE = /^[0-9A-F]{4}$/
 
 /**
+ * An id a route or a commit accepts: the characters a plugin-generated id
+ * carries (`:`, `@`) and none that could name a place of its own. The stored
+ * name escapes `/`, `\` and `~`, so an id carrying one is refused here rather
+ * than resolved through the escape.
+ */
+export const SESSION_ID_RE = /^[A-Za-z0-9._\-:@]{1,200}$/
+
+/**
  * The directory name the harness stores one session id under.
  *
  * @param id - the logical id, as the session services name it.

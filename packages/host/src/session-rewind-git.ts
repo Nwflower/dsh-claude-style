@@ -302,8 +302,8 @@ function nullPaths(bytes: Buffer): string[] {
   return bytes.toString('utf8').split('\0').filter(path => path !== '')
 }
 
-function storagePrefixInRoot(root: string, storage: string): string | null {
-  const rel = relative(root, storage)
+export function pathInWorkspace(root: string, absolute: string): string | null {
+  const rel = relative(root, absolute)
   if (rel === '' || isAbsolute(rel) || rel === '..' || rel.startsWith('..' + sep)) return null
   return rel.split(sep).join('/')
 }
@@ -315,6 +315,16 @@ function insidePrefix(slashPath: string, prefix: string): boolean {
     return p === pre || p.startsWith(pre + '/')
   }
   return slashPath === prefix || slashPath.startsWith(prefix + '/')
+}
+
+async function rewindIgnoreFile(root: string): Promise<string | null> {
+  const file = join(root, REWIND_IGNORE_FILE)
+  try {
+    return (await lstat(file)).isFile() ? file : null
+  } catch (error) {
+    if (missing(error)) return null
+    throw error
+  }
 }
 
 /** Write the bounded non-ignored work tree into the plugin's object store, skipping files above maxFileBytes. */
@@ -342,15 +352,10 @@ export async function snapshotTree(
       if (!missing(error)) throw error
     }
     const env = { ...workspace.env, GIT_INDEX_FILE: index }
-    const storagePrefix = storagePrefixInRoot(workspace.root, storage)
+    const storagePrefix = pathInWorkspace(workspace.root, storage)
     const lsArgs = ['ls-files', '-z', '--modified', '--others', '--deleted', '--exclude-standard']
-    const ignoreFile = join(workspace.root, REWIND_IGNORE_FILE)
-    try {
-      const ignoreInfo = await lstat(ignoreFile)
-      if (ignoreInfo.isFile()) lsArgs.push('--exclude-from=' + ignoreFile)
-    } catch (error) {
-      if (!missing(error)) throw error
-    }
+    const ignoreFile = await rewindIgnoreFile(workspace.root)
+    if (ignoreFile !== null) lsArgs.push('--exclude-from=' + ignoreFile)
     if (storagePrefix !== null) lsArgs.push('--', '.', ':(exclude)' + storagePrefix)
 
     const listed = await runGit(lsArgs, workspace.root, env, { signal })
@@ -420,6 +425,26 @@ export async function snapshotTree(
 export async function treePaths(workspace: GitWorkspace, tree: string, signal?: AbortSignal): Promise<Set<string>> {
   const result = await runGit(['ls-tree', '-r', '-z', '--name-only', tree], workspace.root, workspace.env, { signal })
   return new Set(nullPaths(result.stdout))
+}
+
+/** Capture-only paths inside the work tree follow the same ignore sources as snapshotTree (D111). */
+export async function ignoredPaths(workspace: GitWorkspace, paths: string[], signal?: AbortSignal): Promise<Set<string>> {
+  if (!paths.length) return new Set()
+  const input = Buffer.from(paths.join('\0') + '\0')
+  const result = new Set<string>()
+  const collect = async (config: string[]) => {
+    try {
+      const found = await runGit([...config, 'check-ignore', '--no-index', '-z', '--stdin'], workspace.root, workspace.env, { input, signal })
+      for (const path of nullPaths(found.stdout)) result.add(path)
+    } catch (error) {
+      // check-ignore returns 1 when none of the input paths are ignored.
+      if (!(error instanceof GitExit && error.code === 1)) throw error
+    }
+  }
+  await collect([])
+  const ignoreFile = await rewindIgnoreFile(workspace.root)
+  if (ignoreFile !== null) await collect(['-c', 'core.excludesFile=' + ignoreFile])
+  return result
 }
 
 /** Reachable object hashes for a set of trees in one workspace, used during loose-object pruning. */

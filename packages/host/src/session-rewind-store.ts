@@ -42,6 +42,7 @@ export interface PruneOptions {
   limitBytes: number
   checkpoints: Record<string, PrunableCheckpoint[]>
   protectedTrees: readonly ProtectedTree[]
+  protectedCheckpoints?: readonly PrunableCheckpoint[]
   signal?: AbortSignal
   warn: (message: string) => void
 }
@@ -175,6 +176,7 @@ async function collectGarbage(
   defaultStorageDir: string,
   checkpoints: Record<string, PrunableCheckpoint[]>,
   protectedTrees: readonly ProtectedTree[],
+  protectedCheckpoints: readonly PrunableCheckpoint[],
   signal: AbortSignal | undefined,
   warn: (message: string) => void,
 ): Promise<void> {
@@ -190,7 +192,7 @@ async function collectGarbage(
     }
     group.trees.add(tree)
   }
-  for (const rows of Object.values(checkpoints)) {
+  for (const rows of [...Object.values(checkpoints), protectedCheckpoints]) {
     for (const checkpoint of rows) {
       if (!sameDir(checkpoint.storage ?? defaultStorageDir, storageDir)) continue
       for (const capture of Object.values(checkpoint.captures)) {
@@ -233,11 +235,12 @@ async function collectGarbage(
 
 /** Evict oldest checkpoints and unreachable objects until storage sits within limitBytes. */
 export async function pruneRewindStorage(options: PruneOptions): Promise<PruneResult> {
-  const { storageDir, defaultStorageDir, limitBytes, checkpoints, protectedTrees, signal, warn } = options
+  const { storageDir, defaultStorageDir, limitBytes, checkpoints, protectedTrees, protectedCheckpoints = [], signal, warn } = options
+  const collect = () => collectGarbage(storageDir, defaultStorageDir, checkpoints, protectedTrees, protectedCheckpoints, signal, warn)
   let bytes = await measureRewindStorage(storageDir)
   if (bytes <= limitBytes) return { changed: false, bytes }
 
-  await collectGarbage(storageDir, defaultStorageDir, checkpoints, protectedTrees, signal, warn)
+  await collect()
   bytes = await measureRewindStorage(storageDir)
   if (bytes <= limitBytes) return { changed: false, bytes }
 
@@ -252,7 +255,7 @@ export async function pruneRewindStorage(options: PruneOptions): Promise<PruneRe
   const newest = owned.at(-1)
   const protectedSet = new Set(protectedTrees.map(entry => entry.tree))
   const evictable = owned.filter((checkpoint) => {
-    if (checkpoint === newest) return false
+    if (checkpoint === newest || protectedCheckpoints.includes(checkpoint)) return false
     if (checkpoint.git !== null && protectedSet.has(checkpoint.git.beforeTree)) return false
     return true
   })
@@ -270,14 +273,14 @@ export async function pruneRewindStorage(options: PruneOptions): Promise<PruneRe
       if (kept.length === 0) delete checkpoints[sessionId]
       else checkpoints[sessionId] = kept
     }
-    await collectGarbage(storageDir, defaultStorageDir, checkpoints, protectedTrees, signal, warn)
+    await collect()
     bytes = await measureRewindStorage(storageDir)
   }
   return { changed, bytes }
 }
 
 /** Snapshot one file or symlink into captures/ before a file-tool mutation. */
-export async function captureFile(absolute: string, storage: string, maxBytes: number): Promise<Capture> {
+export async function captureFile(absolute: string, storage: string | null, maxBytes: number): Promise<Capture> {
   let info
   try {
     info = await lstat(absolute)
@@ -298,6 +301,8 @@ export async function captureFile(absolute: string, storage: string, maxBytes: n
   if (info.size > maxBytes) return { kind: 'oversized' }
   const bytes = await readFileAsync(absolute)
   const hash = createHash('sha256').update(bytes).digest('hex')
+  const capture = { kind: 'file' as const, hash, mode: info.mode & 0o777 }
+  if (storage === null) return capture
   const path = join(storage, 'captures', hash)
   await mkdir(dirname(path), { recursive: true, mode: 0o700 })
   try {
@@ -305,7 +310,7 @@ export async function captureFile(absolute: string, storage: string, maxBytes: n
   } catch (error) {
     if ((error as { code?: unknown }).code !== 'EEXIST') throw error
   }
-  return { kind: 'file', hash, mode: info.mode & 0o777 }
+  return capture
 }
 
 /** Restore one captured file, symlink or absence without leaving partial temporaries behind. */

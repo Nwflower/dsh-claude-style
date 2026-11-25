@@ -6,6 +6,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { execFileSync } from 'node:child_process'
+import { createHook } from 'node:async_hooks'
 import { runsPath } from '../../../scripts/shared/debug-paths.mjs'
 import { ROOT, check } from './shared.mjs'
 
@@ -27,6 +28,7 @@ async function hostRewind({ mod, fakeHost, request, browser, crossSite }) {
   fs.writeFileSync(path.join(repo, '.gitignore'), 'ignored.txt\n')
   fs.writeFileSync(path.join(repo, 'note.txt'), 'before\n')
   fs.writeFileSync(path.join(repo, 'ignored.txt'), 'ignored-before\n')
+  git(repo, 'add', 'note.txt')
   const rewindHome = path.join(home, 'dsh-claude-style', 'rewind')
   fs.mkdirSync(rewindHome, { recursive: true })
   fs.writeFileSync(path.join(rewindHome, 'state.json'), JSON.stringify({
@@ -70,6 +72,7 @@ async function hostRewind({ mod, fakeHost, request, browser, crossSite }) {
   const loaderEntries = [{ options: { id: 'rewind-disabled', name: 'dsh-rewind-plugin' } }]
   const rewindReads = []
   const hostConfig = { messageActions: true, rewindCheckpoints: true, rewindStorageLimit: '512mb', rewindStorageDir: '' }
+  const stored = Object.keys(events).map(id => ({ header: { id }, revision: 'r' }))
   const host = fakeHost(mod, {
     fenced: true,
     registry,
@@ -80,7 +83,7 @@ async function hostRewind({ mod, fakeHost, request, browser, crossSite }) {
     loader: { entries: () => loaderEntries.values() },
     live: ['session-source', 'session-child', 'session-racy', 'session-plain'],
     events,
-    stored: Object.keys(events).map(id => ({ header: { id }, revision: 'r' })),
+    stored,
     directories: Object.fromEntries(Object.keys(events).map(id => [id, repo])),
     filesystem: { processPath: target => target.path },
   })
@@ -88,6 +91,8 @@ async function hostRewind({ mod, fakeHost, request, browser, crossSite }) {
   await host.emit('session/event', session, { seq: 1, type: 'turn/start', data: { turn: 1 } })
   const execution = { agent: { session } }
   await host.emit('tools/pre-execute', execution, async () => {})
+  fs.writeFileSync(path.join(repo, 'note.txt'), 'command-intermediate\n')
+  await host.emit('fs/edit-intent', { path: path.join(repo, 'note.txt') }, execution, async () => ({}))
   await host.emit('fs/write-intent', { path: path.join(repo, 'ignored.txt') }, execution, async () => ({}))
   fs.writeFileSync(path.join(repo, 'note.txt'), 'after\n')
   fs.writeFileSync(path.join(repo, 'ignored.txt'), 'ignored-after\n')
@@ -143,13 +148,41 @@ async function hostRewind({ mod, fakeHost, request, browser, crossSite }) {
     stale?.revisions[0]?.missing === true && stale.revisions[0].archived === false && !registry.archivedSessionIds.includes('session-stale'),
     JSON.stringify(stale))
 
+  const statePath = path.join(rewindHome, 'state.json')
+  const missingState = async () => {
+    const response = await request(host, REVISIONS, 'GET', '', browser)
+    return JSON.parse(response.body).value.find(item => item.id === 'session-stale').revisions[0].missing
+  }
+  stored.push({ header: { id: 'session-stale' }, revision: 'r' })
+  check('restoring a physical session makes its revision available', await missingState() === false, 'known session')
+  stored.pop()
+  check('removing a previously known session disables its revision', await missingState() === true, 'removed session')
+  fs.utimesSync(statePath, 1, 1)
+  const stamp = fs.statSync(statePath).mtimeMs
+  await missingState()
+  check('reading unchanged revision metadata leaves the state file untouched', fs.statSync(statePath).mtimeMs === stamp, String(stamp))
+
   fs.writeFileSync(path.join(repo, 'note.txt'), 'second-version\n')
   const inheritedAnswer = await request(host, PLAN, 'POST', JSON.stringify({ sessionId: 'session-child', messageSeq: 2, turn: 1 }), browser)
   const inherited = inheritedAnswer.status === 200 ? JSON.parse(inheritedAnswer.body).value : null
   check('a fork resolves checkpoints inherited from its source', inherited?.restoreAvailable === true, inheritedAnswer.body)
+  const independent = { seq: 3, type: 'turn/start', data: { turn: 1 } }
+  const inheritedEvents = events['session-child']
+  events['session-child'] = [independent]
+  const branch = await request(host, PLAN, 'POST', JSON.stringify({ sessionId: 'session-child', messageSeq: 2, turn: 1 }), browser)
+  check('a new branch turn cannot inherit a same-numbered parent checkpoint past the cut', JSON.parse(branch.body).value?.reason === 'missing-target', branch.body)
+  events['session-child'] = inheritedEvents
+  fs.writeFileSync(path.join(repo, 'ignored.txt'), 'reader-edit\n')
+  const conflict = await request(host, COMMIT, 'POST', JSON.stringify({
+    planId: inherited.id, childSessionId: 'ignored-conflict', action: 'edit', restore: true,
+  }), browser)
+  check('a changed ignored file refuses the whole restore before touching tracked files', conflict.status === 409
+    && fs.readFileSync(path.join(repo, 'ignored.txt'), 'utf8') === 'reader-edit\n'
+    && fs.readFileSync(path.join(repo, 'note.txt'), 'utf8') === 'second-version\n', conflict.body)
+  const secondPlan = await request(host, PLAN, 'POST', JSON.stringify({ sessionId: 'session-child', messageSeq: 2, turn: 1 }), browser)
   fs.writeFileSync(path.join(repo, 'note.txt'), 'racy\n')
   const racy = await request(host, COMMIT, 'POST', JSON.stringify({
-    planId: inherited?.id,
+    planId: JSON.parse(secondPlan.body).value.id,
     childSessionId: 'session-racy',
     action: 'retract',
     restore: true,
@@ -277,19 +310,49 @@ async function hostRewind({ mod, fakeHost, request, browser, crossSite }) {
     })
   }
   const bytesBeforePrune = await storeMod.measureRewindStorage(pruneStorage)
+  const activeCapture = await storeMod.captureFile(path.join(repo, 'ignored.txt'), pruneStorage, 1024)
+  const activeCheckpoint = { ...pruneCheckpoints['session-prune'][0], captures: { ignored: activeCapture } }
   const pruned = await storeMod.pruneRewindStorage({
     storageDir: pruneStorage,
     defaultStorageDir: pruneStorage,
     limitBytes: Math.max(100, Math.floor(bytesBeforePrune / 2)),
     checkpoints: pruneCheckpoints,
     protectedTrees: [],
+    protectedCheckpoints: [activeCheckpoint],
     warn: () => {},
   })
   fs.unlinkSync(path.join(repo, 'prune-blob.bin'))
+  check('a running turn keeps its unpublished capture and baseline through a quota sweep',
+    fs.existsSync(path.join(pruneStorage, 'captures', activeCapture.hash))
+      && (await gitMod.treePaths(pruneWs, activeCheckpoint.git.beforeTree)).has('prune-blob.bin'), activeCapture.hash)
   check('storage pruning evicts oldest checkpoints and shrinks loose objects under budget',
     pruned.changed && pruned.bytes < bytesBeforePrune && pruneCheckpoints['session-prune'].length < 4
       && pruneCheckpoints['session-prune'].at(-1)?.turn === 4,
     JSON.stringify({ before: bytesBeforePrune, after: pruned.bytes, turns: pruneCheckpoints['session-prune'].map(c => c.turn) }))
+
+  // D111: count actual Node filesystem requests on the tool queue while the retained corpus grows.
+  const countTurnRequests = async turn => {
+    let requests = 0
+    const hook = createHook({ init(_id, type) { if (type === 'FSREQPROMISE') requests++ } })
+    hook.enable()
+    try {
+      await runTurn(turn)
+      return requests
+    } finally {
+      hook.disable()
+    }
+  }
+  const quotaDir = path.join(root, 'quota-cost')
+  hostConfig.rewindStorageDir = quotaDir
+  await runTurn(9)
+  const initialRequests = await countTurnRequests(10)
+  const extraCaptures = 128
+  for (let i = 0; i < extraCaptures; i++) {
+    fs.writeFileSync(path.join(quotaDir, 'captures', String(i).padStart(64, '0')), 'retained')
+  }
+  const laterRequests = await countTurnRequests(11)
+  check('the next tool does not stat each retained capture after a turn', laterRequests < initialRequests + extraCaptures,
+    JSON.stringify({ initialRequests, laterRequests, extraCaptures }))
 
   // Process-tree kill on timeout/abort and host disposal leaves no listeners or hanging git workers.
   const abortStart = Date.now()
