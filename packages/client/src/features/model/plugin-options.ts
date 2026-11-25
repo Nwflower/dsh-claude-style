@@ -11,7 +11,6 @@ import type {
   HostSnapshotSource,
 } from '@dsh-claude-style/contracts/services'
 import { activeLocale } from '../../core/i18n'
-import { createHostToast } from '../../shared/host-toast'
 import { copy } from './copy'
 
 /** The host's list slot under the model and effort rows of its own model menu. */
@@ -393,11 +392,12 @@ export function createPluginOptions(options: {
   locked(): boolean
   /** Close the picker's cards. */
   dismiss(): void
+  /** Show a notice: an entry's reported failure, or the picker having no detail pane. */
+  notice(text: string): void
   /** The scheduler wake-up asked for when registrations change. */
   schedule?: () => void
 }) {
   const { ctx } = options
-  const toast = createHostToast()
   const nodes = new Map<string, HTMLElement>()
   const schedule = options.schedule ?? (() => {})
   const hub = acquireBridgeHub(ctx, schedule)
@@ -408,8 +408,8 @@ export function createPluginOptions(options: {
     locked: false,
     locale: activeLocale(),
     dismiss: options.dismiss,
-    reportFailure(message: string) { toast.show({ text: message }) },
-    openPane() { toast.show({ text: copy('pluginPaneUnsupported') }) },
+    reportFailure(message: string) { options.notice(message) },
+    openPane() { options.notice(copy('pluginPaneUnsupported')) },
   }
   hub.targets.set(target.id, target)
 
@@ -482,7 +482,6 @@ export function createPluginOptions(options: {
       releaseBridgeHub(hub, schedule, target.id)
       for (const node of nodes.values()) node.remove()
       nodes.clear()
-      toast.dispose()
     },
   }
 }

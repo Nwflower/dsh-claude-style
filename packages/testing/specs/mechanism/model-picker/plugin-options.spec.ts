@@ -201,6 +201,18 @@ function createHostHarness(initialSessionId: string | null) {
   }
 }
 
+/** A picker's option rows on the harness; the menu's own controls stay idle unless a test hands in its own. */
+function createPicker(host: ReturnType<typeof createHostHarness>, controls: { locked?: () => boolean, schedule?: () => void } = {}) {
+  return createPluginOptions({
+    ctx: host.ctx,
+    slots: () => host.slots,
+    locked: controls.locked ?? (() => false),
+    dismiss: () => {},
+    notice: () => {},
+    schedule: controls.schedule,
+  })
+}
+
 test('forwards host SessionStandardProps (useProjection), host context, inject hooks and stable callbacks into option rows', async () => {
   const host = createHostHarness('sess-1')
   host.projectionSource('potetoMode').set({ enabled: true })
@@ -240,12 +252,7 @@ test('forwards host SessionStandardProps (useProjection), host context, inject h
     component: PotetoRow,
   })
 
-  const pluginOptions = createPluginOptions({
-    ctx: host.ctx,
-    slots: () => host.slots,
-    locked: () => locked,
-    dismiss: () => {},
-  })
+  const pluginOptions = createPicker(host, { locked: () => locked })
   cleanups.push(() => pluginOptions.dispose())
 
   const bridge = host.mountBridge('sess-1')
@@ -287,12 +294,7 @@ test('deduplicates multiple bridge mounts for the same session and hands over on
   }
   host.addOption({ options: { id: 'tracked' }, component: TrackedRow })
 
-  const pluginOptions = createPluginOptions({
-    ctx: host.ctx,
-    slots: () => host.slots,
-    locked: () => false,
-    dismiss: () => {},
-  })
+  const pluginOptions = createPicker(host)
   cleanups.push(() => pluginOptions.dispose())
 
   const footer = document.createElement('div')
@@ -322,19 +324,8 @@ test('isolates failing rows and dynamic slot updates, and ref-counts bridge tear
   cleanups.push(() => warn.mockRestore())
 
   const wake = vi.fn()
-  const firstPicker = createPluginOptions({
-    ctx: host.ctx,
-    slots: () => host.slots,
-    locked: () => false,
-    dismiss: () => {},
-    schedule: wake,
-  })
-  const secondPicker = createPluginOptions({
-    ctx: host.ctx,
-    slots: () => host.slots,
-    locked: () => false,
-    dismiss: () => {},
-  })
+  const firstPicker = createPicker(host, { schedule: wake })
+  const secondPicker = createPicker(host)
   cleanups.push(() => firstPicker.dispose())
   cleanups.push(() => secondPicker.dispose())
 

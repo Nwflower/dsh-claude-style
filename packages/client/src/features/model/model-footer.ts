@@ -1,6 +1,7 @@
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostSlotsService } from '@dsh-claude-style/contracts/services'
+import { createHostToast } from '../../shared/host-toast'
 import { createPluginOptions } from './plugin-options'
 import { createTeamMode } from './team-mode'
 
@@ -33,11 +34,16 @@ export function createModelFooter(options: {
     restoreFocus: options.restoreFocus,
     locked: options.locked,
   })
+  // The footer owns the notice root: the host Toast renders through
+  // ui-primitives, which only the host supplies, so the option rows' mechanism
+  // takes the notice as a callback and stays loadable on its own.
+  const toast = createHostToast()
   const pluginOptions = createPluginOptions({
     ctx: options.ctx,
     slots: options.slots,
     locked: options.locked,
     dismiss: options.dismiss,
+    notice: (text) => toast.show({ text }),
     schedule: options.schedule,
   })
 
@@ -76,6 +82,7 @@ export function createModelFooter(options: {
     dispose() {
       teamMode.dispose()
       pluginOptions.dispose()
+      toast.dispose()
     },
   }
 }
