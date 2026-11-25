@@ -1,11 +1,11 @@
 import * as React from 'react'
-import * as reactDom from 'react-dom/client'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import { buildElement, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
 import { currentSessionId, hostRemoteAgentTeams, hostSessions } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostAgentTeamProjection, HostModelSelectionProjection, HostSnapshotSource } from '@dsh-claude-style/contracts/services'
 import { createHostToast } from '../../shared/host-toast'
+import { createDialogRoot } from '../../shared/dialog-root'
 import { hostTooltip } from '../../shared/host-tooltip'
 import { sessionProjectionFaces } from '../../shared/session-projections'
 import { copy } from './copy'
@@ -46,7 +46,7 @@ export function createTeamMode(options: {
   let switchEl: HTMLButtonElement | null = null
   let infoEl: HTMLButtonElement | null = null
   let infoTip: ReturnType<typeof hostTooltip> | null = null
-  let dialogRoot: reactDom.Root | null = null
+  const dialog = createDialogRoot()
   let pending = false
   /** The session whose projections the row follows, and the undo of that subscription. */
   let followed: string | null = null
@@ -156,12 +156,11 @@ export function createTeamMode(options: {
   }
 
   function openDisableDialog(sessionId: string) {
-    if (dialogRoot === null) dialogRoot = reactDom.createRoot(document.createElement('div'))
-    dialogRoot.render(React.createElement(DisableDialog, { sessionId, key: sessionId }))
+    dialog.render(React.createElement(DisableDialog, { sessionId, key: sessionId }))
   }
 
   function closeDisableDialog() {
-    if (dialogRoot !== null) dialogRoot.render(null)
+    dialog.close()
     options.restoreFocus()
   }
 
@@ -237,10 +236,7 @@ export function createTeamMode(options: {
       switchEl = null
       infoEl = null
       toast.dispose()
-      if (dialogRoot !== null) {
-        dialogRoot.unmount()
-        dialogRoot = null
-      }
+      dialog.dispose()
     },
   }
 }

@@ -42,7 +42,7 @@
   var slotRegistry = CASE === 'search' || CASE === 'studio' || CASE === 'effort' || CASE === 'settings' || CASE === 'chunk-late' || CASE === 'chat-files' || CASE === 'peer-chat-ux' || CASE === 'skin-center-handoff' || CASE === 'skin-center-arrival' || switchCase ? {
     inject: function (key, callback) {
       var declared = CASE === 'search'
-        ? key === 'sidebar.panellist'
+        ? key === 'sidebar.panellist' || key === 'sidebar.panellist.actions'
         : switchCase
           ? key === 'sidebar.workspaces' || key === 'sidebar.workspaces.session.row.action' || key === 'sidebar.panellist'
           : CASE === 'studio'

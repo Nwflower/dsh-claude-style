@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-24",
+  "group": "fixes",
+  "order": 0,
+  "external": false,
+  "zh": "修复编辑侧栏等弹窗关闭后遮罩残留、界面无法点击的问题",
+  "en": "Fix dialogs such as Edit sidebar leaving a mask that blocks the page after closing"
+}

@@ -1,5 +1,4 @@
 import * as React from 'react'
-import * as reactDom from 'react-dom/client'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import { MENU_ROLE_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { observeMatches } from '@dsh-claude-style/engine/bus'
@@ -13,6 +12,7 @@ import type manifest from './sidebar-entries.manifest'
 import { copy } from './copy'
 import { openPanelFromAction } from '../../shared/panel-actions'
 import { createHostToast } from '../../shared/host-toast'
+import { createDialogRoot } from '../../shared/dialog-root'
 import { placeBesideLauncher } from './more-placement'
 
 /**
@@ -75,7 +75,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    */
   const glyphs = new Map<string, Element>()
   const toast = createHostToast()
-  let dialogRoot: reactDom.Root | null = null
+  const dialog = createDialogRoot()
   /** The slot registry, once the host has served it to the injected scope. */
   let slots: HostSlotsService | null = null
 
@@ -325,12 +325,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /** The dialog lists the panels More was opened with; the Modal portals itself into the page. */
   function openDialog(entries: readonly HostPanelActionEntry[], onPinnedChange: HostPanelActionsProps['onPinnedChange']) {
-    if (dialogRoot === null) dialogRoot = reactDom.createRoot(document.createElement('div'))
-    dialogRoot.render(React.createElement(EditSidebarDialog, { entries, onPinnedChange }))
+    dialog.render(React.createElement(EditSidebarDialog, { entries, onPinnedChange }))
   }
 
   function closeDialog() {
-    if (dialogRoot !== null) dialogRoot.render(null)
+    dialog.close()
   }
 
   // The registry the pass reads labels and the pin list from is the one the injected scope holds;
@@ -354,10 +353,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (unfollow !== null) unfollow()
     if (wake !== null) clearTimeout(wake)
     toast.dispose()
-    if (dialogRoot !== null) {
-      dialogRoot.unmount()
-      dialogRoot = null
-    }
+    dialog.dispose()
     glyphs.clear()
     rows.release()
     delete ui.sidebarEntries
