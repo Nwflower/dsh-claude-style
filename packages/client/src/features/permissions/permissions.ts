@@ -386,6 +386,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   ui.permissions = {
+      skipOnContentOnly: true,
     /**
      * The pass's read phase: the segment control's own box, taken before this
      * frame's writes. A pass that builds the segments measures them in the

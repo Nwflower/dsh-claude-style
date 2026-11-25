@@ -272,6 +272,7 @@ export function createQuestionCards() {
 export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const questionCards = createQuestionCards()
   ui.questionCard = {
+      skipOnContentOnly: true,
     sync: questionCards.sync,
     /** A typed custom answer marks its row selected. */
     onInput: questionCards.sync,

@@ -1,4 +1,4 @@
-import { observeMatches, observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
+import { observeMatches, observeSizeGroup, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { CHAT_ROW_SELECTOR, conversationColumn, userBubble } from '@dsh-claude-style/engine/chat-dom'
 import { buildElement, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
 import { MESSAGE_FOLD_ATTR } from '../../constants'
@@ -29,8 +29,17 @@ export function createMessageFold(requestPass: () => void) {
   const rows = observeMatches<HTMLElement>(CHAT_ROW_SELECTOR, structureChanged)
   /** A marked bubble can be replaced while its row stays mounted. */
   const markedBubbles = observeMatches<HTMLElement>(MESSAGE_BUBBLE_SELECTOR, structureChanged)
-  /** The size subscription of each bubble read so far: the browser reports when its box moves. */
-  const sizes = new Map<Element, () => void>()
+  /** Live bubbles sharing one size subscription; entries leave when their bubble leaves. */
+  const sizes = new Set<Element>()
+  const sizeGroup = observeSizeGroup(entries => {
+    for (const entry of entries) {
+      const bubble = entry.target
+      if (!(bubble instanceof HTMLElement)) continue
+      decided.delete(bubble)
+      touched.add(bubble)
+    }
+    if (entries.length > 0) requestPass()
+  })
   /** The reader's own choice per message. */
   const choices = new WeakMap<Element, FoldChoice>()
   /** The toggle standing under each bubble, while it stands. */
@@ -60,8 +69,7 @@ export function createMessageFold(requestPass: () => void) {
    * comes back is decided again, which subscribes it afresh.
    */
   function release(bubble: Element) {
-    const stop = sizes.get(bubble)
-    if (stop !== undefined) stop()
+    sizeGroup.delete(bubble)
     sizes.delete(bubble)
     decided.delete(bubble)
     dropToggle(bubble)
@@ -111,11 +119,8 @@ export function createMessageFold(requestPass: () => void) {
   /** Text may arrive after the row; box changes invalidate the earlier height decision. */
   function watchSize(bubble: HTMLElement) {
     if (sizes.has(bubble)) return
-    sizes.set(bubble, observeSize(bubble, () => {
-      decided.delete(bubble)
-      touched.add(bubble)
-      requestPass()
-    }))
+    sizes.add(bubble)
+    sizeGroup.add(bubble)
   }
 
   /**
@@ -286,7 +291,7 @@ export function createMessageFold(requestPass: () => void) {
         bubble.removeAttribute(MESSAGE_FOLD_ATTR)
         dropToggle(bubble)
       }
-      for (const stop of sizes.values()) stop()
+      sizeGroup.stop()
       sizes.clear()
       markedBubbles.release()
       rows.release()

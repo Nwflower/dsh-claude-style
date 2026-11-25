@@ -22,7 +22,7 @@ import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostSlotsService } from '@dsh-claude-style/contracts/services'
 import { closePaletteManager } from './palette-manager'
 import { closeBrandManager } from './brand-manager'
-import { closeTypefacePopover } from './typeface-popover'
+import { closeTypefacePopover, measureTypefacePopover, placeTypefacePopover, setTypefacePopoverWake } from './typeface-popover'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './settings.manifest'
 import type { SettingsTab, SettingsView } from './settings-controls'
@@ -478,7 +478,20 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const hostSettings = createHostAccountMenu({ close() {} })
   if (ui) {
     ui.settingsNav = {
-      sync: syncSettingsNav,
+      skipOnContentOnly: true,
+      sync() {
+        syncSettingsNav()
+        // The write half of the font popover's placement: its read ran in this
+        // pass's measure phase, and a pass after a host change carries it by
+        // the same two phases (typeface-popover.ts).
+        placeTypefacePopover()
+      },
+      /** The font popover's read phase, before this pass's writes (D40). */
+      measure() { measureTypefacePopover() },
+      /** A page scroll or resize re-reads the anchor and the card before the write. */
+      measureReposition() { measureTypefacePopover() },
+      /** The viewport write phase, in the same frame as measureReposition. */
+      reposition(reason) { if (reason === 'viewport') placeTypefacePopover() },
       /** A pointer press anywhere: the nav's class changes are outside the
        * observer's attributeFilter, so no pass would fire for them. */
       onPointerDown() { syncSettingsNav() },
@@ -491,6 +504,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       },
     }
     quickProviderHandle = () => ui.quickProviders ?? null
+    // The font popover's own size changes ask for a pass rather than writing
+    // from the size callback; the handle's phases place it (typeface-popover.ts).
+    setTypefacePopoverWake(() => { ui.schedule?.() })
   }
   if (typeof ctx.inject !== 'function') return stopThemeFlip
   const fiber = ctx.inject(['slots'], scope => {
@@ -528,6 +544,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     stopThemeFlip()
     closePaletteManager()
     closeBrandManager()
+    setTypefacePopoverWake(null)
     closeTypefacePopover()
     hostSettings.stopSettingsDrive()
     if (ui && ui.settingsNav) {

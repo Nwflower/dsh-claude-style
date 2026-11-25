@@ -91,13 +91,7 @@ export function byDocumentOrder(a: FileMergeRow, b: FileMergeRow) {
   return a.element.compareDocumentPosition(b.element) & Node.DOCUMENT_POSITION_PRECEDING ? 1 : -1
 }
 
-/**
- * Read every registered row's group.
- *
- * @param rows - the registered rows.
- * @returns each registered row's element → the view it draws.
- */
-export function mergeViews(rows: readonly FileMergeRow[]) {
+function groupRows(rows: readonly FileMergeRow[]) {
   const groups = new Map<Element, Map<string, FileMergeRow[]>>()
   for (const row of rows) {
     const container = rowContainer(row.element)
@@ -111,27 +105,33 @@ export function mergeViews(rows: readonly FileMergeRow[]) {
     if (members === undefined) byPath.set(row.path, [row])
     else members.push(row)
   }
-  const views = new Map<HTMLElement, FileMergeView>()
-  for (const byPath of groups.values()) {
+  return groups
+}
+
+function mergeGroup(members: readonly FileMergeRow[]) {
+  const ordered = [...members].sort(byDocumentOrder)
+  // One group shares one hunk list: the tail and the diff card both read it.
+  const hunks = ordered.flatMap(member => [...member.hunks])
+  const running = ordered.some(member => member.state === 'running')
+  const last = ordered[ordered.length - 1]
+  let read: FileReadCard | null = null
+  for (let at = ordered.length - 1; at >= 0 && read === null; at -= 1) read = ordered[at].read
+  const head = ordered[0].element
+  return ordered.map(member => [member.element, {
+    head: member.element === head, count: ordered.length, hunks, running, operation: last.operation, read,
+  }] as const)
+}
+
+function emptyViews() {
+  return new Map<HTMLElement, FileMergeView>()
+}
+
+/** Read every registered row's group. */
+export function mergeViews(rows: readonly FileMergeRow[]) {
+  const views = emptyViews()
+  for (const byPath of groupRows(rows).values()) {
     for (const members of byPath.values()) {
-      const ordered = [...members].sort(byDocumentOrder)
-      // One group shares one hunk list: the tail and the diff card both read it,
-      // so the numbers can never disagree with the card.
-      const hunks = ordered.flatMap((member) => [...member.hunks])
-      const running = ordered.some((member) => member.state === 'running')
-      // The last call in document order is the one whose work the file's row is
-      // in the middle of, and the last call that read the file is the window a
-      // group with no changes draws.
-      const last = ordered[ordered.length - 1]
-      let read: FileReadCard | null = null
-      for (let at = ordered.length - 1; at >= 0 && read === null; at -= 1) read = ordered[at].read
-      // The element the file was first touched in draws the group. Every call the
-      // host ran through that one element is that element's own, so a row kept
-      // across the file's calls carries the whole group.
-      const head = ordered[0].element
-      for (const member of ordered) {
-        views.set(member.element, { head: member.element === head, count: ordered.length, hunks, running, operation: last.operation, read })
-      }
+      for (const [element, view] of mergeGroup(members)) views.set(element, view)
     }
   }
   return views
@@ -155,9 +155,24 @@ export function createFileMerge() {
   const leaving = new Set<HTMLElement>()
   const listeners: (() => void)[] = []
   let views = new Map<HTMLElement, FileMergeView>()
+  /** Per install: unchanged file groups keep their merged entries; removed groups leave on rebuild. */
+  let groupCache: { container: Element, path: string, members: readonly FileMergeRow[], entries: ReturnType<typeof mergeGroup> }[] = []
 
   const rebuild = () => {
-    views = mergeViews([...rows.values()].flatMap((held) => [...held.calls.values()]))
+    const registered = [...rows.values()].flatMap(held => [...held.calls.values()])
+    const nextViews = emptyViews()
+    const nextCache: typeof groupCache = []
+    for (const [container, byPath] of groupRows(registered)) {
+      for (const [path, members] of byPath) {
+        const held = groupCache.find(group => group.container === container && group.path === path)
+        const unchanged = held !== undefined && held.members.length === members.length && held.members.every((member, at) => member === members[at])
+        const entries = unchanged ? held.entries : mergeGroup(members)
+        for (const [element, view] of entries) nextViews.set(element, view)
+        nextCache.push({ container, path, members, entries })
+      }
+    }
+    groupCache = nextCache
+    views = nextViews
     notifyAll(listeners)
   }
 

@@ -158,6 +158,8 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
   let signature = ''
   /** The freshest reading, what append and render draw from. */
   let latest = { order: [] as string[], byId: {} as Record<string, HostSessionSummary>, sig: '' }
+  let orderCache: { workspaces: object | null, sessions: object | null, current: string | null, order: string[], byId: Record<string, HostSessionSummary> } | null = null
+  let signatureCache: { order: string[], cursor: number, sig: string } | null = null
   /** One queued append per frame: a scroll storm at the foot adds one page, not many. */
   let cancelAppend: (() => void) | null = null
   /** The snapshot subscriptions, taken once both services stand. */
@@ -166,23 +168,27 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
   function read() {
     const workspaces = deps.host.workspaces()
     const sessions = deps.host.sessions()
-    const archived = workspaces?.list.getSnapshot().archivedSessionIds ?? []
-    const snapshot = sessions?.list.getSnapshot()
-    const byId = snapshot?.byId ?? {}
+    const workspaceSnapshot = workspaces?.list.getSnapshot() ?? null
+    const snapshot = sessions?.list.getSnapshot() ?? null
     const current = deps.host.currentSession()
-    const order = archivedOrder(archived, byId, current)
-    // The window the list draws is what a re-render has to see: a change below
-    // it cannot move a row the reader holds, and signing the whole archive
-    // would build a string over every archived title on each pass.
-    const sig = JSON.stringify([
-      current,
-      cursor,
-      order.slice(0, cursor).map((id) => [id, byId[id]?.updatedAt, byId[id]?.displayTitle]),
-    ])
-    return { order, byId, sig }
+    let ordered = orderCache
+    if (ordered === null || ordered.workspaces !== workspaceSnapshot || ordered.sessions !== snapshot || ordered.current !== current) {
+      const archived = workspaceSnapshot?.archivedSessionIds ?? []
+      const byId = snapshot?.byId ?? {}
+      const order = archivedOrder(archived, byId, current)
+      ordered = { workspaces: workspaceSnapshot, sessions: snapshot, current, order, byId }
+      orderCache = ordered
+    }
+    // Only the visible window is signed; a change below it cannot move a held row.
+    if (signatureCache?.order !== ordered.order || signatureCache.cursor !== cursor) {
+      signatureCache = {
+        order: ordered.order,
+        cursor,
+        sig: JSON.stringify([current, cursor, ordered.order.slice(0, cursor).map(id => [id, ordered!.byId[id]?.updatedAt, ordered!.byId[id]?.displayTitle])]),
+      }
+    }
+    return { order: ordered.order, byId: ordered.byId, sig: signatureCache.sig }
   }
-
-  /** Keep both row actions readable in the copy's current language, including on a reused row. */
   function syncActionCopy(row: HTMLElement) {
     const unarchive = row.querySelector(`.${UNARCHIVE_CLASS}`)
     unarchive?.setAttribute('aria-label', copy('archiveUnarchive'))

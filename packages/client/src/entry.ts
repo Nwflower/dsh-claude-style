@@ -115,6 +115,29 @@ export function apply(ctx: HostContext) {
   let owner = pageOwner()
 
   /**
+   * One scheduler pass. The scheduler installs last, so every caller before it
+   * has to look the handle up, and a page whose scheduler never installed asks
+   * for nothing.
+   */
+  function wake() {
+    if (typeof ui.schedule === 'function') ui.schedule()
+  }
+
+  /**
+   * Whether a feature should be standing on the page now: this generation is
+   * live, the feature was not retired after failing, a bisecting run did not
+   * switch it off, the page's owner keeps it (`keep`; null while this theme
+   * has the page, D74), and, for a live one, its switch and the plugins it
+   * yields to still want it. Whether it is installed already is the caller's
+   * own bookkeeping, since a teardown needs the entry it removes.
+   */
+  function shouldStand(feature: Feature, keep: string[] | null) {
+    if (disposed || failed.has(feature.id) || switchedOffHere(feature.id)) return false
+    if (keep !== null && !keep.includes(feature.id)) return false
+    return !isLive(feature) || isWanted(feature)
+  }
+
+  /**
    * Give the page back, keeping the features `keep` names: run every other
    * feature's teardown and take this package's body attributes and stylesheet
    * away. A yield keeps the owner's KEPT_FOR features and the preference
@@ -137,6 +160,7 @@ export function apply(ctx: HostContext) {
       try { installed[i].stop() } catch (error) { reportError(error) }
     }
     installed = kept.reverse()
+    ui.refreshHooks?.()
     // Each body attribute goes with whoever writes it: a feature's own with
     // its teardown above, the preference mirror's here, the stamps last.
     clearPrefsAttributes()
@@ -236,6 +260,7 @@ export function apply(ctx: HostContext) {
       // Retiring goes through even when the feature's own teardown fails too.
       try { stop() } catch (error) { reportError(error) }
     }
+    ui.refreshHooks?.()
     if (name === 'footer') retireFooterTakeover()
     if (name === 'composer') retireComposerRestyle()
   }
@@ -251,6 +276,7 @@ export function apply(ctx: HostContext) {
     try {
       const stop = run()
       if (typeof stop === 'function') installed.push({ id, handle, stop })
+      ui.refreshHooks?.()
       return true
     } catch (error) {
       reportFeatureFailure(id, error)
@@ -286,9 +312,8 @@ export function apply(ctx: HostContext) {
    * chunk was on its way.
    */
   function belongs(feature: Feature) {
-    if (disposed || failed.has(feature.id) || installed.some(entry => entry.id === feature.id)) return false
-    if (owner !== null && !KEPT_FOR[owner].includes(feature.id)) return false
-    return !isLive(feature) || isWanted(feature)
+    if (installed.some(entry => entry.id === feature.id)) return false
+    return shouldStand(feature, owner === null ? null : KEPT_FOR[owner])
   }
 
   /**
@@ -305,7 +330,7 @@ export function apply(ctx: HostContext) {
       if (!belongs(feature)) return
       install(feature.id, handleName(feature), () => run(ctx, ui))
       // The feature's handle joins the next pass, which nothing else asks for.
-      if (typeof ui.schedule === 'function') ui.schedule()
+      wake()
     }, (error: unknown) => {
       awaited.delete(feature.id)
       // This generation is gone (a hot reload replaced it): reporting names a
@@ -328,9 +353,9 @@ export function apply(ctx: HostContext) {
     const handle = handleName(feature)
     // A bisecting run's list outranks the switch: a live feature is the one
     // applySwitch installs, so the list has to be read here too (docs/DEBUGGING.md).
-    const wanted = isWanted(feature) && !switchedOffHere(feature.id)
+    const wanted = shouldStand(feature, null)
     const index = installed.findIndex(entry => entry.id === feature.id)
-    if (wanted && index === -1 && !failed.has(feature.id)) {
+    if (wanted && index === -1) {
       installFeature(feature)
       return
     }
@@ -338,6 +363,7 @@ export function apply(ctx: HostContext) {
     const stop = installed[index].stop
     installed.splice(index, 1)
     delete ui[handle]
+    ui.refreshHooks?.()
     // Isolation (D12): a teardown that throws is reported, and the feature
     // stays off for the rest of the generation.
     try {
@@ -357,7 +383,7 @@ export function apply(ctx: HostContext) {
   function yieldTo(next: PageOwner) {
     const keep = KEPT_FOR[next]
     for (const feature of FEATURES) {
-      if (!keep.includes(feature.id) || switchedOffHere(feature.id) || failed.has(feature.id) || installed.some(entry => entry.id === feature.id)) continue
+      if (!shouldStand(feature, keep) || installed.some(entry => entry.id === feature.id)) continue
       installFeature(feature)
     }
     release(keep)
@@ -397,9 +423,7 @@ export function apply(ctx: HostContext) {
         holds: HOLDS_ATTR,
         regions: { account: ACCOUNT_MENU_ATTR, hero: HERO_MENU_ATTR, more: MORE_MENU_ATTR },
         marks: SKIN_PART_MARKS,
-      }, () => {
-        if (typeof ui.schedule === 'function') ui.schedule()
-      })
+      }, wake)
     }
     // The sheet carries this package's own tags and is unmounted by
     // release(); the features install onto a page that already wears it.
@@ -416,14 +440,14 @@ export function apply(ctx: HostContext) {
     // and the host's floating cards are carried under it (engine/src/scaled-layer.ts).
     if (stopScale === null) stopScale = installPageScale()
     for (const feature of FEATURES) {
-      if (failed.has(feature.id) || switchedOffHere(feature.id) || installed.some(entry => entry.id === feature.id)) continue
+      if (!shouldStand(feature, null) || installed.some(entry => entry.id === feature.id)) continue
       if (isLive(feature)) applySwitch(feature)
       else installFeature(feature)
     }
     if (offSwitches === null) {
       offSwitches = subscribePrefs(() => {
         for (const feature of live) applySwitch(feature)
-        if (typeof ui.schedule === 'function') ui.schedule()
+        wake()
       })
     }
     // Last: its passes read the `ui` handles lazily. Without it nothing syncs,
@@ -435,7 +459,7 @@ export function apply(ctx: HostContext) {
     // the smoke prelude sets the marker before the bundle boots, and a page the
     // reader opens never carries it.
     if ((window as unknown as { __dshStandIn?: unknown }).__dshStandIn === true) {
-      (window as unknown as { __dshClaudePass?: () => void }).__dshClaudePass = () => { ui.schedule?.() }
+      (window as unknown as { __dshClaudePass?: () => void }).__dshClaudePass = wake
     }
   }
 

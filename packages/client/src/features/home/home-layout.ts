@@ -102,8 +102,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       const timer = window.setTimeout(() => setReveal('settled'), motionMs('--dsh-claude-duration-fade'))
       return () => window.clearTimeout(timer)
     }, [reveal])
+    const listSummary = usage.list()
+    const data = React.useMemo(
+      () => homePanelData(state, listSummary, range, bookPick),
+      [state.value, state.scope, listSummary, range, bookPick],
+    )
     if (layout !== HOME_LAYOUT_STUDIO || !heroPhase()) return null
-    const data = homePanelData(state, usage.list(), range, bookPick)
     if (!data.known && reveal !== 'placeholders') setReveal('placeholders')
     if (data.known && reveal === 'placeholders') setReveal('revealing')
 
@@ -228,7 +232,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   window.addEventListener('focus', onWindowWake)
   const stopWatchingVisibility = subscribePageHidden(hidden => { if (!hidden) onWindowWake() })
 
-  ui.homeLayout = { sync }
+  ui.homeLayout = { sync, skipOnContentOnly: true }
 
   registerPanel()
   setLayout(readPrefs().homeLayout)

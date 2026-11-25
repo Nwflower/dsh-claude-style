@@ -44,7 +44,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     whaleGirl.onActivity()
   }
 
-  ui.mascot = { sync, onActivity }
+  ui.mascot = { sync, onActivity, skipOnContentOnly: true }
 
   return () => {
     crab.dispose()

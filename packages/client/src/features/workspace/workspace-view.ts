@@ -252,6 +252,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   void document.fonts?.ready.then(schedulePass)
 
   ui.workspace = {
+      skipOnContentOnly: true,
     measure,
     sync,
     // The archived list reads its labels from the skin's copy; a locale change

@@ -1,12 +1,15 @@
 import { skin } from './skin'
 
+export { observeSize, observeSizeGroup } from './size-bus'
+export type { SizeGroup } from './size-bus'
+
 /**
  * Shared mutation/size observation (D40). Small mutation batches dispatch before paint;
  * large batches use 8ms deferred slices except `beforePaint` subscribers.
  * Recreated `afterHost` ResizeObservers preserve host-before-skin callback order (D74).
  */
 
-export interface MutationOptions {
+interface MutationOptions {
   childList?: boolean
   characterData?: boolean
   characterDataOldValue?: boolean
@@ -148,19 +151,48 @@ function bodyChildListOnly(subscription: MutationSubscription) {
     options.attributeOldValue !== true && options.skipQuiet !== true && options.beforePaint !== true
 }
 
-function selectedRecords(subscription: MutationSubscription, records: MutationRecord[]) {
-  if (!bodyChildListOnly(subscription)) {
-    const selected = records.filter(record => selects(subscription, record))
-    // One batch answers every subscriber with the same additions, so a feature
-    // reading them (batchAdditions) does not walk the records a second time.
-    additionsByBatch.set(selected, additionsOf(records))
-    return selected
+interface BatchShape {
+  childList: boolean
+  characterData: boolean
+  attributes: Set<string> | null
+}
+
+/** One batch's kinds and attribute names, shared by every subscription and deferred slice. */
+const batchShapes = new WeakMap<MutationRecord[], BatchShape>()
+function shapeOf(records: MutationRecord[]): BatchShape {
+  const known = batchShapes.get(records)
+  if (known !== undefined) return known
+  const shape: BatchShape = { childList: false, characterData: false, attributes: null }
+  for (const record of records) {
+    if (record.type === 'childList') shape.childList = true
+    else if (record.type === 'characterData') shape.characterData = true
+    else (shape.attributes ??= new Set()).add(record.attributeName ?? '')
   }
-  const known = bodyChildListSelections.get(records)
+  batchShapes.set(records, shape)
+  return shape
+}
+
+/** Reject a subscription without filtering the batch when no record kind can match. */
+function mayMatchBatch(subscription: MutationSubscription, records: MutationRecord[]) {
+  const shape = shapeOf(records)
+  const options = subscription.options
+  if (shape.childList && options.childList === true) return true
+  if (shape.characterData && options.characterData === true) return true
+  if (shape.attributes === null) return false
+  if (options.attributes === true && options.attributeFilter === undefined) return true
+  return options.attributeFilter?.some(name => shape.attributes!.has(name)) ?? false
+}
+
+function selectedRecords(subscription: MutationSubscription, records: MutationRecord[]) {
+  if (!mayMatchBatch(subscription, records)) return []
+  const bodyOnly = bodyChildListOnly(subscription)
+  const known = bodyOnly ? bodyChildListSelections.get(records) : undefined
   if (known !== undefined) return known
   const selected = records.filter(record => selects(subscription, record))
-  bodyChildListSelections.set(records, selected)
-  additionsByBatch.set(selected, additionsOf(records))
+  if (bodyOnly) bodyChildListSelections.set(records, selected)
+  // One batch answers every subscriber with the same additions, so a feature
+  // reading them (batchAdditions) does not walk the records a second time.
+  if (selected.length > 0) additionsByBatch.set(selected, additionsOf(records))
   return selected
 }
 
@@ -220,12 +252,43 @@ function routeRecords(records: MutationRecord[], audience: MutationSubscription[
   }
 }
 
+/** Last attached options, used to avoid disconnecting an unchanged shared observer. */
+let observedInits = new Map<Node, string>()
+
+function mergedObserverOptions() {
+  const merged = new Map<Node, MutationObserverInit>()
+  for (const { target, options } of mutationSubscriptions) {
+    const into = merged.get(target) ?? {}
+    if (options.childList === true) into.childList = true
+    if (options.characterData === true) into.characterData = true
+    if (options.characterDataOldValue === true) into.characterDataOldValue = true
+    if (options.subtree === true) into.subtree = true
+    if (options.attributeOldValue === true) into.attributeOldValue = true
+    if (options.attributes === true && options.attributeFilter === undefined) {
+      into.attributes = true
+      delete into.attributeFilter
+      merged.set(target, into)
+      continue
+    }
+    if (options.attributeFilter !== undefined && !(into.attributes === true && into.attributeFilter === undefined)) {
+      into.attributeFilter = [...new Set([...(into.attributeFilter ?? []), ...options.attributeFilter])]
+    }
+    merged.set(target, into)
+  }
+  for (const init of merged.values()) if (init.attributeFilter === undefined) delete init.attributeFilter
+  return merged
+}
+
 /** Attach the observer to every subscribed target with the union of their options. */
 function refreshMutationObserver(joining?: MutationSubscription) {
   const pending = mutationObserver?.takeRecords() ?? []
-  mutationObserver?.disconnect()
+  const merged = mergedObserverOptions()
+  const unchanged = mutationObserver !== null && merged.size === observedInits.size &&
+    [...merged].every(([target, init]) => observedInits.get(target) === JSON.stringify(init))
+  if (!unchanged) mutationObserver?.disconnect()
   if (mutationSubscriptions.length === 0) {
     mutationObserver = null
+    observedInits.clear()
     // Nothing is left to hear the queued batches: drop them rather than scan a
     // page no feature is watching any more.
     deferredBatches.length = 0
@@ -235,28 +298,9 @@ function refreshMutationObserver(joining?: MutationSubscription) {
     }
   } else {
     if (mutationObserver === null) mutationObserver = new MutationObserver(records => routeRecords(records))
-    const merged = new Map<Node, MutationObserverInit>()
-    for (const { target, options } of mutationSubscriptions) {
-      const into = merged.get(target) ?? {}
-      if (options.childList === true) into.childList = true
-      if (options.characterData === true) into.characterData = true
-      if (options.characterDataOldValue === true) into.characterDataOldValue = true
-      if (options.subtree === true) into.subtree = true
-      if (options.attributeOldValue === true) into.attributeOldValue = true
-      if (options.attributes === true && options.attributeFilter === undefined) {
-        into.attributes = true
-        into.attributeFilter = undefined
-        merged.set(target, into)
-        continue
-      }
-      if (options.attributeFilter !== undefined && !(into.attributes === true && into.attributeFilter === undefined)) {
-        into.attributeFilter = [...new Set([...(into.attributeFilter ?? []), ...options.attributeFilter])]
-      }
-      merged.set(target, into)
-    }
-    for (const [target, init] of merged) {
-      if (init.attributeFilter === undefined) delete init.attributeFilter
-      mutationObserver.observe(target, init)
+    if (!unchanged) {
+      for (const [target, init] of merged) mutationObserver.observe(target, init)
+      observedInits = new Map([...merged].map(([target, init]) => [target, JSON.stringify(init)]))
     }
   }
   // Records the old attachment had gathered still belong to their subscribers,
@@ -403,8 +447,11 @@ function registryFor(selector: string): MatchRegistry {
         }
       }
       if (removedRoots.length > 0) {
+        const connectedRoots = removedRoots.filter(root => root.isConnected)
         for (const item of registry.items) {
-          for (const root of removedRoots) {
+          // A disconnected root cannot contain an item still in the document.
+          const roots = item.isConnected ? connectedRoots : removedRoots
+          for (const root of roots) {
             if (root === item || root.contains(item)) {
               registry.items.delete(item)
               changed = true
@@ -505,7 +552,7 @@ function markerAttributes(selector: string): string[] {
 }
 
 /** The elements a marker sits on, kept current as the marker arrives and leaves (D40). */
-export interface MarkerList<T extends Element> {
+interface MarkerList<T extends Element> {
   all(): readonly T[]
   release(): void
 }
@@ -546,6 +593,7 @@ export function observeMarker<T extends Element>(selector: string, onChange?: ()
         if (!(node instanceof Element)) continue
         if (matches.delete(node)) changed = true
         for (const item of matches) {
+          if (item.isConnected && !node.isConnected) continue
           if (node.contains(item)) {
             matches.delete(item)
             changed = true
@@ -577,82 +625,5 @@ export function observeMarker<T extends Element>(selector: string, onChange?: ()
       stop()
       matches.clear()
     },
-  }
-}
-
-/** A size subscription: the elements it watches and what hears their entries. */
-interface SizeSubscription {
-  targets: Element[]
-  /** The same elements as a set: one batch can carry thousands of entries, and `includes()` would scan them per entry. */
-  lookup: Set<Element>
-  callback: (entries: ResizeObserverEntry[]) => void
-}
-
-/** One resize observer, its subscriptions in the order they were made, and how many watch each element. */
-interface SizeRegistry {
-  observer: ResizeObserver | null
-  subscriptions: SizeSubscription[]
-  watchers: Map<Element, number>
-}
-
-const early: SizeRegistry = { observer: null, subscriptions: [], watchers: new Map() }
-const afterHost: SizeRegistry = { observer: null, subscriptions: [], watchers: new Map() }
-
-/** Each subscription hears its own elements' entries of a batch, once per batch, in subscription order. */
-function makeSizeObserver(registry: SizeRegistry) {
-  return new ResizeObserver(entries => {
-    for (const subscription of registry.subscriptions.slice()) {
-      if (!registry.subscriptions.includes(subscription)) continue
-      const own = entries.filter(entry => subscription.lookup.has(entry.target))
-      if (own.length === 0) continue
-      // A failing subscription must not keep the rest of the batch from hearing it (D12); reportError still surfaces the failure.
-      try { subscription.callback(own) } catch (error) { reportError(error) }
-    }
-  })
-}
-
-/**
- * Hear the sizes of `targets`, one call per resize batch with their entries.
- * Like a ResizeObserver of its own, the subscription first hears the sizes as
- * they are now. `afterHost` places it after every resize observer the host
- * made before this call.
- * @returns unsubscribe.
- */
-export function observeSize(targets: Element | Element[], callback: (entries: ResizeObserverEntry[]) => void, options?: { afterHost?: boolean }) {
-  const registry = options?.afterHost === true ? afterHost : early
-  const list = Array.isArray(targets) ? [...targets] : [targets]
-  const subscription = { targets: list, lookup: new Set(list), callback }
-  registry.subscriptions.push(subscription)
-  for (const target of subscription.targets) registry.watchers.set(target, (registry.watchers.get(target) ?? 0) + 1)
-  if (registry === afterHost) {
-    // Made anew, so it is younger than the host's; every element is watched
-    // again and reports its size once more, which a size callback takes as no change.
-    registry.observer?.disconnect()
-    registry.observer = makeSizeObserver(registry)
-    for (const element of registry.watchers.keys()) registry.observer.observe(element)
-  } else {
-    if (registry.observer === null) registry.observer = makeSizeObserver(registry)
-    for (const target of subscription.targets) {
-      // Watched again, so the new subscription hears the current size first.
-      if (registry.watchers.get(target)! > 1) registry.observer.unobserve(target)
-      registry.observer.observe(target)
-    }
-  }
-  return () => {
-    const at = registry.subscriptions.indexOf(subscription)
-    if (at === -1) return
-    registry.subscriptions.splice(at, 1)
-    for (const target of subscription.targets) {
-      const count = registry.watchers.get(target)! - 1
-      if (count > 0) {
-        registry.watchers.set(target, count)
-        continue
-      }
-      registry.watchers.delete(target)
-      registry.observer?.unobserve(target)
-    }
-    if (registry.subscriptions.length > 0) return
-    registry.observer?.disconnect()
-    registry.observer = null
   }
 }

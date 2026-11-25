@@ -74,7 +74,7 @@ function colour(style: CSSStyleDeclaration, token: string): Rgb | null {
  * characters; frames run only while a wave or its afterglow is on the canvas.
  * The colours are read when a frame draws, and the size when the root resizes.
  */
-export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
+export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   let mounted: Mounted | null = null
 
   function readPalette(canvas: HTMLCanvasElement): FieldPalette | null {
@@ -248,7 +248,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (mounted === null && root !== null) mounted = mount(root)
   }
 
-  ui.homeRipple = { sync }
+  ui.homeRipple = { sync, skipOnContentOnly: true }
 
   return () => {
     unmount()

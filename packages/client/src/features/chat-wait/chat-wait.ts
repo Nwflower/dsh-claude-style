@@ -1,5 +1,5 @@
 import { QUIET_ATTR } from '../../constants'
-import { observeMatches } from '@dsh-claude-style/engine/bus'
+import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { closestConversationSession, conversationSessionId, findChatTarget, hostSnapshot } from '@dsh-claude-style/engine/host'
 import { hostChatCopy, hostChatSeat } from '../../core/i18n'
@@ -11,7 +11,7 @@ import { releaseSwappingText, setSwappingText } from '../../shared/swapping-text
 import { activityWords, waitingWord, THINKING_KEY } from '../../shared/turn-activity'
 import { sessionProjectionFaces } from '../../shared/session-projections'
 import { startWaitLoader, releaseWaitLoader, resyncWaitLoader, setWaitLoaderOutputting } from './wait-loader'
-import { CHAT_FLOW_SELECTOR, CHAT_RUNNING_SELECTOR, CHAT_RUNNING_HOLDING_ATTRIBUTE, CHAT_RUNNING_TEXT_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CHAT_FLOW_SELECTOR, CHAT_RUNNING_SELECTOR, CHAT_RUNNING_HOLDING_ATTRIBUTE, CHAT_RUNNING_TEXT_SELECTOR, SHIMMER_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { openTurn, overtimeMargin, waitStart, wordForPass } from './wait-state'
 import { foreignRunningLineOwns } from './running-owner'
 import type { RowWords } from './wait-state'
@@ -28,6 +28,11 @@ interface WaitLine {
   label: HTMLElement
   clock: HTMLElement
   badge: HTMLElement
+  /** The clock and overtime inputs retained by the last complete row sync. */
+  clockStart: number | null
+  waitKey: string | null
+  sessionId: string | null
+  hasTarget: boolean
   /** What the row's wording is held under (syncRow): `session:turn` where the snapshot says it, the row itself before that. */
   key: string | HTMLElement
 }
@@ -56,13 +61,17 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** On the overtime badge while it plays its way out (syncBadge). */
   const BADGE_LEAVING_ATTR = 'data-dsh-claude-wait-badge-leaving'
   /**
-   * The clock's step: fast enough that a replacement which stops owning the
-   * words hands the line back without a visible pause, and that the seconds
-   * shown never lag the turn by more than a quarter.
+   * The clock's step. The line shows whole seconds, and everything else that
+   * moves it — a publish, or a mark the hand-over reads — reaches it through the
+   * bus. One pass a second is therefore all the number itself needs.
    */
-  const TICK_MS = 250
-  /** The host's running rows, kept current by the bus: a pass reads this instead of querying (D40). */
-  const runningRows = observeMatches<HTMLElement>(CHAT_RUNNING_SELECTOR)
+  const CLOCK_MS = 1000
+  /**
+   * The host's running rows, kept current by the bus: a pass reads this instead
+   * of querying (D40). A row arriving or leaving is a line to draw or hand back,
+   * so the registry's own record asks for the pass that does it.
+   */
+  const runningRows = observeMatches<HTMLElement>(CHAT_RUNNING_SELECTOR, () => scheduleSync())
   /** Each running row with the line drawn into it and the parts a pass writes. */
   const lines = new Map<HTMLElement, WaitLine>()
   const hostWords = new Map<HTMLElement, Element>()
@@ -77,6 +86,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const wording = new Map<string | HTMLElement, RowWords>()
   /** Each row's follow of its own session's snapshot, and the session it follows. */
   const follows = new Map<HTMLElement, { sessionId: string, stop: () => void }>()
+  /** Each running row's watch for the marks the hand-over reads (watchOwnership). */
+  const ownershipWatches = new Map<HTMLElement, () => void>()
   let timer: number | null = null
   let cancelTick: (() => void) | null = null
   let queued: Promise<void> | null = null
@@ -89,10 +100,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    *
    * Both surroundings questions resolve styles: `followedByContent` asks each
    * sibling whether it is visible, and the foreign-line test lays the words'
-   * subtree out through `innerText`. The clock asks four times a second, and a
-   * row whose chain to the column kept its child counts cannot have gained a
-   * line or content below it, so a reading stands until that shape moves or a
-   * second passes. A sibling that only flips its visibility is caught by that
+   * subtree out through `innerText`. The clock asks once a second, and a row
+   * whose chain to the column kept its child counts cannot have gained a line or
+   * content below it, so a reading stands until that shape moves or a second
+   * passes. A sibling that only flips its visibility is caught by that
    * second, and a row arriving or leaving moves the column's own count, which
    * is part of the shape.
    */
@@ -102,6 +113,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** How long a reading stands when the structure around its row did not move. */
   const REREAD_MS = 1000
   let stopped = false
+  let lastTickAt = 0
   /** The badge exits still playing; the teardown cancels every one of them. */
   const badgeTimers = new Set<number>()
 
@@ -140,8 +152,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /**
    * Follow the session's own snapshot while its row stands: the host publishes
-   * a call starting and again finishing, and a quarter-second tick would step
-   * over a call that had already settled.
+   * a call starting and again finishing, and the clock's second would step over
+   * a call that had already settled.
    */
   function followRow(row: HTMLElement, sessionId: string | null, target: HostChatTarget | null) {
     const followed = follows.get(row)
@@ -176,6 +188,48 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     return loader
   }
 
+  /**
+   * The row's own watch for the marks the hand-over reads (the subscription bus,
+   * D40): the host's holding mark, the words' shimmer mark, and the marks a
+   * sibling line's visibility turns on. The ownership verdict is held for a
+   * second on a shape that has not moved, which is exactly what a mark or a
+   * sibling line landing does not change — so the watch drops the verdict and
+   * asks for the pass in the batch the change arrived in, instead of leaving the
+   * words with the wrong owner until the clock next looks. Yielded rows stay
+   * watched even though they hold no line: a style-only change is what gives
+   * the line back.
+   */
+  function watchOwnership(row: HTMLElement) {
+    if (ownershipWatches.has(row)) return
+    ownershipWatches.set(row, subscribeMutations(row, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: [CHAT_RUNNING_HOLDING_ATTRIBUTE, SHIMMER_ATTRIBUTE, 'aria-hidden', 'hidden', 'class', 'style'],
+      // The line's own writes stand inside its quiet mark and are no page change.
+      skipQuiet: true,
+    }, records => {
+      // Streaming rewrites the words' own text many times a second, and the
+      // foreign-line reading flushes layout: only a mark, or a change beside the
+      // words or of their place, can hand the line to another owner.
+      const words = row.querySelector(CHAT_RUNNING_TEXT_SELECTOR)
+      let handedOver = false
+      for (const record of records) {
+        if (record.type === 'attributes') {
+          handedOver = true
+          break
+        }
+        if (!(record.target instanceof Element) || words === null || !words.contains(record.target)) {
+          handedOver = true
+          break
+        }
+      }
+      if (!handedOver) return
+      foreignVerdicts.delete(row)
+      scheduleSync()
+    }))
+  }
+
   /** The line inside one row, built the first time beside the host's words. */
   function lineOf(row: HTMLElement, words: Element, key: string | HTMLElement): WaitLine {
     const previous = hostWords.get(row)
@@ -208,7 +262,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const loader = buildLoader()
     line.append(loader, label, clock, badge)
     words.after(line)
-    const parts = { line, loader, label, clock, badge, key }
+    const parts = { line, loader, label, clock, badge, key, clockStart: null, waitKey: null, sessionId: null, hasTarget: false }
     // The line is recorded before its loader starts: wait-loader.ts throws on a
     // lane, fade length or turn the stylesheet leaves out, and with the record
     // unwritten every pass would put up another line and another set of dots
@@ -326,6 +380,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /** Bring one row's line to what the host's snapshot says now. */
   function syncRow(row: HTMLElement, t: HostText, now: number, seen: Set<string>, live: Set<string>) {
+    // Watched from the first pass that sees the row, drawn or yielded: the marks
+    // the hand-over reads arrive without a publish, and this pass may have
+    // released the line before the next clock tick.
+    watchOwnership(row)
     // The host keeps the running row's slot after the turn stops, marked
     // `data-holding`, until the actions row replaces it (RunningStatus). It
     // still answers `[data-chat-running]` and holds its content span, so a pass
@@ -348,7 +406,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const key: string | HTMLElement = sessionId !== null && turn !== undefined ? `${sessionId}:${turn.turn}` : row
     if (typeof key === 'string') live.add(key)
     const line = lineOf(row, words, key)
-    const { loader, label, clock, badge } = line
+    const { loader, label } = line
+    line.clockStart = turn?.start?.time ?? null
+    line.sessionId = sessionId
+    line.hasTarget = target !== null
     // What the turn is doing, and the one word its brand waits on for a turn
     // whose state cannot be read (D74). Under the Precise choice three states
     // carry words of their own — a call's file, a command's description, the
@@ -359,6 +420,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const prefs = readPrefs()
     const precise = prefs.statusDetail === true
     const activity = activityWords(snapshot, turn, precise)
+    line.waitKey = snapshot !== null && turn !== undefined && activity === null && typeof key === 'string' ? key : null
     // One word stands for the model thinking and for a wait nothing can be read
     // from (shared/turn-activity): the skin's under Claude, the host's under
     // DeepSeek. The thinking state answers no word of its own, so the clause
@@ -381,21 +443,22 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // output ends past the minimum gap (wait-loader.ts): activity is non-null
     // exactly while the model thinks, calls a tool or writes its answer.
     setWaitLoaderOutputting(loader, activity !== null)
-    clock.hidden = turn === undefined || turn.start === undefined
-    if (turn !== undefined && turn.start !== undefined) writeTextInPlace(clock, formatHostDuration(Math.max(1000, now - turn.start.time), t))
-    let overtime = false
-    if (snapshot !== null && turn !== undefined && activity === null) {
-      const key = `${sessionId}:${turn.turn}`
-      seen.add(key)
-      let began = waits.get(key)
-      if (began === undefined) {
-        began = waitStart(turn, now)
-        waits.set(key, began)
-      }
-      overtime = now - began >= overtimeMargin(sessionStatsOf(sessionId))
+    if (line.waitKey !== null) {
+      seen.add(line.waitKey)
+      if (!waits.has(line.waitKey)) waits.set(line.waitKey, waitStart(turn!, now))
     }
-    syncBadge(badge, overtime)
+    syncClockAndBadge(line, now, t)
     if (!row.hasAttribute(WAIT_ATTR)) row.setAttribute(WAIT_ATTR, '')
+  }
+
+  /** The clock tick's only writes; the complete row pass retains its inputs. */
+  function syncClockAndBadge(line: WaitLine, now: number, t: HostText) {
+    line.clock.hidden = line.clockStart === null
+    if (line.clockStart !== null) writeTextInPlace(line.clock, formatHostDuration(Math.max(1000, now - line.clockStart), t))
+    const began = line.waitKey === null ? null : waits.get(line.waitKey)
+    const overtime = began !== null && began !== undefined && line.sessionId !== null &&
+      now - began >= overtimeMargin(sessionStatsOf(line.sessionId))
+    syncBadge(line.badge, overtime)
   }
 
   /**
@@ -443,6 +506,24 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     row.removeAttribute(WAIT_ATTR)
   }
 
+  /** One clock frame: retain the tail geometry check, but avoid rebuilding every row's wording. */
+  function tickLines() {
+    if (stopped) return
+    const now = Date.now()
+    for (const [row, line] of lines) {
+      const held = wording.get(line.key)
+      const lockCrossed = held !== undefined && held.standing.until > lastTickAt && held.standing.until <= now
+      if (row.isConnected && line.hasTarget && !lockCrossed) continue
+      lastTickAt = now
+      syncLines()
+      return
+    }
+    lastTickAt = now
+    const t = hostChatSeat(ctx)
+    if (t === null) return
+    for (const line of lines.values()) syncClockAndBadge(line, now, t)
+  }
+
   function syncLines() {
     const t = hostChatSeat(ctx)
     const rows = t === null ? [] : runningRows.all()
@@ -465,6 +546,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     for (const row of [...foreignVerdicts.keys()]) {
       if (!running.has(row)) foreignVerdicts.delete(row)
     }
+    for (const [row, stop] of [...ownershipWatches]) {
+      if (running.has(row)) continue
+      stop()
+      ownershipWatches.delete(row)
+    }
     // A wait the model ended, or a turn that closed, starts over next time; a
     // turn no row speaks for any more forgets the wording it stood on.
     for (const key of [...waits.keys()]) {
@@ -473,7 +559,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     for (const key of [...wording.keys()]) {
       if (typeof key === 'string' && !live.has(key)) wording.delete(key)
     }
-    // Yielded rows stay watched: style-only ownership changes must restore the line.
+    // The seconds are the clock's own work: a publish, a row arriving or leaving,
+    // and a mark the hand-over reads all ask for their pass through the bus.
     if (rows.length > 0 && timer === null) {
       timer = window.setInterval(() => {
         if (cancelTick !== null) return
@@ -481,10 +568,10 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
           read: readTails,
           write() {
             cancelTick = null
-            syncInFrame()
+            try { tickLines() } finally { writeTails() }
           },
         })
-      }, TICK_MS)
+      }, CLOCK_MS)
     } else if (rows.length === 0 && timer !== null) {
       window.clearInterval(timer)
       timer = null
@@ -506,7 +593,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
   }
 
-  ui.chatWait = { measure: readTails, sync: syncInFrame, onCopyChange: sync }
+  ui.chatWait = { measure: readTails, sync: syncInFrame, onCopyChange: sync, skipOnContentOnly: true }
 
   return () => {
     stopped = true
@@ -534,6 +621,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // still standing.
     for (const followed of [...follows.values()]) followed.stop()
     follows.clear()
+    for (const stop of [...ownershipWatches.values()]) stop()
+    ownershipWatches.clear()
     delete ui.chatWait
   }
 }

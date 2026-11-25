@@ -99,7 +99,7 @@ export interface MeterRingHandle extends FeatureHandle {
  * @param ui - the shared registry. `ui.model` answers the seat box the ring stands after.
  * @returns the teardown.
  */
-export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
+export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The rings on the page, one per composer card the skin has restyled. */
   const faces = new Map<HTMLElement, RingFace>()
   /** The composer cards, kept current by the bus (D40): the pass reads the list rather than the document. */
@@ -363,6 +363,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   // slot: this one sweeps it out before drawing its own.
   removeStrayNodes(document, `[${METER_RING_ATTR}]`, [])
   ui.meterRing = {
+      skipOnContentOnly: true,
     sync: syncRing,
     // The ring's plate colour comes off the page's own styles, which a pass
     // reads in its read phase alone (D40).

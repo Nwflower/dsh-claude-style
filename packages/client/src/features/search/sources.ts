@@ -2,7 +2,7 @@ import { SESSION_SEARCH_ROUTE } from '../../constants'
 import { currentSessionId, hostConversation, hostLayout, hostLocale, hostPluginNavigation, hostRemoteSkills, profileBundles, hostSessions, hostShortcuts, hostSlots, hostUiWorkspace, hostWorkspaces } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { ContentHit, SearchAnswer } from '@dsh-claude-style/contracts/usage'
-import type { HostConversationInput, HostConversationService, HostPluginBundle, HostSessionBinding, HostSessionSummary, HostShortcutRow, HostShortcutsService, HostSkill, HostSkillListAnswer, HostSlotsService, HostSlotStore, HostWorkspaceListSnapshot } from '@dsh-claude-style/contracts/services'
+import type { HostPluginBundle, HostSessionBinding, HostSessionSummary, HostShortcutRow, HostSkill, HostSkillListAnswer, HostSlotStore, HostWorkspaceListSnapshot } from '@dsh-claude-style/contracts/services'
 import { copy } from './copy'
 
 /** The kinds of thing the palette lists, and the filter that shows them all. */
@@ -51,6 +51,22 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
   let skills: HostSkill[] | null = null
   let skillSessionId: string | null = null
   let generation = 0
+  /** Snapshot-keyed source rows, reused across keystrokes in one palette opening. */
+  let sessionCache: { list: object, archive: object, rows: { summary: HostSessionSummary, workspace: string }[] } | null = null
+  let projectCache: { snapshot: object, rows: SearchRow[] } | null = null
+  let pluginCache: { source: HostPluginBundle[], rows: SearchRow[] } | null = null
+  let skillCache: { source: HostSkill[], binding: HostSessionBinding, rows: SearchRow[] } | null = null
+  let shortcutCache: { catalog: object, fixed: object, rows: SearchRow[] } | null = null
+  let actionCache: { catalog: object | null, fixed: object | null, rows: SearchRow[] } | null = null
+
+  function clearRowCaches() {
+    sessionCache = null
+    projectCache = null
+    pluginCache = null
+    skillCache = null
+    shortcutCache = null
+    actionCache = null
+  }
 
   /** The host's shortcut row for a command id, for the keycaps an action row shows. */
   function commandKeys(id: string): string[] {
@@ -106,6 +122,7 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
     if (!sessions || !workspaces) return []
     const list = sessions.list.getSnapshot()
     const archive = workspaces.list.getSnapshot()
+    if (sessionCache?.list === list && sessionCache.archive === archive) return sessionCache.rows
     const archived = new Set(archive.archivedSessionIds)
     const titles = workspaceTitles(archive)
     const rows: { summary: HostSessionSummary, workspace: string }[] = []
@@ -115,6 +132,7 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
       rows.push({ summary, workspace: titles[summary.id] || '' })
     }
     rows.sort((a, b) => b.summary.updatedAt - a.summary.updatedAt)
+    sessionCache = { list, archive, rows }
     return rows
   }
 
@@ -129,7 +147,9 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
       snippet: hit === undefined ? '' : hit.snippet,
       snippetMatch: hit === undefined ? null : hit.match,
       run() {
-        hostUiWorkspace(ctx).openSession(id)
+        const ui = hostUiWorkspace(ctx)
+        if (ui === null) throw new Error('search: the host has no workspace actions')
+        ui.openSession(id)
         // A content hit names the message it matched, so the conversation does
         // not stop at the session: the turn holding that message is revealed
         // once the session is the shown one.
@@ -196,15 +216,23 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
   function projectRows(): SearchRow[] {
     const workspaces = hostWorkspaces(ctx)
     if (!workspaces) return []
-    const items: HostWorkspaceListSnapshot['items'] = workspaces.list.getSnapshot().items
-    return items.map(workspace => ({
+    const snapshot = workspaces.list.getSnapshot()
+    if (projectCache?.snapshot === snapshot) return projectCache.rows
+    const items: HostWorkspaceListSnapshot['items'] = snapshot.items
+    const rows: SearchRow[] = items.map(workspace => ({
       kind: 'project',
       id: `project:${workspace.workspaceId}`,
       title: workspace.title,
       detail: workspace.path,
       label: workspace.path,
-      run() { hostUiWorkspace(ctx).startSession(workspace.workspaceId) },
+      run() {
+        const ui = hostUiWorkspace(ctx)
+        if (ui === null) throw new Error('search: the host has no workspace actions')
+        ui.startSession(workspace.workspaceId)
+      },
     }))
+    projectCache = { snapshot, rows }
+    return rows
   }
 
   function pluginText(value: unknown): string {
@@ -221,7 +249,8 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
 
   function pluginRows(): SearchRow[] {
     if (plugins === null) return []
-    return plugins.map(bundle => {
+    if (pluginCache?.source === plugins) return pluginCache.rows
+    const rows: SearchRow[] = plugins.map(bundle => {
       const title = (bundle.meta && pluginText(bundle.meta.title)) || shortPackageName(bundle.name)
       return {
         kind: 'plugin',
@@ -233,6 +262,8 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
         run() { hostPluginNavigation(ctx).openBundle(bundle.name) },
       }
     })
+    pluginCache = { source: plugins, rows }
+    return rows
   }
 
   /**
@@ -280,7 +311,8 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
     const sessions = hostSessions(ctx)
     const binding = sessions ? sessions.binding(skillSessionId) : null
     if (!binding) return []
-    return skills.map(skill => ({
+    if (skillCache?.source === skills && skillCache.binding === binding) return skillCache.rows
+    const rows: SearchRow[] = skills.map(skill => ({
       kind: 'skill',
       id: `skill:${skill.name}`,
       title: `/${skill.name}`,
@@ -288,6 +320,8 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
       label: skill.description || '',
       run() { insertSkill(binding, skill.name) },
     }))
+    skillCache = { source: skills, binding, rows }
+    return rows
   }
 
   function loadSkills(owner: number): Promise<void> {
@@ -309,6 +343,9 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
   function shortcutRows() {
     const shortcuts = hostShortcuts(ctx)
     if (!shortcuts) return []
+    const catalog = shortcuts.catalog.getSnapshot()
+    const fixed = shortcuts.fixedCatalog.getSnapshot()
+    if (shortcutCache?.catalog === catalog && shortcutCache.fixed === fixed) return shortcutCache.rows
     const rows: SearchRow[] = []
     const seen = new Set<string>()
     const add = (entry: HostShortcutRow) => {
@@ -324,19 +361,28 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
         run() { openShortcutReference(label) },
       })
     }
-    shortcuts.catalog.getSnapshot().forEach(add)
-    shortcuts.fixedCatalog.getSnapshot().forEach(add)
+    catalog.forEach(add)
+    fixed.forEach(add)
+    shortcutCache = { catalog, fixed, rows }
     return rows
   }
 
   function actionRows() {
+    const shortcuts = hostShortcuts(ctx)
+    const catalog = shortcuts?.catalog.getSnapshot() ?? null
+    const fixed = shortcuts?.fixedCatalog.getSnapshot() ?? null
+    if (actionCache?.catalog === catalog && actionCache.fixed === fixed) return actionCache.rows
     const rows: SearchRow[] = [{
       kind: 'action',
       id: 'action:new-session',
       icon: 'newSession',
       title: copy('searchActionNewSession'),
       keys: commandKeys('session.new'),
-      run() { hostUiWorkspace(ctx).startSession() },
+      run() {
+        const ui = hostUiWorkspace(ctx)
+        if (ui === null) throw new Error('search: the host has no workspace actions')
+        ui.startSession()
+      },
     }]
     if (hostPluginNavigation(ctx)) {
       rows.push({
@@ -367,6 +413,7 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
         run() { openShortcutReference('') },
       })
     }
+    actionCache = { catalog, fixed, rows }
     return rows
   }
 
@@ -403,6 +450,7 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
   function open(onLoaded: () => void) {
     generation++
     const owner = generation
+    clearRowCaches()
     plugins = null
     skills = null
     skillSessionId = null
@@ -426,6 +474,7 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
 
   function close() {
     generation++
+    clearRowCaches()
   }
 
   /**

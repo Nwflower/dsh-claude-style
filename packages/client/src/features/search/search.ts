@@ -187,7 +187,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     close.type = 'button'
     close.setAttribute('aria-label', copy('searchClose'))
     close.innerHTML = ICONS.close
-    close.addEventListener('click', closePalette)
+    close.addEventListener('click', () => closePalette())
     head.appendChild(close)
     card.appendChild(head)
 
@@ -477,11 +477,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * Fade the palette out, then unmount it.
    * @param then - a picked row's navigation, run once the modal is gone.
    */
-  function closePalette(then?: unknown) {
+  function closePalette(then?: () => void) {
     if (disposed || !isOpen) return
     isOpen = false
     closing = true
-    pendingRun = typeof then === 'function' ? then as () => void : null
+    pendingRun = then ?? null
     window.clearTimeout(contentTimer)
     if (contentAbort !== null) contentAbort.abort()
     contentAbort = null
@@ -526,7 +526,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     if (filterBar !== null) filterPill.measure(filterBar)
   }
 
-  ui.search = { measure, sync, onFocusIn: takeover.onFocusIn }
+  ui.search = { measure, sync, onFocusIn: takeover.onFocusIn, skipOnContentOnly: true }
 
   return () => {
     disposed = true

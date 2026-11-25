@@ -13,7 +13,7 @@ import type manifest from './hero-menu.manifest'
  * (hero-menu.css), and drive the host's click handler from delegated hover. Two
  * open candidates leave every card alone.
  */
-export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
+export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** Air between the trigger and its card, as the skin's other pickers take. */
   const GAP = 6
   /** The two triggers, and the card once it is stamped. */
@@ -267,7 +267,7 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
   // (shared/popover.ts): the entry closes whatever menu the row opened.
   registerPopover('hero', closeHeroMenu)
 
-  ui.heroMenu = { sync: syncHeroMenu, reposition: repositionHeroMenu }
+  ui.heroMenu = { sync: syncHeroMenu, reposition: repositionHeroMenu, skipOnContentOnly: true }
   return () => {
     hoverIntent.cancel()
     openedByHover = false

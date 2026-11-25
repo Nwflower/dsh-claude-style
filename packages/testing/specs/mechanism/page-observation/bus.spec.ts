@@ -11,7 +11,7 @@
  * @risk A feature misses the host's change and the page stops following the conversation, or reacts to its own writes in a loop that never lets the page idle.
  */
 import { afterEach, expect, test } from 'vitest'
-import { batchAdditions, observeMarker, observeMatches, observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
+import { batchAdditions, observeMarker, observeMatches, observeSize, observeSizeGroup, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { QUIET_ATTR } from '../../fixtures/vocabulary'
 
 /** The attribute these specs match on; the registry is told the selector. */
@@ -197,6 +197,25 @@ test('a subscription over several elements hears one batch per frame, holding on
   for (const element of [a, b, other]) element.style.height = '20px'
   await nextFrame()
   expect(batches).toEqual([[a, b]])
+})
+
+test('a size group follows target additions and removals under one subscription', async () => {
+  const a = host()
+  const b = host()
+  for (const element of [a, b]) element.style.height = '10px'
+  const batches: Element[][] = []
+  const group = observeSizeGroup(entries => batches.push(entries.map(entry => entry.target)))
+  cleanups.push(() => group.stop())
+  group.add([a, b])
+  await nextFrame()
+  expect(batches).toEqual([[a, b]])
+  group.delete(a)
+  expect(group.has(a)).toBe(false)
+  expect(group.has(b)).toBe(true)
+  a.style.height = '30px'
+  b.style.height = '30px'
+  await nextFrame()
+  expect(batches.at(-1)).toEqual([b])
 })
 
 test('unsubscribing the last size subscription stops the reports', async () => {
