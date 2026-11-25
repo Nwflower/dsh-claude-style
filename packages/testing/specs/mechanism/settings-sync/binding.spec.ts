@@ -90,84 +90,84 @@ function boundHost(values: Record<string, unknown>) {
 const sent = () => new Promise(resolve => setTimeout(resolve, 0))
 
 test('the form answers with the document it holds', () => {
-  const { seen } = boundHost({ turnNav: true, viewTabs: true })
-  expect(seen()).toEqual({ turnNav: true, viewTabs: true })
+  const { seen } = boundHost({ headerBand: true, viewTabs: true })
+  expect(seen()).toEqual({ headerBand: true, viewTabs: true })
 })
 
 test('a field this page is writing keeps its value while the document is re-read mid-write', async () => {
-  const { host, adopted, binding, seen } = boundHost({ turnNav: true, viewTabs: true })
-  const saving = binding.save({ turnNav: false })
+  const { host, adopted, binding, seen } = boundHost({ headerBand: true, viewTabs: true })
+  const saving = binding.save({ headerBand: false })
   await sent()
   const from = adopted.length
   host.publish()
   host.publish()
-  expect(adopted.slice(from).map(value => value.turnNav)).toEqual([false, false])
+  expect(adopted.slice(from).map(value => value.headerBand)).toEqual([false, false])
   host.settle(true)
   expect(await saving).toBe(true)
-  expect(seen()).toEqual({ turnNav: false, viewTabs: true })
+  expect(seen()).toEqual({ headerBand: false, viewTabs: true })
 })
 
 test('a refused write lands on the stored value once it settles', async () => {
-  const { host, binding, seen } = boundHost({ turnNav: true })
-  const saving = binding.save({ turnNav: false })
+  const { host, binding, seen } = boundHost({ headerBand: true })
+  const saving = binding.save({ headerBand: false })
   await sent()
   host.publish()
-  expect(seen()).toEqual({ turnNav: false })
+  expect(seen()).toEqual({ headerBand: false })
   host.settle(false)
   expect(await saving).toBe(false)
-  expect(seen()).toEqual({ turnNav: true })
+  expect(seen()).toEqual({ headerBand: true })
 })
 
 test('a field the Config does not carry is released when set() refuses it', async () => {
-  const { host, binding, seen } = boundHost({ turnNav: true })
-  host.refuseByConfig('turnNav')
-  expect(await binding.save({ turnNav: false })).toBe(false)
+  const { host, binding, seen } = boundHost({ headerBand: true })
+  host.refuseByConfig('headerBand')
+  expect(await binding.save({ headerBand: false })).toBe(false)
   host.publish()
-  expect(seen()).toEqual({ turnNav: true })
+  expect(seen()).toEqual({ headerBand: true })
 })
 
 test('an earlier write settling does not drop a later write to the same field', async () => {
-  const { host, binding, seen } = boundHost({ turnNav: true })
-  const first = binding.save({ turnNav: false })
-  const second = binding.save({ turnNav: true })
+  const { host, binding, seen } = boundHost({ headerBand: true })
+  const first = binding.save({ headerBand: false })
+  const second = binding.save({ headerBand: true })
   await sent()
   host.settle(true)
   await first
   // The document holds the first write's value while the second still crosses:
   // the reader's latest choice stands until that one answers.
   host.publish()
-  expect(seen()).toEqual({ turnNav: true })
+  expect(seen()).toEqual({ headerBand: true })
   host.settle(true)
   await second
-  expect(seen()).toEqual({ turnNav: true })
+  expect(seen()).toEqual({ headerBand: true })
 })
 
 test('a change from elsewhere is adopted once nothing of ours is in flight', async () => {
-  const { host, binding, seen } = boundHost({ turnNav: true })
-  const saving = binding.save({ turnNav: false })
+  const { host, binding, seen } = boundHost({ headerBand: true })
+  const saving = binding.save({ headerBand: false })
   await sent()
   host.settle(true)
   await saving
   host.change('viewTabs', false)
-  expect(seen()).toEqual({ turnNav: false, viewTabs: false })
+  expect(seen()).toEqual({ headerBand: false, viewTabs: false })
 })
 
 test('a field the write did not carry is adopted while another one is held', async () => {
-  const { host, binding, seen } = boundHost({ turnNav: true, viewTabs: true })
-  const saving = binding.save({ turnNav: false })
+  const { host, binding, seen } = boundHost({ headerBand: true, viewTabs: true })
+  const saving = binding.save({ headerBand: false })
   await sent()
   host.change('viewTabs', false)
-  expect(seen()).toEqual({ turnNav: false, viewTabs: false })
+  expect(seen()).toEqual({ headerBand: false, viewTabs: false })
   host.settle(true)
   await saving
 })
 
 test('a write with no form bound holds nothing', async () => {
-  const host = hostForm({ turnNav: true })
+  const host = hostForm({ headerBand: true })
   const adopted: Record<string, unknown>[] = []
   const binding = createSettingsBinding({ namespaces: ['dsh-test-skin'], adoptForm(value) { adopted.push(value) } })
-  expect(await binding.save({ turnNav: false })).toBe(null)
+  expect(await binding.save({ headerBand: false })).toBe(null)
   expect(binding.adopt(host.ctx)).toBe(true)
   host.change('viewTabs', false)
-  expect(adopted.slice(-1)[0]).toEqual({ turnNav: true, viewTabs: false })
+  expect(adopted.slice(-1)[0]).toEqual({ headerBand: true, viewTabs: false })
 })

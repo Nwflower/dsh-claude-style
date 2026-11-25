@@ -275,10 +275,6 @@ export default {
       JSON.stringify(keys))
     check('Shift+Alt+↑, a bare ↑ and an arrow in a field holding a draft stay with the page',
       keys.shifted === false && keys.bare === false && keys.draft === false, JSON.stringify(keys))
-    check('switching it off hands the host its rail back; on stands the skin\'s in again, live',
-      !!nav.switchedOff && nav.switchedOff.rail === 0 && nav.switchedOff.hostReplaced === false && nav.switchedOff.hostShown === 'visible' &&
-        !!nav.switchedOn && nav.switchedOn.rail === 1 && nav.switchedOn.hostReplaced === true,
-      JSON.stringify({ off: nav.switchedOff, on: nav.switchedOn }))
     const long = nav.long || {}
     const longMost = (long.rows || 0) * 24 - (long.height || 0)
     check('a long conversation\'s card scrolls, and the pointer\'s height over the rail\'s lines is where the list stands — proportional over the span between the ends\' rests',

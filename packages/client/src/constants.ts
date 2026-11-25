@@ -123,8 +123,6 @@ export const ANY_COMPOSER_REQUIRES = {
   values: [COMPOSER_SCOPE_HERO, COMPOSER_SCOPE_CONVERSATION, COMPOSER_SCOPE_ALL],
   note: 'composerRequired',
 } as const
-/** The factor the conversation column draws at (features/conversation-width/); the full width writes no attribute. */
-export const CONVERSATION_WIDTH_ATTR = 'data-dsh-claude-conversation-width'
 /** Present while open process groups draw their rows as one card (features/process-column/); the flat layout writes none. */
 export const PROCESS_COLUMN_ATTR = 'data-dsh-claude-process-column'
 /** Present while the effort trigger takes a colour from the rung in force (features/effort/effort-picker.css): the switch-off rung keeps the resting ink, and every thinking rung takes its step along the theme accent's ramp, the top rung included. */

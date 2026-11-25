@@ -5,13 +5,7 @@ export default {
   order: 180,
   load: 'deferred',
   contracts: ['boot.peer-sheet', 'chat.scroller', 'chat.turn-attribute', 'conversation.session', 'conversation.session-attribute', 'shell.foreground', 'turn.rail', 'turn.rail-current', 'turn.rail-inset', 'turn.rail-mark', 'turn.rail-pitch', 'turn.rail-scroller'],
-  pref: 'turnNav',
+  ungated: '消息导航随主题常驻开启，不再提供设置开关',
   stylesheets: [{ file: 'turn-nav.css', rank: 150 }],
-  settingsRows: [{
-    tab: 'conversation',
-    rank: 20,
-    pref: 'turnNav',
-    title: 'turnNavTitle',
-  }],
   cases: ['turn-nav']
 } satisfies FeatureManifest

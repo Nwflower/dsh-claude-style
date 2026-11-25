@@ -11,7 +11,7 @@
   "rewound": { "zh": "原文已回到输入框", "en": "The message is back in the composer" },
   "sent": { "zh": "已从原消息位置重新发出", "en": "Sent again from the original message position" },
   "failed": { "zh": "这条消息没能处理完", "en": "The message could not be handled" },
-  "actionsTitle": { "zh": "消息操作行", "en": "Message actions" },
+  "actionsTitle": { "zh": "对话编辑与回退", "en": "Conversation edit and rewind" },
   "rewindPeerNote": { "zh": "撤回、编辑、重跑与删除由插件 dsh-rewind 提供", "en": "Retract, edit, rerun and delete come from the dsh-rewind plugin" },
   "rewindCheckpointsTitle": { "zh": "工作区检查点", "en": "Workspace checkpoints" },
   "rewindCheckpointsDesc": { "zh": "每轮对话前记录工作区快照，供消息回退时同步恢复文件改动。", "en": "Snapshot the workspace before each turn so file changes can be restored on rewind." },

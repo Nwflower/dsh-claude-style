@@ -57,7 +57,6 @@ export interface Handles {
   rightbarFit: FeatureHandle
   sessionPanel: FeatureHandle
   bottomPanelFit: FeatureHandle
-  conversationWidth: FeatureHandle
   rowSkip: FeatureHandle
   sessionTitle: FeatureHandle
   settingsNav: FeatureHandle

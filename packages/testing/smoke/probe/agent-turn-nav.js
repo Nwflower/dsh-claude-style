@@ -1,8 +1,7 @@
 /**
  * The turn-navigator case: the host's turn rail with the skin's rail beside it in
- * the same slot, the card its pointer opens, the press and the Alt+↑ keys that
- * drive the host's marks, and the switch that hands the rail back and stands it
- * in again.
+ * the same slot, the card its pointer opens, and the press and Alt+↑ keys that
+ * drive the host's marks.
  */
 (function () {
   var probe = window.__dshSmokeProbe
@@ -110,19 +109,6 @@
         return event.defaultPrevented
       })()
       navDraft.remove()
-      // The switch: off hands the host its rail back, on stands the skin's in again, live.
-      var navSwitch = async function (on) {
-        window.__pushForm({ turnNav: on })
-        document.body.appendChild(document.createElement('i'))
-        await sleep(300)
-        return {
-          rail: navPhase.querySelectorAll('.dsh-claude-turn-rail').length,
-          hostReplaced: navRail.hasAttribute('data-dsh-claude-turn-nav-replaced'),
-          hostShown: getComputedStyle(navRail).visibility,
-        }
-      }
-      navOut.switchedOff = await navSwitch(false)
-      navOut.switchedOn = await navSwitch(true)
       // One conversation at a time on the page: the rail just exercised leaves.
       navPhase.remove()
       await sleep(200)

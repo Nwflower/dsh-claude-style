@@ -59,9 +59,9 @@ test('a value already read back reads back the same', () => {
 })
 
 test('a switch stays on unless stored as false', () => {
-  expect(clampPrefs({ turnNav: false }).turnNav).toBe(false)
-  expect(clampPrefs({ turnNav: 0 }).turnNav).toBe(true)
-  expect(clampPrefs({ turnNav: 'false' }).turnNav).toBe(true)
+  expect(clampPrefs({ viewTabs: false }).viewTabs).toBe(false)
+  expect(clampPrefs({ viewTabs: 0 }).viewTabs).toBe(true)
+  expect(clampPrefs({ viewTabs: 'false' }).viewTabs).toBe(true)
 })
 
 test('a choice outside its set reads as its default', () => {

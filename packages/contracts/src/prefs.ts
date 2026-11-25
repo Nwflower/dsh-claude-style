@@ -175,12 +175,6 @@ export const CONTEXT_DISPLAY_RING_RAMP_LEGACY = 'ring-ramp'
 export const CONTEXT_DISPLAY_RING_BAND_LEGACY = 'ring-band'
 export const CONTEXT_DISPLAYS = [CONTEXT_DISPLAY_PIE, CONTEXT_DISPLAY_RING] as const
 
-/** How wide the conversation column draws, as a factor of the width the host gives it. */
-export const CONVERSATION_WIDTH_FULL = '1'
-export const CONVERSATION_WIDTH_THREE_QUARTERS = '0.75'
-export const CONVERSATION_WIDTH_HALF = '0.5'
-export const CONVERSATION_WIDTHS = [CONVERSATION_WIDTH_FULL, CONVERSATION_WIDTH_THREE_QUARTERS, CONVERSATION_WIDTH_HALF] as const
-
 /** The room under the conversation's composer: the host's own, or one of the skin's two. */
 export const COMPOSER_GAP_COMPACT = 'compact'
 export const COMPOSER_GAP_THEME = 'theme'
@@ -386,7 +380,6 @@ export const PREFS = {
   fontProse: { type: 'list', default: [], max: FONT_STACK_MAX, entryMax: FONT_NAME_MAX, drop: [] },
   fontUi: { type: 'list', default: [], max: FONT_STACK_MAX, entryMax: FONT_NAME_MAX, drop: [] },
   fontCode: { type: 'list', default: [], max: FONT_STACK_MAX, entryMax: FONT_NAME_MAX, drop: [] },
-  conversationWidth: { type: 'choice', values: CONVERSATION_WIDTHS, default: CONVERSATION_WIDTH_FULL },
   composerBottomGap: { type: 'choice', values: COMPOSER_GAPS, default: COMPOSER_GAP_THEME },
   /** The mascot on the composer; the resolved one rides the document. */
   mascot: { type: 'choice', values: MASCOTS, default: MASCOT_BRAND },
@@ -444,7 +437,6 @@ export const PREFS = {
   ongoingIndicator: { type: 'choice', values: ONGOING_INDICATORS, default: ONGOING_INDICATOR_BREATHE },
   /** Leading uses the host slot; trailing leaves that slot available for third-party marks. */
   ongoingIndicatorSide: { type: 'choice', values: ONGOING_SIDES, default: ONGOING_SIDE_LEFT },
-  turnNav: { type: 'boolean', default: true },
   /** Whether a message the reader sent carries edit and retract beside its copy button (features/message-actions); default off. */
   messageActions: { type: 'boolean', default: false },
   /** Whether the host records workspace checkpoints for code restoration alongside message rewind. */
