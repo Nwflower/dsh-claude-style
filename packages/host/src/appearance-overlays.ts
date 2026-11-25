@@ -49,7 +49,9 @@ function createOverlayStore(ctx: DshContext) {
     return normalize(JSON.parse(readFileSync(file(), 'utf8')))
   }
   const write = (value: unknown) => {
-    const normalized = normalize(value)
+    if (value === null || typeof value !== 'object' || Array.isArray(value)) throw new Error('the overlay is not an object')
+    // The synchronous read, merge and atomic replace form one host operation (D75).
+    const normalized = normalize({ ...read(), ...value })
     const target = file()
     writeAtomicFile(target, Buffer.from(JSON.stringify(normalized, null, 2) + '\n'), [])
     return normalized

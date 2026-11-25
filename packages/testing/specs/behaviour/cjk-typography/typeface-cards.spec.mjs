@@ -118,5 +118,17 @@ export default spec({ page: 'settings' }, ({ test }) => {
     t.expectThat.equal(proseAfter.reset, null, 'refresh icon disappears once prose returns to default')
     const clearedProse = await t.page.evaluate((name) => document.body.style.getPropertyValue(name), props.prose)
     t.expectThat.equal(clearedProse, '', 'resetting prose removes its inline body override')
+    const uiFont = '--dsw-font-family'
+    await t.page.evaluate(name => document.body.style.setProperty(name, 'Georgia', 'important'), uiFont)
+    await t.prefs({ typeface: 'host', fontUi: [] })
+    const readHostFont = () => t.page.evaluate(name => [
+      document.body.style.getPropertyValue(name), document.body.style.getPropertyPriority(name),
+    ], uiFont)
+    t.expectThat.equal(await readHostFont(), ['Georgia', 'important'], 'following host keeps its inline font')
+    await t.prefs({ fontUi: ['Inter'] })
+    t.expectThat.equal((await readHostFont())[0].startsWith("'Inter', "), true, 'custom font takes ownership')
+    await t.prefs({ fontUi: [] })
+    t.expectThat.equal(await readHostFont(), ['Georgia', 'important'], 'releasing the override restores the original declaration')
+    await t.page.evaluate(name => document.body.style.removeProperty(name), uiFont)
   })
 })

@@ -22,7 +22,12 @@ import { skin } from './skin'
  * normalizes on write compares equal and a restore settles after one write.
  */
 
-const held = new Map<string, string>()
+interface HeldProperty {
+  value: string
+  previous: string
+  priority: string
+}
+const held = new Map<string, HeldProperty>()
 let stopWatch: (() => void) | null = null
 
 function restore() {
@@ -31,7 +36,7 @@ function restore() {
   for (const name of held.keys()) {
     if (body.style.getPropertyValue(name) !== '') return
   }
-  for (const [name, value] of held) body.style.setProperty(name, value)
+  for (const [name, property] of held) body.style.setProperty(name, property.value)
 }
 
 function watch() {
@@ -47,12 +52,22 @@ function watch() {
 /** Writes `value` as `name` on <body> and holds it there; null removes the property and stops holding it. */
 export function writeBodyProperty(name: string, value: string | null) {
   const style = document.body.style
+  const current = style.getPropertyValue(name)
+  const priority = style.getPropertyPriority(name)
+  const property = held.get(name)
   if (value === null) {
+    if (property === undefined) return
     held.delete(name)
-    style.removeProperty(name)
+    // Restore only an override still owned by this generation (D74).
+    if (current === property.value && priority === '') {
+      style.setProperty(name, property.previous, property.priority)
+    }
   } else {
-    if (style.getPropertyValue(name) !== value) style.setProperty(name, value)
-    held.set(name, style.getPropertyValue(name))
+    const owner = property !== undefined && current === property.value && priority === ''
+      ? property : { value, previous: current, priority }
+    if (current !== value || priority !== '') style.setProperty(name, value)
+    owner.value = style.getPropertyValue(name)
+    held.set(name, owner)
   }
   watch()
 }
