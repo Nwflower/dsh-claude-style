@@ -17,7 +17,7 @@
       "count": 2,
       "reason": "The two cards' instance-scoped sweep during refresh and when they are dropped or torn down."
     },
-    "packages/client/src/features/account/footer-geometry.ts": {
+    "packages/client/src/features/account/account-footer.ts": {
       "count": 2,
       "reason": "The takeover's teardown sweeps the rows it injected and the marks it put on the host's entries."
     },
