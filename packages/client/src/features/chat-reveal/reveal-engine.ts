@@ -2,7 +2,8 @@ import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { inCurrentConversation, observeSession } from '@dsh-claude-style/engine/host'
 import { isChatFoldToggle } from '../chat-fold/fold-toggle'
-import { STREAMING_ATTRIBUTE, STREAMING_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { DARK_THEME_ATTRIBUTE, STREAMING_ATTRIBUTE, STREAMING_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CHAT_REVEAL_RUN_ATTR } from '../../constants'
 import { createRevealScanner } from './reveal-diff'
 import { createRevealPainter } from './reveal-paint'
 import { CHAT_REVEAL_COLOR_VAR, CHAT_REVEAL_FOLD_QUIET_MS, CHAT_REVEAL_HIGHLIGHT_PREFIX, CHAT_REVEAL_STEPS, createRevealState } from './reveal-params'
@@ -105,8 +106,13 @@ function createRevealHighlights(registry: HighlightRegistry, HighlightConstructo
  *
  * What matters is the colour the markdown layer actually paints — a link's
  * token, a syntax token, a list marker — not what this module last wrote.
- * The computed colour is read, and skipped entirely when the element still
- * carries the colour recorded for it, which is every frame after the first.
+ * The computed colour is read once per element and read again only when what
+ * decides it changes: the element's own class (the markdown layer recolours a
+ * token by renaming its class, or by replacing the element, which is a new
+ * key) and the page's light or dark theme. The read is a forced style
+ * resolution, and it lands right after the host's mutation has left the styles
+ * stale; reading before this check put one into every scan and into every
+ * paint that met a rebuilt node, for elements whose colour had not moved.
  *
  * A value inherited from an ancestor already is its colour (bold inside a
  * paragraph, body text inside a list item), so nothing is written then: an
@@ -115,20 +121,22 @@ function createRevealHighlights(registry: HighlightRegistry, HighlightConstructo
  *
  * @returns the publisher: give it the element a segment renders in.
  */
-function createRunColorPublisher() {
-  /** Colours already written onto elements, so an unchanged one skips the style read. */
-  const writtenColors = new WeakMap<Element, string>()
+export function createRunColorPublisher() {
+  /** What decided each published element's colour when it was read: the theme and the element's class. */
+  const readUnder = new WeakMap<Element, string>()
 
   return (element: HTMLElement | null) => {
-    if (element === null) return
+    // A detached element paints nothing and has no computed colour to keep.
+    if (element === null || !element.isConnected) return
+    const decidedBy = (document.body.hasAttribute(DARK_THEME_ATTRIBUTE) ? 'dark ' : 'light ') + (element.getAttribute('class') ?? '')
+    if (readUnder.get(element) === decidedBy) return
+    readUnder.set(element, decidedBy)
     // The step rules name this mark as their subject (D107): the element that
     // carries text is the only thing a highlight can be drawn on, and marking it
     // once is what keeps each batch from re-matching the streaming block whole.
-    if (!element.hasAttribute('data-dsh-claude-reveal-run')) element.setAttribute('data-dsh-claude-reveal-run', '')
+    if (!element.hasAttribute(CHAT_REVEAL_RUN_ATTR)) element.setAttribute(CHAT_REVEAL_RUN_ATTR, '')
     const style = window.getComputedStyle(element)
     const color = style.color
-    if (writtenColors.get(element) === color) return
-    writtenColors.set(element, color)
     if (style.getPropertyValue(CHAT_REVEAL_COLOR_VAR).trim() === color) return
     element.style.setProperty(CHAT_REVEAL_COLOR_VAR, color)
   }

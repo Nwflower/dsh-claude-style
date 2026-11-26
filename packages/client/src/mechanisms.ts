@@ -12,7 +12,7 @@ export { install as installRightbarFit } from './features/rightbar-fit/rightbar-
 export { install as installBottomPanelFit } from './features/bottom-panel-fit/bottom-panel-fit'
 export { heldWrites } from './shared/held-writes'
 export { createRevealScanner } from './features/chat-reveal/reveal-diff'
-export { createChatRevealEngine } from './features/chat-reveal/reveal-engine'
+export { createChatRevealEngine, createRunColorPublisher } from './features/chat-reveal/reveal-engine'
 export { createChatProcessFollow } from './features/chat-follow/process-follow'
 export { createProcessSummary, PROCESS_SUMMARY_ATTR, PROCESS_SUMMARY_CLASS, PROCESS_SUMMARY_REPLACED_ATTR } from './features/chat-fold/process-summary'
 export { HEAT_CELL_SELECTOR, HEAT_HINT_CLASS, HEAT_HINT_SHOWN_ATTR, HEAT_HINT_SIDE_ATTR, HEAT_HINT_TEXT_CLASS, HEAT_TIP_ATTR, HEAT_TIP_GAP, hideHeatTip, placeHeatTip, showHeatTip } from './features/home/heat-tip'

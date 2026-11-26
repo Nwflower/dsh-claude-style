@@ -18,7 +18,7 @@ export type { FileMergeRow } from './features/chat-files/file-row-merge'
 export { foldExpandedBody } from './features/chat-fold/fold-glide-parts'
 export { createRowHeightCache, ROW_HEIGHT_CACHE_LIMIT, rowHeightKey } from './features/row-skip/row-heights'
 export { appendRevealSnapshot, revealEntryAt, revealTextSlice } from './features/chat-reveal/reveal-text'
-export { CHAT_REVEAL_ACTIVE_LIMIT, CHAT_REVEAL_MS, createRevealState } from './features/chat-reveal/reveal-params'
+export { CHAT_REVEAL_ACTIVE_LIMIT, CHAT_REVEAL_COLOR_VAR, CHAT_REVEAL_MS, createRevealState } from './features/chat-reveal/reveal-params'
 export type { RevealRun, RevealSnapshot, RevealState } from './features/chat-reveal/reveal-params'
 export { countProcessItems, summaryForm, summaryParts, summarySeparator, summaryText } from './features/chat-fold/process-summary'
 export {
