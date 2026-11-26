@@ -145,6 +145,46 @@ function ClaudeStyleSettingsHeading() {
   )
 }
 
+/**
+ * A still copy of a tab's rows for its leaving slide, holding only the rows
+ * the reader can see. A whole tab is hundreds of elements, and a copy of all
+ * of them is styled and laid out in the very frame the next tab renders in;
+ * the rows below the fold or above it are never seen leaving.
+ *
+ * The copy starts one row before the first visible one, so a rule keyed to the
+ * row before (the notice's `+` rule) still reads as it did, and a spacer of
+ * the rows it leaves out puts that row where it stood; the spacer is also what
+ * keeps the first copied row from taking the page's `:first-child` rule.
+ *
+ * @param rows - the tab's rows, laid out.
+ * @param scroller - the container the page scrolls in; null leaves the window as the view.
+ */
+function stillOfVisibleRows(rows: HTMLElement, scroller: HTMLElement | null) {
+  const still = rows.cloneNode(false) as HTMLElement
+  const view = scroller === null ? null : scroller.getBoundingClientRect()
+  const top = Math.max(view === null ? 0 : view.top, 0)
+  const bottom = Math.min(view === null ? window.innerHeight : view.bottom, window.innerHeight)
+  const children = [...rows.children]
+  let from = children.findIndex(child => child.getBoundingClientRect().bottom > top)
+  if (from === -1) return still
+  from = Math.max(0, from - 1)
+  const start = children[from]
+  if (from > 0) {
+    // The space the left-out rows took: the start row's border edge, less its
+    // own top margin, which the copy keeps.
+    const offset = start.getBoundingClientRect().top - rows.getBoundingClientRect().top - Number.parseFloat(getComputedStyle(start).marginTop)
+    const spacer = document.createElement('div')
+    spacer.style.height = `${offset}px`
+    still.append(spacer)
+  }
+  for (let at = from; at < children.length; at += 1) {
+    const child = children[at]
+    if (at > from && child.getBoundingClientRect().top >= bottom) break
+    still.append(child.cloneNode(true))
+  }
+  return still
+}
+
 export function ClaudeStyleSettingsSection(props: { embed?: boolean }) {
   const state = React.useState(readPrefs())
   const prefs = state[0]
@@ -176,6 +216,8 @@ export function ClaudeStyleSettingsSection(props: { embed?: boolean }) {
   const pageRef = React.useRef<HTMLDivElement>(null)
   const rowsRef = React.useRef<HTMLFieldSetElement>(null)
   const leavingRef = React.useRef<HTMLDivElement>(null)
+  /** The host container the page scrolls in, found once the page is mounted; null outside one. */
+  const scrollerRef = React.useRef<HTMLElement | null>(null)
 
   /** Show one username in the field, keeping the draft beside it: the two are the same text here. */
   const adoptUsername = (value: string) => {
@@ -187,16 +229,16 @@ export function ClaudeStyleSettingsSection(props: { embed?: boolean }) {
    * Open another tab, sliding the pages the way the strip reads: a tab to the
    * right arrives from the right while the one it replaces leaves to the left,
    * and back again (transitions.dev's "Page side-by-side", MIT). The page that
-   * leaves is a still copy of its rows laid over the new one, out of the tab
-   * order and the accessibility tree, and gone once it has played
-   * (settings.css).
+   * leaves is a still copy of the rows the reader can see, laid over the new
+   * one, out of the tab order and the accessibility tree, and gone once it has
+   * played (settings.css).
    */
   const pickTab = (next: SettingsTabId) => {
     const direction: PageDirection = SETTINGS_TABS.findIndex(item => item.id === next) > SETTINGS_TABS.findIndex(item => item.id === activeTab) ? 'forward' : 'back'
     const rows = rowsRef.current
     const holder = leavingRef.current
     if (rows !== null && holder !== null && !motionReduced()) {
-      const still = rows.cloneNode(true) as HTMLElement
+      const still = stillOfVisibleRows(rows, scrollerRef.current)
       still.removeAttribute('role')
       still.removeAttribute(PAGE_ENTER_ATTR)
       still.setAttribute('aria-hidden', 'true')
@@ -219,7 +261,11 @@ export function ClaudeStyleSettingsSection(props: { embed?: boolean }) {
     while (scroller !== null && !/(auto|scroll)/.test(getComputedStyle(scroller).overflowY)) scroller = scroller.parentElement
     if (scroller === null) return undefined
     scroller.setAttribute(SETTINGS_SCROLLER_ATTR, '')
-    return () => { scroller.removeAttribute(SETTINGS_SCROLLER_ATTR) }
+    scrollerRef.current = scroller
+    return () => {
+      scroller.removeAttribute(SETTINGS_SCROLLER_ATTR)
+      scrollerRef.current = null
+    }
   }, [])
 
   // The skin's own apply-side writes land here too (a reload, a conflict
