@@ -1,6 +1,6 @@
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { conversationScroller } from '@dsh-claude-style/engine/chat-dom'
-import { QUIET_ATTR } from '../../constants'
+import { POINTER_CLAIM_ATTR, QUIET_ATTR } from '../../constants'
 import { conversationSessionId, findConversationSession, findForeground } from '@dsh-claude-style/engine/host'
 import { motionReduced } from '../../core/prefs'
 import { createTurnNavHost } from './turn-nav-host'
@@ -147,6 +147,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     rail.setAttribute('aria-hidden', 'true')
     // The marks change with the reading position; none of that is news to a pass.
     rail.setAttribute(QUIET_ATTR, '')
+    // The rail stands inside the sidebar peek's left-edge strip: the pointer reaching it is the rail's.
+    rail.setAttribute(POINTER_CLAIM_ATTR, '')
     const track = buildElement('div', 'dsh-claude-turn-rail-track')
     rail.appendChild(track)
     rail.addEventListener('pointerenter', openCard)
@@ -333,6 +335,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     built.setAttribute('data-open', 'false')
     // Rows are rebuilt while the card is open; none of that is news to a pass.
     built.setAttribute(QUIET_ATTR, '')
+    // The card opens over the rail, inside the same edge strip.
+    built.setAttribute(POINTER_CLAIM_ATTR, '')
     const rows = buildElement('div', 'dsh-claude-turn-nav-list')
     built.appendChild(rows)
     built.addEventListener('mouseenter', () => { hoverIntent.cancel() })

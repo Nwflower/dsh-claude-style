@@ -12,9 +12,14 @@
  * its box while the sidebar stands over it at its open width; leaving closes
  * it with the centre standing still; a click on the toggle keeps it open and
  * the centre then makes room; picking a session in it closes it behind the
- * switch.
+ * switch. A second turn puts the turn rail in the conversation's top-left
+ * corner: resting the pointer on the rail opens the rail's card and leaves the
+ * sidebar collapsed. On the web the collapsed column keeps its width, so the
+ * rail stands past the edge strip here; the desktop's hidden column puts it
+ * inside, and that case is specs/mechanism/sidebar-peek/edge-claim.spec.ts.
  */
 import surfaceTable from '../data/surface.json' with { type: 'json' }
+import { sendPrompt, waitForTurn } from '../prompt.mjs'
 import { collapseRail } from './sidebar-rail.mjs'
 
 /** The skin's part mark, read off the surface table rather than spelled here (D92). */
@@ -27,7 +32,12 @@ const PEEK = {
   center: `${part('layout-frame')} > ${part('center-column')}`,
   toggle: `${part('logo-row')} > ${part('sidebar-toggle')}`,
   sessionRow: part('session-row'),
+  rail: '.dsh-claude-turn-rail',
+  card: '.dsh-claude-turn-nav[data-open="true"]',
 }
+
+/** The edge strip's width in sidebar-peek.ts: the rail is read against it. */
+const EDGE_PX = 32
 
 /** The narrowest column that reads as the open sidebar rather than the rail. */
 const OPEN_WIDTH_PX = 200
@@ -92,6 +102,34 @@ async function openEdgePeek(page) {
   const opened = await waitForSidebar(page, false)
   await page.waitForTimeout(400)
   return opened
+}
+
+/** A page wide enough for the conversation to keep its turn rail: turn-nav.css hides it in a conversation 900px wide or narrower. */
+const RAIL_PAGE_WIDTH_PX = 1600
+
+/**
+ * Rest the pointer on the turn rail, as far into the edge strip as the rail
+ * reaches, and read what stands after the peek's delay and the card's.
+ */
+async function restOnRail(page) {
+  await page.setViewportSize({ width: RAIL_PAGE_WIDTH_PX, height: page.viewportSize().height })
+  const rail = await page.waitForFunction((peek) => {
+    const element = document.querySelector(peek.rail)
+    const frame = document.querySelector(peek.frame)
+    if (element === null || frame === null) return null
+    const box = element.getBoundingClientRect()
+    if (box.height <= 0) return null
+    return { left: box.left, right: box.right, top: box.top, bottom: box.bottom, frameLeft: frame.getBoundingClientRect().left }
+  }, PEEK, { timeout: 10000 }).then((handle) => handle.jsonValue(), () => null)
+  if (rail === null) return null
+  const x = Math.min(rail.right - 2, Math.max(rail.left + 2, rail.frameLeft + EDGE_PX - 2))
+  await page.mouse.move(x, Math.round((rail.top + rail.bottom) / 2), { steps: 4 })
+  await page.waitForTimeout(600)
+  const state = await page.evaluate((peek) => ({
+    collapsed: document.querySelector(peek.frame)?.hasAttribute('data-sidebar-collapsed') ?? false,
+    card: document.querySelector(peek.card) !== null,
+  }), PEEK)
+  return { ...state, x, inStrip: x <= rail.frameLeft + EDGE_PX }
 }
 
 /** Somewhere in the centre, well clear of the sidebar's open width. */
@@ -162,6 +200,12 @@ function sidebarPeekScenario({ check }) {
       await page.locator(`${PEEK.column} ${PEEK.sessionRow}`).first().click()
       const picked = await waitForSidebar(page, true)
 
+      await leave(page)
+      await sendPrompt(page, 'and once more')
+      await waitForTurn(page)
+      const onRail = await restOnRail(page)
+      await leave(page)
+
       const same = (a, b) => a !== null && b !== null && a.left === b.left && a.width === b.width
       return [
         check('侧栏已收起',
@@ -190,6 +234,9 @@ function sidebarPeekScenario({ check }) {
             pinned.center.left >= pinned.column.width - 1,
           JSON.stringify(pinned)),
         check('在浮起的侧栏里选中会话后侧栏自动收起', picked, ''),
+        check('鼠标停在左上方的消息导航栏上，导航卡片展开，侧栏保持收起',
+          onRail !== null && onRail.collapsed && onRail.card,
+          JSON.stringify(onRail)),
         check('控制台没有异常', session.problems.length === 0, session.problems.slice(0, 3).join(' | ')),
       ]
     },

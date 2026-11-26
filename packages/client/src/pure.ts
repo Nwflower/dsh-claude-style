@@ -27,7 +27,7 @@ export {
   chatSendStepOpacity, chatSendTextWindows,
 } from './features/chat-send/send-shape'
 export type { ShapeSample } from './features/chat-send/send-shape'
-export { PAGE_ZOOM_ATTR, QUIET_ATTR } from './constants'
+export { PAGE_ZOOM_ATTR, POINTER_CLAIM_ATTR, QUIET_ATTR } from './constants'
 export { chatSendSamples, maxContentWidthOf } from './features/chat-send/send-morph'
 export { chatSendOpaque } from './features/chat-send/send-snapshot'
 export { foreignRunningLineOwns } from './features/chat-wait/running-owner'

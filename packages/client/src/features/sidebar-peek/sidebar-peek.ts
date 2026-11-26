@@ -2,13 +2,15 @@ import { RIGHTBAR_COLLAPSED_ATTRIBUTE, SIDEBAR_BESIDE_RIGHTBAR_MIN_PX, SIDEBAR_C
 import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { findForeground, findSidebarRoot, findSidebarToggle, hostLayout } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
-import { MOTION_ATTR, MOTION_REDUCED, SIDEBAR_PEEK_ATTR, SIDEBAR_PEEK_CLOSING, SIDEBAR_PEEK_OPEN, SIDEBAR_PEEK_RAIL_PROPERTY, SIDEBAR_PEEK_WIDTH_PROPERTY } from '../../constants'
+import { MOTION_ATTR, MOTION_REDUCED, POINTER_CLAIM_ATTR, SIDEBAR_PEEK_ATTR, SIDEBAR_PEEK_CLOSING, SIDEBAR_PEEK_OPEN, SIDEBAR_PEEK_RAIL_PROPERTY, SIDEBAR_PEEK_WIDTH_PROPERTY } from '../../constants'
 import { motionMs } from '../../shared/motion'
 import { FRAME_SELECTOR } from '../../shared/page-scale-columns'
 
 /**
  * The collapsed sidebar opened over the page while the pointer rests on its
- * toggle or the window's left edge, the way Claude's app peeks it (D43).
+ * toggle or the window's left edge, the way Claude's app peeks it (D43). A skin
+ * control standing in that edge strip, the conversation's turn rail among them,
+ * keeps the pointer for itself: the strip opens nothing over it.
  *
  * The host draws the session list only while its own layout has the sidebar
  * open, so the peek opens it through the host's layout service and keeps the
@@ -30,6 +32,8 @@ import { FRAME_SELECTOR } from '../../shared/page-scale-columns'
 const OPEN_DELAY_MS = 120
 /** The full-height strip at the frame's left edge that also opens the peek. */
 const EDGE_PX = 32
+/** A skin control inside the edge strip that keeps the pointer for itself. */
+const CLAIM_SELECTOR = `[${POINTER_CLAIM_ATTR}]`
 /** How long the pointer may stand outside the toggle and the column before the sidebar closes: the Windows caption strip between the two hands the pointer to the shell for a moment. */
 const LEAVE_DELAY_MS = 300
 
@@ -44,6 +48,8 @@ type Phase = 'idle' | 'waiting' | 'open' | 'closing'
 interface Point {
   x: number
   y: number
+  /** The element under the pointer: one inside a skin control that claims the pointer keeps the edge strip shut. */
+  target: EventTarget | null
 }
 
 function within(box: DOMRect, point: Point) {
@@ -97,12 +103,20 @@ export function install(ctx: HostContext) {
     return box.hasAttribute(RIGHTBAR_COLLAPSED_ATTRIBUTE) || box.getBoundingClientRect().width >= SIDEBAR_BESIDE_RIGHTBAR_MIN_PX
   }
 
-  /** The toggle keeps its original hover path; the edge adds a full-height strip without putting a hit box over the page. */
+  /**
+   * The toggle keeps its original hover path; the edge adds a full-height strip
+   * without putting a hit box over the page. The strip yields to a skin control
+   * standing in it: the turn rail sits 12px in from the conversation's left
+   * edge, inside the strip whenever the sidebar is collapsed, and a pointer
+   * reaching for the rail would otherwise open the sidebar over it. The claim
+   * is read only for a point already inside the strip.
+   */
   function triggered(box: HTMLElement, point: Point) {
     const toggle = findSidebarToggle()
     if (toggle !== null && within(toggle.getBoundingClientRect(), point)) return true
     const bounds = box.getBoundingClientRect()
-    return point.x >= bounds.left && point.x <= bounds.left + EDGE_PX && point.y >= bounds.top && point.y < bounds.bottom
+    if (point.x < bounds.left || point.x > bounds.left + EDGE_PX || point.y < bounds.top || point.y >= bounds.bottom) return false
+    return !(point.target instanceof Element && point.target.closest(CLAIM_SELECTOR) !== null)
   }
 
   /**
@@ -295,7 +309,7 @@ export function install(ctx: HostContext) {
     if (box === null) return
     // The Windows caption strip can deliver this event without a following
     // pointermove, so the button keeps its own entry into the same wait.
-    pointer = { x: event.clientX, y: event.clientY }
+    pointer = { x: event.clientX, y: event.clientY, target: event.target }
     if (!eligible(box, pointer)) return
     phase = 'waiting'
     openTimer = window.setTimeout(open, OPEN_DELAY_MS)
@@ -310,13 +324,14 @@ export function install(ctx: HostContext) {
       return
     }
     if (phase !== 'waiting') return
-    pointer = { x: event.clientX, y: event.clientY }
+    // The element the pointer moves onto is the one it now stands over.
+    pointer = { x: event.clientX, y: event.clientY, target: event.relatedTarget }
     const box = frames.all()[0] ?? null
     if (box === null || !eligible(box, pointer)) cancelWaiting()
   }
 
   function onPointerMove(event: PointerEvent) {
-    pointer = { x: event.clientX, y: event.clientY }
+    pointer = { x: event.clientX, y: event.clientY, target: event.target }
     if (phase === 'idle' || phase === 'waiting') {
       const box = frames.all()[0] ?? null
       const ready = event.buttons === 0 && box !== null && eligible(box, pointer)
