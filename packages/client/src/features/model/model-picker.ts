@@ -229,7 +229,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     const groups = (snap && snap.groups) || []
     const current = modelCatalog.current(snap)
     const prefs = readPrefs()
-    let sig = [status, activeLocale(), modelFooter.signature(), current ? `${current.group.id}/${current.model.id}` : '', prefs.quickProviders.join(','), prefs.modelOrder, prefs.modelOrderRows.join(','), prefs.modelDescriptions !== false].join('|')
+    let sig = [status, activeLocale(), modelFooter.signature(), current ? `${current.group.id}/${current.model.id}` : '', prefs.quickProviders.join(','), prefs.modelDescriptions !== false].join('|')
     sig += rowsSignature(groups)
     if (sig === modelBodySig) {
       modelRows.refreshRates()
@@ -258,7 +258,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
           // The official source needs no naming, and the first section needs
           // no rule: a bare line above the list would be one line too many.
           const sectionLabel = section.id === MODEL_OFFICIAL_GROUP ? '' : modelGroupName(section.id, section.name)
-          const sectionModels = section.models.slice().sort(modelComparator(prefs.modelOrder, section.id, prefs.modelOrderRows))
+          const sectionModels = section.models.slice().sort(modelComparator())
           if (s === 0 && sectionLabel === '') {
             for (const model of sectionModels) {
               const selected = current !== null && current.group.id === section.id && current.model.id === model.id
@@ -321,8 +321,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     const sections = modelRows.levelOneSections(groups)
     const listed: string[] = []
     for (let s = 0; s < sections.length; s++) listed.push(sections[s].id)
-    const prefs = readPrefs()
-    let sig = `more|${prefs.modelOrder}|${prefs.modelOrderRows.join(',')}|${listed.join(',')}`
+    let sig = `more|${listed.join(',')}`
     sig += rowsSignature(groups)
     if (current) sig += `#${current.group.id}/${current.model.id}`
     return sig

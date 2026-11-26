@@ -4,7 +4,7 @@ import { modelGroupName } from './provider-name'
 import { modelComparator } from './rows'
 import { motionEaseAt, motionMs, motionValue } from '../../shared/motion'
 import { releaseCardHeight, travelCardHeight } from '../../shared/card-resize'
-import { motionReduced, readPrefs } from '../../core/prefs'
+import { motionReduced } from '../../core/prefs'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { CARET_FIELD_ATTR } from '../../constants'
 import type { createModelRows } from './rows'
@@ -134,7 +134,6 @@ export function createModelSubMenu(options: ModelSubMenuOptions) {
     const groups = (snap && snap.groups) || []
     const current = options.current()
     const query = field.value.trim().toLowerCase()
-    const prefs = readPrefs()
     const at = `${options.signature()}\u0000${query}`
     if (at === painted) return
     const searched = query !== lastQuery
@@ -159,7 +158,7 @@ export function createModelSubMenu(options: ModelSubMenuOptions) {
     let listed = 0
     for (let g = 0; g < sections.length; g++) {
       const group = sections[g]
-      const found = group.models.slice().sort(modelComparator(prefs.modelOrder, group.id, prefs.modelOrderRows)).filter(model => admits(group, model, query))
+      const found = group.models.slice().sort(modelComparator()).filter(model => admits(group, model, query))
       if (found.length === 0) continue
       body.appendChild(rows.buildProviderGroup(group, found, modelGroupName(group.id, group.name), current, false))
       listed += found.length

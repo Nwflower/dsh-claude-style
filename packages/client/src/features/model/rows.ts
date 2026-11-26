@@ -13,7 +13,6 @@ import type { HostTooltip } from '../../shared/host-tooltip'
 import type { createHoverIntent } from '../../shared/popover'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostModelEntry, HostModelGroup } from '@dsh-claude-style/contracts/services'
-import type { Prefs } from '@dsh-claude-style/contracts/prefs'
 import { modelComparator as compareModelOrder } from './model-order'
 
 /**
@@ -29,9 +28,9 @@ export const MODEL_CHEVRON_SVG = '<svg viewBox="0 0 16 16" width="12" height="12
 
 export { byModelId } from './model-order'
 
-/** Apply the configured order with the same brand lookup the row painter uses. */
-export function modelComparator(order: Prefs['modelOrder'], provider: string, rows: readonly string[] = []) {
-  return compareModelOrder(order, provider, rows, modelBrand)
+/** Order a provider's rows with the same brand lookup the row painter uses. */
+export function modelComparator() {
+  return compareModelOrder(modelBrand)
 }
 
 /**

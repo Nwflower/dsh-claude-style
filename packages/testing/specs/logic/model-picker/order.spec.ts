@@ -3,37 +3,60 @@
  *
  * @capability model-picker
  * @features model
- * @risk Recognised vendor rows and plain-text rows interleave unpredictably, or a custom provider/model order is ignored by either picker level.
+ * @risk Recognised vendor rows and unbranded rows interleave unpredictably, vendor families split apart, or a provider's curated catalog order inside one vendor is scrambled.
  */
 import { expect, test } from 'vitest'
-import { byModelId, modelComparator } from '@dsh-claude-style/client/pure'
+import { MODEL_COPY_DOCUMENT, byModelId, indexModelCopy, modelComparator, resolveModelBrand } from '@dsh-claude-style/client/pure'
 import type { HostModelEntry } from '@dsh-claude-style/contracts/services'
 
-const rows: HostModelEntry[] = [
-  { id: 'unknown-b', name: 'Unknown B' },
-  { id: 'known-b', name: 'Known B' },
-  { id: 'unknown-a', name: 'Unknown A' },
-  { id: 'known-a', name: 'Known A' },
-]
-const brand = (id: unknown) => String(id).startsWith('known-') ? 'known' : null
-const ids = (order: 'id' | 'brand' | 'catalog' | 'custom', custom: string[] = []) => rows.slice()
-  .sort(modelComparator(order, 'provider', custom, brand))
-  .map(row => row.id)
+const copyIndex = indexModelCopy(MODEL_COPY_DOCUMENT)
+const realBrand = (id: unknown, name: unknown) => resolveModelBrand(copyIndex, id, name)
 
-test('id order remains the compatible default', () => {
-  expect(ids('id')).toEqual(['known-a', 'known-b', 'unknown-a', 'unknown-b'])
-  expect(rows.slice().sort(byModelId).map(row => row.id)).toEqual(ids('id'))
+test('recognised brands precede the unbranded second tier, brands sort by brand id, each brand keeps catalog order, and the second tier sorts by model id', () => {
+  const rows: HostModelEntry[] = [
+    { id: 'zeta-plain', name: 'Zeta Plain' },
+    { id: 'openai/o3-mini', name: 'o3-mini' },
+    { id: 'anthropic/claude-opus-4-6', name: 'Claude Opus 4.6' },
+    { id: 'alpha-plain', name: 'Alpha Plain' },
+    { id: 'openai/gpt-5', name: 'GPT-5' },
+    { id: 'anthropic/claude-sonnet-4-6', name: 'Claude Sonnet 4.6' },
+    { id: 'anthropic/claude-haiku-4-5', name: 'Claude Haiku 4.5' },
+  ]
+
+  expect(rows.slice().sort(modelComparator(realBrand)).map(row => row.id)).toEqual([
+    'anthropic/claude-opus-4-6',
+    'anthropic/claude-sonnet-4-6',
+    'anthropic/claude-haiku-4-5',
+    'openai/o3-mini',
+    'openai/gpt-5',
+    'alpha-plain',
+    'zeta-plain',
+  ])
 })
 
-test('brand order groups recognised lockups before plain names', () => {
-  expect(ids('brand')).toEqual(['known-a', 'known-b', 'unknown-a', 'unknown-b'])
+test('display-name brand fallback groups opaque gateway ids with their vendor in catalog order', () => {
+  const rows: HostModelEntry[] = [
+    { id: 'opaque-z', name: 'Custom Gateway Model Z' },
+    { id: 'route-2', name: 'DeepSeek R1' },
+    { id: 'opaque-a', name: 'Custom Gateway Model A' },
+    { id: 'route-1', name: 'DeepSeek V3' },
+  ]
+
+  expect(rows.slice().sort(modelComparator(realBrand)).map(row => row.id)).toEqual([
+    'route-2',
+    'route-1',
+    'opaque-a',
+    'opaque-z',
+  ])
 })
 
-test('catalog order preserves the provider sequence', () => {
-  expect(ids('catalog')).toEqual(rows.map(row => row.id))
-})
+test('when no brand is recognised (or before model copy loads), all rows sort by model id', () => {
+  const rows: HostModelEntry[] = [
+    { id: 'c-model', name: 'C' },
+    { id: 'a-model', name: 'A' },
+    { id: 'b-model', name: 'B' },
+  ]
 
-test('custom order ranks provider/model rows and leaves the rest in id order', () => {
-  expect(ids('custom', ['provider/unknown-b', 'provider/known-b'])).toEqual(['unknown-b', 'known-b', 'known-a', 'unknown-a'])
-  expect(ids('custom', ['other/unknown-b'])).toEqual(ids('id'))
+  expect(rows.slice().sort(modelComparator(() => null)).map(row => row.id))
+    .toEqual(rows.slice().sort(byModelId).map(row => row.id))
 })

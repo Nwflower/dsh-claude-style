@@ -20,7 +20,7 @@ export default {
       general: ['brand', 'username', 'pageZoom', 'interfaceFontSize', 'sodium', 'soundCues', 'systemNotifications', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable'],
       appearance: ['sidebarBrand', 'brandLockup', 'typeface', 'homeLayout', 'homeSessionScope', 'homeRipple', 'mascot', 'mascotScope', 'palette', 'paletteCards', 'backgroundOpacity'],
       conversation: ['viewTabs', 'hideToolbarOutsideConversation', 'headerBand', 'processRows', 'questionCard', 'answerAnchor', 'messageActions'],
-      composer: ['composerScope', 'composerBottomGap', 'permissionsControl', 'modelPicker', 'effortSlider', 'effortAccent', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'contextDisplay', 'statsPosition'],
+      composer: ['composerScope', 'composerBottomGap', 'permissionsControl', 'modelPicker', 'effortSlider', 'effortAccent', 'modelDescriptions', 'quickProviders', 'peakrate', 'contextDisplay', 'statsPosition'],
       sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'workspaceView', 'sidebarPeek', 'sidebarLayout', 'sessionPanel'],
       motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator', 'reasoningDisplay', 'autoPopover'],
     }
@@ -33,11 +33,11 @@ export default {
       { label: 'Transcript and rewind', rows: ['processRows', 'questionCard', 'answerAnchor', 'messageActions'] },
     ]
     const composerGroups = [
-      { label: 'Input and models', rows: ['composerScope', 'composerBottomGap', 'permissionsControl', 'modelPicker', 'effortSlider', 'effortAccent', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate'] },
+      { label: 'Input and models', rows: ['composerScope', 'composerBottomGap', 'permissionsControl', 'modelPicker', 'effortSlider', 'effortAccent', 'modelDescriptions', 'quickProviders', 'peakrate'] },
       { label: 'Meter and statistics bar', rows: ['contextDisplay', 'statsPosition'] },
     ]
     const REWIND_CHILDREN = ['rewindCheckpoints', 'rewindStorageLimit', 'rewindStorageDir']
-    const MODEL_CHILDREN = ['effortSlider', 'effortAccent', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate']
+    const MODEL_CHILDREN = ['effortSlider', 'effortAccent', 'modelDescriptions', 'quickProviders', 'peakrate']
     const expectedGrey = { appearance: ['homeSessionScope'], conversation: ['headerBand'] }
     const expectedNotes = { appearance: ['homeSessionScope'], conversation: ['headerBand'] }
     const notesOf = tab => ((pages[tab] || {}).notes || []).filter(key => key !== 'typeface')

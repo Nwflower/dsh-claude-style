@@ -1,7 +1,6 @@
-import type { Prefs } from '@dsh-claude-style/contracts/prefs'
 import type { HostModelEntry } from '@dsh-claude-style/contracts/services'
 
-/** Catalog order is whatever the provider happened to send; id order is scannable. */
+/** Ascending code-unit order on `model.id`, used for the unbranded second tier. */
 export function byModelId(a: HostModelEntry, b: HostModelEntry) {
   const left = String(a.id)
   const right = String(b.id)
@@ -9,21 +8,20 @@ export function byModelId(a: HostModelEntry, b: HostModelEntry) {
 }
 
 /**
- * One provider's row order. Catalog order returns equality for every pair so
- * the stable array sort keeps the host's sequence. Brand order reads the same
- * rule table as the painted lockup; custom ranks name `provider/model` rows.
+ * One provider's row order: recognised vendor lockups lead the unbranded second
+ * tier, vendors sort by brand id, models within one vendor keep the catalog
+ * sequence via stable `Array.prototype.sort`, and unbranded models sort by
+ * `model.id`.
  */
 export function modelComparator(
-  order: Prefs['modelOrder'],
-  provider: string,
-  rows: readonly string[],
   readBrand: (modelId: unknown, modelName: unknown) => string | null,
 ) {
-  if (order === 'id') return byModelId
-  if (order === 'catalog') return () => 0
-  const rank = new Map(rows.map((row, at) => [row, at]))
-  const place = (model: HostModelEntry) => order === 'custom'
-    ? rank.get(`${provider}/${model.id}`) ?? Number.MAX_SAFE_INTEGER
-    : readBrand(model.id, model.name) === null ? 1 : 0
-  return (a: HostModelEntry, b: HostModelEntry) => place(a) - place(b) || byModelId(a, b)
+  return (a: HostModelEntry, b: HostModelEntry): number => {
+    const left = readBrand(a.id, a.name)
+    const right = readBrand(b.id, b.name)
+    if (left !== null && right !== null) return left < right ? -1 : left > right ? 1 : 0
+    if (left !== null) return -1
+    if (right !== null) return 1
+    return byModelId(a, b)
+  }
 }
