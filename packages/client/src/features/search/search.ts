@@ -110,6 +110,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** Every selectable row on screen, in order, and the highlighted one's index. */
   let rows: SearchRow[] = []
   let active = 0
+  /**
+   * The list's children in order, each with the key of what it draws: a row's
+   * key is everything the row element shows, so a keystroke that keeps a row
+   * keeps its element, and only the rows that came, went or moved touch the DOM.
+   */
+  let shown: { key: string, element: HTMLElement }[] = []
+  /** The row and position each row element's listeners act on, updated when the element is kept. */
+  const itemRows = new WeakMap<Element, { row: SearchRow, index: number }>()
+  /** Cancels the queued reveal of the active row; null when none. */
+  let cancelReveal: (() => void) | null = null
   /** The content index's hits for `contentQuery`; the request in flight and its timer. */
   let contentHits: ContentHit[] = []
   let contentQuery = ''
@@ -210,6 +220,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
     const listbox = buildElement('div', 'dsh-claude-search-list')
     list = listbox
+    shown = []
     listbox.id = LIST_ID
     listbox.setAttribute('role', 'listbox')
     card.appendChild(listbox)
@@ -313,13 +324,25 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }, CONTENT_DEBOUNCE_MS)
   }
 
+  /** Everything a row element shows; two rows with one key draw the same element. */
+  function rowKey(row: SearchRow) {
+    return JSON.stringify(['row', row.kind, row.title, row.detail ?? '', row.snippet ?? '', row.snippetMatch ?? null, row.keys ?? [], row.icon ?? '', row.image ?? ''])
+  }
+
+  /** Point a row element at its row and its place in the list, writing only what moved. */
+  function placeRow(item: HTMLElement, row: SearchRow, index: number) {
+    itemRows.set(item, { row, index })
+    const id = `${LIST_ID}-option-${index}`
+    if (item.id !== id) item.id = id
+    if (item.getAttribute('data-index') !== String(index)) item.setAttribute('data-index', String(index))
+  }
+
   function buildRow(row: SearchRow, index: number) {
     const item = buildElement('div', 'dsh-claude-search-item')
-    item.id = `${LIST_ID}-option-${index}`
     item.setAttribute('role', 'option')
     item.setAttribute('aria-selected', 'false')
     item.setAttribute('data-kind', row.kind)
-    item.setAttribute('data-index', String(index))
+    placeRow(item, row, index)
     const icon = buildElement('span', 'dsh-claude-search-item-icon')
     if (row.image) {
       const image = buildElement('img', 'dsh-claude-search-item-image')
@@ -353,11 +376,15 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     enter.innerHTML = ICONS.enter
     item.appendChild(enter)
     item.addEventListener('mousemove', () => {
-      if (active === index) return
-      active = index
+      const at = itemRows.get(item)?.index
+      if (at === undefined || active === at) return
+      active = at
       paintActive(false)
     })
-    item.addEventListener('click', () => pick(row))
+    item.addEventListener('click', () => {
+      const current = itemRows.get(item)
+      if (current !== undefined) pick(current.row)
+    })
     return item
   }
 
@@ -369,17 +396,49 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       const on = i === active
       if (items[i].hasAttribute('data-active') !== on) items[i].toggleAttribute('data-active', on)
       if (items[i].getAttribute('aria-selected') !== String(on)) items[i].setAttribute('aria-selected', String(on))
-      if (on) {
-        named = items[i].id
-        if (reveal) items[i].scrollIntoView({ block: 'nearest' })
-      }
+      if (on) named = items[i].id
     }
+    if (reveal && named !== null) revealActive()
     // The field keeps focus; this is what tells a reader which option the
     // arrows and Enter will act on.
     if (input !== null) {
       if (named === null) input.removeAttribute('aria-activedescendant')
       else input.setAttribute('aria-activedescendant', named)
     }
+  }
+
+  /**
+   * Scroll the active row into the list's view in the next frame, and only when
+   * it lies outside it: the measurement joins the frame's read phase rather than
+   * forcing a layout inside every keystroke.
+   */
+  function revealActive() {
+    if (cancelReveal !== null) return
+    let delta = 0
+    cancelReveal = requestFrame({
+      read() {
+        delta = 0
+        const item = list?.querySelector<HTMLElement>('.dsh-claude-search-item[data-active]') ?? null
+        if (list === null || item === null) return
+        const view = list.getBoundingClientRect()
+        const top = view.top + list.clientTop
+        const bottom = top + list.clientHeight
+        const box = item.getBoundingClientRect()
+        if (box.top < top) delta = box.top - top
+        else if (box.bottom > bottom) delta = Math.min(box.bottom - bottom, box.top - top)
+      },
+      scroll() {
+        cancelReveal = null
+        if (delta !== 0 && list !== null) list.scrollTop += delta
+      },
+    })
+  }
+
+  /** Take a kept element drawing `key` out of the pool, or null when none is left. */
+  function takeKept(pool: Map<string, HTMLElement[]>, key: string) {
+    const kept = pool.get(key)
+    if (kept === undefined || kept.length === 0) return null
+    return kept.shift() ?? null
   }
 
   function render() {
@@ -393,20 +452,47 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     filterPill.sync(filterBar)
     const q = currentQuery()
     const sections = sources.sections(q, filter, contentQuery === q ? contentHits : [])
+    const pool = new Map<string, HTMLElement[]>()
+    for (const each of shown) {
+      const kept = pool.get(each.key)
+      if (kept === undefined) pool.set(each.key, [each.element])
+      else kept.push(each.element)
+    }
+    const next: { key: string, element: HTMLElement }[] = []
     rows = []
-    while (list.firstChild) list.removeChild(list.firstChild)
     for (let s = 0; s < sections.length; s++) {
       const section = sections[s]
-      list.appendChild(buildElement('div', 'dsh-claude-search-section', section.title))
+      const titleKey = JSON.stringify(['section', section.title])
+      next.push({ key: titleKey, element: takeKept(pool, titleKey) ?? buildElement('div', 'dsh-claude-search-section', section.title) })
       for (let r = 0; r < section.rows.length; r++) {
-        list.appendChild(buildRow(section.rows[r], rows.length))
-        rows.push(section.rows[r])
+        const row = section.rows[r]
+        const key = rowKey(row)
+        const kept = takeKept(pool, key)
+        if (kept !== null) placeRow(kept, row, rows.length)
+        next.push({ key, element: kept ?? buildRow(row, rows.length) })
+        rows.push(row)
       }
     }
     if (rows.length === 0) {
       const waiting = sources.pending(filter) || (q !== '' && contentQuery !== q && (filter === 'all' || filter === 'session'))
-      list.appendChild(buildElement('div', 'dsh-claude-search-status', waiting ? copy('searchLoading') : copy('searchEmpty')))
+      const status = waiting ? copy('searchLoading') : copy('searchEmpty')
+      const statusKey = JSON.stringify(['status', status])
+      next.push({ key: statusKey, element: takeKept(pool, statusKey) ?? buildElement('div', 'dsh-claude-search-status', status) })
     }
+    // Lay the children out in order: an element already in place is passed
+    // over, one out of place moves before the cursor, and whatever is left
+    // after the last placed element is what this render no longer shows.
+    let cursor = list.firstChild
+    for (const { element } of next) {
+      if (element === cursor) cursor = cursor.nextSibling
+      else list.insertBefore(element, cursor)
+    }
+    while (cursor !== null) {
+      const after: ChildNode | null = cursor.nextSibling
+      list.removeChild(cursor)
+      cursor = after
+    }
+    shown = next
     if (active >= rows.length) active = Math.max(0, rows.length - 1)
     paintActive(true)
   }
@@ -535,6 +621,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     closingStamp.release()
     window.clearTimeout(contentTimer)
     if (contentAbort !== null) contentAbort.abort()
+    cancelReveal?.()
+    cancelReveal = null
     sources.close()
     hostTurns.stop()
     filterPill.release()
