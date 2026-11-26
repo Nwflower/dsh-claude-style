@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-26",
+  "group": "removals",
+  "order": 1,
+  "external": false,
+  "zh": "移除「编辑侧栏入口」功能，侧栏面板入口改由宿主自带的固定与取消固定能力管理",
+  "en": "Remove the Edit sidebar entries feature in favor of the host's built-in sidebar pin and unpin controls"
+}

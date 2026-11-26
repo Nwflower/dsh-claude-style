@@ -138,12 +138,6 @@ export interface HostSlotOptions {
   label?(): string
 }
 
-/** The sidebar's pin list, as its registration's business face hands it out: the unpinned panel ids (held in memory until the host plugin reloads) and the one write. */
-export interface HostSidebarPins {
-  unpinned: HostSnapshotSource<readonly string[]>
-  setPinned(id: string, pinned: boolean): void
-}
-
 /** One registered slot entry: how it was declared, the component the owner renders, and the store it hands out. */
 export interface HostSlotRegistration {
   /** A label is a string or a thunk the owner re-reads on every projection, so it follows the locale. */
@@ -153,32 +147,11 @@ export interface HostSlotRegistration {
   /** The dictionary namespace the owner binds into the entry's `t` prop. */
   locale?: string
   store?: { create(): HostSlotStore }
-  /** The registrant's business face; a session-scoped slot hands it the session id, and the sidebar's carries its pin list. */
+  /** The registrant's business face; a session-scoped slot hands it the session id. */
   inject?(sessionId?: string): Record<string, unknown> & {
-    setPinned?: unknown
-    hooks?: Record<string, unknown> & { entryPins?: unknown }
+    hooks?: Record<string, unknown>
     keyedHooks?: Record<string, unknown>
   }
-}
-
-/** One customizable panel, as the sidebar's More menu hands it to its rows; Plugins is never one. */
-export interface HostPanelActionEntry {
-  id: string
-  label: string
-  pinned: boolean
-  active?: boolean
-}
-
-/** The owner props of a row in the sidebar's More menu (`sidebar.panellist.actions`). */
-export interface HostPanelActionsProps {
-  /** Customizable panels in the sidebar's own order. */
-  entries: readonly HostPanelActionEntry[]
-  /** Open a panel by id; the sidebar does the selecting. */
-  onOpen(id: string): void
-  /** Pin a panel to the sidebar (true) or unpin it (false); the sidebar's own pin list takes the change. */
-  onPinnedChange(id: string, pinned: boolean): void
-  /** Close the More menu. */
-  onDismiss(): void
 }
 
 /** A slot's own store, as far as the palette presses it (the shortcut reference). */

@@ -14,8 +14,8 @@ diff --git a/packages/client/src/shared/popover.css b/packages/client/src/shared
  }
  /* ---------- Host menu cards the skin repaints ---------- */
  /* The host's shared Menu card, wherever a feature stamps it: the account menu
-@@ -118,7 +117,7 @@ body[data-dsh-claude-style] :is([data-dsh-claude-account-menu], [data-dsh-claude
- body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu], [data-dsh-claude-hero-menu], [data-dsh-claude-more-menu]) {
+@@ -113,7 +112,7 @@ body[data-dsh-claude-style] :is([data-dsh-claude-account-menu], [data-dsh-claude
+ body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu], [data-dsh-claude-hero-menu]) {
    background: var(--dsh-claude-card) !important;
    border-color: var(--dsw-alias-border-l1) !important;
 -  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.35), 0 8px 28px rgba(0, 0, 0, 0.65), 0 2px 8px rgba(0, 0, 0, 0.45) !important;

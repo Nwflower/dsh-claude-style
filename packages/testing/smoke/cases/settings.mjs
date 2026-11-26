@@ -21,7 +21,7 @@ export default {
       appearance: ['sidebarBrand', 'brandLockup', 'typeface', 'homeLayout', 'homeSessionScope', 'homeRipple', 'mascot', 'mascotScope', 'palette', 'paletteCards', 'backgroundOpacity'],
       conversation: ['viewTabs', 'hideToolbarOutsideConversation', 'headerBand', 'processRows', 'questionCard', 'answerAnchor', 'messageActions'],
       composer: ['composerScope', 'composerBottomGap', 'permissionsControl', 'modelPicker', 'effortSlider', 'effortAccent', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'contextDisplay', 'statsPosition'],
-      sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'workspaceView', 'sidebarPeek', 'sidebarEntries', 'sidebarLayout', 'sessionPanel'],
+      sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'workspaceView', 'sidebarPeek', 'sidebarLayout', 'sessionPanel'],
       motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator', 'reasoningDisplay', 'autoPopover'],
     }
     const generalGroups = [

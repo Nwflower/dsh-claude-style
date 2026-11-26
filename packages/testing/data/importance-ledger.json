@@ -138,18 +138,18 @@
       "state": "page under 768",
       "opponents": []
     },
-    "body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu],[data-dsh-claude-hero-menu],[data-dsh-claude-more-menu])|background": {
-      "selector": "body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu],[data-dsh-claude-hero-menu],[data-dsh-claude-more-menu])",
+    "body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu],[data-dsh-claude-hero-menu])|background": {
+      "selector": "body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu],[data-dsh-claude-hero-menu])",
       "prop": "background",
       "verdict": "unmatched"
     },
-    "body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu],[data-dsh-claude-hero-menu],[data-dsh-claude-more-menu])|border-color": {
-      "selector": "body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu],[data-dsh-claude-hero-menu],[data-dsh-claude-more-menu])",
+    "body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu],[data-dsh-claude-hero-menu])|border-color": {
+      "selector": "body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu],[data-dsh-claude-hero-menu])",
       "prop": "border-color",
       "verdict": "unmatched"
     },
-    "body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu],[data-dsh-claude-hero-menu],[data-dsh-claude-more-menu])|box-shadow": {
-      "selector": "body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu],[data-dsh-claude-hero-menu],[data-dsh-claude-more-menu])",
+    "body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu],[data-dsh-claude-hero-menu])|box-shadow": {
+      "selector": "body[data-dsh-claude-style][data-ds-dark-theme] :is([data-dsh-claude-account-menu],[data-dsh-claude-hero-menu])",
       "prop": "box-shadow",
       "verdict": "unmatched"
     },

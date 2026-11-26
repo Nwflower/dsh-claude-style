@@ -239,10 +239,6 @@ export const USERNAME_MAX = 64
 /** Most quick-provider ids kept, and the longest id accepted. */
 export const QUICK_PROVIDERS_MAX = 64
 export const PROVIDER_ID_MAX = 128
-/** Hidden-panel limits; Plugins is host-pinned and must never be stored as hidden. */
-export const SIDEBAR_HIDDEN_MAX = 32
-export const PANEL_ID_MAX = 128
-export const PLUGINS_PANEL_ID = 'plugins'
 /** Custom-price storage limits; decimal text avoids losing entered digits to floats. */
 export const PRICE_ROWS_MAX = 32
 
@@ -429,10 +425,6 @@ export const PREFS = {
   searchStyle: { type: 'choice', values: SEARCH_STYLES, default: SEARCH_STYLE_STANDALONE },
   /** Whether resting the pointer on the collapsed sidebar's toggle or the window's left edge opens the sidebar over the page. */
   sidebarPeek: { type: 'boolean', default: true },
-  /** Whether the panel list carries the More menu's hidden entries and its Edit sidebar dialog. */
-  sidebarEntries: { type: 'boolean', default: true },
-  /** The panel ids that dialog took off the list; they stay reachable from More. */
-  sidebarHidden: { type: 'list', default: [], max: SIDEBAR_HIDDEN_MAX, entryMax: PANEL_ID_MAX, drop: [PLUGINS_PANEL_ID] },
   sidebarLayout: { type: 'choice', values: SIDEBAR_LAYOUTS, default: SIDEBAR_LAYOUT_RELAXED },
   ongoingIndicator: { type: 'choice', values: ONGOING_INDICATORS, default: ONGOING_INDICATOR_BREATHE },
   /** Leading uses the host slot; trailing leaves that slot available for third-party marks. */

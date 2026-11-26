@@ -5,7 +5,7 @@
  */
 
 import type { HostAccountService } from '@dsh-claude-style/contracts/account'
-import type { HostAgentTeamsRemote, HostBundleListAnswer, HostChatTarget, HostConfigFormsService, HostConversationService, HostInventoryAnswer, HostLocaleService, HostModelDirectoriesService, HostPluginBundle, HostServiceLookup, HostSession, HostSessionRenameAnswer, HostSessionsService, HostSessionStatusService, HostShortcutsService, HostSidebarPins, HostSlotOptions, HostSlotsService, HostSnapshotSource, HostUiConversationService, HostUiSessionService, HostUiWorkspaceService, HostWorkspacesService, HostWorkspaceViewStore } from '@dsh-claude-style/contracts/services'
+import type { HostAgentTeamsRemote, HostBundleListAnswer, HostChatTarget, HostConfigFormsService, HostConversationService, HostInventoryAnswer, HostLocaleService, HostModelDirectoriesService, HostPluginBundle, HostServiceLookup, HostSession, HostSessionRenameAnswer, HostSessionsService, HostSessionStatusService, HostShortcutsService, HostSlotOptions, HostSlotsService, HostSnapshotSource, HostUiConversationService, HostUiSessionService, HostUiWorkspaceService, HostWorkspacesService, HostWorkspaceViewStore } from '@dsh-claude-style/contracts/services'
 // The engine's only runtime import from a host npm package: the host process
 // provides it at runtime and the plugin ships no copy (D36).
 import { fileAddressFor } from '@deepseek-ai/dsh-util-workspace-path'
@@ -126,24 +126,6 @@ export function registerSlotEntries(ctx: HostContext, entries: readonly SlotEntr
       scope.effect(() => slots.inject(entry.options.name, () => slots.register(entry.options, entry.component)), label)
     }
   })
-}
-
-/**
- * The sidebar's pin list, read from the face its own registration injects: the
- * host keeps no service for it, and the list lives in the sidebar plugin's
- * memory, so the registration is the one seat that hands it out. The unpinned
- * source keeps its identity for as long as the sidebar plugin stands, which is
- * how a reload of that plugin shows. Null while no sidebar registers.
- */
-export function hostSidebarPins(slots: HostSlotsService): HostSidebarPins | null {
-  for (const entry of slots.entries('sidebar')) {
-    if (typeof entry.inject !== 'function') continue
-    const face = entry.inject()
-    const unpinned = face.hooks?.entryPins as HostSidebarPins['unpinned'] | undefined
-    const setPinned = face.setPinned as HostSidebarPins['setPinned'] | undefined
-    if (unpinned !== undefined && typeof setPinned === 'function') return { unpinned, setPinned }
-  }
-  return null
 }
 
 /** The Agent Teams service behind the remote; null where the host mounts no team mode. */

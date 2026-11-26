@@ -499,7 +499,7 @@ export function installParts(next: PartsVocabulary, onMarked?: () => void) {
     // relations' own attributes are watched too: the node they belong to can
     // take one after it was mounted, and the mark answers what the subtree
     // holds from there on.
-    attributeFilter: ['class', next.regions.account, next.regions.hero, next.regions.more, ...HOLD_ATTRIBUTES],
+    attributeFilter: ['class', next.regions.account, next.regions.hero, ...HOLD_ATTRIBUTES],
     skipQuiet: true,
     // The class names this pass reports are what the sheet is finished with,
     // and the hold marks it writes are what the sheet draws the frame with: the

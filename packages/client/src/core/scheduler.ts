@@ -40,7 +40,6 @@ export interface Handles {
   sidebarPeek: FeatureHandle
   sidebarStatus: FeatureHandle
   sessionActions: FeatureHandle
-  sidebarEntries: FeatureHandle
   turnNav: FeatureHandle
   chatFollow: FeatureHandle
   chatFold: ChatFoldHandle

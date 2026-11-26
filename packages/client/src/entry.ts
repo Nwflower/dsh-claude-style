@@ -1,4 +1,4 @@
-import { ACCOUNT_MENU_ATTR, HANDOFF_ATTR, HERO_MENU_ATTR, HOLDS_ATTR, MORE_MENU_ATTR, PACKAGE_NAME, PART_ATTR, QUIET_ATTR, READER_HOLD_ATTR, SKIN_CLASS_PREFIX, SKIN_PART_MARKS, STYLE_STAMP_ATTR } from './constants'
+import { ACCOUNT_MENU_ATTR, HANDOFF_ATTR, HERO_MENU_ATTR, HOLDS_ATTR, PACKAGE_NAME, PART_ATTR, QUIET_ATTR, READER_HOLD_ATTR, SKIN_CLASS_PREFIX, SKIN_PART_MARKS, STYLE_STAMP_ATTR } from './constants'
 import { closeHostSeats } from '@dsh-claude-style/engine/host'
 import { installParts } from '@dsh-claude-style/engine/parts'
 import { installPageScale } from './shared/page-scale'
@@ -417,7 +417,7 @@ export function apply(ctx: HostContext) {
       stopParts = installParts({
         part: PART_ATTR,
         holds: HOLDS_ATTR,
-        regions: { account: ACCOUNT_MENU_ATTR, hero: HERO_MENU_ATTR, more: MORE_MENU_ATTR },
+        regions: { account: ACCOUNT_MENU_ATTR, hero: HERO_MENU_ATTR },
         marks: SKIN_PART_MARKS,
       }, wake)
     }

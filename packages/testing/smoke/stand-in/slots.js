@@ -42,7 +42,7 @@
   var slotRegistry = CASE === 'search' || CASE === 'studio' || CASE === 'effort' || CASE === 'settings' || CASE === 'chunk-late' || CASE === 'chat-files' || CASE === 'peer-chat-ux' || CASE === 'skin-center-handoff' || CASE === 'skin-center-arrival' || switchCase ? {
     inject: function (key, callback) {
       var declared = CASE === 'search'
-        ? key === 'sidebar.panellist' || key === 'sidebar.panellist.actions'
+        ? key === 'sidebar.panellist'
         : switchCase
           ? key === 'sidebar.workspaces' || key === 'sidebar.workspaces.session.row.action' || key === 'sidebar.panellist'
           : CASE === 'studio'
@@ -96,7 +96,6 @@
     // each with the options it was registered under. The workspace browser
     // declares the store it renders from instead, which is what the skin reads.
     entries: function (key) {
-      if (host.sidebarEntry !== undefined && key === 'sidebar') return [host.sidebarEntry]
       if (switchCase && key === 'sidebar.workspaces') {
         return [{ store: { create: function () { return viewStore } } }]
       }

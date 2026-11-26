@@ -382,8 +382,8 @@ function checkParts(parts) {
 
 /** Build relation tables with the same skin vocabulary the browser uses (D73). */
 function partsVocabulary() {
-  const { ACCOUNT_MENU_ATTR, HERO_MENU_ATTR, MORE_MENU_ATTR, PART_ATTR, SKIN_PART_MARKS } = loadModule('packages/client/src/constants.ts')
-  return { part: PART_ATTR, regions: { account: ACCOUNT_MENU_ATTR, hero: HERO_MENU_ATTR, more: MORE_MENU_ATTR }, marks: SKIN_PART_MARKS }
+  const { ACCOUNT_MENU_ATTR, HERO_MENU_ATTR, PART_ATTR, SKIN_PART_MARKS } = loadModule('packages/client/src/constants.ts')
+  return { part: PART_ATTR, regions: { account: ACCOUNT_MENU_ATTR, hero: HERO_MENU_ATTR }, marks: SKIN_PART_MARKS }
 }
 
 /** Every part name the tables define, sorted. */

@@ -1,9 +1,0 @@
-{
-  "entriesTitle": { "zh": "编辑侧栏入口", "en": "Edit sidebar entries" },
-  "editRow": { "zh": "编辑侧栏…", "en": "Edit sidebar…" },
-  "editTitle": { "zh": "编辑侧栏", "en": "Edit sidebar" },
-  "editDesc": { "zh": "选择要在侧栏中显示的项目。", "en": "Choose which items appear in your sidebar." },
-  "editDone": { "zh": "完成", "en": "Done" },
-  "editClose": { "zh": "关闭", "en": "Close" },
-  "saveFailed": { "zh": "设置暂时无法保存，请稍后再试。", "en": "The setting could not be saved right now. Try again shortly." }
-}
