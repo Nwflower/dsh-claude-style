@@ -22,11 +22,10 @@ export default {
     title: 'effortSliderTitle',
     desc: 'effortSliderDesc',
   }, {
-    // The colour speaks on the slider's own trigger, so the row stands under the
-    // switch that draws it and goes with it (D76).
+    // The colour speaks on the slider's own trigger, so the row stands directly
+    // under the switch that draws it and folds with it (D76).
     tab: 'composer',
-    // After the rows about the menu's own lines (35–45): this one colours the trigger.
-    rank: 46,
+    rank: 32,
     pref: 'effortAccent',
     parent: 'effortSlider',
     title: 'effortAccentTitle',

@@ -10,7 +10,7 @@ export default {
   ],
   stylesheets: [{ file: 'header-visibility.css', rank: 77 }],
   settingsRows: [{
-    tab: 'conversation',
+    tab: 'conversation-header',
     rank: 55,
     pref: 'hideToolbarOutsideConversation',
     title: 'hideToolbarOutsideConversationTitle',

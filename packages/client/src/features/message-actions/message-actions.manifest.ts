@@ -15,14 +15,14 @@ export default {
   stylesheets: [{ file: 'message-actions.css', rank: 155 }],
   settingsRows: [{
     tab: 'conversation',
-    rank: 25,
+    rank: 85,
     pref: 'messageActions',
     title: 'actionsTitle',
     // dsh-rewind takes the four write actions; the switch still governs revision history (D111).
     sharedWith: { plugin: 'dsh-rewind', note: 'rewindPeerNote' },
   }, {
     tab: 'conversation',
-    rank: 26,
+    rank: 86,
     pref: 'rewindCheckpoints',
     parent: 'messageActions',
     title: 'rewindCheckpointsTitle',
@@ -30,7 +30,7 @@ export default {
     sharedWith: { plugin: 'dsh-rewind', note: 'rewindPeerNote' },
   }, {
     tab: 'conversation',
-    rank: 27,
+    rank: 87,
     pref: 'rewindStorageLimit',
     parent: 'rewindCheckpoints',
     title: 'rewindStorageLimitTitle',
@@ -44,7 +44,7 @@ export default {
     sharedWith: { plugin: 'dsh-rewind', note: 'rewindPeerNote' },
   }, {
     tab: 'conversation',
-    rank: 28,
+    rank: 88,
     pref: 'rewindStorageDir',
     parent: 'rewindCheckpoints',
     title: 'rewindStorageDirTitle',

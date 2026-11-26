@@ -147,7 +147,7 @@
       probe.walkSettingsTree = walk
       r.settings = { registered: typeof Section === 'function', pages: {} }
       if (r.settings.registered) {
-        var tabIds = ['general', 'appearance', 'main-window', 'sidebar', 'motion']
+        var tabIds = ['general', 'appearance', 'conversation', 'composer', 'sidebar', 'motion']
         for (var ti = 0; ti < tabIds.length; ti++) r.settings.pages[tabIds[ti]] = renderTab(tabIds[ti])
         r.settings.link = r.settings.pages.general.link
         // The heading's mark: the build inlines the asset into the token sheet
@@ -563,17 +563,25 @@
           await sleep(120)
           return { claude: claude, system: system }
         })()
-        window.__pushForm({ modelPicker: false, mascot: 'off', sidebarSearch: false, palette: 'host', billingCurrency: 'off' })
-        r.settings.parentsOff = { appearance: renderTab('appearance'), mainWindow: renderTab('main-window'), sidebar: renderTab('sidebar') }
-        window.__pushForm({ modelPicker: true, mascot: 'brand', sidebarSearch: true, palette: 'claude', billingCurrency: 'CNY' })
+        window.__pushForm({ messageActions: true })
+        r.settings.messageActionsOn = renderTab('conversation')
+        window.__pushForm({ messageActions: true, rewindCheckpoints: false, modelPicker: false, mascot: 'off', sidebarSearch: false, palette: 'host', billingCurrency: 'off' })
+        r.settings.parentsOff = {
+          general: renderTab('general'),
+          appearance: renderTab('appearance'),
+          conversation: renderTab('conversation'),
+          composer: renderTab('composer'),
+          sidebar: renderTab('sidebar'),
+        }
+        window.__pushForm({ messageActions: false, rewindCheckpoints: true, modelPicker: true, mascot: 'brand', sidebarSearch: true, palette: 'claude', billingCurrency: 'CNY' })
         // The rows that wait for another setting: the composer restyle off greys
-        // the picker, its sub-rows, the permission control and the statistics'
-        // figures; the footer takeover off greys the easter egg under it. Home
-        // only still leaves the statistics without a conversation to stand in.
+        // the picker, its sub-rows, the permission control and the meter/bar
+        // rows while global billing in General stays live; Home only still leaves
+        // the meter and statistics bar without a conversation to stand in.
         window.__pushForm({ composerScope: 'off', collapseFooter: false })
-        r.settings.requirementsOff = { mainWindow: renderTab('main-window'), sidebar: renderTab('sidebar') }
+        r.settings.requirementsOff = { general: renderTab('general'), composer: renderTab('composer'), sidebar: renderTab('sidebar') }
         window.__pushForm({ composerScope: 'hero', collapseFooter: true })
-        r.settings.heroOnly = { mainWindow: renderTab('main-window') }
+        r.settings.heroOnly = { composer: renderTab('composer') }
         window.__pushForm({ composerScope: 'all' })
         // Page zoom reaches the document through the preference mirror and the
         // sheet draws the page at it, above and below the page's own size; the
@@ -633,7 +641,7 @@
         // On the Windows window the title-bar row takes input; everywhere else
         // it stays greyed with its note.
         document.documentElement.setAttribute('data-windows-titlebar', '')
-        r.settings.onWindows = renderTab('main-window')
+        r.settings.onWindows = renderTab('conversation')
         document.documentElement.removeAttribute('data-windows-titlebar')
       }
     })

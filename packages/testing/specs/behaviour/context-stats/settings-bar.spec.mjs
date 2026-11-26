@@ -12,7 +12,7 @@ import { spec } from '../../fixtures/behaviour.mjs'
 import { inspectSettingsTab } from '../../fixtures/settings-tree.mjs'
 
 async function readStatsBarSettings(t) {
-  return inspectSettingsTab(t, 'main-window', (tree, { walk, textOf, has }, names) => {
+  return inspectSettingsTab(t, 'composer', (tree, { walk, textOf, has }, names) => {
     let toggle = null
     const cards = []
     const chips = []
@@ -64,7 +64,7 @@ async function readStatsBarSettings(t) {
 }
 
 async function pressStatsBarToggle(t) {
-  await inspectSettingsTab(t, 'main-window', (tree, { walk }) => {
+  await inspectSettingsTab(t, 'composer', (tree, { walk }) => {
     walk(tree, node => {
       if (node.props?.role === 'switch' && node.props?.['aria-label'] === 'Conversation statistics bar') {
         node.props.onClick()

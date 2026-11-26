@@ -66,12 +66,11 @@ export interface SettingsRow {
 }
 
 /**
- * One labelled group of the main-window tab: the label that opens it and the
- * rows this page writes for it; the manifests' rows that name the group stand
- * among them (settings-tab-main-window.ts).
+ * One labelled group inside a grouped settings tab: its heading label and any
+ * imperative rows the tab supplies alongside manifest-owned rows.
  */
 export interface SettingsGroup {
-  id: SettingsGroupId
+  id: SettingsGroupId | SettingsTabId
   label(): string
   rows?(view: SettingsView): SettingsRow[]
 }
@@ -242,29 +241,63 @@ function featureRowParts(feature: Feature, row: FeatureSettingsRow, view: Settin
 }
 
 /**
+ * Whether any ancestor in a row's `parent` chain is stored off (`false` or
+ * `'off'`). Titled sub-rows fold away while an ancestor switch is off; untitled
+ * preview-card sub-rows stay mounted and dim with their switch.
+ */
+function ancestorOff(
+  row: FeatureSettingsRow,
+  seen: ReadonlySet<string>,
+  prefs: Prefs,
+  rowsByPref: ReadonlyMap<keyof Prefs, FeatureSettingsRow>,
+): boolean {
+  if (row.parent === undefined || seen.has(row.parent)) return false
+  if (isOff(prefs, row.parent)) return true
+  const above = rowsByPref.get(row.parent)
+  if (above === undefined) return false
+  return ancestorOff(above, new Set([...seen, row.parent]), prefs, rowsByPref)
+}
+
+/** Nesting depth along the `parent` chain (`0` top-level, `1` direct child, `2+` nested child). */
+function parentDepth(
+  row: FeatureSettingsRow,
+  seen: ReadonlySet<string>,
+  rowsByPref: ReadonlyMap<keyof Prefs, FeatureSettingsRow>,
+): number {
+  if (row.parent === undefined || seen.has(row.parent)) return 0
+  const above = rowsByPref.get(row.parent)
+  if (above === undefined) return 1
+  return 1 + parentDepth(above, new Set([...seen, row.parent]), rowsByPref)
+}
+
+/**
  * The rows the feature manifests declare for a slot (D76): a tab of the strip,
- * or one of the main window's groups. A row placed in a header (`placement`)
- * stands in its parent's row instead (headerAside).
+ * or one of a tab's labelled groups. A row placed in a header (`placement`)
+ * stands in its parent's row instead (headerAside); a titled sub-row whose
+ * ancestor `parent` is off folds out of the list.
  */
 function featureRows(slot: SettingsRowSlot, view: SettingsView): SettingsRow[] {
   const controls = view.controls
   const rowsByPref = rowsByPrefOf(slot)
-  return settingsRowsOf(slot).filter(({ row }) => row.placement !== 'header').map(({ feature, row }) => {
-    const { title, description, control, aside, off, drawn } = featureRowParts(feature, row, view, rowsByPref)
-    // A feature's own control (preview cards, a table) takes the line under the
-    // row's text, or the whole row when it has none, under a parent row too: a
-    // row of cards stays a block so its title keeps the line above them.
-    const node = row.parent === undefined || drawn
-      ? controls.row(row.pref, title, description, control, {
-        disabled: off,
-        block: drawn && row.controlLayout !== 'inline',
-        sub: row.parent !== undefined,
-        experimental: row.experimental === true,
-        aside,
-      })
-      : controls.subRow(row.pref, title ?? '', description, control, !off, row.experimental === true)
-    return { rank: row.rank, node }
-  })
+  return settingsRowsOf(slot)
+    .filter(({ row }) => row.placement !== 'header' && !(row.title !== undefined && ancestorOff(row, new Set(), view.prefs, rowsByPref)))
+    .map(({ feature, row }) => {
+      const depth = parentDepth(row, new Set(), rowsByPref)
+      const { title, description, control, aside, off, drawn } = featureRowParts(feature, row, view, rowsByPref)
+      // A feature's own control (preview cards, an inline field) renders through
+      // `row()` so block vs inline layout follows `controlLayout`.
+      const node = row.parent === undefined || drawn
+        ? controls.row(row.pref, title, description, control, {
+          disabled: off,
+          block: drawn && row.controlLayout !== 'inline',
+          sub: row.parent !== undefined,
+          nested: depth >= 2,
+          experimental: row.experimental === true,
+          aside,
+        })
+        : controls.subRow(row.pref, title ?? '', description, control, !off, row.experimental === true, depth >= 2)
+      return { rank: row.rank, node }
+    })
 }
 
 /**
@@ -382,7 +415,7 @@ export function createSettingsControls() {
    * `lead` is a quieter control the row shows ahead of its own, such as the
    * button that opens what the control governs.
    */
-  function row(key: string, title: string | null, description: React.ReactNode, control: React.ReactNode, options?: { block?: boolean, disabled?: boolean, sub?: boolean, experimental?: boolean, mark?: string, aside?: React.ReactElement | null, lead?: React.ReactElement | null }) {
+  function row(key: string, title: string | null, description: React.ReactNode, control: React.ReactNode, options?: { block?: boolean, disabled?: boolean, sub?: boolean, nested?: boolean, experimental?: boolean, mark?: string, aside?: React.ReactElement | null, lead?: React.ReactElement | null }) {
     const classes = ['dsh-claude-settings-row']
     if (options?.block) classes.push('dsh-claude-settings-row-block')
     else if (React.isValidElement(control) && control.type === ClaudeStyleSegmentGroup) classes.push('dsh-claude-settings-row-segment')
@@ -391,6 +424,7 @@ export function createSettingsControls() {
     // (the precise status line under that switch): the stylesheet keeps the
     // group's members together, with no hairline between them (settings.css).
     if (options?.sub === true || title === null) classes.push('dsh-claude-settings-row-sub')
+    if (options?.nested === true) classes.push('dsh-claude-settings-row-sub-nested')
     // The switch has no text of its own; its name is this row's title.
     const named = React.isValidElement(control) && control.type === ClaudeStyleSwitch
       ? React.cloneElement(control as React.ReactElement<{ label?: string }>, { label: title ?? '' })
@@ -409,25 +443,11 @@ export function createSettingsControls() {
   }
 
   /**
-   * A row that belongs to the row above it: indented under its parent, and
-   * disabled while the parent is off. The control is built by the caller
-   * with the same `disabled` flag, so it also refuses the keyboard.
+   * A row that belongs to the row above it: indented under its parent with a
+   * vertical guide rule, and disabled while the parent cannot act.
    */
-  function subRow(key: string, title: string, description: React.ReactNode, control: React.ReactNode, enabled: boolean, experimental?: boolean) {
-    const named = React.isValidElement(control) && control.type === ClaudeStyleSwitch
-      ? React.cloneElement(control as React.ReactElement<{ label?: string }>, { label: title })
-      : control
-    return React.createElement(
-      'div',
-      {
-        className: 'dsh-claude-settings-row dsh-claude-settings-row-sub',
-        key,
-        'aria-disabled': enabled ? undefined : 'true',
-        'data-disabled': enabled ? undefined : '',
-      },
-      rowText(title, description, experimental),
-      named,
-    )
+  function subRow(key: string, title: string, description: React.ReactNode, control: React.ReactNode, enabled: boolean, experimental?: boolean, nested?: boolean) {
+    return row(key, title, description, control, { sub: true, nested, disabled: !enabled, experimental })
   }
 
   return { segment, toggle, row, subRow }

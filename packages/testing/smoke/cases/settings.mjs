@@ -17,40 +17,57 @@ export default {
     const sameMembers = (actual = [], target = []) =>
       actual.length === target.length && new Set(actual).size === target.length && target.every((item) => actual.includes(item))
     const expected = {
-      general: ['brand', 'username', 'pageZoom', 'interfaceFontSize', 'sodium', 'soundCues', 'systemNotifications'],
+      general: ['brand', 'username', 'pageZoom', 'interfaceFontSize', 'sodium', 'soundCues', 'systemNotifications', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable'],
       appearance: ['sidebarBrand', 'brandLockup', 'typeface', 'homeLayout', 'homeSessionScope', 'homeRipple', 'mascot', 'mascotScope', 'palette', 'paletteCards', 'backgroundOpacity'],
-      'main-window': ['messageActions', 'rewindCheckpoints', 'rewindStorageLimit', 'rewindStorageDir', 'viewTabs', 'hideToolbarOutsideConversation', 'headerBand', 'processRows', 'answerAnchor', 'composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable'],
-      sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'sidebarEntries', 'workspaceView', 'sidebarPeek', 'sidebarLayout', 'sessionPanel'],
+      conversation: ['viewTabs', 'hideToolbarOutsideConversation', 'headerBand', 'processRows', 'questionCard', 'answerAnchor', 'messageActions'],
+      composer: ['composerScope', 'composerBottomGap', 'permissionsControl', 'modelPicker', 'effortSlider', 'effortAccent', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'contextDisplay', 'statsPosition'],
+      sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'workspaceView', 'sidebarPeek', 'sidebarEntries', 'sidebarLayout', 'sessionPanel'],
       motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator', 'reasoningDisplay', 'autoPopover'],
     }
-    const mainWindowGroups = [
-      { label: 'Conversation', rows: ['messageActions', 'rewindCheckpoints', 'rewindStorageLimit', 'rewindStorageDir', 'viewTabs', 'hideToolbarOutsideConversation', 'headerBand', 'processRows', 'answerAnchor'] },
-      { label: 'Composer', rows: ['composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent'] },
-      { label: 'Context and cost', rows: ['contextDisplay', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable'] },
+    const generalGroups = [
+      { label: 'Basics and notifications', rows: ['brand', 'username', 'pageZoom', 'interfaceFontSize', 'sodium', 'soundCues', 'systemNotifications'] },
+      { label: 'Usage and billing', rows: ['statsFooterTokenFormat', 'billingCurrency', 'billingTable'] },
+    ]
+    const conversationGroups = [
+      { label: 'Header and views', rows: ['viewTabs', 'hideToolbarOutsideConversation', 'headerBand'] },
+      { label: 'Transcript and rewind', rows: ['processRows', 'questionCard', 'answerAnchor', 'messageActions'] },
+    ]
+    const composerGroups = [
+      { label: 'Input and models', rows: ['composerScope', 'composerBottomGap', 'permissionsControl', 'modelPicker', 'effortSlider', 'effortAccent', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate'] },
+      { label: 'Meter and statistics bar', rows: ['contextDisplay', 'statsPosition'] },
     ]
     const REWIND_CHILDREN = ['rewindCheckpoints', 'rewindStorageLimit', 'rewindStorageDir']
-    const expectedGrey = { appearance: ['homeSessionScope'], 'main-window': [...REWIND_CHILDREN, 'headerBand'] }
-    const expectedNotes = { appearance: ['homeSessionScope'], 'main-window': ['headerBand'] }
+    const MODEL_CHILDREN = ['effortSlider', 'effortAccent', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate']
+    const expectedGrey = { appearance: ['homeSessionScope'], conversation: ['headerBand'] }
+    const expectedNotes = { appearance: ['homeSessionScope'], conversation: ['headerBand'] }
     const notesOf = tab => ((pages[tab] || {}).notes || []).filter(key => key !== 'typeface')
     const pages = settings.pages || {}
     for (const tab of Object.keys(expected)) {
       const page = pages[tab] || {}
-      check(`the ${tab} tab is selected in the five-tab strip and carries its rows, greying only the rows that wait for something`,
+      check(`the ${tab} tab is selected in the six-tab strip and carries its rows, greying only the rows that wait for something`,
         JSON.stringify(page.tabs) === JSON.stringify(Object.keys(expected)) && page.selected === tab &&
           sameMembers(page.rows, expected[tab]) &&
           sameMembers(page.disabled || [], expectedGrey[tab] || []) &&
           sameMembers(notesOf(tab), expectedNotes[tab] || []),
         JSON.stringify(page))
     }
-    const mainWindow = pages['main-window'] || {}
-    check('the main window page groups rows under Conversation, Composer, and Context and cost',
-      Array.isArray(mainWindow.groups) && mainWindow.groups.length === mainWindowGroups.length &&
-        mainWindow.groups.every((group, index) => group.label === mainWindowGroups[index].label && sameMembers(group.rows, mainWindowGroups[index].rows)),
-      JSON.stringify(mainWindow.groups))
+    const matchesGroups = (page, target) =>
+      Array.isArray(page.groups) && page.groups.length === target.length &&
+      page.groups.every((group, index) => group.label === target[index].label && JSON.stringify(group.rows) === JSON.stringify(target[index].rows))
+    check('General, Chat and Composer organize their rows in rank order under their own section headings',
+      matchesGroups(pages.general || {}, generalGroups) &&
+        matchesGroups(pages.conversation || {}, conversationGroups) &&
+        matchesGroups(pages.composer || {}, composerGroups),
+      JSON.stringify({ general: (pages.general || {}).groups, conversation: (pages.conversation || {}).groups, composer: (pages.composer || {}).groups }))
+    const messageActionsOn = settings.messageActionsOn || {}
+    check('turning message actions on unfolds its three checkpoint rows at the end of the transcript group',
+      sameMembers(messageActionsOn.rows, [...expected.conversation, ...REWIND_CHILDREN]) &&
+        sameMembers(messageActionsOn.disabled, ['headerBand']),
+      JSON.stringify(messageActionsOn))
     const onWindows = settings.onWindows || {}
-    check('on the Windows window the title-bar row takes input while only message-action children stay greyed under its off default',
-      sameMembers(onWindows.rows, expected['main-window']) &&
-        sameMembers(onWindows.disabled, REWIND_CHILDREN) &&
+    check('on the Windows window the title-bar row takes input while message-action children stay folded under its off default',
+      sameMembers(onWindows.rows, expected.conversation) &&
+        sameMembers(onWindows.disabled, []) &&
         sameMembers(onWindows.notes, []),
       JSON.stringify(onWindows))
     const palette = settings.paletteCards || {}
@@ -88,24 +105,30 @@ export default {
         (typefaceNote.claude?.note !== true || /^Missing .*:/.test(typefaceNote.claude.text)),
       JSON.stringify(typefaceNote))
     const off = settings.parentsOff || {}
-    check('a sub-row greys out while its parent is off: the mascot\'s place with the mascot off, the model descriptions, the effort accent colour, the quick providers and the peak rate meter with the model picker off, the custom price table with the billing off, the search button\'s style with the sidebar search off, the home session scope for the Code home layout, and the title-bar band for the window on every page',
-      !!off.appearance && sameMembers(off.appearance.disabled, ['homeSessionScope', 'mascotScope']) &&
-        !!off.mainWindow && sameMembers(off.mainWindow.disabled, [...REWIND_CHILDREN, 'headerBand', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'billingTable']) &&
-        !!off.sidebar && sameMembers(off.sidebar.disabled, ['searchStyle']),
+    check('a titled sub-row folds out of the tab while an ancestor switch in its parent chain is off',
+      !!off.general && sameMembers(off.general.rows, expected.general.filter(key => key !== 'billingTable')) &&
+        !!off.appearance && sameMembers(off.appearance.rows, expected.appearance.filter(key => !['mascotScope', 'paletteCards', 'backgroundOpacity'].includes(key))) &&
+        sameMembers(off.appearance.disabled, ['homeSessionScope']) &&
+        !!off.conversation && sameMembers(off.conversation.rows, [...expected.conversation, 'rewindCheckpoints']) &&
+        !!off.composer && sameMembers(off.composer.rows, expected.composer.filter(key => !MODEL_CHILDREN.includes(key))) &&
+        !!off.sidebar && sameMembers(off.sidebar.rows, expected.sidebar.filter(key => key !== 'searchStyle')),
       JSON.stringify(off))
     const offAppearance = (off.appearance || {}).rows || []
     check('the colour cards and the background opacity stand only under the skin\'s own palette: following the host leaves neither on the tab',
       offAppearance.indexOf('paletteCards') === -1 && offAppearance.indexOf('backgroundOpacity') === -1,
       JSON.stringify(offAppearance))
     const unmet = settings.requirementsOff || {}
-    check('with the composer restyle off, the model picker with its sub-rows, the permission control and the statistics\' figures grey out, the two switches and the statistics rows saying what they wait for; with the footer takeover off, so does the easter egg under it',
-      !!unmet.mainWindow && sameMembers(unmet.mainWindow.disabled, [...REWIND_CHILDREN, 'headerBand', 'composerBottomGap', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable']) &&
-        sameMembers(unmet.mainWindow.notes, ['headerBand', 'composerBottomGap', 'permissionsControl', 'modelPicker', 'contextDisplay', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable']) &&
-        !!unmet.sidebar && sameMembers(unmet.sidebar.disabled, ['banLocale']) && sameMembers(unmet.sidebar.notes, []),
+    check('with the composer restyle off, bottom gap folds away, the model picker with its sub-rows, the permission control and the meter/bar rows grey out while global billing in General stays live; with the footer takeover off, its sub-row folds away',
+      !!unmet.general && sameMembers(unmet.general.disabled, []) &&
+        !!unmet.composer && sameMembers(unmet.composer.rows, expected.composer.filter(key => key !== 'composerBottomGap')) &&
+        sameMembers(unmet.composer.disabled, ['permissionsControl', 'modelPicker', ...MODEL_CHILDREN, 'contextDisplay', 'statsPosition']) &&
+        sameMembers(unmet.composer.notes, ['permissionsControl', 'modelPicker', 'contextDisplay', 'statsPosition']) &&
+        !!unmet.sidebar && sameMembers(unmet.sidebar.rows, expected.sidebar.filter(key => key !== 'banLocale')) && sameMembers(unmet.sidebar.disabled, []),
       JSON.stringify(unmet))
     const hero = settings.heroOnly || {}
-    check('with the restyle on the home page alone, the picker and the permission control take input, the statistics\' position still waits for a conversation and the title-bar band for the window',
-      !!hero.mainWindow && sameMembers(hero.mainWindow.disabled, [...REWIND_CHILDREN, 'headerBand', 'composerBottomGap', 'contextDisplay', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable']),
+    check('with the restyle on the home page alone, the picker and the permission control take input while the bottom gap, meter and statistics bar still wait for a conversation',
+      !!hero.composer && sameMembers(hero.composer.rows, expected.composer) &&
+        sameMembers(hero.composer.disabled, ['composerBottomGap', 'contextDisplay', 'statsPosition']),
       JSON.stringify(hero))
     const pageZoom = settings.pageZoom || {}
     const zoomed = pageZoom.zoomed || {}

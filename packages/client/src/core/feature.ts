@@ -66,9 +66,9 @@ export interface FeatureStylesheetGenerated {
   scope?: 'feature'
 }
 
-export type SettingsTabId = 'general' | 'appearance' | 'main-window' | 'sidebar' | 'motion'
+export type SettingsTabId = 'general' | 'appearance' | 'conversation' | 'composer' | 'sidebar' | 'motion'
 
-export type SettingsGroupId = 'conversation' | 'composer' | 'statistics'
+export type SettingsGroupId = 'billing' | 'conversation-header' | 'statistics'
 
 export type SettingsRowSlot = SettingsTabId | SettingsGroupId
 

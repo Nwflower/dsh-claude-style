@@ -10,8 +10,9 @@ import { subscribeWebfontPresence } from '../../shared/webfonts'
 import { createSettingsControls, headerAside, tabRows } from './settings-controls'
 import { ClaudeStyleSegmentGroup } from '../../shared/segment-group'
 import { createSettingsAppearanceTab } from './settings-tab-appearance'
+import { createSettingsComposerTab } from './settings-tab-composer'
+import { createSettingsConversationTab } from './settings-tab-conversation'
 import { createSettingsGeneralTab } from './settings-tab-general'
-import { createSettingsMainWindowTab } from './settings-tab-main-window'
 import { createSettingsMotionTab } from './settings-tab-motion'
 import { createSettingsSidebarTab } from './settings-tab-sidebar'
 import { settingsTabIcon } from './settings-tab-icons'
@@ -53,10 +54,10 @@ type PageDirection = 'forward' | 'back'
  * follows the shell language like every other string the skin paints. The
  * English literals are the fallback for a failed fetch.
  *
- * The rows are grouped into tabs (packages/client/src/features/settings/settings-tab-*.ts),
+ * The rows are grouped into six tabs (packages/client/src/features/settings/settings-tab-*.ts),
  * picked from a strip at the top that reuses the segmented control and its
- * sliding highlight; the main window tab draws its rows as two labelled groups,
- * the conversation side above and the composer's below. The open tab lives in
+ * sliding highlight; General, Chat and Composer divide their rows under quiet
+ * section headings. The open tab lives in
  * the component: it survives a preference change, not a remount.
  */
 /**
@@ -84,7 +85,8 @@ export const SETTINGS_SECTION_ID = 'claude-style'
 export const SETTINGS_TABS: SettingsTab[] = [
   createSettingsGeneralTab(),
   createSettingsAppearanceTab(),
-  createSettingsMainWindowTab(),
+  createSettingsConversationTab(),
+  createSettingsComposerTab(),
   createSettingsSidebarTab(),
   createSettingsMotionTab(),
 ]
@@ -106,7 +108,11 @@ export function ClaudeStyleSettingsTabStrip(props: { active: SettingsTabId, onPi
     settingsTabIcon(tab.id),
     tab.label(),
   ))
-  return React.createElement(ClaudeStyleSegmentGroup, { role: 'tablist', className: 'dsh-claude-settings-tabs' }, buttons)
+  return React.createElement(
+    'div',
+    { className: 'dsh-claude-settings-strip' },
+    React.createElement(ClaudeStyleSegmentGroup, { role: 'tablist', className: 'dsh-claude-settings-tabs' }, buttons),
+  )
 }
 
 /**

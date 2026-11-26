@@ -57,18 +57,18 @@ export default {
     check('the accent line names dsh-chat-ux',
       (settings.texts || []).some(text => text.includes('dsh-chat-ux')), JSON.stringify(settings.texts))
     check('the rows the other plugin does not own keep answering',
-      [['main-window', 'hideToolbarOutsideConversation'], ['main-window', 'viewTabs'], ['motion', 'motion']]
+      [['conversation', 'hideToolbarOutsideConversation'], ['conversation', 'viewTabs'], ['motion', 'motion']]
         .every(([tab, key]) => refusingIn(tab).includes(key) === false),
       JSON.stringify(Object.keys(ported).map(tab => `${tab} refusing=${refusingIn(tab).join(',')}`)))
     // dsh-rewind in the same boot list takes the four write actions and leaves
     // the message actions row its revision history, so the row keeps answering
     // and its accent line names what that plugin took (D111).
     check('with dsh-rewind on the page the message actions row keeps answering',
-      carried('main-window', 'messageActions') && refusingIn('main-window').includes('messageActions') === false,
-      JSON.stringify({ rows: page('main-window').rows, refusing: refusingIn('main-window') }))
+      carried('conversation', 'messageActions') && refusingIn('conversation').includes('messageActions') === false,
+      JSON.stringify({ rows: page('conversation').rows, refusing: refusingIn('conversation') }))
     check('the message actions row names dsh-rewind in its accent line',
-      managedIn('main-window').includes('messageActions') && (settings.texts || []).some(text => text.includes('dsh-rewind')),
-      JSON.stringify({ managed: managedIn('main-window'), texts: settings.texts }))
+      managedIn('conversation').includes('messageActions') && (settings.texts || []).some(text => text.includes('dsh-rewind')),
+      JSON.stringify({ managed: managedIn('conversation'), texts: settings.texts }))
     commonChecks(r)
   },
   // Another plugin owns the page from the first frame (packages/client/src/shared/visual-owner.ts,

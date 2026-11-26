@@ -128,29 +128,53 @@ body[data-dsh-claude-style] .dsh-claude-settings-repo:focus-visible {
   outline-offset: 1px;
 }
 
-/* The tab strip is the segmented control itself, stretched across the page so
-   every tab gets an equal share; the open tab's rows follow in their own
-   column. A page too narrow for one line of tabs wraps the strip onto a second
-   line: a tab never shrinks under its label's one-line width, so the strip
-   wraps exactly when one line no longer holds every label, and the pill covers
-   the active tab on the line it lands on (shared/sliding-pill.ts). */
+/* The six-tab strip stretches across one line while the column holds all six
+   labels (`> 39em` at the strip's own scaled font size), and switches to a
+   balanced 3×2 grid below that threshold so neither narrow columns nor enlarged
+   interface font scales ever strand a single wrapped tab on the second line
+   (shared/sliding-pill.ts). */
+body[data-dsh-claude-style] .dsh-claude-settings-strip {
+  container-type: inline-size;
+  align-self: stretch;
+  font-size: calc(13px * var(--dsh-claude-interface-font-scale, 1));
+}
+
 body[data-dsh-claude-style] .dsh-claude-settings-tabs {
   display: flex;
-  align-self: stretch;
+  width: 100%;
+  box-sizing: border-box;
   flex-wrap: wrap;
 }
 
 body[data-dsh-claude-style] .dsh-claude-settings-tabs > [role="tab"] {
   flex: 1 1 0;
   min-width: max-content;
+  padding: 4px 8px;
+  font-size: inherit;
+  white-space: nowrap;
+}
+
+@container (max-width: 39em) {
+  body[data-dsh-claude-style] .dsh-claude-settings-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  body[data-dsh-claude-style] .dsh-claude-settings-tabs > [role="tab"] {
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 /* Each tab wears its own mark before its label, on the label's line: the strip
    stays one text line tall, and the mark takes the tab's colour with it. */
 body[data-dsh-claude-style] .dsh-claude-settings-tabs > [role="tab"] .dsh-claude-settings-tab-icon {
-  width: 15px;
-  height: 15px;
-  margin-right: 6px;
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-right: 5px;
   vertical-align: -2px;
 }
 
@@ -230,10 +254,9 @@ body[data-dsh-claude-style] .dsh-claude-settings-tab-notice + .dsh-claude-settin
   border-top: none;
 }
 
-/* The main window tab's two groups, each under the label that names it
-   (settings-tab-main-window.ts). The label opens its group with no hairline
-   under it, so the label and its rows read as one section; a group after
-   another carries the line that separates the two. */
+/* A grouped tab's section headings (General, Chat, Composer). The label opens
+   its group with no hairline under it, so the label and its rows read as one
+   section; a group after another carries the line that separates the two. */
 body[data-dsh-claude-style] .dsh-claude-settings-group {
   padding: 24px 0 4px;
   border-top: 0.5px solid var(--dsh-claude-divider, var(--dsw-alias-border-l2));
@@ -253,12 +276,23 @@ body[data-dsh-claude-style] .dsh-claude-settings-group + .dsh-claude-settings-ro
   border-top: none;
 }
 
-/* A sub-row belongs to the row above it: no hairline between the two and no
-   air above it, so they read as one group, and it greys out while its parent
-   is off (its control is disabled as well, so the keyboard skips it). */
+/* A sub-row belongs to the row above it: no hairline between the two, and
+   titled inline sub-rows indent behind a quiet vertical rule so multi-level
+   children clearly show their parent scope while block preview cards keep the
+   column's full width. */
 body[data-dsh-claude-style] .dsh-claude-settings-row.dsh-claude-settings-row-sub {
   border-top: none;
   padding-top: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-row.dsh-claude-settings-row-sub:not(.dsh-claude-settings-row-block) {
+  margin-left: 8px;
+  padding: 6px 0 10px 14px;
+  border-left: 1.5px solid var(--dsw-alias-border-l1);
+}
+
+body[data-dsh-claude-style] .dsh-claude-settings-row.dsh-claude-settings-row-sub-nested:not(.dsh-claude-settings-row-block) {
+  margin-left: 22px;
 }
 
 /* The host's scroller around the page (the settings dialog's options column,

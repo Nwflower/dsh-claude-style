@@ -34,9 +34,10 @@ export default {
     control: 'stats-bar-picker',
     requires: CONVERSATION_COMPOSER_REQUIRES,
   }, {
-    // Independent of whether the composer statistics bar is on: this unit choice
-    // reaches the bar, the context popover and the session panel alike (D113).
-    tab: 'statistics',
+    // Independent of whether the composer restyle or statistics bar is on: these
+    // unit and billing choices reach the session panel, context popover, home
+    // usage dashboard, mascot bubble and composer bar alike (D113).
+    tab: 'billing',
     rank: 55,
     pref: 'statsFooterTokenFormat',
     title: 'statsFooterTokenFormatTitle',
@@ -44,22 +45,20 @@ export default {
       [FOOTER_TOKEN_DIGITS]: 'statsFooterTokenDigitsSample',
       [FOOTER_TOKEN_UNITS]: 'statsFooterTokenUnitsSample',
     },
-    requires: CONVERSATION_COMPOSER_REQUIRES,
   }, {
-    tab: 'statistics',
+    tab: 'billing',
     rank: 57,
     pref: 'billingCurrency',
     title: 'billingCurrencyTitle',
     choiceLabels: { off: 'billingCurrencyOff', CNY: 'billingCurrencyCny', USD: 'billingCurrencyUsd' },
-    requires: CONVERSATION_COMPOSER_REQUIRES,
   }, {
-    tab: 'statistics',
+    tab: 'billing',
     rank: 58,
     pref: 'billingTable',
     parent: 'billingCurrency',
     title: 'billingTableTitle',
     control: 'billing-table',
-    requires: CONVERSATION_COMPOSER_REQUIRES,
+    controlLayout: 'inline',
   }],
   cases: ['context-stats', 'stats-compact', 'stats-inline'],
   scenarios: ['statsPosition', 'statsOverlay', 'statsFooter'],

@@ -7,9 +7,9 @@ export default {
   pref: 'questionCard',
   stylesheets: [{ file: 'question-card.css', rank: 81 }],
   settingsRows: [{
-    tab: 'composer',
-    // After the restyle and its gap: the card stands apart from the composer's own look.
-    rank: 12,
+    tab: 'conversation',
+    // Between process rows (70) and the answer anchor (80) in the transcript group.
+    rank: 75,
     pref: 'questionCard',
     title: 'questionCardTitle',
     desc: 'questionCardDesc',

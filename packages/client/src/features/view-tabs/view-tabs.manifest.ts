@@ -7,7 +7,7 @@ export default {
   pref: 'viewTabs',
   stylesheets: [{ file: 'view-tabs.css', rank: 60 }],
   settingsRows: [{
-    tab: 'conversation',
+    tab: 'conversation-header',
     rank: 50,
     pref: 'viewTabs',
     title: 'viewTabsTitle',

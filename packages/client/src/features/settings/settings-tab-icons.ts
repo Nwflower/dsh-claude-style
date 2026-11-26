@@ -24,10 +24,15 @@ const GLYPHS: Record<SettingsTabId, React.ReactElement[]> = {
     shape('circle', { cx: 12, cy: 12, r: 7.4 }),
     shape('path', { d: 'M12 4.6a7.4 7.4 0 0 1 0 14.8' }),
   ],
-  // 主窗口: a window with its bar.
-  'main-window': [
+  // 对话: a dialogue bubble with two lines of prose.
+  conversation: [
+    shape('path', { d: 'M4.2 5.4h15.6a1.8 1.8 0 0 1 1.8 1.8v8.4a1.8 1.8 0 0 1-1.8 1.8H9.6l-3.8 2.8v-2.8H4.2a1.8 1.8 0 0 1-1.8-1.8V7.2a1.8 1.8 0 0 1 1.8-1.8z' }),
+    shape('path', { d: 'M7.8 9.8h8.4M7.8 13h5.2' }),
+  ],
+  // 输入: a composer box with a prompt chevron and baseline.
+  composer: [
     shape('rect', { x: 3.2, y: 4.8, width: 17.6, height: 14.4, rx: 3 }),
-    shape('path', { d: 'M3.2 9.4h17.6M6.6 7.1h.01M9.4 7.1h.01' }),
+    shape('path', { d: 'M7.2 9.6l2.4 2.4-2.4 2.4M12 14.4h4.8' }),
   ],
   // 侧栏: a panel with its divider.
   sidebar: [

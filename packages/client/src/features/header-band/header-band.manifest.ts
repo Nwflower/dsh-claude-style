@@ -12,7 +12,7 @@ export default {
   pref: 'headerBand',
   stylesheets: [{ file: 'header-band.css', rank: 75 }],
   settingsRows: [{
-    tab: 'conversation',
+    tab: 'conversation-header',
     rank: 60,
     pref: 'headerBand',
     title: 'headerBandTitle',

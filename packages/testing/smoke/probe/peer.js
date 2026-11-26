@@ -59,7 +59,7 @@
       // caret on the Motion tab — which of them refuse input, which carry the
       // line naming the owner, and what answer each control shows.
       var PeerSection = (window.__slotComponents || {})['claude-style']
-      var PEER_TABS = ['main-window', 'motion']
+      var PEER_TABS = ['conversation', 'motion']
       var peerWalk = function (node, visit) {
         if (node === null || node === undefined || typeof node !== 'object') return
         if (Array.isArray(node)) { node.forEach(function (child) { peerWalk(child, visit) }); return }

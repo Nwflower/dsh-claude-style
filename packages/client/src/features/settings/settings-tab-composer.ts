@@ -4,20 +4,12 @@ import { copy } from './copy'
 import type { SettingsGroup, SettingsRow, SettingsTab, SettingsView } from './settings-controls'
 
 /**
- * The settings page's Main window tab: the conversation side, the composer's
- * controls, and the context and cost figures the composer carries, each under
- * its own label.
- *
- * The rows of every group are the features' own, placed here by their manifests
- * (D76), which name the group they stand in: the message navigator, the column's
- * width, the Chat / Trajectory strip and the Windows title-bar band first; the
- * restyle's scope with its bottom gap, the permission control and the model
- * picker with the rows that hang off it next; the context meter, the statistics'
- * place and the billing last. The labels are this page's own, and so is the
- * quick-provider row, whose popover is imperative where this page is React
- * (settings.ts).
+ * The settings page's Composer (`composer`) tab: the input restyle, permission
+ * and model controls above, and the composer's context meter and live statistics
+ * bar below. Feature rows come from their manifests (D76); this tab adds the
+ * imperative quick-provider trigger under `modelPicker`.
  */
-export function createSettingsMainWindowTab(): SettingsTab {
+export function createSettingsComposerTab(): SettingsTab {
   /** What the quick-provider trigger reads: how many, or nothing chosen. */
   function quickSummary(chosen: string[]) {
     if (chosen.length === 0) return copy('quickNone')
@@ -25,15 +17,14 @@ export function createSettingsMainWindowTab(): SettingsTab {
   }
 
   /**
-   * The composer group's own row. The picker and the permission control are
-   * drawn into the restyled composer, so this row waits with them for the
-   * restyle (the manifests' `requires`).
+   * The model-picker group's imperative quick-provider sub-row. Folds away with
+   * the other `modelPicker` sub-rows while `modelPicker` is off, and dims while
+   * the composer restyle itself is off.
    */
   function composerRows(view: SettingsView): SettingsRow[] {
-    const prefs = view.prefs
-    const write = view.write
-    const pickerOn = prefs.modelPicker && prefs.composerScope !== COMPOSER_SCOPE_OFF
-    const quickTrigger = view.quickTrigger
+    const { prefs, write, quickTrigger } = view
+    if (!prefs.modelPicker) return []
+    const pickerOn = prefs.composerScope !== COMPOSER_SCOPE_OFF
     return [
       {
         rank: 40,
@@ -62,11 +53,10 @@ export function createSettingsMainWindowTab(): SettingsTab {
 
   function groups(_view: SettingsView): SettingsGroup[] {
     return [
-      { id: 'conversation', label: () => copy('groupConversation') },
       { id: 'composer', label: () => copy('groupComposer'), rows: composerRows },
       { id: 'statistics', label: () => copy('groupStatistics') },
     ]
   }
 
-  return { id: 'main-window', label: () => copy('tabMainWindow'), groups }
+  return { id: 'composer', label: () => copy('tabComposer'), groups }
 }

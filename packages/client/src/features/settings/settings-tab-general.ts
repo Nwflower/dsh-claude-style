@@ -167,5 +167,12 @@ export function createSettingsGeneralTab(): SettingsTab {
       },
     ]
   }
-  return { id: 'general', label: () => copy('tabGeneral'), rows }
+  return {
+    id: 'general',
+    label: () => copy('tabGeneral'),
+    groups: () => [
+      { id: 'general', label: () => copy('groupGeneral'), rows },
+      { id: 'billing', label: () => copy('groupBilling') },
+    ],
+  }
 }

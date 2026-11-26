@@ -14,7 +14,7 @@ import { spec } from '../../fixtures/behaviour.mjs'
 import { inspectSettingsTab } from '../../fixtures/settings-tree.mjs'
 
 async function readMeterSettings(t) {
-  return inspectSettingsTab(t, 'main-window', (tree, { walk, textOf, has }, names) => {
+  return inspectSettingsTab(t, 'composer', (tree, { walk, textOf, has }, names) => {
     const cards = []
     const presets = []
     const stops = []
@@ -77,7 +77,7 @@ async function readMeterSettings(t) {
 }
 
 async function clickRampSegment(t, id) {
-  await inspectSettingsTab(t, 'main-window', (tree, { walk }, names) => {
+  await inspectSettingsTab(t, 'composer', (tree, { walk }, names) => {
     walk(tree, node => {
       if (node.props?.[names.presetAttr] === names.target) {
         node.props.onClick()
