@@ -10,7 +10,7 @@ import { motionMs } from '../../shared/motion'
 import { releaseSwappingText, setSwappingText } from '../../shared/swapping-text'
 import { activityWords, waitingWord, THINKING_KEY } from '../../shared/turn-activity'
 import { sessionProjectionFaces } from '../../shared/session-projections'
-import { startWaitLoader, releaseWaitLoader, resyncWaitLoader, setWaitLoaderOutputting } from './wait-loader'
+import { buildWaitLoader, startWaitLoader, releaseWaitLoader, resyncWaitLoader, setWaitLoaderOutputting } from './wait-loader'
 import { CHAT_FLOW_SELECTOR, CHAT_RUNNING_SELECTOR, CHAT_RUNNING_HOLDING_ATTRIBUTE, CHAT_RUNNING_TEXT_SELECTOR, SHIMMER_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { openTurn, overtimeMargin, waitStart, wordForPass } from './wait-state'
 import { foreignRunningLineOwns } from './running-owner'
@@ -164,25 +164,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
 
   /**
-   * The loader the Claude brand leads the row with, where the host draws its
-   * whale tail: one lane of accent dots for each of the loader's four motions
-   * (chat-wait.css). Every motion is built up front, so swapping lanes is a
-   * hand-over rather than a redraw. The dots are decorative — the host's live
-   * region is what a reader hears — and the rotation is wait-loader.ts's.
-   */
-  function buildLoader() {
-    const loader = buildElement('span', 'dsh-claude-chat-wait-loader')
-    loader.setAttribute('aria-hidden', 'true')
-    const laneDots: [string, number][] = [['is-bounce', 3], ['is-line', 3], ['is-orbit', 4], ['is-cross', 3]]
-    for (const [lane, count] of laneDots) {
-      const dots = buildElement('span', `dsh-claude-chat-wait-lane ${lane}`)
-      for (let dot = 0; dot < count; dot += 1) dots.append(buildElement('span', 'dsh-claude-chat-wait-dot'))
-      loader.append(dots)
-    }
-    return loader
-  }
-
-  /**
    * The row's own watch for the marks the hand-over reads (the subscription bus,
    * D40): the host's holding mark, the words' shimmer mark, and the marks a
    * sibling line's visibility turns on. The ownership verdict is held for a
@@ -253,7 +234,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const clock = buildElement('span', 'dsh-claude-chat-wait-clock')
     const badge = buildElement('span', 'dsh-claude-chat-wait-badge')
     badge.hidden = true
-    const loader = buildLoader()
+    const loader = buildWaitLoader()
     line.append(loader, label, clock, badge)
     words.after(line)
     const parts = { line, loader, label, clock, badge, key }

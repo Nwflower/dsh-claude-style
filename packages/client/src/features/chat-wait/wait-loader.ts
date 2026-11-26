@@ -1,3 +1,4 @@
+import { buildElement } from '@dsh-claude-style/engine/dom'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { motionReduced } from '../../core/prefs'
 import { motionEase, motionEaseAt, motionMs } from '../../shared/motion'
@@ -530,6 +531,24 @@ export function setWaitLoaderOutputting(loader: HTMLElement, outputting: boolean
       handOver(loader, state, state.motion, nextMotion(state.motion))
     },
   })
+}
+
+/**
+ * The loader the Claude brand leads the row with, where the host draws its
+ * whale tail: one lane of accent dots for each of the loader's four motions
+ * (chat-wait.css). Every motion is built up front, so swapping lanes is a
+ * hand-over rather than a redraw. The dots are decorative — the host's live
+ * region is what a reader hears.
+ */
+export function buildWaitLoader(): HTMLElement {
+  const loader = buildElement('span', 'dsh-claude-chat-wait-loader')
+  loader.setAttribute('aria-hidden', 'true')
+  for (const { lane, dots } of LANES) {
+    const box = buildElement('span', `dsh-claude-chat-wait-lane ${lane}`)
+    for (let dot = 0; dot < dots; dot += 1) box.append(buildElement('span', DOT))
+    loader.append(box)
+  }
+  return loader
 }
 
 /**
