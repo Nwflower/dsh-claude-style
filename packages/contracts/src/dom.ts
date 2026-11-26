@@ -492,6 +492,14 @@ export const SESSION_PHASE_ATTRIBUTE = 'data-state'
 export const SESSION_ONGOING_STATE = 'ongoing'
 export const SESSION_ONGOING_SELECTOR = '[data-state="ongoing"]'
 /**
+ * The fade marks the host's title marquee writes on a hovered row's title,
+ * every animation frame and whether or not the value changed: `data-scrolled`
+ * while the title has left its start, `data-clipped` while text remains past
+ * its end. They move the title's own scroll position and nothing the skin reads.
+ */
+export const SESSION_TITLE_SCROLLED_ATTRIBUTE = 'data-scrolled'
+export const SESSION_TITLE_CLIPPED_ATTRIBUTE = 'data-clipped'
+/**
  * One workspace row of the grouped session list: the host keys it
  * `workspace:<workspaceId>`, and this is the row whose title stands in for the
  * session rows a closed workspace does not draw.

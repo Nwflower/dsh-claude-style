@@ -1,4 +1,4 @@
-import { SIDEBAR_SLOT_SELECTOR, SESSION_PHASE_ATTRIBUTE, WORKSPACE_ROW_EXPANDED_ATTRIBUTE, WORKSPACE_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { SIDEBAR_SLOT_SELECTOR, SESSION_PHASE_ATTRIBUTE, SESSION_TITLE_CLIPPED_ATTRIBUTE, SESSION_TITLE_SCROLLED_ATTRIBUTE, WORKSPACE_ROW_EXPANDED_ATTRIBUTE, WORKSPACE_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { findSidebarRoot } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
@@ -12,11 +12,17 @@ import type manifest from './sidebar-status.manifest'
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   const schedule = () => ui.schedule?.()
   const observedAttributes = new Set([SESSION_PHASE_ATTRIBUTE, WORKSPACE_ROW_EXPANDED_ATTRIBUTE, PART_ATTR, 'hidden', 'aria-hidden', 'contenteditable', 'style', 'class'])
+  // The host's marquee rewrites these on a hovered title every frame; they move
+  // its scroll position, which no shimmer judgement reads.
+  const marqueeAttributes = new Set([SESSION_TITLE_SCROLLED_ATTRIBUTE, SESSION_TITLE_CLIPPED_ATTRIBUTE])
   const rows = observeMatches<HTMLElement>(`${SIDEBAR_SLOT_SELECTOR} [data-dsh-claude-part~="session-row"]`, schedule)
   const groupRows = observeMatches<HTMLElement>(`${SIDEBAR_SLOT_SELECTOR} ${WORKSPACE_ROW_SELECTOR}`, schedule)
   const groups = new WorkspaceGroupStatus(ctx, () => groupRows.all(), schedule)
   const tracked = new Map<HTMLElement, RightSessionStatus>()
   let present = new Set<HTMLElement>()
+  // Per row: the titles the tracked rows hold, rebuilt by each write after the
+  // departed rows leave, and emptied with them on teardown.
+  const heldTitles = new Set<HTMLElement>()
   let watchedRoot: HTMLElement | null = null
   let stopWatch: (() => void) | null = null
   function measure() {
@@ -29,11 +35,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       stopWatch = root === null ? null : subscribeMutations(root, {
         childList: true, characterData: true, subtree: true, attributes: true,
       }, records => {
-        // A plugin's own title attributes can switch generated content on or off.
-        // Keep one root watch (D40); unrelated row attributes need no title read.
+        // A plugin's own title attributes can switch generated content on or
+        // off, and only a running title's generated content is judged; a title
+        // starts running through its dot, which arrives as a node or a phase
+        // attribute above. Keep one root watch (D40); unrelated row attributes
+        // and the host's marquee marks need no title read.
         if (records.some(record => record.type !== 'attributes'
           || observedAttributes.has(record.attributeName ?? '')
-          || record.target instanceof Element && record.target.getAttribute(PART_ATTR)?.split(/\s+/).includes('row-title'))) schedule()
+          || record.target instanceof HTMLElement && heldTitles.has(record.target) && !marqueeAttributes.has(record.attributeName ?? ''))) schedule()
       })
     }
     present = new Set(rows.all())
@@ -54,6 +63,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       view.dispose()
       tracked.delete(row)
     }
+    heldTitles.clear()
+    for (const view of tracked.values()) {
+      const title = view.heldTitle
+      if (title !== null) heldTitles.add(title)
+    }
   }
   function teardown() {
     stopWatch?.()
@@ -65,6 +79,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     for (const view of tracked.values()) view.dispose()
     tracked.clear()
     present.clear()
+    heldTitles.clear()
   }
   ui.sidebarStatus = { measure, sync, skipOnContentOnly: true, teardown }
   return teardown

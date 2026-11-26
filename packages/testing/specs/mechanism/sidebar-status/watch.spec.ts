@@ -5,7 +5,7 @@
  */
 import { afterEach, expect, test, vi } from 'vitest'
 import { installSidebarStatus } from '@dsh-claude-style/client/mechanisms'
-import { SESSION_PHASE_ATTRIBUTE, SIDEBAR_SLOT_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { SESSION_PHASE_ATTRIBUTE, SESSION_TITLE_CLIPPED_ATTRIBUTE, SESSION_TITLE_SCROLLED_ATTRIBUTE, SIDEBAR_SLOT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { hostElement } from '../../fixtures/host-markup'
 import { surfaceAttribute } from '../../fixtures/surface'
 import { frames } from '../../fixtures/frames'
@@ -126,41 +126,108 @@ test('the shared watch follows a host replacement of the sidebar root', async ()
   expect(next.rows[0].row.getAttribute(STATUS)).toBe('idle')
 })
 
+/** Whether a change to the page asked the feature for a pass once its records arrived. */
+async function scheduledBy(feature: ReturnType<typeof installed>, change: () => void) {
+  const before = feature.calls()
+  change()
+  await settle()
+  return feature.calls() > before
+}
+
+/** dsh-im taking a title's glyphs over with its own generated title. */
+function takeOver(title: HTMLElement) {
+  title.setAttribute(CHANNEL_ATTRIBUTE, 'feishu')
+  title.setAttribute(CHANNEL_TEXT_ATTRIBUTE, '配置书')
+}
+
+/** dsh-im handing the title back. */
+function release(title: HTMLElement) {
+  title.removeAttribute(CHANNEL_ATTRIBUTE)
+  title.removeAttribute(CHANNEL_TEXT_ATTRIBUTE)
+}
+
+/** One frame of the host's title marquee: both fade marks rewritten, changed or not. */
+function marqueeFrame(title: HTMLElement) {
+  title.setAttribute(SESSION_TITLE_SCROLLED_ATTRIBUTE, '')
+  title.setAttribute(SESSION_TITLE_CLIPPED_ATTRIBUTE, '')
+}
+
 test('title-only plugin attributes invalidate generated titles without scheduling unrelated row attributes', async () => {
   const current = sidebar(['ongoing'])
   cleanups.push(installChannelTitleSheet())
   const feature = installed()
   const { row, title } = current.rows[0]
   await frames(2)
-  const beforeTakeover = feature.calls()
-  title.setAttribute(CHANNEL_ATTRIBUTE, 'feishu')
-  title.setAttribute(CHANNEL_TEXT_ATTRIBUTE, '配置书')
-  await settle()
-  expect(feature.calls()).toBeGreaterThan(beforeTakeover)
+  expect(await scheduledBy(feature, () => takeOver(title))).toBe(true)
   feature.sync()
   expect(row.hasAttribute(RUNNING_TITLE)).toBe(false)
 
-  const beforeRename = feature.calls()
-  title.setAttribute(CHANNEL_TEXT_ATTRIBUTE, '新标题')
-  await settle()
-  expect(feature.calls()).toBeGreaterThan(beforeRename)
+  expect(await scheduledBy(feature, () => title.setAttribute(CHANNEL_TEXT_ATTRIBUTE, '新标题'))).toBe(true)
   feature.sync()
   expect(getComputedStyle(title, '::after').content).toContain('新标题')
   expect(row.hasAttribute(RUNNING_TITLE)).toBe(false)
 
-  const beforeRelease = feature.calls()
-  title.removeAttribute(CHANNEL_ATTRIBUTE)
-  title.removeAttribute(CHANNEL_TEXT_ATTRIBUTE)
-  await settle()
-  expect(feature.calls()).toBeGreaterThan(beforeRelease)
+  expect(await scheduledBy(feature, () => release(title))).toBe(true)
   feature.sync()
   expect(row.hasAttribute(RUNNING_TITLE)).toBe(true)
 
   await frames(2)
-  const beforeUnrelated = feature.calls()
-  row.id = 'external-session-row'
+  expect(await scheduledBy(feature, () => { row.id = 'external-session-row' })).toBe(false)
+})
+
+test('the host title marquee schedules no pass on a running or an idle title', async () => {
+  const current = sidebar(['ongoing', 'idle'])
+  const feature = installed()
+  await frames(2)
+  const before = feature.calls()
+  for (let frame = 0; frame < 6; frame += 1) {
+    for (const { title } of current.rows) marqueeFrame(title)
+    await frames(1)
+  }
+  for (const { title } of current.rows) {
+    title.removeAttribute(SESSION_TITLE_SCROLLED_ATTRIBUTE)
+    title.removeAttribute(SESSION_TITLE_CLIPPED_ATTRIBUTE)
+  }
   await settle()
-  expect(feature.calls()).toBe(beforeUnrelated)
+  expect(feature.calls()).toBe(before)
+})
+
+test('title attributes schedule a pass only while the title runs, through a takeover and its release', async () => {
+  const current = sidebar(['idle'])
+  cleanups.push(installChannelTitleSheet())
+  const feature = installed()
+  const { row, dot, title } = current.rows[0]
+  await frames(2)
+
+  expect(await scheduledBy(feature, () => takeOver(title))).toBe(false)
+  release(title)
+  await settle()
+
+  expect(await scheduledBy(feature, () => dot.setAttribute(SESSION_PHASE_ATTRIBUTE, 'ongoing'))).toBe(true)
+  feature.sync()
+  expect(row.hasAttribute(RUNNING_TITLE)).toBe(true)
+
+  // A taken-over title is still the one the row holds: its attributes keep
+  // scheduling, and the marquee's marks pass it by.
+  expect(await scheduledBy(feature, () => takeOver(title))).toBe(true)
+  feature.sync()
+  expect(row.hasAttribute(RUNNING_TITLE)).toBe(false)
+  await frames(2)
+  const beforeMarquee = feature.calls()
+  for (let frame = 0; frame < 3; frame += 1) {
+    marqueeFrame(title)
+    await frames(1)
+  }
+  expect(feature.calls()).toBe(beforeMarquee)
+  expect(await scheduledBy(feature, () => release(title))).toBe(true)
+  feature.sync()
+  expect(row.hasAttribute(RUNNING_TITLE)).toBe(true)
+
+  dot.setAttribute(SESSION_PHASE_ATTRIBUTE, 'idle')
+  await settle()
+  feature.sync()
+  await frames(2)
+  expect(await scheduledBy(feature, () => takeOver(title))).toBe(false)
 })
 
 test('teardown stops the shared watch', async () => {

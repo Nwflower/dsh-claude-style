@@ -11,6 +11,15 @@ export class RightSessionStatus {
 
   constructor(readonly row: HTMLElement, private readonly changed?: () => void) {}
 
+  /**
+   * The running title this row holds after its last write, whether or not a
+   * plugin has taken its glyphs over: the one title whose attributes can turn
+   * the shimmer on or off.
+   */
+  get heldTitle(): HTMLElement | null {
+    return this.title
+  }
+
   measure() {
     const slot = this.row.querySelector(':scope > [data-dsh-claude-part~="row-slot"]')
     let state: 'active' | 'idle' | 'foreign' = 'idle'
