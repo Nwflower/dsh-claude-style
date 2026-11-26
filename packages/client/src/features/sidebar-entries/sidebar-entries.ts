@@ -364,7 +364,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     /** A page scroll or resize re-reads the launcher and the card before the write. */
     measureReposition() { placement?.measure() },
     /** The viewport write phase, in the same frame as measureReposition. */
-    reposition(reason) { if (reason === 'viewport') placement?.place() },
+    reposition(reason) { if (reason !== 'composer') placement?.place() },
     skipOnContentOnly: true,
   }
 

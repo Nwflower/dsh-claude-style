@@ -491,7 +491,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       /** A page scroll or resize re-reads the anchor and the card before the write. */
       measureReposition() { measureTypefacePopover() },
       /** The viewport write phase, in the same frame as measureReposition. */
-      reposition(reason) { if (reason === 'viewport') placeTypefacePopover() },
+      reposition(reason) { if (reason !== 'composer') placeTypefacePopover() },
       /** A pointer press anywhere: the nav's class changes are outside the
        * observer's attributeFilter, so no pass would fire for them. */
       onPointerDown() { syncSettingsNav() },

@@ -16,6 +16,11 @@ import { skin } from './skin'
 /** Why the scheduler asks a feature to close. Features ignore the reasons they do not act on. */
 export type CloseReason = 'outside' | 'escape' | 'composer'
 
+/** What moved the viewport's boxes in one coalesced frame: a resize, or only scrolls. */
+export type ViewportReason = 'resize' | 'scroll'
+/** Why the scheduler asks a feature to re-place what it pinned. */
+export type RepositionReason = ViewportReason | 'composer'
+
 /**
  * A feature's handle on the shared `ui` registry. Every hook is optional: the
  * scheduler calls the ones a feature implements and skips the rest (D76).
@@ -44,14 +49,19 @@ export interface FeatureHandle {
   onInput?(target: EventTarget | null): void
   /** Every focusin, after the composer route. */
   onFocusIn?(target: HTMLElement): void
-  /** `'viewport'` (page scroll or resize) or `'composer'` (the composer card changed size). */
-  reposition?(reason: 'viewport' | 'composer'): void
   /**
-   * The read phase of the frame a page scroll or resize repositions in, before
-   * every feature's `reposition('viewport')` (D40): a feature that pins boxes
-   * reads them here, so no feature's reposition forces a layout under another's.
+   * Boxes may have moved: `'resize'` (the window changed size), `'scroll'`
+   * (something scrolled; `scrolled` holds what did, and no size changed) or
+   * `'composer'` (the composer card changed size). A popover anchored to a
+   * trigger follows every reason; work that follows sizes skips `'scroll'`.
    */
-  measureReposition?(): void
+  reposition?(reason: RepositionReason, scrolled: readonly EventTarget[]): void
+  /**
+   * The read phase of the frame a scroll or resize repositions in, before
+   * every feature's `reposition` (D40): a feature that pins boxes reads them
+   * here, so no feature's reposition forces a layout under another's.
+   */
+  measureReposition?(reason: ViewportReason): void
   /** The locale, the preferences or the model copy changed. */
   onCopyChange?(): void
   /** Every keydown, after the Esc route; a feature that takes the key calls `event.preventDefault()` itself. */
@@ -206,25 +216,44 @@ export function installScheduler<Name extends string>(ctx: HostContext, ui: Sche
   document.addEventListener('compositionend', onComposerInput, true)
   document.addEventListener('focusin', onGlobalFocusIn, true)
 
-  // Fixed popovers are anchored to their trigger, and page scroll or a resize
+  // Fixed popovers are anchored to their trigger, and a scroll or a resize
   // moves that anchor, so whichever is open re-resolves it in the same frame.
   // Scroll fires per frame at most, and a window drag fires far faster: the
-  // callbacks are coalesced into one frame the way the pass is (D40).
+  // callbacks are coalesced into one frame the way the pass is (D40). A frame
+  // with a resize in it is a resize; otherwise it is a scroll, handed the
+  // targets that scrolled, so work that follows sizes skips a frame that only
+  // moved content — the host scrolls a hovered sidebar title every frame.
   let cancelViewportFrame: (() => void) | null = null
-  function onFixedPopoverViewportChange() {
+  let viewportResized = false
+  // Per frame: the targets that scrolled since the frame was queued, dropped
+  // when its write phase hands them on or the scheduler stops.
+  let scrolledTargets: EventTarget[] = []
+  function queueViewportFrame() {
     if (cancelViewportFrame !== null) return
     cancelViewportFrame = requestFrame({
       read() {
-        dispatch('measureReposition')
+        dispatch('measureReposition', viewportResized ? 'resize' : 'scroll')
       },
       write() {
         cancelViewportFrame = null
-        dispatch('reposition', 'viewport')
+        const reason = viewportResized ? 'resize' : 'scroll'
+        const scrolled = scrolledTargets
+        viewportResized = false
+        scrolledTargets = []
+        dispatch('reposition', reason, scrolled)
       },
     })
   }
-  window.addEventListener('resize', onFixedPopoverViewportChange)
-  window.addEventListener('scroll', onFixedPopoverViewportChange, true)
+  function onViewportResize() {
+    viewportResized = true
+    queueViewportFrame()
+  }
+  function onViewportScroll(event: Event) {
+    if (event.target !== null && !scrolledTargets.includes(event.target)) scrolledTargets.push(event.target)
+    queueViewportFrame()
+  }
+  window.addEventListener('resize', onViewportResize)
+  window.addEventListener('scroll', onViewportScroll, true)
 
   // A locale switch has to rebuild rows a popover already painted, so the copy
   // sources subscribe here rather than being read at render time only.
@@ -260,7 +289,7 @@ export function installScheduler<Name extends string>(ctx: HostContext, ui: Sche
   let stopCardSize: (() => void) | null = null
   // The card resizing moves the anchors pinned to it with no window resize:
   // re-pin in the same frame, or a JS-pinned control trails the reflow.
-  const onCardResize = () => { dispatch('reposition', 'composer') }
+  const onCardResize = () => { dispatch('reposition', 'composer', []) }
 
   /** Failed passes in a row after which one of a feature's hooks is switched off. */
   const FAILURE_LIMIT = 3
@@ -427,10 +456,12 @@ export function installScheduler<Name extends string>(ctx: HostContext, ui: Sche
     cancelPass = null
     if (cancelViewportFrame !== null) cancelViewportFrame()
     cancelViewportFrame = null
+    viewportResized = false
+    scrolledTargets = []
     scheduled = false
     clearInterval(clockTimer)
-    window.removeEventListener('resize', onFixedPopoverViewportChange)
-    window.removeEventListener('scroll', onFixedPopoverViewportChange, true)
+    window.removeEventListener('resize', onViewportResize)
+    window.removeEventListener('scroll', onViewportScroll, true)
     if (localeUnsubscribe !== null) localeUnsubscribe()
     for (const stop of copyUnsubscribes) stop()
     motionQuery.removeEventListener('change', onSystemMotionChange)

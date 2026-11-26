@@ -1,6 +1,7 @@
 import { conversationSessionId, findConversationSession, observeSession } from '@dsh-claude-style/engine/host'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
+import type { RepositionReason } from '@dsh-claude-style/engine/scheduler'
 import { sessionProjectionFaces } from '../../shared/session-projections'
 import { hostChatSeat } from '../../core/i18n'
 import { prefsFromForm, readPrefs, subscribePrefs } from '../../core/prefs'
@@ -540,15 +541,16 @@ export function createSessionStats(ctx: HostContext, ring: () => MeterRingFace |
     onFigures: listenFigures,
     /**
      * The viewport moved under the panel: the host re-places it from its anchor,
-     * so the skin's own reading is taken again in the same frame, and a narrower
-     * card is a new budget for the line (inline-stats.ts).
+     * so the skin's own reading is taken again in the same frame. A narrower
+     * card is a new budget for the line (inline-stats.ts), and a scroll leaves
+     * every width as it was.
      */
-    reposition(reason: 'viewport' | 'composer') {
-      if (reason === 'viewport') {
+    reposition(reason: RepositionReason) {
+      if (reason !== 'composer') {
         const panel = contextPanel()
         if (panel !== null) binding.align(panel)
       }
-      inline.refit()
+      if (reason !== 'scroll') inline.refit()
     },
     /** Drop the appends, the line, the projection subscriptions and the host-node bindings. */
     teardown() {

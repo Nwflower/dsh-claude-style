@@ -6,7 +6,7 @@ import { conversationColumn } from '@dsh-claude-style/engine/chat-dom'
 import { COMPOSER_STACK, closestComposerCard, conversationSessionId, conversationViewPreference, findAccessTrigger, findComposerPlaceholder, findComposerRowIn, findPageComposerSeat, findConversationScroller, findConversationSession, findHeroRoot, observeComposerCards, observeComposerPlaceholders } from '@dsh-claude-style/engine/host'
 import { composerRestyleRetired, readPrefs } from '../../core/prefs'
 import type { HostContext } from '@dsh-claude-style/engine/host'
-import type { FeatureHandle } from '@dsh-claude-style/engine/scheduler'
+import type { FeatureHandle, RepositionReason } from '@dsh-claude-style/engine/scheduler'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './composer.manifest'
 import { closestFrom, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
@@ -509,8 +509,12 @@ export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     },
     onPointerDown: focusEditorOnPress,
     onKey: openFilePicker,
-    /** The composer card changed size: the transcript follows it. */
-    reposition(reason: 'viewport' | 'composer') {
+    /**
+     * The card's arrangement follows its width, which a scroll leaves as it
+     * was; the transcript follows the card's own size change.
+     */
+    reposition(reason: RepositionReason) {
+      if (reason === 'scroll') return
       responsive.measure()
       if (reason === 'composer') followTranscript()
     }

@@ -1,4 +1,5 @@
 import { requestFrame } from '@dsh-claude-style/engine/frame'
+import { conversationScroller } from '@dsh-claude-style/engine/chat-dom'
 import { QUIET_ATTR } from '../../constants'
 import { conversationSessionId, findConversationSession, findForeground } from '@dsh-claude-style/engine/host'
 import { motionReduced } from '../../core/prefs'
@@ -48,6 +49,18 @@ import type manifest from './turn-nav.manifest'
  *
  * A host interface for jumping to a turn replaces the pressed marks.
  */
+
+/**
+ * Whether a scroll can move the reading position or the host rail's marks: the
+ * conversation's scroller or a box holding it, or a scroller inside the rail.
+ * While no conversation scroller is found, every scroll counts.
+ */
+function movesReading(rail: HTMLElement, target: EventTarget) {
+  if (!(target instanceof Node)) return true
+  const scroller = conversationScroller()
+  return scroller === null || target.contains(scroller) || rail.contains(target)
+}
+
 export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** On the host's rail while the skin's rail stands in for it: the stylesheet hides it, keeping its layout. */
   const TURN_NAV_REPLACED_ATTR = 'data-dsh-claude-turn-nav-replaced'
@@ -652,9 +665,16 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     onCopyChange() {
       rowItems = null
     },
-    /** A scroll or a resize: the reading position may have moved, and the card's seat with the rail. */
-    reposition() {
-      if (hostRail !== null) scheduleRefresh()
+    /**
+     * The reading position and the card's seat move with the conversation's
+     * scroll and the rail's own; a scroll elsewhere (the sidebar's list, a
+     * marquee title) moves neither.
+     */
+    reposition(reason, scrolled) {
+      const rail = hostRail
+      if (rail === null) return
+      if (reason === 'scroll' && !scrolled.some(target => movesReading(rail, target))) return
+      scheduleRefresh()
     },
   }
 

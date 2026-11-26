@@ -55,8 +55,9 @@ export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     measure() {
       passPlacement = readPlacement()
     },
-    measureReposition() {
-      viewportPlacement = readPlacement()
+    /** The button sits by the composer card and the scroller's boxes, which only a resize moves. */
+    measureReposition(reason) {
+      if (reason === 'resize') viewportPlacement = readPlacement()
     },
     sync() {
       const placement = passPlacement
@@ -64,11 +65,12 @@ export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       writeFollowTail(tailStamp, placement)
     },
     /**
-     * A viewport change was measured in its frame's read phase; a composer card
-     * resizing is reported after that layout, so it reads here and writes on.
+     * A resize was measured in its frame's read phase; a composer card resizing
+     * is reported after that layout, so it reads here and writes on.
      */
     reposition(reason) {
-      const placement = reason === 'viewport' && viewportPlacement !== null ? viewportPlacement : readPlacement()
+      if (reason === 'scroll') return
+      const placement = reason === 'resize' && viewportPlacement !== null ? viewportPlacement : readPlacement()
       viewportPlacement = null
       writeFollowTail(tailStamp, placement)
     },

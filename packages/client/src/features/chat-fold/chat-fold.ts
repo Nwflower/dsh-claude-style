@@ -42,9 +42,12 @@ export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     },
     // A resize can change the text's line height (the content font delta), which
     // the window's own height is measured from, and it re-wraps a message's words.
-    // A scroll or a resize re-anchors whatever is open in the same frame: the
-    // width is read in that frame's read phase, never in the write that follows.
-    measureReposition: () => messageFold.measureColumn(),
+    // A resize re-anchors whatever is open in the same frame: the width is read
+    // in that frame's read phase, never in the write that follows. A scroll
+    // leaves the width as it was, and the comparison below finds it unchanged.
+    measureReposition: (reason) => {
+      if (reason === 'resize') messageFold.measureColumn()
+    },
     reposition: () => {
       stream.sync()
       messageFold.reposition()
