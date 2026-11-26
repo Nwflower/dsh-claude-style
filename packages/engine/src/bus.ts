@@ -207,9 +207,13 @@ function dispatchSlices() {
       // A subscription removed before its turn hears nothing more.
       if (!mutationSubscriptionSet.has(subscription)) continue
       const selected = selectedRecords(subscription, batch.records)
-      if (selected.length === 0) continue
       // One subscriber's error must neither stop the others nor vanish (D12).
-      try { subscription.callback(selected) } catch (error) { reportError(error) }
+      if (selected.length > 0) {
+        try { subscription.callback(selected) } catch (error) { reportError(error) }
+      }
+      // Selecting from a large batch costs time even when nothing is selected,
+      // so the budget is read after every turn; the cursor already points past
+      // this subscription, and the next slice resumes in delivery order.
       if (performance.now() - started >= DISPATCH_BUDGET_MS) {
         scheduleDispatch()
         return

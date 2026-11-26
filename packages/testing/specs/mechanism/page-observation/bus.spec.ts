@@ -369,6 +369,29 @@ test('a small batch keeps the task it was made in', async () => {
   expect(batches).toHaveLength(1)
 })
 
+test('a deferred batch yields once selecting from it has spent the slice, even when nothing was selected', async () => {
+  const root = host()
+  let otherTaskRan = false
+  let reportLast: (ran: boolean) => void = () => {}
+  const lastHeard = new Promise<boolean>(resolve => { reportLast = resolve })
+  // The first turn is cheap and queues a task ahead of any slice the bus
+  // schedules after it.
+  cleanups.push(subscribeMutations(root, { childList: true }, () => { setTimeout(() => { otherTaskRan = true }, 0) }))
+  // Each of these asks every record whether it happened inside its own
+  // subtree and selects none of them; together they outlast one slice.
+  for (let index = 0; index < 400; index += 1) {
+    cleanups.push(subscribeMutations(host(), { childList: true, subtree: true }, () => {}))
+  }
+  cleanups.push(subscribeMutations(root, { childList: true }, () => reportLast(otherTaskRan)))
+  for (let index = 0; index < 1000; index += 1) {
+    const node = document.createElement('div')
+    root.append(node)
+    node.remove()
+  }
+  // The last subscriber still hears the batch, after another task had its turn.
+  expect(await lastHeard).toBe(true)
+})
+
 test('a registry listener hears the change in the batch that made it, before the next frame', async () => {
   const root = host()
   let heard = 0
