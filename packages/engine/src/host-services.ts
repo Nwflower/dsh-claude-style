@@ -185,13 +185,20 @@ export function hostWorkspaces(lookup: HostServiceLookup | null | undefined): Ho
   return workspaces ?? null
 }
 
+/** The slot the workspace browser registers under, with the store it renders from. */
+const WORKSPACE_VIEW_SLOT = 'sidebar.workspaces'
+
 /**
- * The workspace browser's viewing store: the grouping and the archived filter behind the host's own view menu. The host registers its browser under `sidebar.workspaces` with a store whose `create` answers the rendered instance, so a write here is the menu's own. Null when that shape is absent, and the caller stays off rather than mounting a control that cannot drive the host (D12).
+ * The view store each slot registry last answered (or null for none), kept
+ * until that registry announces a change to the browser's registration. A
+ * registry that announces nothing is walked on every read. The key is the host's
+ * registry object, so an entry goes with the registry it was read from.
  */
-export function hostWorkspaceView(lookup: HostContext | null | undefined): HostWorkspaceViewStore | null {
-  const slots = lookup === null || lookup === undefined ? null : hostSlots(lookup)
-  if (slots === null) return null
-  const entries = slots.entries('sidebar.workspaces')
+const workspaceViews = new WeakMap<HostSlotsService, HostWorkspaceViewStore | null>()
+
+/** Walk the browser's registration for its store; null when that shape is absent. */
+function findWorkspaceView(slots: HostSlotsService): HostWorkspaceViewStore | null {
+  const entries = slots.entries(WORKSPACE_VIEW_SLOT)
   for (let i = 0; i < entries.length; i++) {
     const declaration = entries[i].store
     if (declaration === undefined) continue
@@ -202,6 +209,27 @@ export function hostWorkspaceView(lookup: HostContext | null | undefined): HostW
     return view
   }
   return null
+}
+
+/**
+ * The workspace browser's viewing store: the grouping and the archived filter behind the host's own view menu. The host registers its browser under `sidebar.workspaces` with a store whose `create` answers the rendered instance, so a write here is the menu's own. Null when that shape is absent, and the caller stays off rather than mounting a control that cannot drive the host (D12).
+ *
+ * The sidebar's passes read it every frame they run, so the walk is paid once per registration: the answer is kept until the registry says the browser's registration changed, and the subscription that says so ends with that one announcement.
+ */
+export function hostWorkspaceView(lookup: HostContext | null | undefined): HostWorkspaceViewStore | null {
+  const slots = lookup === null || lookup === undefined ? null : hostSlots(lookup)
+  if (slots === null) return null
+  const kept = workspaceViews.get(slots)
+  if (kept !== undefined) return kept
+  const view = findWorkspaceView(slots)
+  if (typeof slots.subscribe === 'function') {
+    workspaceViews.set(slots, view)
+    const stop = slots.subscribe(WORKSPACE_VIEW_SLOT, () => {
+      workspaceViews.delete(slots)
+      stop()
+    })
+  }
+  return view
 }
 
 /**

@@ -6,7 +6,7 @@ import { motionMs } from '../../shared/motion'
 import { SWEEP_BAND_CLASS, SWEEP_GLYPHS_CLASS } from '../../shared/sweep-band'
 import { waitingWord } from '../../shared/turn-activity'
 import { PreviewCards } from '../../shared/preview-cards'
-import { usePreviewLoop } from '../../shared/use-preview-loop'
+import { usePreviewStep } from '../../shared/use-preview-step'
 import { copy } from './copy'
 import type { PreviewOption } from '../../shared/preview-cards'
 import type { Prefs } from '../../constants'
@@ -27,20 +27,14 @@ export const controls: SettingsControlsOf<typeof manifest> = {
 /** The paint the line wears as two preview cards, each painting the words that stand on it. */
 function StatusMotionPicker(props: SettingsRowView) {
   const pickerRef = React.useRef<HTMLDivElement | null>(null)
-  const [alt, setAlt] = React.useState(false)
   /** Which of the two wordings stands; the still page's hand-over follows it. */
-  const phase = React.useRef(false)
-  usePreviewLoop({
+  const alt = usePreviewStep({
     everyMs: motionMs('--dsh-claude-period-preview-swap') / 2,
+    steps: 2,
     // A card that takes no input holds its sample still (settings-controls.ts
     // greys the row while the line's own switch is off).
     disabled: props.disabled,
-    restart: () => { phase.current = false },
-    tick: () => {
-      phase.current = !phase.current
-      setAlt(phase.current)
-    },
-  })
+  }) === 1
   React.useLayoutEffect(() => {
     const picker = pickerRef.current
     if (picker === null) return
@@ -68,11 +62,10 @@ function StatusMotionPicker(props: SettingsRowView) {
     waitingWord(props.prefs.brand, hostChatCopy('chat.deepDiving', 'Deep diving'), copy('chatWaitThinking')),
     copy('chatWaitTools'),
   ]
-  const [preciseTurn, setPreciseTurn] = React.useState(0)
-  usePreviewLoop({
+  const preciseTurn = usePreviewStep({
     everyMs: motionMs('--dsh-claude-period-preview-swap') / preciseWords.length,
+    steps: preciseWords.length,
     disabled: props.disabled || !props.prefs.statusDetail,
-    tick: () => setPreciseTurn(turn => (turn + 1) % preciseWords.length),
   })
   // The precise line swaps one specific for the next, so the card runs the
   // line's own two halves (chat-wait.css): the word leaving rises with a blur

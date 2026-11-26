@@ -333,16 +333,28 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
    * the model mark. Read from the cards' callbacks and the handle below, all of
    * which run after this assignment.
    */
-  const labels = createSeatLabels({
-    mount,
-    ui,
-    cards,
-    modelCatalog,
-    modelFooter,
-    slots: () => slots,
-    invalidateBody() { modelBodySig = '' },
-    renderBody: renderModelBody,
-  })
+  const labels = createSeatLabels({ mount, ui, cards, modelCatalog, slots: () => slots })
+
+  /**
+   * The pass's write: the seat first, then level 1's paint from the same
+   * reading. A seat handed back took the body its rows were built into, and
+   * chrome built new holds none, so either one rebuilds the rows on the next
+   * paint.
+   */
+  function syncModelPicker() {
+    const seat = labels.sync()
+    if (seat === 'handedBack' || seat === 'drawnInNewChrome') modelBodySig = ''
+    if (seat === 'handedBack' || seat === 'noSlot') return
+    renderModelBody()
+    modelFooter.refresh()
+    if (cards.subOpen()) {
+      const modelSub = cards.sub()
+      if (modelSub !== null) modelSub.render()
+      cards.position()
+    } else if (cards.mainOpen()) {
+      cards.position()
+    }
+  }
 
   /**
    * The ledger's own change signal (the host's slots/changed event): a plugin
@@ -362,7 +374,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
   cards.sweep()
 
   ui.model = {
-    sync: labels.sync,
+    sync: syncModelPicker,
     // Who the session routes to: the statistics read it to tell the platform's
     // own billing from a provider that settles elsewhere.
     provider() {
@@ -458,6 +470,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>, mount:
     // handed back here rather than by the stylesheet going away.
     teardown() {
       labels.drop()
+      modelBodySig = ''
       modelCatalog.resetWarm()
       cards.dispose()
       modelFooter.dispose()

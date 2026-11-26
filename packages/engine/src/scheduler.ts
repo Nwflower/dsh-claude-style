@@ -66,8 +66,6 @@ export interface FeatureHandle {
 export interface SchedulerCalls {
   /** Ask for a pass on the next frame (installScheduler). */
   schedule?: () => void
-  /** Rebuild the event/pass indexes after a feature handle joins or leaves. */
-  refreshHooks?: () => void
   /** Switch one feature off for the rest of this generation. */
   retire: (name: string) => void
 }
@@ -126,43 +124,25 @@ export function installScheduler<Name extends string>(ctx: HostContext, ui: Sche
     return ui[name]
   }
 
-  type HookEntry = { handle: FeatureHandle, call: (...args: unknown[]) => void }
-  /** Only live handles implementing a hook, in FEATURES order. */
-  const hookIndex = new Map<FeatureHook, HookEntry[]>()
-  let closeOwners: Name[] = []
-  let measureNames: Name[] = []
-  let syncNames: Name[] = []
-
-  function rebuildHooks() {
-    hookIndex.clear()
-    closeOwners = []
-    measureNames = []
-    syncNames = []
+  /**
+   * Call one hook on every installed feature that implements it, in FEATURES
+   * order. The handles are read at the call, so a feature switched on or off
+   * during the generation is heard or skipped without any index to keep. Each
+   * call is isolated (D12): one route that throws must not keep the rest of the
+   * page's features from hearing the same event.
+   */
+  function dispatch<K extends FeatureHook>(hook: K, ...args: Parameters<NonNullable<FeatureHandle[K]>>) {
     for (const name of features) {
       const handle = handleOf(name)
-      if (!handle) continue
-      if (typeof handle.measure === 'function') measureNames.push(name)
-      if (typeof handle.sync === 'function') syncNames.push(name)
-      if (typeof handle.owns === 'function' && typeof handle.close === 'function') closeOwners.push(name)
-      for (const hook of ['onPointerDown', 'close', 'onInput', 'onFocusIn', 'reposition', 'measureReposition', 'onCopyChange', 'onKey', 'onActivity'] as FeatureHook[]) {
-        const call = handle[hook] as ((...args: unknown[]) => void) | undefined
-        if (typeof call !== 'function') continue
-        const entries = hookIndex.get(hook) ?? []
-        entries.push({ handle, call })
-        hookIndex.set(hook, entries)
+      const call = handle?.[hook] as ((...args: unknown[]) => void) | undefined
+      if (!handle || typeof call !== 'function') continue
+      try {
+        call.apply(handle, args)
+      } catch (error) {
+        reportError(error)
       }
     }
   }
-
-  /** Call one hook on its live subscribers, in FEATURES order, isolating failures (D12). */
-  function dispatch<K extends FeatureHook>(hook: K, ...args: Parameters<NonNullable<FeatureHandle[K]>>) {
-    for (const entry of hookIndex.get(hook) ?? []) {
-      try { entry.call.apply(entry.handle, args) } catch (error) { reportError(error) }
-    }
-  }
-
-  ui.refreshHooks = rebuildHooks
-  rebuildHooks()
 
   /** The reader is at the page: every feature with an `onActivity` hears it. */
   function onGlobalActivity() {
@@ -175,7 +155,7 @@ export function installScheduler<Name extends string>(ctx: HostContext, ui: Sche
     // A press a feature does not own closes it; features without an `owns`
     // keep their own dismiss route. One feature's close throwing must not keep
     // the others from closing (D12).
-    for (const name of closeOwners) {
+    for (const name of features) {
       const handle = handleOf(name)
       if (!handle || typeof handle.owns !== 'function' || typeof handle.close !== 'function') continue
       try {
@@ -261,7 +241,6 @@ export function installScheduler<Name extends string>(ctx: HostContext, ui: Sche
   // defaults with the stored values.
   const copyUnsubscribes = sources.copyChange.map((source) => source(onCopyChange))
   sources.start()
-  rebuildHooks()
 
   // Under "follow the system", the system's own reduced-motion flip is a
   // preference change like any other.
@@ -371,7 +350,7 @@ export function installScheduler<Name extends string>(ctx: HostContext, ui: Sche
         measured = true
         if (stopped) return
         const content = passContentOnly
-        for (const name of measureNames) {
+        for (const name of features) {
           if (content && handleOf(name)?.skipOnContentOnly === true) continue
           runMeasure(name)
         }
@@ -399,7 +378,7 @@ export function installScheduler<Name extends string>(ctx: HostContext, ui: Sche
             runMeasure(name)
           }
         }
-        for (const name of syncNames) {
+        for (const name of features) {
           if (content && handleOf(name)?.skipOnContentOnly === true) continue
           runSync(name)
         }

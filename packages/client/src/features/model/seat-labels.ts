@@ -2,10 +2,11 @@
  * The model picker's seat: the trigger the reader presses, the words on it, the
  * model mark on <body> and the box the two cards hang from.
  *
- * Split out of model-picker.ts, which keeps the catalog, the rows and the pass's
- * paint. This half is the seat's own: the host's own seat is hidden and
- * re-marked on every pass, because React owns that node and a swap puts it
- * back, and the trigger is rebuilt whenever the slot it stands in is replaced.
+ * model-picker.ts keeps the catalog, the rows and the pass's paint, and reads
+ * what each seat pass did from its answer. This half is the seat's own: the
+ * host's own seat is hidden and re-marked on every pass, because React owns that
+ * node and a swap puts it back, and the trigger is rebuilt whenever the slot it
+ * stands in is replaced.
  */
 import { SLOT_NODE_ATTR } from '../../constants'
 import { COMPOSER_CARD_SELECTOR, COMPOSER_VARIANT_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
@@ -25,7 +26,6 @@ import type { ModelCatalog } from './catalog'
 import type { HostModelEntry, HostModelGroup, HostSlotsService } from '@dsh-claude-style/contracts/services'
 import type { ModelPickerMount } from './model-picker'
 import type { createModelCards } from './model-cards'
-import type { createModelFooter } from './model-footer'
 
 /**
  * The mark naming the model in force on <body>. A reader's own tooling reads it
@@ -44,18 +44,20 @@ export interface SeatLabelOptions {
   cards: ReturnType<typeof createModelCards>
   /** The session's catalog, the one store the seat reads. */
   modelCatalog: ModelCatalog
-  /** Level 1's pinned footer, refreshed with the seat. */
-  modelFooter: ReturnType<typeof createModelFooter>
   /** The slot registry from the scope that injected it (D75); null while the host serves none. */
   slots(): HostSlotsService | null
-  /** Level 1's rows must be rebuilt: the body they were built into is gone. */
-  invalidateBody(): void
-  /** Level 1's paint, run after the seat's own reading. */
-  renderBody(): void
 }
 
+/**
+ * What a seat pass did, which decides the picker's paint after it: the seat was
+ * handed back (the body the rows were built into went with it), there was no
+ * slot to stand in, or the seat was drawn — into the cards' existing chrome, or
+ * into chrome built new, which holds no rows yet.
+ */
+export type SeatPass = 'handedBack' | 'noSlot' | 'drawn' | 'drawnInNewChrome'
+
 export function createSeatLabels(options: SeatLabelOptions) {
-  const { mount, ui, cards, modelCatalog, modelFooter } = options
+  const { mount, ui, cards, modelCatalog } = options
   let modelBtn: HTMLButtonElement | null = null
   /** The box the model's text and the effort level's share inside the host slot (seat-box.ts). */
   let seatBox: HTMLElement | null = null
@@ -94,7 +96,6 @@ export function createSeatLabels(options: SeatLabelOptions) {
     removeStrayNodes(modelSlot ?? document, '.dsh-claude-model-btn', [])
     modelBtn = null
     cards.dropNodes()
-    options.invalidateBody()
     modelCatalog.reset()
     markSeatModel(null)
   }
@@ -115,14 +116,14 @@ export function createSeatLabels(options: SeatLabelOptions) {
     setAttributeIfChanged(document.body, MODEL_ATTR, `${current.group.id}/${current.model.id}`)
   }
 
-  /** Build/refresh the trigger, its label and the popover rows. */
-  function syncModelControl() {
+  /** Build or refresh the trigger, its label and the model mark. */
+  function syncModelControl(): SeatPass {
     // The picker's own switch tears this feature down, so the composer restyle
     // is the one way left to be off the page: it hands the host's own model
     // seat and menu back through the same sweep.
     if (mount.slot === undefined && ui.composer?.isActive() !== true) {
       dropModelControl()
-      return
+      return 'handedBack'
     }
 
     // A third-party winner holding the model seat takes the whole seat: the
@@ -132,7 +133,7 @@ export function createSeatLabels(options: SeatLabelOptions) {
     // returns on the pass the seat comes back (features/effort/effort-picker.ts).
     if (thirdPartyHoldsSeat(options.slots())) {
       dropModelControl()
-      return
+      return 'handedBack'
     }
 
     // The copy document is fetched on first paint of the picker rather than
@@ -148,7 +149,7 @@ export function createSeatLabels(options: SeatLabelOptions) {
     if (slot === null) {
       // A page with no composer seat in it names no model either.
       markSeatModel(null)
-      return
+      return 'noSlot'
     }
     // Hide the host's own seat (React owns the node; re-mark on swap).
     // Idempotent against a torn-down-less reload, like the account footer:
@@ -211,8 +212,8 @@ export function createSeatLabels(options: SeatLabelOptions) {
       modelPart.appendChild(modelBtn)
     }
     // Fresh chrome is empty chrome: the body the last paint built is gone, so
-    // the next paint rebuilds the rows into the new one.
-    if (cards.ensureChrome() === true) options.invalidateBody()
+    // the answer tells the picker to rebuild the rows into the new one.
+    const newChrome = cards.ensureChrome() === true
 
     const snap = modelCatalog.snapshot()
     const current = modelCatalog.current(snap)
@@ -258,20 +259,11 @@ export function createSeatLabels(options: SeatLabelOptions) {
     const triggerAria = copy('triggerLabel', { model: label }) + (seatTag === null ? '' : ` ${seatTag}`)
     setAttributeIfChanged(modelBtn, 'aria-label', triggerAria)
     modelBtn.disabled = mount.disabled === true
-
-    options.renderBody()
-    modelFooter.refresh()
-    if (cards.subOpen()) {
-      const modelSub = cards.sub()
-      if (modelSub !== null) modelSub.render()
-      cards.position()
-    } else if (cards.mainOpen()) {
-      cards.position()
-    }
+    return newChrome ? 'drawnInNewChrome' : 'drawn'
   }
 
   return {
-    /** The pass's write half: the seat, its label, the mark and the cards' paint. */
+    /** The seat's part of the pass's write: the seat, its label and the mark. */
     sync: syncModelControl,
     /** Hand the host's own seat and the skin's trigger back. */
     drop: dropModelControl,

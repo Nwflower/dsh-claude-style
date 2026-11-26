@@ -15,7 +15,7 @@ import type manifest from './chat-follow.manifest'
  * dsh-chat-ux. Both ride one preference, as they do upstream.
  *
  * The watch that drives the stream slide is in follow-guard.ts; the slide
- * itself is in slide-motion.ts and slide-sync.ts; every position write is the
+ * itself is in stream-slide.ts; every position write is the
  * scroll owner's (packages/engine/src/scroll-owner.ts, D40); the catch-up
  * inside a capped body is in process-follow.ts.
  */

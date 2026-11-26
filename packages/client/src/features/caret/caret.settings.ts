@@ -3,7 +3,7 @@ import { CARET_MOTION_OFF, CARET_MOTION_TYPING } from '../../constants'
 import { motionMs } from '../../shared/motion'
 import { inPagePixels } from '../../shared/page-zoom'
 import { PreviewCards } from '../../shared/preview-cards'
-import { usePreviewLoop } from '../../shared/use-preview-loop'
+import { usePreviewStep } from '../../shared/use-preview-step'
 import { copy } from './copy'
 import type { PreviewOption } from '../../shared/preview-cards'
 import type { Prefs } from '../../constants'
@@ -41,7 +41,6 @@ const CARET_PREVIEW_TYPING_SHARE = 0.5
 function CaretPicker(props: SettingsRowView) {
   const sample = copy('caretSample')
   const pieces = Array.from(sample)
-  const [at, setAt] = React.useState(0)
   const pickerRef = React.useRef<HTMLDivElement | null>(null)
   const lineRef = React.useRef<HTMLSpanElement | null>(null)
   /**
@@ -56,24 +55,11 @@ function CaretPicker(props: SettingsRowView) {
   const period = motionMs('--dsh-claude-period-preview-caret')
   const typing = Math.round(period * CARET_PREVIEW_TYPING_SHARE)
   const gap = Math.max(1, Math.round(typing / pieces.length))
-  // The ticks the line stands whole before it clears: the rest of the
+  // The steps the line stands whole before it clears: the rest of the
   // period, which is what gives the caret time to blink and the reader time
   // to read the line.
-  const ticks = pieces.length + Math.max(0, Math.round((period - typing) / gap))
-  /** The tick the line is on; the loop starts it over with the phase. */
-  const next = React.useRef(0)
-  usePreviewLoop({
-    everyMs: gap,
-    disabled: props.disabled,
-    restart: () => {
-      next.current = 0
-      setAt(0)
-    },
-    tick: () => {
-      next.current = next.current + 1 >= ticks ? 0 : next.current + 1
-      setAt(Math.min(next.current, pieces.length))
-    },
-  })
+  const steps = pieces.length + Math.max(0, Math.round((period - typing) / gap))
+  const shown = Math.min(usePreviewStep({ everyMs: gap, steps, disabled: props.disabled }), pieces.length)
   // The sample's own measure, taken while the layout is fresh: the two cards
   // carry the same line, so the typing card's reading places both carets.
   React.useLayoutEffect(() => {
@@ -96,7 +82,6 @@ function CaretPicker(props: SettingsRowView) {
     if (document.fonts.status !== 'loaded') void document.fonts.ready.then(measure)
     return () => { mounted = false }
   }, [sample])
-  const shown = Math.min(at, pieces.length)
   React.useLayoutEffect(() => {
     const picker = pickerRef.current
     if (picker === null) return

@@ -154,7 +154,7 @@ export const BACKGROUND_OPACITY_VAR = '--dsh-claude-background-opacity'
 /** Present while the ported chat-area follow is installed (features/chat-follow/). The rules hanging off it are that feature's own: a capped process group's body scrolls vertically alone, so the catch-up measures the distance the host's own smooth scroll does.
  * The host's back-to-end button is placed over the composer, and the waiting line is pinned above it (features/chat-wait/chat-wait.css); switched off, the chat area is handed back untouched. */
 export const CHAT_FOLLOW_ATTR = 'data-dsh-claude-chat-follow'
-/** On the flow column while a door rolls (features/chat-follow/slide-sync.ts). A door's height change reads to the host as a reader who left the tail and takes its own data-chat-following-tail away (D3), the gate the waiting line's pin waits for (features/chat-wait/chat-wait.css).
+/** On the flow column while a door rolls (features/chat-follow/stream-slide.ts). A door's height change reads to the host as a reader who left the tail and takes its own data-chat-following-tail away (D3), the gate the waiting line's pin waits for (features/chat-wait/chat-wait.css).
  * This mark stands for that gate until the fold hands the follow back. */
 export const FOLLOW_HOLD_ATTR = 'data-dsh-claude-follow-hold'
 /** On a container the reader has taken over with his own scrolling (packages/engine/src/scroll-owner.ts), until he comes back to its end. The waiting line's pin (features/chat-wait/chat-wait.css) reads it.

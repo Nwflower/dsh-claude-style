@@ -1,12 +1,12 @@
-diff --git a/packages/client/src/features/chat-follow/slide-motion.ts b/packages/client/src/features/chat-follow/slide-motion.ts
---- a/packages/client/src/features/chat-follow/slide-motion.ts
-+++ b/packages/client/src/features/chat-follow/slide-motion.ts
-@@ -181,7 +181,7 @@ const slideCarried = () => {
+diff --git a/packages/client/src/features/chat-follow/stream-slide.ts b/packages/client/src/features/chat-follow/stream-slide.ts
+--- a/packages/client/src/features/chat-follow/stream-slide.ts
++++ b/packages/client/src/features/chat-follow/stream-slide.ts
+@@ -135,7 +135,7 @@ const slideCarried = () => {
      // The curve the animation paints with, not the linear share of its
      // duration: with the two mixed up, every restart re-inflates the distance
      // the frame before it had already travelled (D95).
--    return state.slide.from * (1 - linear)
-+    return state.slide.from * (1 - motionEaseAt(GLIDE_TOKEN, linear))
+-    return glide.from * (1 - linear)
++    return glide.from * (1 - motionEaseAt(GLIDE_TOKEN, linear))
    }
- 
+
    /**

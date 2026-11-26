@@ -14,7 +14,7 @@ import { openPanelFromAction } from '../../shared/panel-actions'
 import { createHostToast } from '../../shared/host-toast'
 import { createDialogRoot } from '../../shared/dialog-root'
 import { placeBesideLauncher } from './more-placement'
-import type { LauncherPlacement } from './more-placement'
+import type { PhasedPlacement } from '../../shared/popover'
 
 /**
  * The sidebar's panel list as Claude's app keeps it: the reader picks which
@@ -80,7 +80,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The slot registry, once the host has served it to the injected scope. */
   let slots: HostSlotsService | null = null
   /** The open More card's placement, while its row is mounted; the scheduler's hooks read it. */
-  let placement: LauncherPlacement | null = null
+  let placement: PhasedPlacement | null = null
 
   /** Every registered panel's id and label, as the host labels its row now. */
   function registeredPanels() {

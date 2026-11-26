@@ -3,7 +3,7 @@ import { CHAT_RUNNING_SELECTOR, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, THINK_ROW_SE
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { conversationScroller } from '@dsh-claude-style/engine/chat-dom'
 import { joinScrollOwner, readerHolds } from '@dsh-claude-style/engine/scroll-owner'
-import { createStreamSlide } from './slide-motion'
+import { createStreamSlide } from './stream-slide'
 
 /**
  * Watch the page for the moments the stream slide has to answer: while content
@@ -30,7 +30,7 @@ export function createChatFollowGuard(options: { foldBusy: () => boolean, submis
     return scroller !== null && readerHolds(scroller)
   }
 
-  /** The stream slide and the sync under it (slide-motion.ts, D95). */
+  /** The stream slide, its size subscription and the door's hold mark (stream-slide.ts, D95). */
   const slide = createStreamSlide({ foldBusy, submissionHeld, readerAway })
 
   const onRecords = (records: MutationRecord[]) => {

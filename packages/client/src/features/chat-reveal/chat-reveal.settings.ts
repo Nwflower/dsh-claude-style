@@ -2,7 +2,7 @@ import * as React from 'react'
 import { CHAT_REVEAL_OFF, CHAT_REVEAL_ON } from '../../constants'
 import { motionMs } from '../../shared/motion'
 import { PreviewCards } from '../../shared/preview-cards'
-import { usePreviewLoop } from '../../shared/use-preview-loop'
+import { usePreviewStep } from '../../shared/use-preview-step'
 import { copy } from './copy'
 import type { PreviewOption } from '../../shared/preview-cards'
 import type { Prefs } from '../../constants'
@@ -30,28 +30,13 @@ const REVEAL_PREVIEW_ARRIVAL_SHARE = 0.45
 function RevealPicker(props: SettingsRowView) {
   const sample = copy('chatRevealSample')
   const count = Array.from(sample).length
-  const [tick, setTick] = React.useState(0)
   const period = motionMs('--dsh-claude-period-preview-reveal')
   const arrival = Math.round(period * REVEAL_PREVIEW_ARRIVAL_SHARE)
   const gap = Math.max(1, Math.round(arrival / count))
-  // The ticks the sample is on show before the next wipe: the rest of the
+  // The steps the sample is on show before the next wipe: the rest of the
   // period is the hold, which is what gives the reader time to read it.
-  const ticks = count + Math.max(0, Math.round((period - arrival) / gap))
-  /** The tick the sample is on; the loop starts it over with the phase. */
-  const next = React.useRef(0)
-  usePreviewLoop({
-    everyMs: gap,
-    disabled: props.disabled,
-    restart: () => {
-      next.current = 0
-      setTick(0)
-    },
-    tick: () => {
-      next.current = next.current + 1 >= ticks ? 0 : next.current + 1
-      setTick(next.current)
-    },
-  })
-  const shown = Math.min(tick, count)
+  const steps = count + Math.max(0, Math.round((period - arrival) / gap))
+  const shown = Math.min(usePreviewStep({ everyMs: gap, steps, disabled: props.disabled }), count)
   const card = React.createElement(
     'span',
     { className: 'dsh-claude-reveal-sample', 'aria-hidden': 'true' },

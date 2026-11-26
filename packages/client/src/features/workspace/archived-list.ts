@@ -2,6 +2,7 @@ import { buildElement } from '@dsh-claude-style/engine/dom'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import type { HostSessionSummary, HostSessionsService, HostWorkspacesService } from '@dsh-claude-style/contracts/services'
 import type { HostTooltip, HostTooltipOptions } from '../../shared/host-tooltip'
+import { createIdentityMemo } from '../../shared/identity-memo'
 import { copy } from './copy'
 
 /** How many archived conversations one page carries; the next page appends when the reader reaches the foot. */
@@ -158,8 +159,10 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
   let signature = ''
   /** The freshest reading, what append and render draw from. */
   let latest = { order: [] as string[], byId: {} as Record<string, HostSessionSummary>, sig: '' }
-  let orderCache: { workspaces: object | null, sessions: object | null, current: string | null, order: string[], byId: Record<string, HostSessionSummary> } | null = null
-  let signatureCache: { order: string[], cursor: number, sig: string } | null = null
+  /** The archived order, rebuilt when a list snapshot or the open session moves. */
+  const orderMemo = createIdentityMemo<{ order: string[], byId: Record<string, HostSessionSummary> }>()
+  /** The visible window's signature, rebuilt when the order or the page count moves. */
+  const signatureMemo = createIdentityMemo<string>()
   /** One queued append per frame: a scroll storm at the foot adds one page, not many. */
   let cancelAppend: (() => void) | null = null
   /** The snapshot subscriptions, taken once both services stand. */
@@ -171,23 +174,17 @@ export function createArchivedList(deps: ArchivedListDeps): ArchivedList {
     const workspaceSnapshot = workspaces?.list.getSnapshot() ?? null
     const snapshot = sessions?.list.getSnapshot() ?? null
     const current = deps.host.currentSession()
-    let ordered = orderCache
-    if (ordered === null || ordered.workspaces !== workspaceSnapshot || ordered.sessions !== snapshot || ordered.current !== current) {
-      const archived = workspaceSnapshot?.archivedSessionIds ?? []
+    const ordered = orderMemo.get([workspaceSnapshot, snapshot, current], () => {
       const byId = snapshot?.byId ?? {}
-      const order = archivedOrder(archived, byId, current)
-      ordered = { workspaces: workspaceSnapshot, sessions: snapshot, current, order, byId }
-      orderCache = ordered
-    }
+      return { order: archivedOrder(workspaceSnapshot?.archivedSessionIds ?? [], byId, current), byId }
+    })
     // Only the visible window is signed; a change below it cannot move a held row.
-    if (signatureCache?.order !== ordered.order || signatureCache.cursor !== cursor) {
-      signatureCache = {
-        order: ordered.order,
-        cursor,
-        sig: JSON.stringify([current, cursor, ordered.order.slice(0, cursor).map(id => [id, ordered!.byId[id]?.updatedAt, ordered!.byId[id]?.displayTitle])]),
-      }
-    }
-    return { order: ordered.order, byId: ordered.byId, sig: signatureCache.sig }
+    const sig = signatureMemo.get([ordered, cursor], () => JSON.stringify([
+      current,
+      cursor,
+      ordered.order.slice(0, cursor).map(id => [id, ordered.byId[id]?.updatedAt, ordered.byId[id]?.displayTitle]),
+    ]))
+    return { order: ordered.order, byId: ordered.byId, sig }
   }
   function syncActionCopy(row: HTMLElement) {
     const unarchive = row.querySelector(`.${UNARCHIVE_CLASS}`)

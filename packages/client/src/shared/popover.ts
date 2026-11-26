@@ -1,3 +1,4 @@
+import { observeSize } from '@dsh-claude-style/engine/bus'
 import { buildElement, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
 import { inPageBox, pageViewport } from './page-zoom'
 
@@ -153,6 +154,50 @@ export function positionAnchoredPopover(trigger: Element, pop: HTMLElement, opts
     if (pop.style.bottom !== 'auto') pop.style.bottom = 'auto'
   }
   return { x, y }
+}
+
+/** A card's placement split into the frame's two phases, for the handle that owns the card. */
+export interface PhasedPlacement {
+  /** The handle's read phase: take what the place depends on, before any feature writes. */
+  measure(): void
+  /** The handle's write phase: write what the last read resolved, reading no box back. */
+  place(): void
+  /** Stop following the card's size. */
+  release(): void
+}
+
+/**
+ * Place a card in the frame's two phases (D40): `read` takes the boxes and
+ * resolves the place in the read phase, `write` puts it on the card in the write
+ * phase, so no write forces the layout under another feature's read. The card's
+ * own size changes ask for a pass rather than placing it from the observer.
+ *
+ * The card is mounted in a layout effect before its first paint, so the first
+ * placement runs here at once, rather than waiting a frame and painting the
+ * card where it was mounted.
+ *
+ * @param requestPass - asks for the scheduler pass whose phases place the card.
+ */
+export function createPhasedPlacement<Target>(card: HTMLElement, options: {
+  read(): Target
+  write(target: Target): void
+  requestPass(): void
+}): PhasedPlacement {
+  /** What the last read resolved; null before the first read and after the release. */
+  let measured: { target: Target } | null = null
+  const measure = () => { measured = { target: options.read() } }
+  const place = () => { if (measured !== null) options.write(measured.target) }
+  measure()
+  place()
+  const stopSize = observeSize(card, options.requestPass)
+  return {
+    measure,
+    place,
+    release() {
+      stopSize()
+      measured = null
+    },
+  }
 }
 
 /** The check mark a chosen row draws: one string, since every picker shares the slot. */
