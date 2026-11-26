@@ -10,9 +10,9 @@ import {
   toggleFontInStack,
 } from '@dsh-claude-style/contracts/typeface'
 import type { FontRole } from '@dsh-claude-style/contracts/typeface'
-import { observeSize } from '@dsh-claude-style/engine/bus'
 import { readPrefs, savePrefs, subscribePrefs } from '../../core/prefs'
-import { anchorSpace, clampToViewport, closeOtherPopovers, POPOVER_MARGIN, registerPopover, resolveAnchoredPosition, unregisterPopover } from '../../shared/popover'
+import { anchorSpace, clampToViewport, closeOtherPopovers, createPhasedPlacement, POPOVER_MARGIN, registerPopover, resolveAnchoredPosition, unregisterPopover } from '../../shared/popover'
+import type { PhasedPlacement } from '../../shared/popover'
 import { Glyph } from '../../shared/settings-glyphs'
 import { loadSystemFontFamilies } from '../../shared/typeface'
 import { copy } from './copy'
@@ -40,17 +40,7 @@ const listeners = new Set<() => void>()
 /** The scheduler wake a card size change asks for; the settings handle supplies it while installed. */
 let wake: (() => void) | null = null
 /** The open card's placement, while the popover stands. */
-let placement: TypefacePlacement | null = null
-
-/** A font card's placement, its two phases kept apart for the scheduler. */
-interface TypefacePlacement {
-  /** The handle's read phase: the anchor's box, the window's room and the card's size. */
-  measure(): void
-  /** The handle's write phase: `max-height` and the card's place, written only on a change. */
-  place(): void
-  /** Stop watching the card's size. */
-  release(): void
-}
+let placement: PhasedPlacement | null = null
 
 /** The settings handle's read phase: the font card's boxes, before any feature writes. */
 export function measureTypefacePopover() {
@@ -68,21 +58,19 @@ export function setTypefacePopoverWake(next: (() => void) | null) {
 }
 
 /**
- * Split the font card's placement into the frame's two phases (D40). The
+ * The font card's placement in the frame's two phases (shared/popover.ts): the
  * anchor's box, the window's room, the card's size and the resolved
- * `max-height` and place are read in `measure`; `place` writes them without
- * reading a box back, so no write forces the layout under it.
+ * `max-height` and place are read first, then written without reading a box
+ * back. Its own size changes when the pinned rows, the search field or the
+ * results change.
  */
-function attachTypefacePlacement(card: HTMLElement, anchor: HTMLElement, close: () => void): TypefacePlacement {
+function attachTypefacePlacement(card: HTMLElement, anchor: HTMLElement, close: () => void): PhasedPlacement {
   /** The air between the preview card and its picker: the host Menu's own gap. */
   const gap = 6
-  let target: { maxHeight: number, x: number, y: number } | null = null
-  /** Whether the last read found the anchor gone: the write that follows closes the card. */
-  let detached = false
 
-  function measure() {
-    detached = !anchor.isConnected
-    if (detached) return
+  /** The place the card takes, or null when the anchor has left the page. */
+  function read(): { maxHeight: number, x: number, y: number } | null {
+    if (!anchor.isConnected) return null
     const { rect, viewport } = anchorSpace(anchor)
     const roomBelow = viewport.height - rect.bottom - gap - POPOVER_MARGIN
     const roomAbove = rect.top - gap - POPOVER_MARGIN
@@ -97,17 +85,16 @@ function attachTypefacePlacement(card: HTMLElement, anchor: HTMLElement, close: 
     const height = Math.min(card.offsetHeight, maxHeight)
     const anchored = resolveAnchoredPosition(rect, width, height, { side: 'below-left', gap, viewport })
     const position = clampToViewport(anchored, width, height, viewport, POPOVER_MARGIN)
-    target = { maxHeight, x: position.x, y: position.y }
+    return { maxHeight, x: position.x, y: position.y }
   }
 
-  function place() {
+  function write(target: { maxHeight: number, x: number, y: number } | null) {
     // The anchor left the page with its settings page: the card has nothing to
     // sit against, so the write retires it rather than leaving it behind.
-    if (detached || !anchor.isConnected) {
+    if (target === null || !anchor.isConnected) {
       close()
       return
     }
-    if (target === null) return
     const maxHeight = `${target.maxHeight}px`
     if (card.style.maxHeight !== maxHeight) card.style.maxHeight = maxHeight
     const left = `${Math.round(target.x)}px`
@@ -118,14 +105,7 @@ function attachTypefacePlacement(card: HTMLElement, anchor: HTMLElement, close: 
     if (card.style.bottom !== 'auto') card.style.bottom = 'auto'
   }
 
-  // The card is mounted in a layout effect before paint, so the first placement
-  // runs here rather than waiting a frame and painting at the host's place.
-  measure()
-  place()
-  // Its own size changes when the pinned rows, the search field or the results
-  // change; the shared size observer asks for a pass, whose phases place it.
-  const stopSize = observeSize(card, () => { wake?.() })
-  return { measure, place, release() { stopSize() } }
+  return createPhasedPlacement(card, { read, write, requestPass: () => { wake?.() } })
 }
 
 function notify() {
