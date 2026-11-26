@@ -105,9 +105,14 @@ export function install(ctx: HostContext) {
     return point.x >= bounds.left && point.x <= bounds.left + EDGE_PX && point.y >= bounds.top && point.y < bounds.bottom
   }
 
-  /** A foreground surface owns its pointer; the collapsed sidebar must not open beneath it. */
+  /**
+   * A foreground surface owns its pointer; the collapsed sidebar must not open
+   * beneath it. Every pointer move asks, so the attribute an open sidebar
+   * answers with is read before any box, and a collapsed one reads the
+   * trigger's boxes before the layout `canOpen` costs.
+   */
   function eligible(box: HTMLElement, point: Point) {
-    return triggered(box, point) && canOpen(box) && findForeground() === null
+    return collapsed(box) && triggered(box, point) && canOpen(box) && findForeground() === null
   }
 
   /** The width the slide travels: the one the host gives the open sidebar's own box. */
