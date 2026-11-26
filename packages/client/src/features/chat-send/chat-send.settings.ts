@@ -4,7 +4,7 @@ import { motionReduced } from '../../core/prefs'
 import { motionMs } from '../../shared/motion'
 import { withoutTransition } from '../../shared/transition'
 import { PreviewCards } from '../../shared/preview-cards'
-import { usePreviewLoop } from '../../shared/use-preview-loop'
+import { usePreviewStep } from '../../shared/use-preview-step'
 import { copy } from './copy'
 import type { PreviewOption } from '../../shared/preview-cards'
 import type { Prefs } from '../../constants'
@@ -29,28 +29,25 @@ function MessageEnterPicker(props: SettingsRowView) {
     copy('messageEnterSamplePr'),
   ]
   const pickerRef = React.useRef<HTMLDivElement | null>(null)
-  // The messages standing on the cards, by their own number rather than by
-  // their words: the number is also the React key, so the message just
-  // appended is a new node — which is what lets it play its arrival — while
-  // the ones already there keep theirs.
-  const [shown, setShown] = React.useState([0, 1])
-  const nextId = React.useRef(shown.length)
-  usePreviewLoop({
+  const step = usePreviewStep({
     everyMs: motionMs('--dsh-claude-period-preview-enter'),
+    steps: Infinity,
     // A card that takes no input holds its messages still (settings-controls.ts
     // greys the row while the entrance's own switch is off).
     disabled: props.disabled,
-    tick: () => {
-      // The reader's animation choice is read each turn (D40): on a still page
-      // the card stands on the messages already there, the way the line writes
-      // its words at once, instead of a new message appearing without its
-      // arrival and the column jumping a row.
-      if (motionReduced()) return
-      const id = nextId.current
-      nextId.current += 1
-      setShown(previous => previous.length >= 3 ? [...previous.slice(1), id] : [...previous, id])
-    },
+    // The reader's animation choice is read each turn (D40): on a still page
+    // the card stands on the messages already there, the way the line writes
+    // its words at once, instead of a new message appearing without its
+    // arrival and the column jumping a row.
+    hold: motionReduced,
   })
+  // The messages standing on the cards, by their own number rather than by
+  // their words: the newest is number `step + 1` and at most three stand. The
+  // number is also the React key, so the message just appended is a new node —
+  // which is what lets it play its arrival — while the ones already there keep
+  // theirs.
+  const shown: number[] = []
+  for (let id = Math.max(0, step - 1); id <= step + 1; id++) shown.push(id)
   // The lift: appending a message has already moved the column up a row, so
   // the column is pushed back down first and then slides to where it belongs
   // — the same flip the conversation's own entrance needs, without which the
@@ -68,7 +65,7 @@ function MessageEnterPicker(props: SettingsRowView) {
       withoutTransition([stack], () => { stack.style.transform = `translateY(${row}px)` })
       stack.style.transform = ''
     }
-  }, [shown])
+  }, [step])
   const sample = React.createElement(
     'span',
     { className: 'dsh-claude-enter-sample', 'aria-hidden': 'true' },
