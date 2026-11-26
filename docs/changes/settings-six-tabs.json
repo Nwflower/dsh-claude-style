@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-26",
-  "group": "improvements",
-  "order": 1,
-  "external": false,
-  "zh": "设置页原「主窗口」拆分为「对话」与「输入」两个一级标签，计费与 Token 单位归入「通用」，父开关关闭时自动收起从属子项并补充缩进引导线",
-  "en": "Split the settings page's Main window tab into top-level Chat and Composer tabs, move billing and token units to General, and fold child rows behind an indented guide rule while their parent switch is off"
-}

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-26",
-  "group": "improvements",
-  "order": 0,
-  "external": true,
-  "zh": "切换设置页签时离场动画只复制可见区内的行，减少切换卡顿",
-  "en": "Switching settings tabs copies only the visible rows for the leaving slide, making the switch lighter"
-}

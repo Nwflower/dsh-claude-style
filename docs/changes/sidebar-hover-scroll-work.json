@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-26",
-  "group": "improvements",
-  "order": 1,
-  "external": false,
-  "zh": "在左侧会话列表上悬停长标题、滚动列表或移动指针时，不再逐帧触发整页重算",
-  "en": "Stop recomputing the whole page every frame while a long title scrolls, the session list scrolls or the pointer moves over the left sidebar"
-}

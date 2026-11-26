@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-26",
-  "group": "improvements",
-  "order": 0,
-  "external": true,
-  "zh": "会话搜索逐键输入时保留未变化的结果行，只在活动行超出列表可见区时滚动",
-  "en": "Session search keeps unchanged result rows while typing and scrolls only when the active row leaves the visible list"
-}

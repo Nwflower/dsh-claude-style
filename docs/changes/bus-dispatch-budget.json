@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-26",
-  "group": "fixes",
-  "order": 0,
-  "external": false,
-  "zh": "修复延后变更批次在订阅筛选结果为空时越过分发预算、长时间占用主线程",
-  "en": "Keep deferred mutation batches within the dispatch budget when a subscription selects no records"
-}

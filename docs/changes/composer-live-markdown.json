@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-25",
-  "group": "improvements",
-  "order": 0,
-  "external": false,
-  "zh": "输入框草稿的 Markdown 与数学公式改为在原位实时渲染，光标所在的块显示源码，不再需要单独开启",
-  "en": "Render the composer draft's Markdown and math formulas live in place, showing source only for the block under the caret, with no setting to turn on"
-}

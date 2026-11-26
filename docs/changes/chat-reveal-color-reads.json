@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-26",
-  "group": "improvements",
-  "order": 0,
-  "external": true,
-  "zh": "逐字淡入只在元素首次出现、样式类或明暗主题变化时读取文字颜色，长 Markdown 回答流式输出时更流畅",
-  "en": "Chat reveal reads a text colour only when its element first appears or its class or the theme changes, keeping long Markdown replies smooth while they stream"
-}

@@ -1,8 +1,0 @@
-{
-  "at": "2026-11-26",
-  "group": "improvements",
-  "order": 2,
-  "external": false,
-  "zh": "移除「模型排序」设置项，服务商分组内固定采用品牌优先排序，各品牌组与无品牌第二梯队按标识排列且同品牌内部保留目录顺序",
-  "en": "Remove the Model order setting and sort each provider's models with recognised brands first by brand ID in catalog order followed by unbranded models in ID order"
-}

@@ -2,6 +2,48 @@
 
 All notable changes to `dsh-claude-style` are documented here, newest first.
 
+## [0.22.4] - 2026-11-26
+
+[中文](#cn-0.22.4) | [English](#en-0.22.4)
+
+<h3 id="cn-0.22.4">体验优化</h3>
+
+- 逐字淡入只在元素首次出现、样式类或明暗主题变化时读取文字颜色，长 Markdown 回答流式输出时更流畅
+- 输入框草稿的 Markdown 与数学公式改为在原位实时渲染，光标所在的块显示源码，不再需要单独开启
+- 会话搜索逐键输入时保留未变化的结果行，只在活动行超出列表可见区时滚动
+- 切换设置页签时离场动画只复制可见区内的行，减少切换卡顿
+- 设置页原「主窗口」拆分为「对话」与「输入」两个一级标签，计费与 Token 单位归入「通用」，父开关关闭时自动收起从属子项并补充缩进引导线
+- 在左侧会话列表上悬停长标题、滚动列表或移动指针时，不再逐帧触发整页重算
+- 移除「模型排序」设置项，服务商分组内固定采用品牌优先排序，各品牌组与无品牌第二梯队按标识排列且同品牌内部保留目录顺序
+- 重绘设置页「过程行」预览卡片，补齐思考与搜索线性图标、摘要展开箭头、主次文字配色层次及底部选项标签
+
+### 问题修复
+
+- 修复延后变更批次在订阅筛选结果为空时越过分发预算、长时间占用主线程
+
+### 移除
+
+- 移除「编辑侧栏入口」功能，侧栏面板入口改由宿主自带的固定与取消固定能力管理
+
+<h3 id="en-0.22.4">Improvements</h3>
+
+- Chat reveal reads a text colour only when its element first appears or its class or the theme changes, keeping long Markdown replies smooth while they stream
+- Render the composer draft's Markdown and math formulas live in place, showing source only for the block under the caret, with no setting to turn on
+- Session search keeps unchanged result rows while typing and scrolls only when the active row leaves the visible list
+- Switching settings tabs copies only the visible rows for the leaving slide, making the switch lighter
+- Split the settings page's Main window tab into top-level Chat and Composer tabs, move billing and token units to General, and fold child rows behind an indented guide rule while their parent switch is off
+- Stop recomputing the whole page every frame while a long title scrolls, the session list scrolls or the pointer moves over the left sidebar
+- Remove the Model order setting and sort each provider's models with recognised brands first by brand ID in catalog order followed by unbranded models in ID order
+- Redraw the Process rows preview cards in settings with host thinking and search glyphs, an expanded summary chevron, primary-secondary text hierarchy and bottom option labels
+
+### Bug Fixes
+
+- Keep deferred mutation batches within the dispatch budget when a subscription selects no records
+
+### Removals
+
+- Remove the Edit sidebar entries feature in favor of the host's built-in sidebar pin and unpin controls
+
 ## [0.22.3] - 2026-11-25
 
 [中文](#cn-0.22.3) | [English](#en-0.22.3)
