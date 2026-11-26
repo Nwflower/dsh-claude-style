@@ -127,7 +127,12 @@ export function createModelCards(options: {
     // any signature (rateSignature).
     options.onOpen()
     positionModelPopovers()
-    if (modelPop) setMenuPopoverOpen(modelPop, true, options.trigger())
+    if (modelPop) {
+      const trigger = options.trigger()
+      modelPop.id ||= `dsh-claude-model-menu-${owner}`
+      trigger?.setAttribute('aria-controls', modelPop.id)
+      setMenuPopoverOpen(modelPop, true, trigger)
+    }
   }
 
   function openModelSub(focusField?: boolean) {
