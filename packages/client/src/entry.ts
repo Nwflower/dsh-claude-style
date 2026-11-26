@@ -160,7 +160,6 @@ export function apply(ctx: HostContext) {
       try { installed[i].stop() } catch (error) { reportError(error) }
     }
     installed = kept.reverse()
-    ui.refreshHooks?.()
     // Each body attribute goes with whoever writes it: a feature's own with
     // its teardown above, the preference mirror's here, the stamps last.
     clearPrefsAttributes()
@@ -260,7 +259,6 @@ export function apply(ctx: HostContext) {
       // Retiring goes through even when the feature's own teardown fails too.
       try { stop() } catch (error) { reportError(error) }
     }
-    ui.refreshHooks?.()
     if (name === 'footer') retireFooterTakeover()
     if (name === 'composer') retireComposerRestyle()
   }
@@ -276,7 +274,6 @@ export function apply(ctx: HostContext) {
     try {
       const stop = run()
       if (typeof stop === 'function') installed.push({ id, handle, stop })
-      ui.refreshHooks?.()
       return true
     } catch (error) {
       reportFeatureFailure(id, error)
@@ -363,7 +360,6 @@ export function apply(ctx: HostContext) {
     const stop = installed[index].stop
     installed.splice(index, 1)
     delete ui[handle]
-    ui.refreshHooks?.()
     // Isolation (D12): a teardown that throws is reported, and the feature
     // stays off for the rest of the generation.
     try {
