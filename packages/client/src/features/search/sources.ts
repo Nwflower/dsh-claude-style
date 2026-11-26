@@ -3,6 +3,7 @@ import { currentSessionId, hostConversation, hostLayout, hostLocale, hostPluginN
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { ContentHit, SearchAnswer } from '@dsh-claude-style/contracts/usage'
 import type { HostPluginBundle, HostSessionBinding, HostSessionSummary, HostShortcutRow, HostSkill, HostSkillListAnswer, HostSlotStore, HostWorkspaceListSnapshot } from '@dsh-claude-style/contracts/services'
+import { createIdentityMemo } from '../../shared/identity-memo'
 import { copy } from './copy'
 
 /** The kinds of thing the palette lists, and the filter that shows them all. */
@@ -51,21 +52,18 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
   let skills: HostSkill[] | null = null
   let skillSessionId: string | null = null
   let generation = 0
-  /** Snapshot-keyed source rows, reused across keystrokes in one palette opening. */
-  let sessionCache: { list: object, archive: object, rows: { summary: HostSessionSummary, workspace: string }[] } | null = null
-  let projectCache: { snapshot: object, rows: SearchRow[] } | null = null
-  let pluginCache: { source: HostPluginBundle[], rows: SearchRow[] } | null = null
-  let skillCache: { source: HostSkill[], binding: HostSessionBinding, rows: SearchRow[] } | null = null
-  let shortcutCache: { catalog: object, fixed: object, rows: SearchRow[] } | null = null
-  let actionCache: { catalog: object | null, fixed: object | null, rows: SearchRow[] } | null = null
+  /** Each source's rows, reused across keystrokes in one palette opening while the host objects they came from stand. */
+  const rowMemos = {
+    sessions: createIdentityMemo<{ summary: HostSessionSummary, workspace: string }[]>(),
+    projects: createIdentityMemo<SearchRow[]>(),
+    plugins: createIdentityMemo<SearchRow[]>(),
+    skills: createIdentityMemo<SearchRow[]>(),
+    shortcuts: createIdentityMemo<SearchRow[]>(),
+    actions: createIdentityMemo<SearchRow[]>(),
+  }
 
-  function clearRowCaches() {
-    sessionCache = null
-    projectCache = null
-    pluginCache = null
-    skillCache = null
-    shortcutCache = null
-    actionCache = null
+  function clearRowMemos() {
+    for (const memo of Object.values(rowMemos)) memo.clear()
   }
 
   /** The host's shortcut row for a command id, for the keycaps an action row shows. */
@@ -99,6 +97,13 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
     if (query) reference.actions.search(query)
   }
 
+  /** The shell's workspace actions, which every session, project and new-session row runs through. */
+  function workspaceActions() {
+    const ui = hostUiWorkspace(ctx)
+    if (ui === null) throw new Error('search: the host has no workspace actions')
+    return ui
+  }
+
   /** Workspace title by session id, from the workspace list's own accounting. */
   function workspaceTitles(snapshot: HostWorkspaceListSnapshot) {
     const titles: Record<string, string> = {}
@@ -122,18 +127,18 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
     if (!sessions || !workspaces) return []
     const list = sessions.list.getSnapshot()
     const archive = workspaces.list.getSnapshot()
-    if (sessionCache?.list === list && sessionCache.archive === archive) return sessionCache.rows
-    const archived = new Set(archive.archivedSessionIds)
-    const titles = workspaceTitles(archive)
-    const rows: { summary: HostSessionSummary, workspace: string }[] = []
-    for (let i = 0; i < list.ids.length; i++) {
-      const summary = list.byId[list.ids[i]]
-      if (summary === undefined || summary.blank || summary.origin === 'subagent' || archived.has(summary.id)) continue
-      rows.push({ summary, workspace: titles[summary.id] || '' })
-    }
-    rows.sort((a, b) => b.summary.updatedAt - a.summary.updatedAt)
-    sessionCache = { list, archive, rows }
-    return rows
+    return rowMemos.sessions.get([list, archive], () => {
+      const archived = new Set(archive.archivedSessionIds)
+      const titles = workspaceTitles(archive)
+      const rows: { summary: HostSessionSummary, workspace: string }[] = []
+      for (let i = 0; i < list.ids.length; i++) {
+        const summary = list.byId[list.ids[i]]
+        if (summary === undefined || summary.blank || summary.origin === 'subagent' || archived.has(summary.id)) continue
+        rows.push({ summary, workspace: titles[summary.id] || '' })
+      }
+      rows.sort((a, b) => b.summary.updatedAt - a.summary.updatedAt)
+      return rows
+    })
   }
 
   /** A session row; `hit`, when given, is its content hit — the excerpt and the match within it. */
@@ -147,9 +152,7 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
       snippet: hit === undefined ? '' : hit.snippet,
       snippetMatch: hit === undefined ? null : hit.match,
       run() {
-        const ui = hostUiWorkspace(ctx)
-        if (ui === null) throw new Error('search: the host has no workspace actions')
-        ui.openSession(id)
+        workspaceActions().openSession(id)
         // A content hit names the message it matched, so the conversation does
         // not stop at the session: the turn holding that message is revealed
         // once the session is the shown one.
@@ -217,22 +220,14 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
     const workspaces = hostWorkspaces(ctx)
     if (!workspaces) return []
     const snapshot = workspaces.list.getSnapshot()
-    if (projectCache?.snapshot === snapshot) return projectCache.rows
-    const items: HostWorkspaceListSnapshot['items'] = snapshot.items
-    const rows: SearchRow[] = items.map(workspace => ({
+    return rowMemos.projects.get([snapshot], () => snapshot.items.map(workspace => ({
       kind: 'project',
       id: `project:${workspace.workspaceId}`,
       title: workspace.title,
       detail: workspace.path,
       label: workspace.path,
-      run() {
-        const ui = hostUiWorkspace(ctx)
-        if (ui === null) throw new Error('search: the host has no workspace actions')
-        ui.startSession(workspace.workspaceId)
-      },
-    }))
-    projectCache = { snapshot, rows }
-    return rows
+      run() { workspaceActions().startSession(workspace.workspaceId) },
+    })))
   }
 
   function pluginText(value: unknown): string {
@@ -248,9 +243,9 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
   }
 
   function pluginRows(): SearchRow[] {
-    if (plugins === null) return []
-    if (pluginCache?.source === plugins) return pluginCache.rows
-    const rows: SearchRow[] = plugins.map(bundle => {
+    const bundles = plugins
+    if (bundles === null) return []
+    return rowMemos.plugins.get([bundles], () => bundles.map(bundle => {
       const title = (bundle.meta && pluginText(bundle.meta.title)) || shortPackageName(bundle.name)
       return {
         kind: 'plugin',
@@ -261,9 +256,7 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
         label: bundle.name,
         run() { hostPluginNavigation(ctx).openBundle(bundle.name) },
       }
-    })
-    pluginCache = { source: plugins, rows }
-    return rows
+    }))
   }
 
   /**
@@ -307,21 +300,19 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
   }
 
   function skillRows(): SearchRow[] {
-    if (skills === null || skillSessionId === null) return []
+    const listed = skills
+    if (listed === null || skillSessionId === null) return []
     const sessions = hostSessions(ctx)
     const binding = sessions ? sessions.binding(skillSessionId) : null
     if (!binding) return []
-    if (skillCache?.source === skills && skillCache.binding === binding) return skillCache.rows
-    const rows: SearchRow[] = skills.map(skill => ({
+    return rowMemos.skills.get([listed, binding], () => listed.map(skill => ({
       kind: 'skill',
       id: `skill:${skill.name}`,
       title: `/${skill.name}`,
       detail: skill.description || '',
       label: skill.description || '',
       run() { insertSkill(binding, skill.name) },
-    }))
-    skillCache = { source: skills, binding, rows }
-    return rows
+    })))
   }
 
   function loadSkills(owner: number): Promise<void> {
@@ -345,44 +336,44 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
     if (!shortcuts) return []
     const catalog = shortcuts.catalog.getSnapshot()
     const fixed = shortcuts.fixedCatalog.getSnapshot()
-    if (shortcutCache?.catalog === catalog && shortcutCache.fixed === fixed) return shortcutCache.rows
-    const rows: SearchRow[] = []
-    const seen = new Set<string>()
-    const add = (entry: HostShortcutRow) => {
-      const label = entry.label
-      if (seen.has(entry.id) || label === undefined || label === '') return
-      seen.add(entry.id)
-      rows.push({
-        kind: 'shortcut',
-        id: `shortcut:${entry.id}`,
-        title: label,
-        keys: entry.keys,
-        label: (entry.aliases || []).join(' '),
-        run() { openShortcutReference(label) },
-      })
-    }
-    catalog.forEach(add)
-    fixed.forEach(add)
-    shortcutCache = { catalog, fixed, rows }
-    return rows
+    return rowMemos.shortcuts.get([catalog, fixed], () => {
+      const rows: SearchRow[] = []
+      const seen = new Set<string>()
+      const add = (entry: HostShortcutRow) => {
+        const label = entry.label
+        if (seen.has(entry.id) || label === undefined || label === '') return
+        seen.add(entry.id)
+        rows.push({
+          kind: 'shortcut',
+          id: `shortcut:${entry.id}`,
+          title: label,
+          keys: entry.keys,
+          label: (entry.aliases || []).join(' '),
+          run() { openShortcutReference(label) },
+        })
+      }
+      catalog.forEach(add)
+      fixed.forEach(add)
+      return rows
+    })
   }
 
+  /** The action rows, rebuilt when the shortcut catalogs their keycaps come from move. */
   function actionRows() {
     const shortcuts = hostShortcuts(ctx)
     const catalog = shortcuts?.catalog.getSnapshot() ?? null
     const fixed = shortcuts?.fixedCatalog.getSnapshot() ?? null
-    if (actionCache?.catalog === catalog && actionCache.fixed === fixed) return actionCache.rows
+    return rowMemos.actions.get([catalog, fixed], buildActionRows)
+  }
+
+  function buildActionRows() {
     const rows: SearchRow[] = [{
       kind: 'action',
       id: 'action:new-session',
       icon: 'newSession',
       title: copy('searchActionNewSession'),
       keys: commandKeys('session.new'),
-      run() {
-        const ui = hostUiWorkspace(ctx)
-        if (ui === null) throw new Error('search: the host has no workspace actions')
-        ui.startSession()
-      },
+      run() { workspaceActions().startSession() },
     }]
     if (hostPluginNavigation(ctx)) {
       rows.push({
@@ -413,7 +404,6 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
         run() { openShortcutReference('') },
       })
     }
-    actionCache = { catalog, fixed, rows }
     return rows
   }
 
@@ -450,7 +440,7 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
   function open(onLoaded: () => void) {
     generation++
     const owner = generation
-    clearRowCaches()
+    clearRowMemos()
     plugins = null
     skills = null
     skillSessionId = null
@@ -474,7 +464,7 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
 
   function close() {
     generation++
-    clearRowCaches()
+    clearRowMemos()
   }
 
   /**
