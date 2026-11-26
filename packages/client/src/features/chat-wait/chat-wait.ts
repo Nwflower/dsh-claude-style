@@ -28,11 +28,6 @@ interface WaitLine {
   label: HTMLElement
   clock: HTMLElement
   badge: HTMLElement
-  /** The clock and overtime inputs retained by the last complete row sync. */
-  clockStart: number | null
-  waitKey: string | null
-  sessionId: string | null
-  hasTarget: boolean
   /** What the row's wording is held under (syncRow): `session:turn` where the snapshot says it, the row itself before that. */
   key: string | HTMLElement
 }
@@ -261,7 +256,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const loader = buildLoader()
     line.append(loader, label, clock, badge)
     words.after(line)
-    const parts = { line, loader, label, clock, badge, key, clockStart: null, waitKey: null, sessionId: null, hasTarget: false }
+    const parts = { line, loader, label, clock, badge, key }
     // The line is recorded before its loader starts: wait-loader.ts throws on a
     // lane, fade length or turn the stylesheet leaves out, and with the record
     // unwritten every pass would put up another line and another set of dots
@@ -405,10 +400,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const key: string | HTMLElement = sessionId !== null && turn !== undefined ? `${sessionId}:${turn.turn}` : row
     if (typeof key === 'string') live.add(key)
     const line = lineOf(row, words, key)
-    const { loader, label } = line
-    line.clockStart = turn?.start?.time ?? null
-    line.sessionId = sessionId
-    line.hasTarget = target !== null
+    const { loader, label, clock, badge } = line
     // What the turn is doing, and the one word its brand waits on for a turn
     // whose state cannot be read (D74). Under the Precise choice three states
     // carry words of their own — a call's file, a command's description, the
@@ -419,7 +411,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const prefs = readPrefs()
     const precise = prefs.statusDetail === true
     const activity = activityWords(snapshot, turn, precise)
-    line.waitKey = snapshot !== null && turn !== undefined && activity === null && typeof key === 'string' ? key : null
     // One word stands for the model thinking and for a wait nothing can be read
     // from (shared/turn-activity): the skin's under Claude, the host's under
     // DeepSeek. The thinking state answers no word of its own, so the clause
@@ -442,22 +433,21 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // output ends past the minimum gap (wait-loader.ts): activity is non-null
     // exactly while the model thinks, calls a tool or writes its answer.
     setWaitLoaderOutputting(loader, activity !== null)
-    if (line.waitKey !== null) {
-      seen.add(line.waitKey)
-      if (!waits.has(line.waitKey)) waits.set(line.waitKey, waitStart(turn!, now))
+    const started = turn?.start?.time ?? null
+    clock.hidden = started === null
+    if (started !== null) writeTextInPlace(clock, formatHostDuration(Math.max(1000, now - started), t))
+    let overtime = false
+    if (snapshot !== null && turn !== undefined && activity === null && typeof key === 'string') {
+      seen.add(key)
+      let began = waits.get(key)
+      if (began === undefined) {
+        began = waitStart(turn, now)
+        waits.set(key, began)
+      }
+      overtime = now - began >= overtimeMargin(sessionStatsOf(sessionId))
     }
-    syncClockAndBadge(line, now, t)
+    syncBadge(badge, overtime)
     if (!row.hasAttribute(WAIT_ATTR)) row.setAttribute(WAIT_ATTR, '')
-  }
-
-  /** The seconds and the overtime badge, shared by the row pass and the clock tick. */
-  function syncClockAndBadge(line: WaitLine, now: number, t: HostText) {
-    line.clock.hidden = line.clockStart === null
-    if (line.clockStart !== null) writeTextInPlace(line.clock, formatHostDuration(Math.max(1000, now - line.clockStart), t))
-    const began = line.waitKey === null ? null : waits.get(line.waitKey)
-    const overtime = began !== null && began !== undefined && line.sessionId !== null &&
-      now - began >= overtimeMargin(sessionStatsOf(line.sessionId))
-    syncBadge(line.badge, overtime)
   }
 
   /**
