@@ -1,16 +1,14 @@
 import { SESSION_ROW_KEY_ATTRIBUTE, WORKSPACE_ROW_EXPANDED_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
+import { hostSessionStatus, hostSessions, hostSnapshot, hostWorkspaceView, hostWorkspaces } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import { readPrefs } from '../../core/prefs'
-import { createWorkspaceRunning } from '../../shared/workspace-running'
-import type { WorkspaceRunningReader, WorkspaceRunningReading } from '../../shared/workspace-running'
+import { createIdentityMemo } from '../../shared/identity-memo'
+import { createSourceFollow } from '../../shared/source-follow'
 import { WorkspaceRunningMark } from './group-mark'
 import { runningWorkspaces } from './running-groups'
 
 /** The host keys a workspace row `workspace:` and the Workspace id. */
 const KEY_PREFIX = 'workspace:'
-
-/** The mark set a reading without an answer stands for. */
-const NO_MARKS: ReadonlySet<string> = new Set()
 
 /**
  * The mark a closed workspace row carries while a session under it runs.
@@ -18,31 +16,28 @@ const NO_MARKS: ReadonlySet<string> = new Set()
  * The session rows are not on the page while their workspace stands closed, so
  * the reading comes from the host's own lists: the sessions running now
  * (`uiSession.sessionStatus`, with the list's summary behind it) and the
- * workspace each one belongs to (`workspaces.list`). The shared reader
- * (shared/workspace-running.ts) keeps those lists and their subscriptions for
- * this generation; the mark set it answers with is rebuilt only when one of
- * them moves. The rows are written in the pass's write phase, after the measure
- * has taken the whole reading.
+ * workspace each one belongs to (`workspaces.list`). The workspace ids are
+ * rebuilt only when one of those snapshots moved; the page rows are walked every
+ * pass because they change without a host list moving. The rows are written in
+ * the pass's write phase, after the measure has taken the whole reading.
  */
 export class WorkspaceGroupStatus {
   /** 按行: the mark each marked row owns, dropped when the row leaves the document. */
   private readonly marks = new Map<HTMLElement, WorkspaceRunningMark>()
   /** 按行: the rows that carry a mark after the last measure, rebuilt from the page's rows. */
   private wanted = new Set<HTMLElement>()
-  /** The host reading this mark follows, owned by this generation and dropped with dispose. */
-  private readonly running: WorkspaceRunningReader
-  /** Per generation: the reading the mark set was built from; a new reading means its sources moved. */
-  private markedFor: WorkspaceRunningReading | null = null
-  /** Per generation: the workspace ids the last reading marked, reused while that reading stands. */
-  private marked: ReadonlySet<string> = NO_MARKS
+  /** The three lists this mark reads, followed so a status change with no page node asks for a pass. */
+  private readonly sources: ReturnType<typeof createSourceFollow>
+  /** The workspace ids holding a running session, kept while the snapshots they came from stand. */
+  private readonly marked = createIdentityMemo<ReadonlySet<string> | null>()
 
   /**
    * @param ctx - the host context the lists are read from.
    * @param rows - the workspace rows on the page.
    * @param schedule - asks for the pass that writes what a moving status means.
    */
-  constructor(ctx: HostContext, private readonly rows: () => HTMLElement[], schedule: () => void) {
-    this.running = createWorkspaceRunning(ctx, schedule)
+  constructor(private readonly ctx: HostContext, private readonly rows: () => HTMLElement[], schedule: () => void) {
+    this.sources = createSourceFollow(schedule)
   }
 
   measure() {
@@ -67,45 +62,61 @@ export class WorkspaceGroupStatus {
     }
   }
 
-  /**
-   * The rows that should carry a mark now: closed workspaces holding a running
-   * session. The workspace ids come from the shared reading and are rebuilt only
-   * when one of its sources moved; the page rows are walked every pass because
-   * they change without a host list moving.
-   */
+  /** The workspace ids a closed row is marked for, or null while the lists have not answered. */
+  private runningIds(): ReadonlySet<string> | null {
+    const statusSource = hostSessionStatus(this.ctx)
+    const sessionsSource = hostSessions(this.ctx)?.list ?? null
+    const workspacesSource = hostWorkspaces(this.ctx)?.list ?? null
+    this.sources.follow([statusSource, sessionsSource, workspacesSource])
+    const workspaces = hostSnapshot(workspacesSource)
+    const sessions = hostSnapshot(sessionsSource)
+    const status = hostSnapshot(statusSource)
+    const view = hostWorkspaceView(this.ctx)
+    const nested = view !== null && view.getSnapshot().groupBy === 'workspace-tree'
+    return this.marked.get([workspaces, sessions, status, nested], () => {
+      // A list that has not answered says nothing about who runs; no mark is
+      // drawn from a guess, and a mark already standing is taken away.
+      if (workspaces === null || sessions === null || workspaces.phase === 'pending' || !Array.isArray(workspaces.items)) return null
+      const running = new Set<string>()
+      for (const id of sessions.ids) {
+        const summary = sessions.byId?.[id]
+        if (summary === undefined || summary === null || summary.origin === 'subagent') continue
+        const live = typeof status?.get === 'function' ? status.get(id)?.running : undefined
+        if ((live ?? summary.running) === true) running.add(id)
+      }
+      return runningWorkspaces(workspaces.items, running, nested)
+    })
+  }
+
+  /** The rows that should carry a mark now: closed workspaces holding a running session. */
   private read(): Set<HTMLElement> {
     // 按行: one measure's wanted rows, all still on the page.
     const wanted = new Set<HTMLElement>()
+    let marked: ReadonlySet<string> | null
     try {
-      const reading = this.running.read()
-      if (reading !== this.markedFor) {
-        this.markedFor = reading
-        this.marked = reading.answered && reading.workspaces !== null
-          ? runningWorkspaces(reading.workspaces.items, reading.running, reading.nested)
-          : NO_MARKS
-      }
+      marked = this.runningIds()
     } catch {
       // A service the host tore down still hands out its old source, and that
       // source throws. The native row status the feature exists for stands
       // without the group mark, so the throw stops at this addition.
       return wanted
     }
+    if (marked === null) return wanted
     for (const row of this.rows()) {
       const key = row.getAttribute(SESSION_ROW_KEY_ATTRIBUTE)
       if (key === null || !key.startsWith(KEY_PREFIX)) continue
       if (row.getAttribute(WORKSPACE_ROW_EXPANDED_ATTRIBUTE) === 'true') continue
-      if (!this.marked.has(key.slice(KEY_PREFIX.length))) continue
+      if (!marked.has(key.slice(KEY_PREFIX.length))) continue
       wanted.add(row)
     }
     return wanted
   }
 
   dispose() {
-    this.running.dispose()
+    this.sources.release()
+    this.marked.clear()
     for (const mark of this.marks.values()) mark.dispose()
     this.marks.clear()
     this.wanted.clear()
-    this.markedFor = null
-    this.marked = NO_MARKS
   }
 }

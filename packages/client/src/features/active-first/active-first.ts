@@ -1,10 +1,12 @@
 import { SESSION_ONGOING_SELECTOR, SESSION_PHASE_ATTRIBUTE, SESSION_ROW_KEY_ATTRIBUTE, SESSION_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
+import { hostSnapshot, hostWorkspaceView, hostWorkspaces } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
+import type { HostWorkspaceListSnapshot } from '@dsh-claude-style/contracts/services'
 import { PART_ATTR } from '../../constants'
 import { sessionSeatSegments } from '../../shared/element-order'
-import { createWorkspaceRunning } from '../../shared/workspace-running'
+import { createSourceFollow } from '../../shared/source-follow'
 
 const GROUP = '[' + PART_ATTR + '~="group-section"]'
 const LIST = '[' + PART_ATTR + '~="list"], ' + GROUP
@@ -35,6 +37,14 @@ function visualOrder(list: HTMLElement, seats: Map<Element, HTMLElement>, pins: 
     ordered.splice(at, segment.length, ...segment.map(seat => seat.box))
   }
   return ordered.some((child, index) => child !== children[index]) ? ordered : null
+}
+
+/** The pinned sessions as row keys, archived ones left out; null while the list cannot say. */
+function pinnedKeys(snapshot: HostWorkspaceListSnapshot | null): ReadonlySet<string> | null {
+  if (snapshot === null || snapshot.phase === 'pending') return null
+  if (!Array.isArray(snapshot.pinnedSessionIds) || !Array.isArray(snapshot.archivedSessionIds)) return null
+  const archived = new Set(snapshot.archivedSessionIds)
+  return new Set(snapshot.pinnedSessionIds.filter(id => !archived.has(id)).map(id => 'session:' + id))
 }
 
 export function install(ctx: HostContext) {
@@ -71,16 +81,17 @@ export function install(ctx: HostContext) {
   }
 
   function refresh() {
-    const reading = workspaceRunning.read()
-    const view = reading.view
+    const view = hostWorkspaceView(ctx)
+    const workspaces = hostWorkspaces(ctx)?.list ?? null
+    // The view store and the workspace list move without a page node: the
+    // grouping the view menu writes, the pins the list publishes (D40).
+    sources.follow([view, workspaces])
     // 按行：本次刷新生成当前需要显示排序的列表。
     const next = new Map<HTMLElement, HTMLElement[]>()
-    // The host's view store is followed by the shared reader: its subscription
-    // still decides whether this layout applies (only the rendered instance
-    // publishes mode changes), while the grouping and pins come from the same
-    // reading the group mark uses.
-    if (view !== null && typeof view.subscribe === 'function' && reading.viewSnapshot?.orderBy === 'updated' && !document.body.hasAttribute(DATE_MODE)) {
-      const pins = reading.pinnedKeys
+    // Only the rendered instance publishes mode changes, so a store without a
+    // subscription cannot say whether this layout applies.
+    if (view !== null && typeof view.subscribe === 'function' && view.getSnapshot().orderBy === 'updated' && !document.body.hasAttribute(DATE_MODE)) {
+      const pins = pinnedKeys(hostSnapshot(workspaces))
       if (pins !== null) {
         // 按行：本次刷新内按父节点收集宿主当前的座位。
         const lists = new Map<HTMLElement, Map<Element, HTMLElement>>()
@@ -106,9 +117,7 @@ export function install(ctx: HostContext) {
     cancelFrame = requestFrame({ write() { cancelFrame = null; refresh() } })
   }
 
-  // The lists and the view store are followed once for this generation; a
-  // source event asks for this layout's pass like any other change (D40).
-  const workspaceRunning = createWorkspaceRunning(ctx, schedule)
+  const sources = createSourceFollow(schedule)
 
   const rows = observeMatches<HTMLElement>(SESSION_ROW_SELECTOR, schedule)
   const stopDate = subscribeMutations(document.body, { attributeFilter: [DATE_MODE] }, schedule)
@@ -129,7 +138,7 @@ export function install(ctx: HostContext) {
     stopRows()
     stopDate()
     rows.release()
-    workspaceRunning.dispose()
+    sources.release()
     cancelFrame?.()
     render(new Map())
   }
