@@ -20,6 +20,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### 问题修复
 
 - 修复延后变更批次在订阅筛选结果为空时越过分发预算、长时间占用主线程
+- 修复等待行所在的行未显示时，加载点切换动作在控制台抛出错误
 
 ### 移除
 
@@ -39,6 +40,7 @@ All notable changes to `dsh-claude-style` are documented here, newest first.
 ### Bug Fixes
 
 - Keep deferred mutation batches within the dispatch budget when a subscription selects no records
+- Stop the waiting loader from throwing console errors when it switches motion while its row is not displayed
 
 ### Removals
 

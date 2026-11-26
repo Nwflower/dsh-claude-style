@@ -1,4 +1,4 @@
-import { buildElement } from '@dsh-claude-style/engine/dom'
+import { buildElement, rendered } from '@dsh-claude-style/engine/dom'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { motionReduced } from '../../core/prefs'
 import { motionEase, motionEaseAt, motionMs } from '../../shared/motion'
@@ -470,15 +470,18 @@ function handOver(loader: HTMLElement, state: LoaderState, from: WaitLoaderMotio
   dropHandOver(loader)
   state.motion = to
   const handOvers = ++state.handOvers
-  if (from === null) {
-    // Under the Reduced choice there is no motion to read and none to hand over:
-    // the lane is placed on the still frame its stylesheet keeps for it.
-    if (motionReduced()) place(loader, to, null)
-    else open(loader, to)
+  // Under the Reduced choice there is no motion to read and none to hand over:
+  // the lane is placed on the still frame its stylesheet keeps for it. A loader
+  // the page does not render takes the lane in place too, and the lane's motion
+  // runs from the top once it renders: under an undisplayed ancestor its dots
+  // carry no CSS animation to read, and in a row content-visibility skips
+  // (row-skip.css) their motions stand still while every read lays the row out.
+  if (motionReduced() || !rendered(loader)) {
+    place(loader, to, null)
     return
   }
-  if (motionReduced()) {
-    place(loader, to, null)
+  if (from === null) {
+    open(loader, to)
     return
   }
   const animations = morph(loader, from, to)

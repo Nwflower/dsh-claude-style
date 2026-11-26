@@ -4,7 +4,7 @@ import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { copy } from './copy'
 import type { CopyKey } from './copy'
 import { motionReduced } from '../../core/prefs'
-import { buildElement } from '@dsh-claude-style/engine/dom'
+import { buildElement, rendered } from '@dsh-claude-style/engine/dom'
 import { motionMs } from '../../shared/motion'
 import { inPagePixels } from '../../shared/page-zoom'
 import { SWEEP_BAND_CLASS, buildSweepBand } from '../../shared/sweep-band'
@@ -76,8 +76,6 @@ export const PROCESS_SUMMARY_CLASS = 'dsh-claude-process-summary'
 const FIT_CLASS = 'dsh-claude-process-summary-fit'
 /** On the band's copy of the figures, which lays them out the way the summary does (fold.css). */
 const GLYPHS_CLASS = 'dsh-claude-process-summary-glyphs'
-/** What a header has to be for its wording to be measured: rendered, and in a row content-visibility does not skip. */
-const RENDERED: CheckVisibilityOptions = { contentVisibilityAuto: true }
 
 /** Count direct body rows only; calls nested inside a tool row are not separate group items. */
 export function countProcessItems(content: Element): ProcessCounts {
@@ -403,7 +401,7 @@ export function createProcessSummary() {
       const shown: Element[] = []
       for (const entry of entries) {
         const header = entry.target as HTMLElement
-        if (!unseen.has(header) || !header.checkVisibility(RENDERED)) continue
+        if (!unseen.has(header) || !rendered(header)) continue
         const group = header.closest(PROCESS_GROUP_SELECTOR)
         if (group !== null) shown.push(group)
       }
@@ -483,7 +481,7 @@ export function createProcessSummary() {
         deferred.set(candidate, sentence)
         continue
       }
-      if (!header.checkVisibility(RENDERED)) {
+      if (!rendered(header)) {
         unseen.add(header)
         continue
       }

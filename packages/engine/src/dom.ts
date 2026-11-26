@@ -75,6 +75,18 @@ export function shown(element: Element): boolean {
   return element.checkVisibility(SHOWN)
 }
 
+/** What the page renders: no `display: none` above it and no row content-visibility skips. */
+const RENDERED = { contentVisibilityAuto: true }
+
+/**
+ * Whether the page renders this element now. A skipped or undisplayed subtree
+ * runs none of its CSS animations, and a style or layout read inside it lays
+ * that subtree out on its own every time it is read.
+ */
+export function rendered(element: Element): boolean {
+  return element.checkVisibility(RENDERED)
+}
+
 /**
  * Track one stylesheet mark across React node replacement, removing it from the old node.
  * `mark(null)` and `release()` clear it; unchanged values avoid style invalidation.
