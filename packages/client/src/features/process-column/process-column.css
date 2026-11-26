@@ -99,10 +99,35 @@ body[data-dsh-claude-style][data-dsh-claude-process-column] [data-step-process-c
 }
 
 /* ---------- the settings card's sample ---------- */
-/* A process group in miniature: the header's counted line, then three rows —
-   a thought, a call, a thought — in the host's flat list or in the card. */
-body[data-dsh-claude-style] .dsh-claude-process-card {
-  padding: 12px;
+/* A process group in miniature inside a conversation-canvas stage: the counted
+   summary header with its expanded chevron, three rows — a thought, a call, a
+   thought — in the host's flat list or in the single-column card, and the
+   choice's label underneath. Names `.dsh-claude-preview-picker` to outrank
+   settings-cards.css (rank 315), which follows this sheet (rank 172). */
+body[data-dsh-claude-style] .dsh-claude-preview-picker .dsh-claude-process-card {
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 8px;
+  min-width: 0;
+}
+
+body[data-dsh-claude-style] .dsh-claude-process-card > .dsh-claude-settings-card-label {
+  text-align: center;
+}
+
+body[data-dsh-claude-style] .dsh-claude-process-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 10px 11px;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 7px;
+  background: var(--dsw-alias-bg-base);
+  box-sizing: border-box;
+  min-width: 0;
+  overflow: hidden;
 }
 
 body[data-dsh-claude-style] .dsh-claude-process-sample {
@@ -111,10 +136,37 @@ body[data-dsh-claude-style] .dsh-claude-process-sample {
   flex-direction: column;
   gap: 6px;
   min-width: 0;
-  color: var(--dsw-alias-label-secondary);
+  color: var(--dsw-alias-label-tertiary);
   font-size: calc(11px * var(--dsh-claude-interface-font-scale, 1));
   line-height: 16px;
   text-align: start;
+}
+
+body[data-dsh-claude-style] .dsh-claude-process-sample-head {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  max-width: 100%;
+  min-width: 0;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-process-sample-head-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body[data-dsh-claude-style] .dsh-claude-process-sample-head::after {
+  content: "";
+  flex: none;
+  width: 11px;
+  height: 11px;
+  margin-inline-start: 3px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 
 body[data-dsh-claude-style] .dsh-claude-process-sample-body {
@@ -125,30 +177,45 @@ body[data-dsh-claude-style] .dsh-claude-process-sample-body {
 
 body[data-dsh-claude-style] .dsh-claude-process-sample[data-layout="column"] .dsh-claude-process-sample-body {
   gap: 0;
+  border-radius: 6px;
 }
 
 body[data-dsh-claude-style] .dsh-claude-process-sample-row {
   display: flex;
   align-items: center;
+  min-height: 20px;
   min-width: 0;
   white-space: nowrap;
 }
 
 body[data-dsh-claude-style] .dsh-claude-process-sample[data-layout="column"] .dsh-claude-process-sample-row {
   min-height: 24px;
+  padding-inline: 9px;
 }
 
+/* Host `think-outline` and `search-outline` marks drawn at preview scale. */
 body[data-dsh-claude-style] .dsh-claude-process-sample-icon {
   flex: none;
-  width: 8px;
-  height: 8px;
-  margin-inline-end: 6px;
-  border: 1px solid currentColor;
-  border-radius: 50%;
+  width: 13px;
+  height: 13px;
+  margin-inline-end: 5px;
+  background: currentColor;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+body[data-dsh-claude-style] .dsh-claude-process-sample-row[data-kind="thought"] .dsh-claude-process-sample-icon {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M10.285 5.715c2.682 2.682 3.833 5.879 2.571 7.141-1.262 1.262-4.459.111-7.141-2.571C3.033 7.603 1.882 4.406 3.144 3.144c1.262-1.262 4.459-.111 7.141 2.571Z' stroke='black' stroke-width='1.2'/%3E%3Cpath d='M10.285 10.285c-2.681 2.682-5.879 3.833-7.141 2.571-1.262-1.262-.111-4.459 2.571-7.141 2.682-2.682 5.879-3.833 7.141-2.571 1.262 1.262.111 4.459-2.571 7.141Z' stroke='black' stroke-width='1.2'/%3E%3Ccircle cx='8' cy='8' r='0.95' fill='black'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M10.285 5.715c2.682 2.682 3.833 5.879 2.571 7.141-1.262 1.262-4.459.111-7.141-2.571C3.033 7.603 1.882 4.406 3.144 3.144c1.262-1.262 4.459-.111 7.141 2.571Z' stroke='black' stroke-width='1.2'/%3E%3Cpath d='M10.285 10.285c-2.681 2.682-5.879 3.833-7.141 2.571-1.262-1.262-.111-4.459 2.571-7.141 2.682-2.682 5.879-3.833 7.141-2.571 1.262 1.262.111 4.459-2.571 7.141Z' stroke='black' stroke-width='1.2'/%3E%3Ccircle cx='8' cy='8' r='0.95' fill='black'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
+}
+
+body[data-dsh-claude-style] .dsh-claude-process-sample-row[data-kind="tool"] .dsh-claude-process-sample-icon {
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round'%3E%3Ccircle cx='6.6' cy='6.5' r='4.8'/%3E%3Cpath d='M10.2 10.2l4.1 4.1'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.3' stroke-linecap='round'%3E%3Ccircle cx='6.6' cy='6.5' r='4.8'/%3E%3Cpath d='M10.2 10.2l4.1 4.1'/%3E%3C/svg%3E") center / 12px 12px no-repeat;
 }
 
 body[data-dsh-claude-style] .dsh-claude-process-sample-title {
   flex: none;
+  color: var(--dsw-alias-label-secondary);
 }
 
 /* The host's separator is a 2px dot between the kind word and the description. */
@@ -158,11 +225,17 @@ body[data-dsh-claude-style] .dsh-claude-process-sample-sep {
   height: 2px;
   margin-inline: 5px;
   border-radius: 50%;
-  background: currentColor;
+  background: var(--dsw-alias-label-caption);
 }
 
 body[data-dsh-claude-style] .dsh-claude-process-sample-text {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--dsw-alias-label-tertiary);
+}
+
+/* In the column card a thought's description stands alone as the row's line. */
+body[data-dsh-claude-style] .dsh-claude-process-sample[data-layout="column"] .dsh-claude-process-sample-row[data-kind="thought"] .dsh-claude-process-sample-text {
+  color: var(--dsw-alias-label-secondary);
 }
