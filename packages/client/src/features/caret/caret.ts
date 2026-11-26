@@ -1,5 +1,5 @@
 import { CARET_ATTR, CARET_FIELD_ATTR, CARET_HOST_ATTR, CARET_LAYER_ATTR, CARET_MOTION_OFF, CARET_VISIBLE_ATTR, QUIET_ATTR } from '../../constants'
-import { subscribeMutations } from '@dsh-claude-style/engine/bus'
+import { observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { caretClipToField, caretMeasurePlain, caretMeasureRich, noteFacesLoaded, noteMeasuredFamily } from './caret-measure'
@@ -197,12 +197,20 @@ export function createCaretMotion(read: () => string) {
       watchedSurfaces.delete(surface)
     }
     if (watchedSurfaces.has(input)) return
-    watchedSurfaces.set(input, subscribeMutations(input, {
+    const stopMutations = subscribeMutations(input, {
       childList: true,
       subtree: true,
       characterData: true,
       attributeFilter: ['contenteditable', 'data-composer-input'],
-    }, onContentChange))
+    }, onContentChange)
+    // Lines can change height with no edit and no selection event: the draft's
+    // in-place rendering resizes them in a frame's write phase, after this
+    // frame's measurement was read (D115). The surface's size moving says so.
+    const stopSize = observeSize(input, onContentChange)
+    watchedSurfaces.set(input, () => {
+      stopMutations()
+      stopSize()
+    })
   }
 
   /** The focus is on this surface and no caret has been drawn yet: the gap a session switch leaves. */

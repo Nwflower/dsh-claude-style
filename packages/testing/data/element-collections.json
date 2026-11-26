@@ -16,7 +16,7 @@
     "packages/client/src/features/chat-reveal/reveal-engine.ts": 2,
     "packages/client/src/features/chat-send/send-flight.ts": 2,
     "packages/client/src/features/chat-wait/chat-wait.ts": 7,
-    "packages/client/src/features/composer-markdown/composer-markdown.ts": 3,
+    "packages/client/src/features/composer-markdown/composer-markdown.ts": 4,
     "packages/client/src/features/composer/composer.ts": 6,
     "packages/client/src/features/composer/placeholder-copy.ts": 2,
     "packages/client/src/features/composer/responsive.ts": 5,

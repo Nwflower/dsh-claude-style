@@ -19,13 +19,13 @@ export default {
     const expected = {
       general: ['brand', 'username', 'pageZoom', 'interfaceFontSize', 'sodium', 'soundCues', 'systemNotifications'],
       appearance: ['sidebarBrand', 'brandLockup', 'typeface', 'homeLayout', 'homeSessionScope', 'homeRipple', 'mascot', 'mascotScope', 'palette', 'paletteCards', 'backgroundOpacity'],
-      'main-window': ['messageActions', 'rewindCheckpoints', 'rewindStorageLimit', 'rewindStorageDir', 'viewTabs', 'hideToolbarOutsideConversation', 'headerBand', 'processRows', 'answerAnchor', 'composerScope', 'composerBottomGap', 'questionCard', 'composerMarkdown', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable'],
+      'main-window': ['messageActions', 'rewindCheckpoints', 'rewindStorageLimit', 'rewindStorageDir', 'viewTabs', 'hideToolbarOutsideConversation', 'headerBand', 'processRows', 'answerAnchor', 'composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent', 'contextDisplay', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable'],
       sidebar: ['collapseFooter', 'banLocale', 'sidebarSearch', 'searchStyle', 'sidebarEntries', 'workspaceView', 'sidebarPeek', 'sidebarLayout', 'sessionPanel'],
       motion: ['motion', 'chatAnimations', 'chatWait', 'statusDetail', 'statusMotion', 'chatReveal', 'chatSend', 'messageEnter', 'caretMotion', 'ongoingIndicator', 'reasoningDisplay', 'autoPopover'],
     }
     const mainWindowGroups = [
       { label: 'Conversation', rows: ['messageActions', 'rewindCheckpoints', 'rewindStorageLimit', 'rewindStorageDir', 'viewTabs', 'hideToolbarOutsideConversation', 'headerBand', 'processRows', 'answerAnchor'] },
-      { label: 'Composer', rows: ['composerScope', 'composerBottomGap', 'questionCard', 'composerMarkdown', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent'] },
+      { label: 'Composer', rows: ['composerScope', 'composerBottomGap', 'questionCard', 'permissionsControl', 'modelPicker', 'effortSlider', 'modelOrder', 'modelDescriptions', 'quickProviders', 'peakrate', 'effortAccent'] },
       { label: 'Context and cost', rows: ['contextDisplay', 'statsPosition', 'statsFooterTokenFormat', 'billingCurrency', 'billingTable'] },
     ]
     const REWIND_CHILDREN = ['rewindCheckpoints', 'rewindStorageLimit', 'rewindStorageDir']

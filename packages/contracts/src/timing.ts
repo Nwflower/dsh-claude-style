@@ -4,7 +4,7 @@
  */
 
 /** The end-to-end lane's scenarios; the lane checks its own names against these. */
-export const E2E_SCENARIOS = ['conversation', 'systemTypography', 'messageActions', 'messageAnswerActions', 'messageRewindFiles', 'mobileHome', 'composerViewport', 'narrow', 'tool', 'fileMerge', 'send', 'sendFull', 'scroll', 'readerScroll', 'returnTail', 'turnSpacer', 'doorPin', 'streamPace', 'streamJitter', 'streamJitterFooter', 'streamJitterInline', 'motion', 'processSummary', 'reasoningStream', 'reasoningContinuous', 'waitLine', 'washLine', 'longSession', 'statsPosition', 'statsOverlay', 'statsFooter', 'sidebarRail', 'sidebarTrack', 'narrowWindow', 'sidebarPeek', 'rightbar', 'sessionPanel', 'contract', 'importance', 'remoteSettings', 'usernameComposition', 'usernameIme', 'customBrand', 'brandingPresets', 'brandingPresetUi', 'dsBot', 'shots'] as const
+export const E2E_SCENARIOS = ['conversation', 'systemTypography', 'messageActions', 'messageAnswerActions', 'messageRewindFiles', 'mobileHome', 'composerViewport', 'composerLive', 'narrow', 'tool', 'fileMerge', 'send', 'sendFull', 'scroll', 'readerScroll', 'returnTail', 'turnSpacer', 'doorPin', 'streamPace', 'streamJitter', 'streamJitterFooter', 'streamJitterInline', 'motion', 'processSummary', 'reasoningStream', 'reasoningContinuous', 'waitLine', 'washLine', 'longSession', 'statsPosition', 'statsOverlay', 'statsFooter', 'sidebarRail', 'sidebarTrack', 'narrowWindow', 'sidebarPeek', 'rightbar', 'sessionPanel', 'contract', 'importance', 'remoteSettings', 'usernameComposition', 'usernameIme', 'customBrand', 'brandingPresets', 'brandingPresetUi', 'dsBot', 'shots'] as const
 
 /** One timing assumption, and how it is held. */
 interface HostTimingEntry {

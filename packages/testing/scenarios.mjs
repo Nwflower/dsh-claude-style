@@ -34,6 +34,7 @@ import { messageRewindFilesScenario } from './scenarios/message-rewind-files.mjs
 import { systemTypographyScenario } from './scenarios/system-typography.mjs'
 import { mobileHomeScenario } from './scenarios/mobile-home.mjs'
 import { composerViewportScenario } from './scenarios/composer-viewport.mjs'
+import { composerLiveScenario } from './scenarios/composer-live.mjs'
 import { waitLineScenario } from './scenarios/wait-line.mjs'
 import { washLineScenario } from './scenarios/wash-line.mjs'
 import { longSessionScenario } from './scenarios/long-session.mjs'
@@ -212,6 +213,7 @@ const SCENARIOS = {
    */
   mobileHome: mobileHomeScenario(),
   composerViewport: { ...composerViewportScenario(), frames: true },
+  composerLive: composerLiveScenario(),
   narrow: {
     script: 'greeting',
     prompt: 'hello there',

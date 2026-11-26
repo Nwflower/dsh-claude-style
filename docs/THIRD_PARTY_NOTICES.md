@@ -4,7 +4,7 @@ This package includes material from the projects below. Each keeps its own licen
 
 ## Marked
 
-The composer Markdown preview bundles Marked to parse GitHub-flavoured Markdown.
+The composer's in-place Markdown rendering bundles Marked to parse GitHub-flavoured Markdown.
 
 Source: <https://github.com/markedjs/marked>
 
@@ -12,11 +12,27 @@ License: MIT. The copyright and license notices are shipped in `packages/client/
 
 ## DOMPurify
 
-The composer Markdown preview bundles DOMPurify to sanitize the parsed HTML before it enters the page.
+The composer's in-place Markdown rendering bundles DOMPurify to sanitize the parsed HTML before it enters the page.
 
 Source: <https://github.com/cure53/DOMPurify>
 
 License: Apache License 2.0. The license is shipped in `packages/client/src/features/composer-markdown/LICENSE-dompurify`.
+
+## KaTeX
+
+The composer's in-place Markdown rendering bundles KaTeX's script to lay out formulas. Its stylesheet and fonts are not shipped: the formulas are drawn against the copy the host page already loads.
+
+Source: <https://github.com/KaTeX/KaTeX>
+
+License: MIT. The copyright and license notices are shipped in `packages/client/src/features/composer-markdown/LICENSE-katex`.
+
+## marked-katex-extension
+
+The composer's in-place Markdown rendering bundles marked-katex-extension to find formulas in the Markdown it parses.
+
+Source: <https://github.com/UziTech/marked-katex-extension>
+
+License: MIT. The copyright and license notices are shipped in `packages/client/src/features/composer-markdown/LICENSE-marked-katex-extension`.
 
 ## dsh-chat-ux
 

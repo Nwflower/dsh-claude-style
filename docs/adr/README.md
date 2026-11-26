@@ -43,6 +43,7 @@
 | [D111](D111-rewind-yields-to-dsh-rewind.md) | fork 版本链承载消息回退，dsh-rewind 在场时交出写操作 | D105 |
 | [D113](D113-session-panel-section-fold.md) | 会话总览并入宿主会话面板并补齐节折叠，输入区统计栏独立配置 | D112、D110、D106、D102、D94 |
 | [D114](D114-sodium-silent-switch.md) | 钠改写只适配宿主并以静默开关呈现 | D109、D78 |
+| [D115](D115-composer-renders-in-place.md) | 输入框在原位显示渲染结果，宿主编辑器的节点一个不写 |  |
 
 ## 作废的编号
 

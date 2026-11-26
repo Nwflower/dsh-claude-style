@@ -343,8 +343,6 @@ export const PREFS = {
   /** The legacy boolean `false` maps to no popover. */
   autoPopover: { type: 'choice', values: AUTO_POPOVER_SCOPES, default: AUTO_POPOVER_ALL, legacy: { false: AUTO_POPOVER_OFF } },
   composerScope: { type: 'choice', values: COMPOSER_SCOPES, default: COMPOSER_SCOPE_ALL },
-  /** Render a sanitized live Markdown preview below the composer draft. */
-  composerMarkdown: { type: 'boolean', default: false },
   /** Whether the host's question card is redrawn and moved to the end of the conversation; off leaves it in the composer as the host draws it. */
   questionCard: { type: 'boolean', default: true },
   modelPicker: { type: 'boolean', default: true },

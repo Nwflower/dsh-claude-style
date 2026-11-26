@@ -13,6 +13,10 @@ export const SURFACE_STYLE_ID = 'dsh-claude-style-surface'
 export const WEBFONTS_STYLE_ID = 'dsh-claude-style-webfonts'
 /** The reveal's step rules, mounted by that feature alone so an off reveal costs no style recalculation (D108). */
 export const REVEAL_STYLE_ID = 'dsh-claude-style-reveal'
+/** The composer's per-card line rules, generated while the draft renders in place (D115). */
+export const COMPOSER_LIVE_STYLE_ID = 'dsh-claude-style-composer-live'
+/** Names a composer card in those rules; its value is the card's number for this install. */
+export const COMPOSER_LIVE_ATTR = 'data-dsh-claude-composer-live'
 
 /** Fallback profile entry id used when the running loader id is unavailable. */
 export const SETTINGS_ENTRY_FALLBACK = 'ui-skin-claude-style'
@@ -21,6 +25,7 @@ export const STYLE_PLUGIN_CSS = `${PACKAGE_NAME}/client.css`
 export const SURFACE_PLUGIN_CSS = `${PACKAGE_NAME}/surface.css`
 export const WEBFONTS_PLUGIN_CSS = `${PACKAGE_NAME}/webfonts.css`
 export const REVEAL_PLUGIN_CSS = `${PACKAGE_NAME}/reveal.css`
+export const COMPOSER_LIVE_PLUGIN_CSS = `${PACKAGE_NAME}/composer-live.css`
 /** A slash prevents the foreign-sheet tag from matching any package name (D9). */
 export const FOREIGN_SHEET_TAG = `${PACKAGE_NAME}/foreign-sheet`
 export const BUNDLE_CONFIG_SLOT = 'plugins.bundle.config'

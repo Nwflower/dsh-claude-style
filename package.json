@@ -63,6 +63,8 @@
     "packages/client/src/features/sodium/LICENSE",
     "packages/client/src/features/composer-markdown/LICENSE-marked",
     "packages/client/src/features/composer-markdown/LICENSE-dompurify",
+    "packages/client/src/features/composer-markdown/LICENSE-katex",
+    "packages/client/src/features/composer-markdown/LICENSE-marked-katex-extension",
     "docs/THIRD_PARTY_NOTICES.md"
   ],
   "keywords": [
@@ -115,7 +117,9 @@
     "esbuild": "0.28.2",
     "fast-check": "4.10.2",
     "jscpd": "5.3.3",
+    "katex": "0.18.7",
     "marked": "^18.3.0",
+    "marked-katex-extension": "^5.1.13",
     "playwright": "1.63.0",
     "pngjs": "^7.0.0",
     "postcss": "8.5.29",

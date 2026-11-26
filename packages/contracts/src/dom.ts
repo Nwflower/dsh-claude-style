@@ -89,6 +89,24 @@ export const COMPOSER_SELECTOR = '[data-composer-seat]'
 /** The composer's editable surface (contenteditable); the caret motion is drawn for it. */
 export const COMPOSER_INPUT_SELECTOR = '[data-composer-input]'
 /**
+ * One line of draft text in the host's Lexical plain-text editor. Each child
+ * of the input is a paragraph; a paragraph holds one such span per line with a
+ * `<br>` between lines, plus one more `<br>` Lexical keeps after a final line
+ * break, and the host's own widgets as further children. The in-place
+ * rendering selects lines by these positions and never writes into the editor
+ * (D115).
+ */
+export const COMPOSER_LINE_TEXT_SELECTOR = '[data-lexical-text]'
+/** A host text reference (`@file`, `/command`) the editor styles as a widget; its text is not Markdown. */
+export const COMPOSER_TEXT_REF_ATTRIBUTE = 'data-composer-text-ref'
+/**
+ * KaTeX output. The host's web frontend loads the KaTeX stylesheet and fonts
+ * for every page, for the formulas in messages; the composer's formulas are
+ * drawn against that sheet, so the plugin ships KaTeX's script at the host's
+ * version and none of its styles (D115).
+ */
+export const HOST_MATH_SELECTOR = '.katex'
+/**
  * Host composition state. Never move focus or rewrite selection while set:
  * doing so cancels uncommitted input in the contenteditable editor.
  */
