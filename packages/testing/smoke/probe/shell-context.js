@@ -111,14 +111,26 @@
       // from the new value, with no pass and no second hover. The figures count
       // to the new reading (features/context-stats/stats-count.ts), so the
       // reading waits for the count to arrive and the value part way there is
-      // neither the one before nor the one it heads for.
+      // neither the one before nor the one it heads for. Both states are read
+      // off the value's own text as the count moves it — the first frame it
+      // leaves the old reading, then the frame it reaches the new one — so a
+      // display that draws fewer frames a second is judged on the same count
+      // rather than on a pause that only covers it on a fast machine (D92).
+      var statsTotalOf = function () {
+        var node = document.querySelector('.dsh-claude-context-stats .dsh-claude-context-stats-value')
+        return node === null ? null : (node.textContent || '').trim()
+      }
+      var totalBefore = statsTotalOf()
       window.__pushStats('sessionStats', { llmMs: 61000 })
-      await sleep(120)
-      var statsDuring = document.querySelector('.dsh-claude-context-stats .dsh-claude-context-stats-value')
-      r.context.pushedDuring = statsDuring === null ? null : (statsDuring.textContent || '').trim()
-      await sleep(330)
-      var statsPushed = document.querySelector('.dsh-claude-context-stats .dsh-claude-context-stats-value')
-      r.context.pushed = statsPushed === null ? null : (statsPushed.textContent || '').trim()
+      var countingFrames = await probe.until(statsTotalOf, function (reads) {
+        var value = reads[reads.length - 1]
+        return value !== null && value !== totalBefore
+      }, 'the total counting to its new reading')
+      r.context.pushedDuring = countingFrames[countingFrames.length - 1]
+      var arrivedFrames = await probe.until(statsTotalOf, function (reads) {
+        return reads[reads.length - 1] === '1m1s'
+      }, 'the total reaching the new reading', 4000)
+      r.context.pushed = arrivedFrames[arrivedFrames.length - 1]
       if (statsFace !== null) statsFace.dispatchEvent(new MouseEvent('mouseleave'))
       await sleep(500)
       r.context.closedAfterLeave = document.querySelector('.dsh-claude-context-stats') === null

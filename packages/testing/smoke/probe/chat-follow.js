@@ -171,13 +171,50 @@
         slideFrames.push({ gap: endGap(), row: runningRow.getBoundingClientRect().top })
         return Math.round(new DOMMatrix(getComputedStyle(followColumn).transform).m42 * 10) / 10
       }
-      var sliding = function () {
-        return followColumn.getAnimations().length > 0
+      var columnOffset = function () {
+        return Math.round(new DOMMatrix(getComputedStyle(followColumn).transform).m42 * 10) / 10
       }
+      /**
+       * Walk a slide the page has started across its own clock (D92). The slide
+       * is a fixed-duration animation the display may render in only a frame or
+       * two on a slow runner, so stepping the animation's currentTime reads the
+       * whole sequence its own keyframes carry — the start, the intermediate
+       * frames and the rest — instead of the handful of frames the display
+       * happened to paint. The column and the counter-slid live row are stepped
+       * together, so the row stands still over the pin across the whole walk.
+       */
+      var sampleSlide = function (read) {
+        var all = followColumn.getAnimations().concat(runningRow.getAnimations())
+        var span = 0
+        all.forEach(function (animation) {
+          var timing = animation.effect === null ? null : animation.effect.getTiming()
+          if (timing !== null && typeof timing.duration === 'number') span = Math.max(span, timing.duration)
+        })
+        if (span <= 0) return []
+        // Freeze and step the page's own animations, then put them back on the
+        // clock they were on: the sampling is synchronous, so nothing paints and
+        // the product's slide keeps running exactly as it would have.
+        var saved = all.map(function (animation) { return { animation: animation, time: animation.currentTime, playing: animation.playState === 'running' } })
+        all.forEach(function (animation) { animation.pause() })
+        var readings = []
+        // The walk across the slide, then a quiet run at its rest: the case reads
+        // the last frames as the rest the walk arrived at (followQuietFrames).
+        var STEPS = 12
+        var QUIET = 8
+        for (var at = 0; at < STEPS + QUIET - 1; at += 1) {
+          var time = at < STEPS ? span * at / (STEPS - 1) : span
+          all.forEach(function (animation) { animation.currentTime = time })
+          readings.push(read())
+        }
+        saved.forEach(function (one) { one.animation.currentTime = one.time; if (one.playing) one.animation.play() })
+        return readings
+      }
+      var slideStarts = function () { return followColumn.getAnimations().length }
       // The pin the host's own follow writes; the slide starts in the frame it
-      // is laid out in, and is recorded from there the same way as the catch-up.
+      // is laid out in. Wait for the slide the page's own clock started, then walk it.
       followScroller.scrollTop = followScroller.scrollHeight
-      r.chatFollow.slide = await recordWalk(slideOffset, sliding)
+      await probe.until(slideStarts, function (reads) { return reads[reads.length - 1] > 0 }, 'the stream slide to start', 4000)
+      r.chatFollow.slide = sampleSlide(slideOffset)
       r.chatFollow.slideFrames = slideFrames
       r.chatFollow.slideDiag = {
         motion: document.body.getAttribute('data-dsh-claude-motion'),
@@ -189,41 +226,44 @@
       // too, from as much of it as a slide carries (chat-follow.ts), where a
       // growth that size used to read as a replaced column and jumped whole.
       // The lag recorded is the growth still to be put down: the column's
-      // offset while its slide runs, and the whole gap the scroller shows once
-      // the slide has ended with that distance never written.
-      var lagOf = function () {
-        var slide = followColumn.getAnimations()
-        if (slide.length > 0) return Math.round(new DOMMatrix(getComputedStyle(followColumn).transform).m42 * 10) / 10
-        return endGap()
-      }
+      // offset while its slide runs, which stepping its clock reads from the
+      // whole carried stretch down to rest.
       var burstBlock = document.createElement('div')
       burstBlock.style.height = '2000px'
       followColumn.insertBefore(burstBlock, runningRow)
       followScroller.scrollTop = followScroller.scrollHeight
-      r.chatFollow.burst = await recordWalk(lagOf, function () { return followColumn.getAnimations().length > 0 || endGap() > AT_END_PX })
+      await probe.until(slideStarts, function (reads) { return reads[reads.length - 1] > 0 }, 'the burst slide to start', 4000)
+      r.chatFollow.burst = sampleSlide(columnOffset)
       burstBlock.remove()
       await probe.settle()
       // The slide restarts from where the frame before it stood, not from the
       // linear share of its clock, and one growth is all the distance it may be
       // left carrying: a run at thirty milliseconds a growth measures the offset
       // the slide is drawn at on the frame after each landing, and the position
-      // the scroller shows there. A slide left running past the next growth
-      // reads a distance that grows with every step (D95).
+      // the scroller shows there. A slow display can merge two scripted steps
+      // into one larger growth, so each sampled frame carries the growth it
+      // actually took (the most recent one for a frame that took none), which is
+      // what the offset is bounded by (D92).
       var paceFrames = []
       var paced = document.createElement('div')
       paced.style.height = '20px'
+      // Read the column before the block lands, so the block's own insertion
+      // counts as the first growth the slide carries, not as a distance with no
+      // growth behind it.
+      var pacedHeight = followColumn.offsetHeight
       followColumn.insertBefore(paced, runningRow)
       followScroller.scrollTop = followScroller.scrollHeight
-      var nextFrame = probe.frame
+      var lastGrow = 0
       for (var step = 0; step < 8; step += 1) {
         await probe.sleep(30)
         paced.style.height = (24 + step * 20) + 'px'
         followScroller.scrollTop = followScroller.scrollHeight
-        await nextFrame()
-        paceFrames.push({
-          gap: endGap(),
-          offset: Math.round(new DOMMatrix(getComputedStyle(followColumn).transform).m42 * 10) / 10,
-        })
+        await probe.frame()
+        var nowHeight = followColumn.offsetHeight
+        var grew = nowHeight - pacedHeight
+        pacedHeight = nowHeight
+        if (grew > 0) lastGrow = grew
+        paceFrames.push({ gap: endGap(), offset: columnOffset(), grow: lastGrow })
       }
       await probe.sleep(600)
       r.chatFollow.pace = { frames: paceFrames, growth: 20, settled: endGap(), animations: followColumn.getAnimations().length }

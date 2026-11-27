@@ -38,21 +38,45 @@ async function watch(t, duration) {
     const seen = { frames: [], clickedAt: null, done: false }
     const pressed = () => { if (seen.clickedAt === null) seen.clickedAt = performance.now() - started }
     document.addEventListener('pointerdown', pressed, true)
+    // The host re-enumerates the directory for seconds after the press, so the
+    // answer may land after the recording's own stretch on a slow machine. The
+    // loop therefore records the whole window as before, but keeps going past
+    // its end — reading every frame — until the answer has landed and stood for
+    // a few quiet frames, so the same-pass judgement sees both texts change
+    // rather than a window that closed before they did (D92).
+    const GRACE = 15
+    const CAP = 9000
+    let first = null
+    let changedAt = null
     const read = () => {
       const name = document.querySelector(selectors.name)
       const level = document.querySelector(selectors.level)
-      seen.frames.push({
+      const frame = {
         at: Math.round((performance.now() - started) * 10) / 10,
         name: name === null ? null : (name.dataset.text ?? name.textContent),
         level: level === null || level.firstElementChild === null ? null : level.firstElementChild.textContent,
         trigger: level !== null && level.isConnected,
         seat: box(document.querySelector(selectors.seat)),
         card: box(document.querySelector(selectors.card)),
-      })
+      }
+      seen.frames.push(frame)
+      // Judge the change against the state at the press, not a frame before it:
+      // only frames at or after the press count toward the answer landing.
+      if (seen.clickedAt !== null) {
+        if (first === null) first = frame
+        else if (changedAt === null && (frame.name !== first.name || frame.level !== first.level)) changedAt = seen.frames.length - 1
+      }
+      return frame
     }
     const tick = () => {
       read()
-      if (performance.now() - started < duration) requestAnimationFrame(tick)
+      const elapsed = performance.now() - started
+      const afterPress = seen.clickedAt !== null
+      const landed = afterPress && changedAt !== null && seen.frames.length - 1 - changedAt >= GRACE
+      // Always record the whole duration window as before; only past its end
+      // does the loop wait, on the answer landing and standing quiet, up to CAP
+      // (D92).
+      if ((elapsed < duration || !landed) && elapsed < CAP) requestAnimationFrame(tick)
       else {
         document.removeEventListener('pointerdown', pressed, true)
         seen.done = true

@@ -23,7 +23,11 @@ export default {
       working.marked === true && working.besideWords === true && working.wordsShown === false, JSON.stringify(working))
     const loader = working.loader || {}
     const laneOf = (reading, name) => (reading.lanes || []).find((lane) => String(lane.name).includes(name)) || {}
-    const numbers = (text) => (String(text).match(/-?[\d.]+/g) || []).map(Number)
+    // Browser-serialized px can carry an exponent when a value lands on zero
+    // (e.g. "-5.32907e-15px" at the cross lane's exact centre); a regex that
+    // stops at the "e" splits that token into a bogus "-5.32907" and a bogus
+    // "-15", so the exponent is part of the number here (D92).
+    const numbers = (text) => (String(text).match(/-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?/g) || []).map(Number)
     const LANE_DOTS = [['is-bounce', 3], ['is-line', 3], ['is-orbit', 4], [CROSS_NAME, 3]]
     const OPENINGS = ['dsh-claude-wait-dot', 'dsh-claude-wait-dot-line', 'dsh-claude-wait-dot-orbit-1']
     // The cross keyframes are the wave's own name with the lane's suffix (chat-wait.css).

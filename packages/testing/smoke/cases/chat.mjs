@@ -103,8 +103,8 @@ export default {
     const paceFrames = pace.frames || []
     const carried = paceFrames.map((frame) => frame.offset)
     check('a run of small growths leaves the sliding column no further off the pin than the growth just taken',
-      paceFrames.length > 4 && paceFrames.every((frame) => Number.isFinite(frame.gap) && frame.gap <= pace.growth + bound('followSlideRowDriftPx')
-        && Number.isFinite(frame.offset) && frame.offset <= pace.growth + bound('streamSlideCarryTailPx')) &&
+      paceFrames.length > 4 && paceFrames.every((frame) => Number.isFinite(frame.gap) && frame.gap <= frame.grow + bound('followSlideRowDriftPx')
+        && Number.isFinite(frame.offset) && frame.offset <= frame.grow + bound('streamSlideCarryTailPx')) &&
         (pace.settled ?? 1) <= AT_END_PX,
       JSON.stringify({ ...pace, offsets: carried }))
     const shrink = follow.shrink || {}
