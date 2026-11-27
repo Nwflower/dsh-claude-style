@@ -16,5 +16,6 @@
   "messageFoldLess": { "zh": "收起", "en": "Show less" },
   "reasoningDisplayTitle": { "zh": "思考内容显示", "en": "Reasoning display" },
   "reasoningDisplayContinuous": { "zh": "逐字跟随", "en": "As it arrives" },
-  "reasoningDisplayStepped": { "zh": "两行步进", "en": "Two-line steps" }
+  "reasoningDisplayStepped": { "zh": "两行步进", "en": "Two-line steps" },
+  "reasoningDisplayCollapsed": { "zh": "保持折叠", "en": "Keep collapsed" }
 }

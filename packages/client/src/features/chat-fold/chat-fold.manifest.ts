@@ -20,6 +20,7 @@ export default {
     choiceLabels: {
       continuous: 'reasoningDisplayContinuous',
       stepped: 'reasoningDisplayStepped',
+      collapsed: 'reasoningDisplayCollapsed',
     },
   }],
   cases: ['chat-fold', 'peer-chat-ux']

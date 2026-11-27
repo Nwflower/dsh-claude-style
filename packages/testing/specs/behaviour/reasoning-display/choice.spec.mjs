@@ -130,4 +130,22 @@ export default spec({ page: 'chat-fold' }, ({ test }) => {
     t.expectThat.equal(glide.records.every(r => r.dur >= glide.base && r.dur <= glide.hold), true, 'every glide stays between the step and the wait: ' + JSON.stringify({ base: glide.base, hold: glide.hold, records: glide.records.slice(0, 6) }))
     await t.prefs({ reasoningDisplay: 'continuous' })
   })
+
+  test('collapsed keeps a running thinking row closed without installing a window', async (t) => {
+    const row = t.host('chat.think-row')
+    const window = t.surface('chat.reason-window')
+    await t.prefs({ chatAnimations: true, motion: 'full', reasoningDisplay: 'collapsed' })
+    await t.page.evaluate(([rowSelector, phase, running, expanded]) => {
+      const element = document.querySelector(rowSelector)
+      element?.setAttribute(phase, running)
+      element?.removeAttribute(expanded)
+    }, [row, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, EXPANDED_ATTRIBUTE])
+    await t.settle()
+    const expanded = await t.page.evaluate(([rowSelector, attr]) => {
+      return document.querySelector(rowSelector)?.hasAttribute(attr) ?? false
+    }, [row, EXPANDED_ATTRIBUTE])
+    t.expectThat.equal(expanded, false, 'collapsed keeps a running thinking row collapsed')
+    t.expectThat.equal(await t.page.locator(window).count(), 0, 'collapsed creates no stepped window')
+    await t.prefs({ reasoningDisplay: 'continuous' })
+  })
 })

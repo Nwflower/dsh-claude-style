@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-27",
+  "group": "new",
+  "order": 0,
+  "external": true,
+  "zh": "思考内容显示新增「保持折叠」选项，在保留聊天区滚动与折叠动画的同时不自动展开思考块，避免配合思考翻译插件时触发全量翻译消耗",
+  "en": "Add a Keep collapsed option to Reasoning display so thinking rows stay collapsed while chat animations stay on, preventing automatic full thinking translation when paired with cot-translation"
+}

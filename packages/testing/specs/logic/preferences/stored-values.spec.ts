@@ -151,6 +151,7 @@ test('the typeface, custom font stacks, reasoning and interface font choices sur
   expect(stored.interfaceFontSize).toBe('125')
   expect(clampPrefs({ typeface: 'other' }).typeface).toBe(PREF_DEFAULTS.typeface)
   expect(clampPrefs({ fontProse: 'Inter' }).fontProse).toEqual([])
+  expect(clampPrefs({ reasoningDisplay: 'collapsed' }).reasoningDisplay).toBe('collapsed')
   expect(clampPrefs({ reasoningDisplay: 'other' }).reasoningDisplay).toBe(PREF_DEFAULTS.reasoningDisplay)
   expect(clampPrefs({}).interfaceFontSize).toBe('100')
 })

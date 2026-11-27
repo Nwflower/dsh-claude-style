@@ -4,6 +4,8 @@ import { collectFoldRows, createFoldScheduler } from './fold-scheduler'
 import { foldControlAt, foldControlAtBottom, foldExpandedBody } from './fold-glide-parts'
 import { inPagePixels } from '../../shared/page-zoom'
 import { EXPANDED_ATTRIBUTE, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, THINK_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { REASONING_DISPLAY_COLLAPSED } from '../../constants'
+import { readPrefs, subscribePrefs } from '../../core/prefs'
 
 /** The toggle control inside a thinking row across both host DisclosureRow and button shapes. */
 export function thinkRowControl(row: Element) {
@@ -20,6 +22,7 @@ export function createReasoningFold(onRows?: (rows: readonly Element[]) => void)
     rows: () => document.querySelectorAll(THINK_ROW_SELECTOR),
     onRows,
     press(row) {
+      if (readPrefs().reasoningDisplay === REASONING_DISPLAY_COLLAPSED) return null
       const phase = row.getAttribute(ROW_PHASE_ATTRIBUTE) ?? ''
       const desiredExpanded = phase === RUNNING_STATE
       if (row.hasAttribute(EXPANDED_ATTRIBUTE) === desiredExpanded) return null
@@ -54,8 +57,10 @@ export function createReasoningFold(onRows?: (rows: readonly Element[]) => void)
     collectFoldRows(records, THINK_ROW_SELECTOR, scheduler.add)
     scheduler.schedule()
   })
+  const stopPrefs = subscribePrefs(() => scheduler.refresh())
   scheduler.refresh()
   return () => {
+    stopPrefs()
     stopMutations()
     scheduler.stop()
   }
