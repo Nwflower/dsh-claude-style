@@ -36,8 +36,8 @@ export function crowdingFixture(options: { width: number; zoom?: number; directi
     [hidden] { display:none ${String.fromCharCode(33)}important; }
   `
   const productSheet = document.createElement('style')
-  // The third-party sheet carries the prompt-rewriter seat-nudge repair, which
-  // governs the controls box spacing beside a foreign right-hand control.
+  // The third-party sheet carries the foreign-control spacing repairs, which
+  // govern the controls box beside a right-hand plugin control.
   productSheet.textContent = [composerVarsCss, composerInlineCss, composerModelCss, composerInlineBarCss, composerSwappingCss, composerResponsiveCss, THIRD_PARTY_SHEET].join('\n')
   document.head.append(hostSheet, productSheet)
   const host = attach(document.body, CONVERSATION_SCROLL_SELECTOR)

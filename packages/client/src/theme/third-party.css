@@ -70,6 +70,18 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-controls"] {
   --dsh-pe-seat-nudge: 0;
 }
 
+/* ---------- Third-party repair: dsh-voice-prompt-enhancer's negative margin ---------- */
+/* The enhancer's margin-right:-12px closes its distance from a following voice
+   button under the host's toolbar gap. The skin removes that gap (inline-bar.css),
+   so an enhancer ending the right slot instead leans 12px into the model seat,
+   whose 4px leading inset cannot cover it (issue #509). Clear the literal margin
+   only for that final control; an enhancer followed by a voice button keeps the
+   plugin's own tightening. The class belongs to another plugin, so it stays out
+   of the host contract table (D3). */
+body[data-dsh-claude-style] [data-slot="conversation.input.right"] > .dsh-enh-btn:last-child {
+  margin-right: 0;
+}
+
 /* ---------- Third-party repair: dsh-connect-workbuddy's model label ---------- */
 /* WorkBuddyModelLabel renders an inline-flex row inside the host's block
    triggerLabel and modelName boxes without a width ceiling of its own, so a

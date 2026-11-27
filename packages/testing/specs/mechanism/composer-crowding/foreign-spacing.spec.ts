@@ -3,7 +3,7 @@
  * @features composer, model
  * @risk A foreign right-hand control touches or paints over the model seat: the
  * controls box keeps no column gap, and a plugin that nudges itself toward the
- * seat assuming the host's gap leans into the plate (issue #438).
+ * seat assuming the host's gap leans into the plate (issues #438 and #509).
  */
 import { beforeAll, expect, test } from 'vitest'
 import { page } from 'vitest/browser'
@@ -31,6 +31,21 @@ function mountNudgedControl(view: CrowdedComposer) {
   view.right.append(root)
   view.responsive.measure()
   return root
+}
+
+/** dsh-voice-prompt-enhancer's fixed-width enhance button, whose literal negative
+ * margin closes up to a following voice button under the host's toolbar gap. */
+function mountVoiceEnhancerControl(view: CrowdedComposer) {
+  const control = document.createElement('button')
+  control.type = 'button'
+  control.className = 'dsh-enh-btn'
+  control.textContent = '✨ 优化'
+  control.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:63px;height:28px;flex:0 0 auto;padding:0 8px 0 4px;border:0;white-space:nowrap'
+  const pluginSheet = document.createElement('style')
+  pluginSheet.textContent = '.dsh-enh-btn{margin-right:-12px}'
+  view.right.append(pluginSheet, control)
+  view.responsive.measure()
+  return control
 }
 
 /** The horizontal air between a control's painted right edge and the seat's left
@@ -67,4 +82,26 @@ test('a nudged foreign control keeps its inset: the skin neutralizes the seat nu
     expect(root.getBoundingClientRect().right).toBeLessThanOrEqual(view.seat.getBoundingClientRect().left)
     expect(view.card.scrollWidth).toBeLessThanOrEqual(view.card.clientWidth + 1)
   }
+})
+
+test('an enhancer ending the right slot keeps its seat inset and only tightens beside a following voice control', async () => {
+  const view = mount({ width: 1000 }); await frames()
+  const control = mountVoiceEnhancerControl(view); await frames()
+  for (const width of [1000, 600, 480]) {
+    view.resize(width); await frames()
+    expect(getComputedStyle(control).marginRight).toBe('0px')
+    const gap = gapToSeat(control, view)
+    expect(gap).toBeGreaterThanOrEqual(3)
+    expect(gap).toBeLessThanOrEqual(5)
+    expect(control.getBoundingClientRect().right).toBeLessThanOrEqual(view.seat.getBoundingClientRect().left)
+    expect(view.card.scrollWidth).toBeLessThanOrEqual(view.card.clientWidth + 1)
+  }
+
+  const voice = document.createElement('button')
+  voice.type = 'button'
+  voice.textContent = '🎤'
+  voice.style.cssText = 'width:36px;height:28px;flex:0 0 auto;padding:0;border:0'
+  view.right.append(voice)
+  view.responsive.measure(); await frames()
+  expect(getComputedStyle(control).marginRight).toBe('-12px')
 })

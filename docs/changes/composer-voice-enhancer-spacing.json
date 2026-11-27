@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-27",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "修复与 dsh-voice-prompt-enhancer 同时启用时“优化”按钮与模型选择器重叠的问题，并保留它与后续语音按钮的紧凑间距",
+  "en": "Keep dsh-voice-prompt-enhancer's enhance button clear of the model selector while preserving its tightening beside a following voice control"
+}
