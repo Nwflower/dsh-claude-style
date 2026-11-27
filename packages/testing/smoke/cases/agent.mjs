@@ -115,7 +115,7 @@ export default {
     // shipped values want asks for its chunk here.
     check('each deferred feature the page wants was switched off once, and nothing else',
       same(switchedOff, [...deferredWanted(SHIPPED_PREFS)].sort()), r.errors.join(' | '))
-    check('each report names the chunk that did not load', r.errors.every((line) => line.includes('/dsh-claude-style/assets/') && line.includes('failed to load')), r.errors.join(' | '))
+    check('each report names the chunk that did not load', r.errors.every((line) => /the chunk client\.[A-Za-z]+\.js failed to load/.test(line)), r.errors.join(' | '))
     check('the features in the bundle keep running', r.composerRestyle === true && r.accountUser === 'Tester', JSON.stringify({ restyle: r.composerRestyle, account: r.accountUser }))
     commonChecks(r)
   },

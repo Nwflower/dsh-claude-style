@@ -48,7 +48,9 @@ export function chunkModulesModule(ids) {
     const index = own.indexOf(id)
     return `  ${JSON.stringify(id)}: ${index === -1 ? `require(${JSON.stringify(id)})` : `shared${index}`},`
   })
-  const contents = `${imports.join('\n')}\nexport const CHUNK_MODULES = {\n${entries.join('\n')}\n}\n`
+  // `require` here is the host factory's own (FACTORY_OPEN): its `async` fetches a
+  // package-local chunk beside client.js at the owner's current revision.
+  const contents = `${imports.join('\n')}\nexport const CHUNK_MODULES = {\n${entries.join('\n')}\n}\nexport const importChunk = (fileName) => require.async(\`./\${fileName}\`)\n`
   return {
     name: 'chunk-modules',
     setup(build) {

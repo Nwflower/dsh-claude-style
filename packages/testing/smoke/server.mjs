@@ -53,6 +53,17 @@ async function serveStandIn(html) {
     if (name === 'client.js') {
       res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8' })
       res.end(fs.readFileSync(CLIENT))
+    } else if (/^client\.[A-Za-z0-9][A-Za-z0-9._-]*\.js$/.test(name)) {
+      // A deferred feature's chunk, beside client.js where the host serves it (D76).
+      // The chunk-fault case is answered none of them, the way a host answers a
+      // chunk asked for at a revision it no longer serves.
+      if (fromPage(req) === 'chunk-fault' || !fs.existsSync(path.join(ROOT, 'lib', name))) {
+        res.writeHead(404)
+        res.end()
+        return
+      }
+      res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8' })
+      res.end(fs.readFileSync(path.join(ROOT, 'lib', name)))
     } else if (name === 'dsh-claude-style/model-descriptions.json' && fromPage(req) === 'effort') {
       // The effort page reads the real built copy and brand rules: its rows
       // draw the vendor lockups those rules name.
@@ -91,10 +102,7 @@ async function serveStandIn(html) {
       // produce answers 404.
       const file = name.slice('dsh-claude-style/assets/'.length)
       const asset = assets[file]
-      // The chunk-fault case's route carries none of the feature chunks, the
-      // way a host still serving the bundle it read before an update answers (D76).
-      const chunkRefused = fromPage(req) === 'chunk-fault' && file.endsWith('.js')
-      if (asset === undefined || chunkRefused) {
+      if (asset === undefined) {
         res.writeHead(404)
         res.end()
         return

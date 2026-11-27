@@ -213,18 +213,9 @@ export function checkClaimed(plan, claimed) {
   }
 }
 
-/** Route generated chunks and source maps; inlining would defeat deferred loading (D76). */
-export function routeText(plan, { file, name, type, text }) {
-  const bytes = Buffer.from(text, 'utf8')
-  const entry = { file, bytes, text, type, hash: name.split('.')[0], name, url: ASSETS_ROUTE + name, inline: false }
-  plan.entries.set(file, entry)
-  plan.routed.push(entry)
-  return entry
-}
-
 /**
  * Write assets before their manifest and prune old files last so live pages
- * never see a missing route; retain keeps previous chunks addressable (D76).
+ * never see a missing route; retain keeps a previous build's assets addressable.
  */
 export function writeAssets(libDir, plan, { retain = false, compress = brotliCompressSync } = {}) {
   const dir = path.join(libDir, 'assets')

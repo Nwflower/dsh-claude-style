@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-27",
+  "group": "chores",
+  "order": 0,
+  "external": false,
+  "zh": "延后加载的功能改由宿主的客户端模块系统按插件当前修订号提供，会话面板的统计与 Token 用量两节直接读取宿主的会话投影，面板路由不再汇总这两项",
+  "en": "Deferred features now load through the host's client module system at the plugin's current revision, and the session panel's statistics and token usage sections read the host's session projections directly instead of the panel route's summary"
+}

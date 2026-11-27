@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * build.mjs — type-check and bundle the client, generated modules, assets and host
- * half (D36). Assets are written before client.js so hot reload finds their chunks.
+ * half (D36). Assets and the deferred features' chunks are written before
+ * client.js, so the generation hot reload swaps to finds every file of its build.
  */
 import { createHash } from 'node:crypto'
 import fs from 'node:fs'
@@ -12,7 +13,7 @@ import { brotliCompressSync } from 'node:zlib'
 import esbuild from 'esbuild'
 import { PNG } from 'pngjs'
 import { buildHostHalf } from './build-host.mjs'
-import { buildFonts, checkClaimed, checkSheetPixels, checkSheets, layoutCells, planAssets, routeText, vectorizeSheet, writeAssets } from '../../packages/assets/assets.mjs'
+import { buildFonts, checkClaimed, checkSheetPixels, checkSheets, layoutCells, planAssets, vectorizeSheet, writeAssets } from '../../packages/assets/assets.mjs'
 import { openBuildCache } from './build-cache.mjs'
 import { checkContracts, checkCycles, checkDependencies, checkListed, checkManifests, checkMotionSources, checkScrollOwner, checkTypes } from './build-checks.mjs'
 import { chunkFiles, chunkModules, ownModuleIds, splitChunks } from './chunks.mjs'
@@ -96,7 +97,7 @@ const PACKAGE_ID = PACKAGE.name
 /** The packages the host's loader hands the factory's `require`; never bundled. */
 const HOST_PACKAGES = ['react', 'react-dom', 'react-dom/client', '@deepseek-ai/dsh-client-ui-primitives']
 
-/** Retain old assets only for linked live pages; published and CI builds carry exactly their own (D76). */
+/** Retain old assets only for linked live pages; published and CI builds carry exactly their own. */
 const RETAIN_ASSETS = process.env.DSH_CLAUDE_STYLE_DEBUG === '1' && process.env.CI === undefined
 
 /** Find linked profiles so the build log explains retained or replaced assets. */
@@ -373,7 +374,7 @@ async function main() {
    * The bundle's esbuild options around a feature registry and a chunk-module table; the
    * graph passes below read them unchanged.
    */
-  const clientOptions = (chunkUrls, shared) => ({
+  const clientOptions = (chunkNames, shared) => ({
     entryPoints: [path.join(SRC, 'entry.ts')],
     bundle: true,
     format: 'cjs',
@@ -390,14 +391,15 @@ async function main() {
     // The factory around the body is part of the output, so the source map counts its lines.
     banner: { js: FACTORY_OPEN },
     footer: { js: FACTORY_CLOSE },
-    plugins: [featuresModule(manifests, chunkUrls), chunkModulesModule(shared), settingsControlsModule(manifests), generated],
+    plugins: [featuresModule(manifests, chunkNames), chunkModulesModule(shared), settingsControlsModule(manifests), generated],
   })
 
   // The deferred features leave the bundle for chunks of their own (D76); a graph
-  // pass stands every chunk's address in with its feature id.
+  // pass stands every chunk's file name in with its feature id.
   const deferred = manifests.filter((manifest) => manifest.load === 'deferred')
   const standIns = Object.fromEntries(deferred.map((manifest) => [manifest.id, manifest.id]))
   const split = await splitChunks({
+    packageId: PACKAGE_ID,
     deferred,
     mainModules: async (promoted) => {
       const graph = await esbuild.build({ ...clientOptions(standIns, promoted), minify: false, sourcemap: false })
@@ -406,18 +408,19 @@ async function main() {
     options: { external: HOST_PACKAGES, plugins: [settingsControlsModule(manifests), generated] },
     slot: BUILD_ID_SLOT,
   })
-  const chunkUrls = {}
+  const chunkNames = {}
+  const chunkOutputs = []
   const chunkInputs = []
   for (const [id, { result: chunk }] of split.chunks) {
     checkCycles(chunk.metafile)
     checkScrollOwner(chunk.metafile)
     chunkInputs.push(...chunkModules(chunk))
-    const files = chunkFiles(chunk)
-    chunkUrls[id] = routeText(plan, { file: `chunks/${id}.js`, name: files.name, type: 'text/javascript; charset=utf-8', text: files.code }).url
-    routeText(plan, { file: `chunks/${id}.js.map`, name: files.mapName, type: 'application/json; charset=utf-8', text: files.map })
+    const files = chunkFiles(id, chunk)
+    chunkNames[id] = files.name
+    chunkOutputs.push({ id, ...files })
   }
 
-  const result = await esbuild.build(clientOptions(chunkUrls, split.shared))
+  const result = await esbuild.build(clientOptions(chunkNames, split.shared))
   checkCycles(result.metafile)
   checkScrollOwner(result.metafile)
   // The metafile keys paths the way esbuild saw them: repository-relative. Both sides are
@@ -493,13 +496,27 @@ async function main() {
   const host = await buildHostHalf({ outDir: LIB })
   console.log(`built lib/host/ (${host.files} modules) from packages/host/src/`)
 
-  // Last, always: this is the file a running page's client hot reload watches, and the
-  // generation it swaps to reads its chunks from this build, so every asset is on disk first (D76).
+  // The deferred features' chunks sit beside client.js, where the host's module
+  // system serves them (D76). A chunk a removed or no longer deferred feature left
+  // behind is deleted, so lib/ holds exactly this build's chunks.
+  const written = new Set(['client.js', 'client.js.map'])
+  for (const chunk of chunkOutputs) {
+    fs.writeFileSync(path.join(LIB, chunk.name), chunk.code)
+    fs.writeFileSync(path.join(LIB, chunk.mapName), chunk.map)
+    written.add(chunk.name)
+    written.add(chunk.mapName)
+  }
+  for (const file of fs.readdirSync(LIB)) {
+    if (/^client\..+\.js(?:\.map)?$/.test(file) && !written.has(file)) fs.rmSync(path.join(LIB, file))
+  }
+
+  // Last, always: this is the file a running page's client hot reload watches, and its
+  // rewrite moves the revision the host serves the chunks at, so every other file is on disk first (D76).
   fs.writeFileSync(OUT, bundle)
   fs.writeFileSync(`${OUT}.map`, sourceMap)
   console.log(`built lib/client.js (${Buffer.byteLength(bundle)} bytes, build ${buildId}) from packages/client/src/ (${bundled.size} modules + ${sheets.length} stylesheets + ${Object.keys(combines).length} lockups)`)
-  for (const [id, url] of Object.entries(chunkUrls)) {
-    console.log(`built the deferred feature "${id}" as ${url} (${Buffer.byteLength(plan.entries.get(`chunks/${id}.js`).text)} bytes)`)
+  for (const chunk of chunkOutputs) {
+    console.log(`built the deferred feature "${chunk.id}" as lib/${chunk.name} (${Buffer.byteLength(chunk.code)} bytes)`)
   }
   const pruned = cache.prune()
   const { hits, misses } = cache.counts()
@@ -507,7 +524,7 @@ async function main() {
   if (!RETAIN_ASSETS) {
     const linked = linkedProfiles()
     if (linked.length > 0) {
-      console.log(`linked into ${linked.join(', ')}: a rebuild replaces lib/assets, and a page still running the previous bundle asks for chunks this build replaced — build with DSH_CLAUDE_STYLE_DEBUG=1 to keep them`)
+      console.log(`linked into ${linked.join(', ')}: a rebuild replaces lib/assets, and a page still running the previous bundle asks for assets this build replaced — build with DSH_CLAUDE_STYLE_DEBUG=1 to keep them`)
     }
   }
 }

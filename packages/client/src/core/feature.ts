@@ -163,7 +163,7 @@ export type FeatureRuntime = FeatureIdentity & Pick<FeatureFields, 'order' | 'yi
 /** A feature main module's `install`. */
 export type FeatureInstall = (ctx: HostContext, ui: Ui) => (() => void) | void
 
-/** A feature carries either `install` or its deferred chunk address (D76). */
+/** A feature carries either `install` or its deferred chunk's file name beside client.js (D76). */
 export type Feature = FeatureRuntime & ({ install: FeatureInstall, chunk?: never } | { chunk: string, install?: never })
 
 /** The name a feature's handle registers under on `ui`. */

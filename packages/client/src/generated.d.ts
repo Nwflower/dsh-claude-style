@@ -31,6 +31,8 @@ declare module 'virtual:dsh-claude-style/generated' {
 /** Chunk import ids map to repository modules or host packages (D76). */
 declare module 'virtual:dsh-claude-style/chunk-modules' {
   export const CHUNK_MODULES: Record<string, unknown>
+  /** The host module system's fetch of one package-local chunk beside client.js; resolves to the chunk's exports. */
+  export const importChunk: (fileName: string) => Promise<unknown>
 }
 
 /** The feature registry scripts/build/build.mjs generates from the manifests (D76), in install order. */

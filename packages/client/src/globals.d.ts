@@ -44,11 +44,6 @@ interface Element {
   __dshAccountStream?: unknown
 }
 
-interface HTMLScriptElement {
-  /** The running chunk publishes its factory here; `require` resolves shared bundle modules (D76). */
-  __dshChunk?: (require: (id: string) => unknown) => { install?: unknown }
-}
-
 interface KeyboardEvent {
   /** Set on the Escape the skin dispatches to the host's own menu; the skin's key route skips it. */
   __dshHostMenuEscape?: boolean

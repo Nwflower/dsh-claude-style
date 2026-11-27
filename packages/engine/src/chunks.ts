@@ -1,9 +1,16 @@
-import { DEPLOY_ROOT, assetUrlUnder } from '@dsh-claude-style/contracts/routes'
+/**
+ * Load deferred feature chunks (D76) through the host's client module system,
+ * then run each chunk's body against the modules the bundle shares, so stateful
+ * modules stay singletons.
+ *
+ * The host fetches a package-local chunk at the owner's current revision and
+ * materializes it with its own module-table `require`, which knows only the host's
+ * packages. The chunk's exports are therefore its body: a function that takes the
+ * shared-module `require` and returns the feature's `install`.
+ */
 
-/** Load deferred feature scripts (D76) with bundle-shared modules so stateful modules stay singletons. */
-
-/** What a chunk's script sets on its own element: its body, still to be run against the shared modules. */
-type ChunkFactory = NonNullable<HTMLScriptElement['__dshChunk']>
+/** What a chunk's exports are: its body, still to be run against the shared modules. */
+type ChunkBody = (require: (id: string) => unknown) => { install?: unknown }
 
 /** Where a loader's chunks come from. */
 export interface ChunkSource {
@@ -11,44 +18,8 @@ export interface ChunkSource {
   packageName: string
   /** The modules the bundle carries, by id, as the chunk's `require` answers them. */
   modules: Record<string, unknown>
-}
-
-/** How long one chunk's script may take: a route that accepts and then says nothing is not worth the wait. */
-const CHUNK_TIMEOUT_MS = 15_000
-
-/** Load as a classic script like the host loader; always remove the element and bound waiting by timeout. */
-function fetchFactory(url: string, packageName: string) {
-  return new Promise<ChunkFactory>((resolve, reject) => {
-    const script = document.createElement('script')
-    let settled = false
-    const settle = (answer: () => void) => {
-      if (settled) return
-      settled = true
-      clearTimeout(deadline)
-      script.remove()
-      answer()
-    }
-    const deadline = setTimeout(() => {
-      settle(() => reject(new Error(`${packageName}: the chunk ${url} did not arrive within ${CHUNK_TIMEOUT_MS} ms`)))
-    }, CHUNK_TIMEOUT_MS)
-    script.src = url
-    script.async = true
-    script.onload = () => {
-      settle(() => {
-        if (script.__dshChunk === undefined) reject(new Error(`${packageName}: the chunk ${url} ran without handing back a factory`))
-        else resolve(script.__dshChunk)
-      })
-    }
-    script.onerror = () => {
-      settle(() => {
-        // The route answers every chunk the build in lib/ wrote. A host still
-        // serving the bundle it read at boot asks for the chunks of the build
-        // before an update, which the update replaced.
-        reject(new Error(`${packageName}: the chunk ${url} failed to load; restart the host if the plugin was updated while it ran`))
-      })
-    }
-    document.head.appendChild(script)
-  })
+  /** The host's fetch of one chunk file beside client.js, resolving to that chunk's exports. */
+  importChunk(fileName: string): Promise<unknown>
 }
 
 /** Cache successful loads; forget failures so re-enabling retries. */
@@ -61,24 +32,26 @@ export function createChunkLoader<Install>(source: ChunkSource) {
     return source.modules[id]
   }
 
-  /** Return the chunk's `install`; failures reject with its URL. */
-  function load(url: string): Promise<Install> {
-    // The build bakes an origin-root chunk address; resolve it against the page's
-    // deployment root so a prefix-stripping proxy reaches the assets route (D73).
-    url = assetUrlUnder(url, DEPLOY_ROOT)
-    const known = loads.get(url)
+  /** Return the chunk's `install`; failures reject with its file name. */
+  function load(fileName: string): Promise<Install> {
+    const known = loads.get(fileName)
     if (known !== undefined) return known
-    const pending = fetchFactory(url, source.packageName).then((factory) => {
-      const { install } = factory(chunkRequire)
-      if (typeof install !== 'function') throw new Error(`${source.packageName}: the chunk ${url} exports no install`)
+    const arrived = source.importChunk(fileName).catch((error: unknown) => {
+      // The host's transport error names a URL of its own; the report names the chunk.
+      throw new Error(`${source.packageName}: the chunk ${fileName} failed to load: ${error instanceof Error ? error.message : String(error)}`, { cause: error })
+    })
+    const pending = arrived.then((body) => {
+      if (typeof body !== 'function') throw new Error(`${source.packageName}: the chunk ${fileName} hands back no body`)
+      const { install } = (body as ChunkBody)(chunkRequire)
+      if (typeof install !== 'function') throw new Error(`${source.packageName}: the chunk ${fileName} exports no install`)
       return install as Install
     })
-    loads.set(url, pending)
+    loads.set(fileName, pending)
     // A failure is that call's own: forgetting it here lets a later enable ask
-    // the route again, rather than carrying one network blip as a permanent
+    // the host again, rather than carrying one network blip as a permanent
     // refusal for the rest of the page.
     pending.catch(() => {
-      if (loads.get(url) === pending) loads.delete(url)
+      if (loads.get(fileName) === pending) loads.delete(fileName)
     })
     return pending
   }

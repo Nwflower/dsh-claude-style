@@ -144,15 +144,52 @@
   var reactDomPortal = {
     createPortal: function (children) { return children },
   }
+  // The host's module system as the bundle meets it: the factory's `require`
+  // answers the host packages, and its `async` fetches a package-local chunk
+  // (`client.<name>.js` beside client.js), which registers itself by file name
+  // and is materialized once with the same `require`.
+  var chunkFactories = {}
+  var chunkLoads = {}
+  function hostRequire(name) {
+    if (name === 'react') return react
+    if (name === 'react-dom') return reactDomPortal
+    if (name === 'react-dom/client') return reactDom
+    if (name === '@deepseek-ai/dsh-client-ui-primitives') return primitives
+    throw new Error('no module ' + name)
+  }
+  hostRequire.async = function (spec) {
+    var fileName = spec.slice(2)
+    if (spec.slice(0, 2) !== './' || !/^client\.[A-Za-z0-9][A-Za-z0-9._-]*\.js$/.test(fileName)) {
+      return Promise.reject(new Error('stand-in: no package-local chunk ' + spec))
+    }
+    if (chunkLoads[fileName] !== undefined) return chunkLoads[fileName]
+    var pending = new Promise(function (resolve, reject) {
+      var script = document.createElement('script')
+      script.src = '/' + fileName
+      script.async = true
+      script.onload = function () {
+        script.remove()
+        var factory = chunkFactories[fileName]
+        if (factory === undefined) reject(new Error('stand-in: ' + fileName + ' loaded without registering'))
+        else resolve(factory(hostRequire))
+      }
+      script.onerror = function () {
+        script.remove()
+        reject(new Error('stand-in: ' + fileName + ' failed to load'))
+      }
+      document.head.appendChild(script)
+    })
+    chunkLoads[fileName] = pending
+    pending.catch(function () { if (chunkLoads[fileName] === pending) delete chunkLoads[fileName] })
+    return pending
+  }
   window.__ModuleLoader__ = {
     load: function (def) {
-      window.__skin = def.factory(function (name) {
-        if (name === 'react') return react
-        if (name === 'react-dom') return reactDomPortal
-        if (name === 'react-dom/client') return reactDom
-        if (name === '@deepseek-ai/dsh-client-ui-primitives') return primitives
-        throw new Error('no module ' + name)
-      })
+      if (def.chunk !== undefined) {
+        chunkFactories[def.chunk] = def.factory
+        return
+      }
+      window.__skin = def.factory(hostRequire)
     },
   }
 })()
