@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-27",
+  "group": "fixes",
+  "order": 0,
+  "external": true,
+  "zh": "修复开启「悬停展开侧栏」后，指针移到对话区左上方的消息导航栏时侧栏先行展开、遮住导航栏而无法选择轮次",
+  "en": "Keep the hover-to-peek sidebar from opening over the message navigator rail at the conversation's top left, so its turns can be picked while the peek is on"
+}

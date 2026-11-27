@@ -88,6 +88,8 @@ export const SIDEBAR_PEEK_OPEN = 'open'
 export const SIDEBAR_PEEK_CLOSING = 'closing'
 export const SIDEBAR_PEEK_RAIL_PROPERTY = '--dsh-claude-sidebar-peek-rail'
 export const SIDEBAR_PEEK_WIDTH_PROPERTY = '--dsh-claude-sidebar-peek-width'
+/** On a skin element that stands inside the sidebar peek's left-edge strip and takes the pointer itself (features/turn-nav's rail and its card): the strip opens no peek while the pointer is over such an element, so the control under the pointer keeps it. The sidebar's toggle still opens the peek. */
+export const POINTER_CLAIM_ATTR = 'data-dsh-claude-pointer-claim'
 
 /** The waiting line's paint rides this attribute and the stylesheets decide it (features/chat-wait/chat-wait.css): the wording, the swap and the clock stay untouched. */
 export const STATUS_MOTION_ATTR = 'data-dsh-claude-status-motion'
