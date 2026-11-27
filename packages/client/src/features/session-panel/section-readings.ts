@@ -37,23 +37,23 @@ export const ContextReading = panelEntry(function ContextReadingBody({ sessionId
 export const StatsReading = panelEntry(function StatsReadingBody({ sessionId }) {
   const active = useSectionFoldActive()
   const folded = useSectionFolded('claude-style-stats')
-  const { figures, failed } = useFigures(sessionId, active && folded)
-  if (!active || failed) return null
-  if (figures === null) return h(Reading, null, h(Skeleton, { width: '48px' }))
-  const speed = speedText(figures.stats)
-  return h(Reading, null, speed ?? copy('sectionTurns', { count: figures.stats.turns }))
+  const stats = useFigures(sessionId, active && folded)?.run ?? null
+  if (!active) return null
+  if (stats === null) return h(Reading, null, h(Skeleton, { width: '48px' }))
+  const speed = speedText(stats)
+  return h(Reading, null, speed ?? copy('sectionTurns', { count: stats.turns }))
 })
 
 export const TokensReading = panelEntry(function TokensReadingBody({ sessionId }) {
   const active = useSectionFoldActive()
   const folded = useSectionFolded('claude-style-tokens')
-  const { figures, failed } = useFigures(sessionId, active && folded)
+  const figures = useFigures(sessionId, active && folded)
   const tokens = useTokenText()
-  if (!active || failed) return null
-  if (figures === null) return h(Reading, null, h(Skeleton, { width: '48px' }))
-  const { stats, cost } = figures
-  const billed = stats.uncachedInputTokens + stats.cacheReadTokens + stats.cacheWriteTokens
-  return h(Reading, null, cost ?? tokens(billed + stats.outputTokens))
+  if (!active) return null
+  const usage = figures?.usage ?? null
+  if (figures === null || usage === null) return h(Reading, null, h(Skeleton, { width: '48px' }))
+  const billed = usage.uncachedInputTokens + usage.cacheReadTokens + usage.cacheWriteTokens
+  return h(Reading, null, figures.cost ?? tokens(billed + usage.outputTokens))
 })
 
 export const OutputsReading = panelEntry(function OutputsReadingBody({ sessionId }) {

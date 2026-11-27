@@ -1,7 +1,6 @@
 import * as React from 'react'
 import { SESSION_PANEL_PATH } from '@dsh-claude-style/contracts/routes'
 import type { SessionPanelAnswer } from '@dsh-claude-style/contracts/session-panel'
-import { billingQuery } from '../../shared/billing'
 import { sessionProjectionFaces } from '../../shared/session-projections'
 import { createPanelPoller } from './panel-poller'
 import { createWakeThrottle } from './wake-throttle'
@@ -16,7 +15,7 @@ export type { PanelReading } from './reading-state'
 
 /** How often a mounted section asks the host again; the host keeps its own answer for about a second. */
 const POLL_MS = 2500
-/** The projections whose frames refresh the reading: the session's figures and its token buckets. */
+/** The projections whose frames refresh the reading: each settled step moves the context and outputs with them. */
 const WAKE_KEYS = ['sessionStats', 'tokenUsage'] as const
 /** The closest two asks from those frames, so one streaming turn is not one ask per frame. */
 const WAKE_MIN_MS = 400
@@ -113,7 +112,7 @@ function openSource(sessionId: string): ReadingSource {
     url: () => {
       const live = liveNext ? '&live=1' : ''
       liveNext = false
-      return `${SESSION_PANEL_PATH}?id=${encodeURIComponent(sessionId)}${billingQuery()}${live}`
+      return `${SESSION_PANEL_PATH}?id=${encodeURIComponent(sessionId)}${live}`
     },
     async fetch(url, signal) {
       const response = await fetch(url, { credentials: 'same-origin', headers: { accept: 'application/json' }, signal })
@@ -171,10 +170,10 @@ function openSource(sessionId: string): ReadingSource {
 /**
  * Follow one session's folded overview (D113).
  *
- * The context, figures and outputs sections each mount on their own in the
- * host's panel; they read one source per session, opened by the first section
- * that mounts and closed with the last one, so the host is asked once per poll
- * whatever the number of sections standing.
+ * The context and outputs sections, and their folded summaries, each mount on
+ * their own in the host's panel; they read one source per session, opened by
+ * the first one that mounts and closed with the last one, so the host is asked
+ * once per poll whatever the number of sections standing.
  * @param sessionId - the session the panel shows.
  * @returns the last answer for that session, or the failed flag while nothing arrived.
  */

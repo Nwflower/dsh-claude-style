@@ -285,7 +285,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope, config?: HostCo
     const peakrate = createPeakRate(ctx)
     const prices = createPrices(ctx)
     const sessionCost = createSessionCost(ctx, prices)
-    const sessionPanel = createSessionPanel(ctx, sessionCost)
+    const sessionPanel = createSessionPanel(ctx)
     const sessionRewind = new SessionRewind(ctx, config)
     // The listener is what makes a total O(1) after the first read; the
     // snapshot loads on the first ask, so a reader who never opens the figures
@@ -528,7 +528,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope, config?: HostCo
         // `?live=1` asks past the kept answer: the page wakes its reading on every
         // figure the host lands, and a cache hit would hand it the numbers the
         // wake was meant to replace (D113).
-        sendPayload(res, sessionPanel.get(sessionId, readBillingRows(params), params.get('live') === '1').then(value => ({ value })))
+        sendPayload(res, sessionPanel.get(sessionId, params.get('live') === '1').then(value => ({ value })))
       },
     })
 

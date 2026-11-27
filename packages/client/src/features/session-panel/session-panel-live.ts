@@ -2,12 +2,11 @@
  * Following the statistics feature's live reading from the panel sections (D113).
  *
  * The figures the panel's two tables print are the ones the composer's line
- * prints, so the tables subscribe to the same entry instead of asking the host
- * route for a second, settled copy (session-panel-figures.ts makes the rows).
- * The feature is installed from a chunk of its own and can be switched off, so
- * its handle comes and goes under the tables: the body's mark says when it
- * lands, and a handle that leaves hands the tables back to the route's folded
- * numbers.
+ * prints, so the tables subscribe to the same entry and print one set of numbers
+ * with the line (session-panel-figures.ts makes the rows). The feature is
+ * installed from a chunk of its own, so its handle comes and goes under the
+ * tables: the body's mark says when it lands, and while no handle stands the
+ * tables keep their placeholders.
  */
 import * as React from 'react'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'

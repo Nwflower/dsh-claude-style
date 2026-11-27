@@ -85,11 +85,9 @@ async function hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHo
   check('the composition is priced from the session log, the tool result included',
     parts.some((part) => part.kind === 'tool-result') && parts.every((part) => Number.isInteger(part.tokens) && part.tokens > 0),
     JSON.stringify(parts))
-  check('the overview carries the session\'s own figures and token buckets',
-    panelBody?.value?.stats?.turns === 2 && panelBody.value.stats.steps === 9 &&
-      panelBody.value.stats.llmMs === 61_000 && panelBody.value.stats.decodeTokens === 246 &&
-      panelBody.value.stats.cacheReadTokens === 5_800 && panelBody.value.stats.outputTokens === 246,
-    JSON.stringify(panelBody?.value?.stats ?? null))
+  check('the overview leaves the session\'s figures to the host\'s own projections, which the page reads',
+    panelBody !== null && !('stats' in panelBody.value),
+    JSON.stringify(Object.keys(panelBody?.value ?? {})))
   const pendingAnswer = await request(panelHost, '/dsh-claude-style/session-panel?id=split-write', 'GET', '', browser)
   check('a pending write is absent until its result arrives', JSON.parse(pendingAnswer.body).value.outputs.length === 0)
   splitWrite.push({ seq: 2, type: 'tool/result', data: { message: { source: { callId: 'split-write' }, content: [] } } })
@@ -160,17 +158,20 @@ async function hostPanel({ mod, fakeHost, request, browser, crossSite, scratchHo
     check('live session-panel with unchanged seq reuses cached answer past ANSWER_TTL_MS',
       secondPanel.status === 200 && reads.length === readsAfterCold, JSON.stringify({ status: secondPanel.status, readsAfterCold, reads }))
 
+    // The panel carries no cost, so the first cost ask is the one that folds the log.
     const firstCost = await request(liveHost, '/dsh-claude-style/session-cost?id=session-live', 'GET', '', browser)
+    const readsAfterCostCold = reads.length
     const secondCost = await request(liveHost, '/dsh-claude-style/session-cost?id=session-live', 'GET', '', browser)
     liveEvents.push({ seq: 2, type: 'assistant/message', time: 1_700_000_000_200, data: { turn: 2, step: 0, usage: { inputTokens: 1000, outputTokens: 100 }, message: { source: { model: 'kimi-k3' } } } })
     const thirdCost = await request(liveHost, '/dsh-claude-style/session-cost?id=session-live', 'GET', '', browser)
     const c1 = JSON.parse(firstCost.body).value
+    const c2 = JSON.parse(secondCost.body).value
     const c3 = JSON.parse(thirdCost.body).value
     check('live session-cost reuses warm cache and advances new events incrementally via snapshotEvents',
-      reads.length === readsAfterCold
+      reads.length === readsAfterCostCold
         && tails.some(([id, from]) => id === 'session-live' && from === 2)
-        && c1 !== null && c3 !== null && c3.usd === c1.usd * 2,
-      JSON.stringify({ reads, tails, c1, c3 }))
+        && c1 !== null && c2 !== null && c2.usd === c1.usd && c3 !== null && c3.usd === c1.usd * 2,
+      JSON.stringify({ readsAfterCostCold, reads, tails, c1, c2, c3 }))
     liveHost.dispose()
   }
 }

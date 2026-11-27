@@ -1,9 +1,11 @@
 /**
  * The session panel sections' host assembly (D113).
  *
- * The page cannot reach what the skin's sections in the host's session panel
- * show: the context window's composition, the files the session presented or
- * wrote, and the settled cost. The checkout and its branch are the host panel's
+ * The page cannot reach what the skin's context and outputs sections in the
+ * host's session panel show: the context window's composition and the files the
+ * session presented or wrote. The session's figures are the host's own
+ * `sessionStats` and `tokenUsage` projections, which the page reads itself, so
+ * this fold carries none of them. The checkout and its branch are the host panel's
  * own Environment rows, so this fold runs no Git. The host half folds them
  * from the session log and the host's own projections and services, and answers
  * one route per ask; the browser half renders the sections and polls while one
@@ -20,8 +22,7 @@
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
 import { homedir } from 'node:os'
 import { resolve } from 'node:path'
-import type { PanelContextProjections, PanelStats, SessionPanelValue } from '@dsh-claude-style/contracts/session-panel'
-import { billingKeyOf, type BillingRows } from './session-cost.js'
+import type { PanelContextProjections, SessionPanelValue } from '@dsh-claude-style/contracts/session-panel'
 import type { PanelEvent } from './session-panel-event.js'
 import { createPanelContext, foldPanelContext, panelContextOf } from './session-panel-context.js'
 import { compactionThresholdOf } from './session-compact.js'
@@ -57,8 +58,6 @@ interface AgentsRegistry {
 /** The projections the fold reads, as the host's merged table types them. */
 interface PanelProjections extends PanelContextProjections {
   workingDirectory?: string | null
-  sessionStats?: { turns?: unknown, steps?: unknown, llmMs?: unknown, toolMs?: unknown, ttftMs?: unknown, ttftSteps?: unknown, decodeMs?: unknown, decodeTokens?: unknown }
-  tokenUsage?: { uncachedInputTokens?: unknown, cacheReadTokens?: unknown, cacheWriteTokens?: unknown, outputTokens?: unknown }
 }
 
 /** One session's kept fold. */
@@ -67,8 +66,6 @@ interface Entry {
   at: number
   /** The last event seq consumed by the context and round folds. */
   cursor: number
-  /** Billing signature used to build `value.stats.cost`. */
-  billingKey: string
   context: PanelContextState
   /** The latest human-input round and call ownership across polls. */
   round: PanelRoundState
@@ -79,25 +76,10 @@ interface Entry {
 /** One session panel service: a folded answer per session. */
 export interface SessionPanelService {
   /** Fold one session's answer, reusing the kept one while it is fresh; `fresh` asks past that kept answer. */
-  get(sessionId: string, billing?: BillingRows, fresh?: boolean): Promise<SessionPanelValue>
+  get(sessionId: string, fresh?: boolean): Promise<SessionPanelValue>
   /** Start the session-event watch that marks folds stale. */
   ensure(): void
   dispose(): void
-}
-
-/** What the host's cost fold answers for one session, in the members this module reads. */
-interface CostReading {
-  cny: number
-  usd: number
-}
-
-/** The host's own cost store, as the routes seat hands it here. */
-export interface PanelCostStore {
-  get(sessionId: string, billing: BillingRows): Promise<CostReading | null>
-}
-
-function number(value: unknown): number | null {
-  return typeof value === 'number' && Number.isFinite(value) ? value : null
 }
 
 function text(value: unknown): string | null {
@@ -119,7 +101,7 @@ function release(observation: SessionObservation) {
  * @param ctx - host plugin context.
  * @returns the service; `ensure` starts the event watch and `dispose` stops it.
  */
-export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): SessionPanelService {
+export function createSessionPanel(ctx: DshContext): SessionPanelService {
   const entries = new Map<string, Entry>()
   /** Stops the session-event watch; opened by `ensure`. */
   let stopEvents: (() => void) | null = null
@@ -155,44 +137,13 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
     return index === events.length ? [] : events.slice(index)
   }
 
-  /** The session's own figures: timing and usage projections, and the settled cost when the route seated one. */
-  async function statsOf(projections: PanelProjections, sessionId?: string, billing?: BillingRows): Promise<PanelStats | null> {
-    const stats = projections.sessionStats
-    const usage = projections.tokenUsage
-    if (stats === undefined && usage === undefined) return null
-    let settled: { cny: number, usd: number } | null = null
-    if (cost !== undefined && sessionId !== undefined && billing !== undefined) {
-      try {
-        const answer = await cost.get(sessionId, billing)
-        if (answer !== null) settled = { cny: answer.cny, usd: answer.usd }
-      } catch {
-        // The figures stand without a price while the table is unavailable.
-      }
-    }
-    return {
-      turns: number(stats?.turns) ?? 0,
-      steps: number(stats?.steps) ?? 0,
-      llmMs: number(stats?.llmMs) ?? 0,
-      toolMs: number(stats?.toolMs) ?? 0,
-      ttftMs: number(stats?.ttftMs) ?? 0,
-      ttftSteps: number(stats?.ttftSteps) ?? 0,
-      decodeMs: number(stats?.decodeMs) ?? 0,
-      decodeTokens: number(stats?.decodeTokens) ?? 0,
-      uncachedInputTokens: number(usage?.uncachedInputTokens) ?? 0,
-      cacheReadTokens: number(usage?.cacheReadTokens) ?? 0,
-      cacheWriteTokens: number(usage?.cacheWriteTokens) ?? 0,
-      outputTokens: number(usage?.outputTokens) ?? 0,
-      cost: settled,
-    }
-  }
-
   function liveSeqOf(sessionId: string): number | null {
     const sessions = ctx.get('sessions') as { get?(id: string): { seq?: unknown } | undefined } | null | undefined
     const seq = sessions?.get?.(sessionId)?.seq
     return typeof seq === 'number' && Number.isFinite(seq) ? seq : null
   }
 
-  async function build(sessionId: string, entry: Entry, billing: BillingRows, billingKey: string): Promise<SessionPanelValue> {
+  async function build(sessionId: string, entry: Entry): Promise<SessionPanelValue> {
     const observation = await observe(sessionId)
     try {
       const projections = (observation.projections?.values ?? {}) as PanelProjections
@@ -216,10 +167,8 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
         context: panelContextOf(projections, entry.context, thresholdTokens),
         // Newest first: the row a reader just caused stands at the top of the list.
         outputs: [...entry.round.outputs].reverse(),
-        stats: await statsOf(projections, sessionId, billing),
       }
       entry.value = value
-      entry.billingKey = billingKey
       entry.at = Date.now()
       entry.touchedAt = Date.now()
       return value
@@ -228,16 +177,12 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
     }
   }
 
-  async function get(sessionId: string, billing: BillingRows = { rows: [], currency: null }, fresh = false): Promise<SessionPanelValue> {
-    const billingKey = billingKeyOf(billing)
+  async function get(sessionId: string, fresh = false): Promise<SessionPanelValue> {
     const held = entries.get(sessionId)
     if (held !== undefined) {
       held.touchedAt = Date.now()
-      if (held.loading !== null) {
-        const value = await held.loading
-        return held.billingKey === billingKey ? value : get(sessionId, billing, fresh)
-      }
-      if (!fresh && held.at > 0 && held.billingKey === billingKey) {
+      if (held.loading !== null) return await held.loading
+      if (!fresh && held.at > 0) {
         if (Date.now() - held.at < ANSWER_TTL_MS) return held.value
         const liveSeq = liveSeqOf(sessionId)
         if (liveSeq !== null && liveSeq <= held.cursor + 1) return held.value
@@ -247,14 +192,13 @@ export function createSessionPanel(ctx: DshContext, cost?: PanelCostStore): Sess
       value: { directory: null, context: null, outputs: [] },
       at: 0,
       cursor: -1,
-      billingKey,
       context: createPanelContext(),
       round: createPanelRound(),
       loading: null,
       touchedAt: Date.now(),
     }
     remember(sessionId, entry)
-    const work = build(sessionId, entry, billing, billingKey)
+    const work = build(sessionId, entry)
     entry.loading = work
     try {
       return await work

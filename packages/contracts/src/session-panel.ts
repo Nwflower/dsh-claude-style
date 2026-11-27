@@ -1,8 +1,9 @@
 /**
  * The data of the skin's sections in the host's session panel (D113): one answer
- * describes a session's working directory, context, outputs and figures, folded on the
- * host from its own projections, session log and services. The browser half
- * renders each section from it and leaves out the ones with nothing to show.
+ * describes a session's working directory, context and outputs, folded on the host
+ * from its own projections, session log and services. The browser half renders
+ * each section from it and leaves out the ones with nothing to show; the session's
+ * figures are the host's own projections, which the page reads without this route.
  */
 
 /** The context window's occupancy and its composition. */
@@ -66,35 +67,12 @@ export interface PanelOutput {
   origin: 'presented' | 'written'
 }
 
-/** The session's own figures: the host's timing projection, its token usage, and the settled cost. */
-export interface PanelStats {
-  turns: number
-  steps: number
-  /** Model (llm) time and tool time, in milliseconds. */
-  llmMs: number
-  toolMs: number
-  /** Time to first token, summed over steps. */
-  ttftMs: number
-  ttftSteps: number
-  /** Decode time and the tokens it produced. */
-  decodeMs: number
-  decodeTokens: number
-  uncachedInputTokens: number
-  cacheReadTokens: number
-  cacheWriteTokens: number
-  outputTokens: number
-  /** Settled cost in micro units of each currency, or null while none is known. */
-  cost: { cny: number, usd: number } | null
-}
-
-/** Everything the skin's sections show about one session. */
+/** What the skin's context and outputs sections show about one session. */
 export interface SessionPanelValue {
   /** The session's working directory, or the reader's home when the session recorded none; outputs resolve and open against it. */
   directory: string | null
   context: PanelContext | null
   outputs: readonly PanelOutput[]
-  /** The session's own figures, absent where the host reports none. */
-  stats?: PanelStats | null
 }
 
 /** The route's answer: the panel value, or the reason the host could not build it. */

@@ -6,13 +6,10 @@ import { hostChatSeat } from '../../core/i18n'
 import { readPrefs, subscribePrefs } from '../../core/prefs'
 import { copy } from './copy'
 import type { CopyKey } from './copy'
-import { billingCurrency, statsCostText } from './stats-cost'
-import { usePanelReading } from './session-panel-data'
 import { panelFiguresOf } from './session-panel-figures'
-import type { PanelFigures } from './session-panel-figures'
+import type { PanelFigures, PanelRunFigures } from './session-panel-figures'
 import { useLiveFigures } from './session-panel-live'
 import { Skeleton, panelEntry } from './panel-rows'
-import type { PanelStats } from '@dsh-claude-style/contracts/session-panel'
 
 const h = React.createElement
 
@@ -23,30 +20,17 @@ function useTokenUnits() {
   return units
 }
 
-/** The currency the reader's billing setting chose, followed across a settings change. */
-function useBillingCurrency() {
-  const [choice, setChoice] = React.useState<string | null>(() => readPrefs().billingCurrency ?? null)
-  React.useEffect(() => subscribePrefs(prefs => setChoice(prefs.billingCurrency ?? null)), [])
-  return billingCurrency(choice)
-}
-
 /**
  * One session's figures, as both tables print them (D113).
  *
- * The tables print the statistics feature's live reading — the one the
- * composer's line prints — so the numbers beside the chat move with the numbers
- * under it instead of one settlement behind them; the route's fold stands in
- * until that reading speaks. Null while neither has answered, and `failed` once
- * the route failed with nothing to show.
+ * The tables print the statistics feature's live reading of the host's
+ * projections — the one the composer's line prints — so the numbers beside the
+ * chat move with the numbers under it. Null while that reading has not answered
+ * for this session; `live` false stops following it.
  */
-export function useFigures(sessionId: string, live = true): { figures: PanelFigures | null, failed: boolean } {
-  const { value, failed } = usePanelReading(sessionId)
+export function useFigures(sessionId: string, live = true): PanelFigures | null {
   const liveFigures = useLiveFigures(sessionId, live)
-  const currency = useBillingCurrency()
-  const settled = value?.stats ?? null
-  if (liveFigures !== null) return { figures: panelFiguresOf(liveFigures, settled), failed: false }
-  if (settled !== null) return { figures: { stats: settled, cost: statsCostText(settled.cost, currency) }, failed: false }
-  return { figures: null, failed: failed && value === null }
+  return liveFigures === null ? null : panelFiguresOf(liveFigures)
 }
 
 /** The session's tokens in the host's own words and the reader's chosen format. */
@@ -84,7 +68,7 @@ function PendingFigures({ labels }: { labels: readonly CopyKey[] }) {
 }
 
 /** The output speed in the host's own words, or null while the session decoded nothing. */
-export function speedText(stats: PanelStats) {
+export function speedText(stats: PanelRunFigures) {
   if (stats.decodeMs <= 0) return null
   const speed = sessionStatsSpeed(stats.decodeTokens / (stats.decodeMs / 1000))
   const chat = hostChatSeat()
@@ -99,10 +83,8 @@ export function speedText(stats: PanelStats) {
  * surface of one session, not a second set of numbers.
  */
 export const StatsSection = panelEntry(function StatsBody({ sessionId }) {
-  const { figures, failed } = useFigures(sessionId)
-  if (failed) return null
-  if (figures === null) return h(PendingFigures, { labels: ['statsTurns', 'statsSteps', 'statsModelTime', 'statsToolTime'] })
-  const stats = figures.stats
+  const stats = useFigures(sessionId)?.run ?? null
+  if (stats === null) return h(PendingFigures, { labels: ['statsTurns', 'statsSteps', 'statsModelTime', 'statsToolTime'] })
   const chat = hostChatSeat()
   const duration = (ms: number) => (chat === null ? `${Math.max(0, Math.round(ms / 1000))}s` : sessionStatsDuration(ms, chat))
   const rows: Figure[] = []
@@ -122,22 +104,22 @@ export const StatsSection = panelEntry(function StatsBody({ sessionId }) {
  * With billing off or a model no table prices, the cost row is left out.
  */
 export const TokensSection = panelEntry(function TokensBody({ sessionId }) {
-  const { figures, failed } = useFigures(sessionId)
+  const figures = useFigures(sessionId)
   const tokens = useTokenText()
-  if (failed) return null
-  if (figures === null) return h(PendingFigures, { labels: ['statsUncachedInput', 'statsCacheRead', 'statsCacheWrite', 'statsOutput'] })
-  const { stats, cost } = figures
+  const usage = figures?.usage ?? null
+  if (figures === null || usage === null) return h(PendingFigures, { labels: ['statsUncachedInput', 'statsCacheRead', 'statsCacheWrite', 'statsOutput'] })
+  const cost = figures.cost
   const chat = hostChatSeat()
   const rows: Figure[] = []
   if (cost !== null) rows.push({ key: 'cost', label: copy('statsCost'), value: cost })
-  const billed = stats.uncachedInputTokens + stats.cacheReadTokens + stats.cacheWriteTokens
+  const billed = usage.uncachedInputTokens + usage.cacheReadTokens + usage.cacheWriteTokens
   if (billed > 0) {
-    const hit = chat === null ? String(Math.round((stats.cacheReadTokens / billed) * 100)) : sessionStatsCacheHit(stats.cacheReadTokens, billed)
+    const hit = chat === null ? String(Math.round((usage.cacheReadTokens / billed) * 100)) : sessionStatsCacheHit(usage.cacheReadTokens, billed)
     if (hit !== null) rows.push({ key: 'cache', label: copy('statsCacheHit'), value: `${hit}%` })
   }
-  rows.push({ key: 'uncached', label: copy('statsUncachedInput'), value: tokens(stats.uncachedInputTokens) })
-  rows.push({ key: 'read', label: copy('statsCacheRead'), value: tokens(stats.cacheReadTokens) })
-  rows.push({ key: 'write', label: copy('statsCacheWrite'), value: tokens(stats.cacheWriteTokens) })
-  rows.push({ key: 'out', label: copy('statsOutput'), value: tokens(stats.outputTokens) })
+  rows.push({ key: 'uncached', label: copy('statsUncachedInput'), value: tokens(usage.uncachedInputTokens) })
+  rows.push({ key: 'read', label: copy('statsCacheRead'), value: tokens(usage.cacheReadTokens) })
+  rows.push({ key: 'write', label: copy('statsCacheWrite'), value: tokens(usage.cacheWriteTokens) })
+  rows.push({ key: 'out', label: copy('statsOutput'), value: tokens(usage.outputTokens) })
   return h(Figures, { rows })
 })
