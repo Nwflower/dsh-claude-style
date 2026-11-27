@@ -10,6 +10,7 @@ import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { FeatureHandle } from '@dsh-claude-style/engine/scheduler'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './chat-fold.manifest'
+import { prefsFromForm, subscribePrefs } from '../../core/prefs'
 
 /** What the follow reads off the folding (ui.chatFold): whether a door is rolling. */
 export interface ChatFoldHandle extends FeatureHandle {
@@ -21,9 +22,17 @@ export interface ChatFoldHandle extends FeatureHandle {
 export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   document.body.setAttribute(CHAT_FOLD_ATTR, '')
   const stream = createReasoningStream()
-  const stopReasoning = createReasoningFold(rows => {
-    for (const row of rows) stream.queueRow(row)
-  })
+  let stopReasoning: (() => void) | null = null
+  const startReasoning = () => {
+    // An automatic press needs the saved choice: the defaults holding until the
+    // first form snapshot must not open a row whose stored choice is collapsed.
+    if (stopReasoning !== null || !prefsFromForm()) return
+    stopReasoning = createReasoningFold(rows => {
+      for (const row of rows) stream.queueRow(row)
+    })
+  }
+  startReasoning()
+  const stopPrefs = subscribePrefs(startReasoning)
   const stopProcess = createProcessFold()
   const summary = createProcessSummary()
   const messageFold = createMessageFold(() => ui.schedule?.())
@@ -55,8 +64,9 @@ export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   }
   return () => {
     delete ui.chatFold
+    stopPrefs()
     stream.stop()
-    stopReasoning()
+    stopReasoning?.()
     stopProcess()
     summary.stop()
     messageFold.stop()

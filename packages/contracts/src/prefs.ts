@@ -87,10 +87,11 @@ export const CHAT_REVEAL_OFF = 'off'
 export const CHAT_REVEAL_ON = 'on'
 export const CHAT_REVEAL_MODES = [CHAT_REVEAL_ON, CHAT_REVEAL_OFF] as const
 
-/** How live reasoning reaches the reader: as it arrives, or through the two-line stepping window. */
+/** How live reasoning reaches the reader: as it arrives, through the two-line stepping window, or kept collapsed. */
 export const REASONING_DISPLAY_CONTINUOUS = 'continuous'
 export const REASONING_DISPLAY_STEPPED = 'stepped'
-export const REASONING_DISPLAYS = [REASONING_DISPLAY_CONTINUOUS, REASONING_DISPLAY_STEPPED] as const
+export const REASONING_DISPLAY_COLLAPSED = 'collapsed'
+export const REASONING_DISPLAYS = [REASONING_DISPLAY_CONTINUOUS, REASONING_DISPLAY_STEPPED, REASONING_DISPLAY_COLLAPSED] as const
 
 /** How a message the reader sends arrives: a stand-in flying up from the composer, or the row growing in place. */
 export const MESSAGE_ENTER_FLIGHT = 'flight'

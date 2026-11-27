@@ -25,11 +25,29 @@
     await probe.onlyFor(['late-forms'], async function () {
       // The directory has not answered yet: the skin holds the defaults.
       r.lateBefore = document.body.getAttribute('data-dsh-claude-home-layout')
+      // A saved collapsed choice arrives with the namespace. Until then the
+      // default stepped display must not press an already running row.
+      window.__pushForm({ reasoningDisplay: 'collapsed' })
+      var lateReasoning = document.createElement('div')
+      lateReasoning.setAttribute('data-variant', 'think')
+      lateReasoning.setAttribute('data-state', 'running')
+      var lateReasoningControl = document.createElement('button')
+      lateReasoningControl.type = 'button'
+      var lateReasoningClicks = 0
+      lateReasoningControl.addEventListener('click', function () {
+        lateReasoningClicks++
+        lateReasoning.toggleAttribute('data-expanded')
+      })
+      lateReasoning.appendChild(lateReasoningControl)
+      document.body.appendChild(lateReasoning)
+      await sleep(200)
+      r.lateReasoningBefore = { clicks: lateReasoningClicks, expanded: lateReasoning.hasAttribute('data-expanded') }
       window.__serveNamespace()
       // A pass is driven by a mutation, the way the live page drives one.
       document.body.appendChild(document.createElement('i'))
       await sleep(200)
       r.lateAfter = document.body.getAttribute('data-dsh-claude-home-layout')
+      r.lateReasoningAfter = { clicks: lateReasoningClicks, expanded: lateReasoning.hasAttribute('data-expanded') }
     })
     await probe.onlyFor(['popovers'], async function () {
       // The shared popover rule (shared/popover.ts): the dwell keeps a pointer that

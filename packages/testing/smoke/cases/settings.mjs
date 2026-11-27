@@ -8,6 +8,10 @@ export default {
     check('a namespace served after apply still binds the form and its value (classic)',
       r.lateAfter === 'classic' && r.homeLayoutAttr === 'classic',
       JSON.stringify({ after: r.lateAfter, final: r.homeLayoutAttr }))
+    check('a saved collapsed choice never presses a running row before or after the settings arrive',
+      r.lateReasoningBefore?.clicks === 0 && r.lateReasoningBefore?.expanded === false &&
+        r.lateReasoningAfter?.clicks === 0 && r.lateReasoningAfter?.expanded === false,
+      JSON.stringify({ before: r.lateReasoningBefore, after: r.lateReasoningAfter }))
     commonChecks(r)
   },
   settings(r) {

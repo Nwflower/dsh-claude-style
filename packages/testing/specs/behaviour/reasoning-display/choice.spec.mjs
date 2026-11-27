@@ -130,4 +130,56 @@ export default spec({ page: 'chat-fold' }, ({ test }) => {
     t.expectThat.equal(glide.records.every(r => r.dur >= glide.base && r.dur <= glide.hold), true, 'every glide stays between the step and the wait: ' + JSON.stringify({ base: glide.base, hold: glide.hold, records: glide.records.slice(0, 6) }))
     await t.prefs({ reasoningDisplay: 'continuous' })
   })
+
+  test('collapsed leaves a fresh running row to the reader until another display mode takes over', async (t) => {
+    const row = t.host('chat.think-row')
+    const rowAttributes = t.host.attributes('chat.think-row')
+    const textAttributes = t.host.attributes('chat.reasoning-text')
+    const window = t.surface('chat.reason-window')
+    await t.prefs({ chatAnimations: true, motion: 'full', reasoningDisplay: 'collapsed' })
+    await t.page.evaluate(([rowAttributes, textAttributes, phase, running, expanded]) => {
+      const element = document.createElement('div')
+      for (const [name, value] of rowAttributes) element.setAttribute(name, value)
+      element.setAttribute(phase, running)
+      const control = document.createElement('button')
+      control.type = 'button'
+      control.textContent = 'Thinking'
+      control.dataset.clicks = '0'
+      control.addEventListener('click', () => {
+        control.dataset.clicks = String(Number(control.dataset.clicks) + 1)
+        element.toggleAttribute(expanded)
+      })
+      const body = document.createElement('div')
+      const text = document.createElement('div')
+      for (const [name, value] of textAttributes) text.setAttribute(name, value)
+      text.textContent = 'reasoning'
+      body.append(text)
+      element.append(control, body)
+      document.body.append(element)
+    }, [rowAttributes, textAttributes, ROW_PHASE_ATTRIBUTE, RUNNING_STATE, EXPANDED_ATTRIBUTE])
+    await t.settle()
+    const readFresh = () => t.page.evaluate(([rowSelector, expanded]) => {
+      const rows = document.querySelectorAll(rowSelector)
+      const element = rows[rows.length - 1]
+      return {
+        expanded: element?.hasAttribute(expanded) ?? false,
+        clicks: Number(element?.querySelector('button')?.dataset.clicks ?? 0),
+      }
+    }, [row, EXPANDED_ATTRIBUTE])
+    t.expectThat.equal(await readFresh(), { expanded: false, clicks: 0 }, 'collapsed never presses a fresh running row')
+
+    await t.page.locator(row).last().locator('button').click()
+    await t.settle()
+    t.expectThat.equal(await readFresh(), { expanded: true, clicks: 1 }, 'the reader can still open the row')
+    t.expectThat.equal(await t.page.locator(window).count(), 0, 'collapsed creates no stepped window for the opened row')
+    await t.page.evaluate(([rowSelector, phase]) => {
+      const rows = document.querySelectorAll(rowSelector)
+      rows[rows.length - 1]?.setAttribute(phase, 'finished')
+    }, [row, ROW_PHASE_ATTRIBUTE])
+    await t.settle()
+    t.expectThat.equal(await readFresh(), { expanded: true, clicks: 1 }, 'collapsed does not close the row when thinking finishes')
+
+    await t.prefs({ reasoningDisplay: 'continuous' })
+    t.expectThat.equal(await readFresh(), { expanded: false, clicks: 2 }, 'leaving collapsed restores the current phase automatic fold')
+  })
 })
