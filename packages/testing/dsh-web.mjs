@@ -374,14 +374,32 @@ const pressOverlay = (page, tried) => page.evaluate((spent) => {
 async function dismissOverlays(page, options = {}) {
   const limit = options.limit ?? 6
   const quietMs = options.quietMs ?? 1000
-  const settleMs = options.settleMs ?? 8000
+  // A ceiling, not a fixed wait: the loop leaves as soon as nothing has been open
+  // for `quietMs`. The first-run chain now runs three steps (the preview notice,
+  // the credentials dialog, the provider form), and on a loaded runner each press
+  // plus its settle pass costs more, so the ceiling leaves room for the whole
+  // chain instead of cutting a notice still up at eight seconds.
+  const settleMs = options.settleMs ?? 15000
   // The host's own drawer sidebar is a dialog it mounts whether it stands open
   // or not, so it is left out of both the read and the verdict.
   const byText = () => page.locator('[role="dialog"]:not([data-shortcut-modal="sidebar"]):visible')
   const roots = () => page.locator('[role="presentation"]:visible')
   /** How many buttons of each dialog were already pressed, keyed by its text. */
   const pressed = new Map()
-  const overlayOpen = () => page.evaluate(() => document.querySelector('[role="dialog"]:not([data-shortcut-modal="sidebar"]), [role="presentation"]') !== null)
+  // The host keeps one `[role="presentation"]` in the document at all times — the
+  // strip tabs root sits hidden whether or not an overlay is up — so an existence
+  // read never goes quiet: the pass would spend its whole settle window on every
+  // boot instead of the frames an overlay is really up, and the longer first-run
+  // chain (the preview notice, then the credentials step) can then overrun the
+  // window on a loaded runner while a notice still stands. What counts as open is
+  // a visible overlay, or the app root the onboarding modal holds inert — the two
+  // signals the shell gives while it is still asking for the first run.
+  const overlayOpen = () => page.evaluate(() => {
+    const shown = (element) => element.checkVisibility() && element.getBoundingClientRect().width > 0
+    const visible = Array.from(document.querySelectorAll('[role="dialog"]:not([data-shortcut-modal="sidebar"]), [role="presentation"]')).some(shown)
+    const root = document.getElementById('root')
+    return visible || (root !== null && root.inert)
+  })
   const started = Date.now()
   let quietSince = null
   let answered = 0
