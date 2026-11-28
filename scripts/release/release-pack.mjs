@@ -5,6 +5,7 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import { argOf } from '../shared/args.mjs'
 import { runner } from '../shared/run.mjs'
 import { runsPath } from '../shared/debug-paths.mjs'
 
@@ -21,15 +22,11 @@ function fail(message) {
 const lastLine = (text) => text.split('\n').map((line) => line.trim()).filter(Boolean).pop() ?? ''
 
 const args = process.argv.slice(2)
-const argOf = (flag) => {
-  const at = args.indexOf(`--${flag}`)
-  return at === -1 ? undefined : args[at + 1]
-}
-const dev = argOf('dev')
-if (args.includes('--dev') && (dev === undefined || dev.trim() === '' || dev.startsWith('--'))) {
+const dev = argOf('dev', args)
+if (args.includes('--dev') && (dev === undefined || dev.trim() === '')) {
   fail('--dev needs the dev version to write into the tarball')
 }
-const out = path.resolve(argOf('out') ?? DEFAULT_OUT)
+const out = path.resolve(argOf('out', args) ?? DEFAULT_OUT)
 
 // A tarball left by an earlier run would otherwise sit beside this one and make
 // the printed paths ambiguous.

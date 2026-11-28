@@ -3,7 +3,7 @@ import type { BrandAnswer, BrandImageKind, BrandImageState } from '@dsh-claude-s
 import { BRAND_INK_ORIGINAL, brandingSlot, withBrandingAsset } from '@dsh-claude-style/contracts/branding-presets'
 import type { BrandingAppearance, BrandingPreset, BrandingSlot } from '@dsh-claude-style/contracts/branding-presets'
 import { DARK_THEME_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
-import { BRAND_MARK_ROUTE, BRAND_ROUTE, BRAND_WORDMARK_ROUTE, BRANDING_ASSET_ROUTE, BRANDING_STATUS_ROUTE } from '../constants'
+import { BRAND_MARK_PATH, BRAND_PATH, BRAND_WORDMARK_PATH, BRANDING_ASSET_PATH, BRANDING_STATUS_PATH } from '@dsh-claude-style/contracts/routes'
 import type { Prefs } from '../constants'
 import { prefsFromForm, readPrefs, savePrefs, subscribePrefs } from '../core/prefs'
 import { notifyAll } from '@dsh-claude-style/engine/notify'
@@ -30,7 +30,7 @@ interface PresetAnswer extends BrandAnswer {
   problems?: { kind: BrandImageKind, message: string }[]
 }
 
-const ROUTES: Record<BrandImageKind, string> = { mark: BRAND_MARK_ROUTE, wordmark: BRAND_WORDMARK_ROUTE }
+const ROUTES: Record<BrandImageKind, string> = { mark: BRAND_MARK_PATH, wordmark: BRAND_WORDMARK_PATH }
 const empty = (): BrandImages => ({ mark: null, wordmark: null, problems: {} })
 let images = empty()
 let armed = false
@@ -108,7 +108,7 @@ function reload() {
   request.reset()
   const mode = pageAppearance()
   const held = heldImages(readPrefs(), readPrefs().brandingPreset, mode)
-  if (!isImages(held)) return request.load(BRANDING_STATUS_ROUTE, statusRequest(held, mode), error => { console.warn('dsh-claude-style: branding status could not be read: ' + String(error)) })
+  if (!isImages(held)) return request.load(BRANDING_STATUS_PATH, statusRequest(held, mode), error => { console.warn('dsh-claude-style: branding status could not be read: ' + String(error)) })
   deliver(held)
   return Promise.resolve()
 }
@@ -137,7 +137,7 @@ export function subscribeBrandImages(listener: (images: BrandImages) => void) {
  * of a carrying build has taken the originals across.
  */
 async function moveLegacyImages(name: () => string) {
-  const held = await adopt(await readHostJson(BRAND_ROUTE, {}))
+  const held = await adopt(await readHostJson(BRAND_PATH, {}))
   if (held.mark === null && held.wordmark === null) return
   const prefs = readPrefs()
   const preset = await cloneImages(newBrandingPresetId(prefs), held, null)
@@ -184,11 +184,11 @@ export function resetBrandImages() {
 /** Read the set `id` on one canvas independently of the page's shared state (the settings page reads any set in either appearance). */
 export async function loadBrandingImages(prefs: Prefs, id: string, mode: BrandingAppearance) {
   const held = heldImages(prefs, id, mode)
-  return isImages(held) ? held : adopt(await readHostJson(BRANDING_STATUS_ROUTE, statusRequest(held, mode)))
+  return isImages(held) ? held : adopt(await readHostJson(BRANDING_STATUS_PATH, statusRequest(held, mode)))
 }
 
 function assetRoute(id: string, slot: BrandingSlot) {
-  return BRANDING_ASSET_ROUTE + '?' + new URLSearchParams({ id, slot }).toString()
+  return BRANDING_ASSET_PATH + '?' + new URLSearchParams({ id, slot }).toString()
 }
 
 async function writeManagedAsset(id: string, slot: BrandingSlot, file: File) {

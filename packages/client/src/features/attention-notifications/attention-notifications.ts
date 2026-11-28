@@ -1,4 +1,4 @@
-import { createAttentionFeed } from '../sound-cues/attention-feed'
+import { createAttentionFeed } from '../../shared/attention-feed'
 import { createNotificationBatch, notificationsInBackground } from './batch'
 import { createNotificationDisplay } from './display'
 import type { HostContext } from '@dsh-claude-style/engine/host'

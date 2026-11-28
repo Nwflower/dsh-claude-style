@@ -9,6 +9,7 @@
 import fs from 'fs'
 import path from 'path'
 import { openBrowser } from './browser.mjs'
+import { argOf } from '../../scripts/shared/args.mjs'
 import { SESSION_NAMES, sanitizePage } from '../../scripts/shared/privacy.mjs'
 
 const WIDTH = 1440
@@ -146,16 +147,12 @@ export { shoot, DEMO_PROMPT, DEMO_TITLE, CANVAS }
 
 if (import.meta.main) {
   const args = process.argv.slice(2)
-  const argOf = (name) => {
-    const i = args.indexOf('--' + name)
-    return i === -1 ? undefined : args[i + 1]
-  }
-  const token = argOf('token') || process.env.DSH_WEB_TOKEN
+  const token = argOf(args, 'token') || process.env.DSH_WEB_TOKEN
   if (!token) {
     console.error('usage: node packages/testing/shoot.mjs --token <launch-token> [--url <base>] [--brand claude|deepseek] [--scene home|conversation] [--session <title>]')
     process.exit(2)
   }
-  shoot({ token, url: argOf('url'), out: argOf('out'), brand: argOf('brand'), scene: argOf('scene'), session: argOf('session') })
+  shoot({ token, url: argOf(args, 'url'), out: argOf(args, 'out'), brand: argOf(args, 'brand'), scene: argOf(args, 'scene'), session: argOf(args, 'session') })
     .then(() => console.log('\nSCREENSHOTS CAPTURED'))
     .catch((e) => { console.error(e.message || e); process.exitCode = 1 })
 }

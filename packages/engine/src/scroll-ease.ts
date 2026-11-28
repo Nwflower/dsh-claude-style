@@ -97,7 +97,8 @@ export function stopScrollEase(element: Element) {
 
 /** The scroll owner's session lifetime ends every spring it owns (D40, D91). */
 export function stopAllScrollEases() {
-  for (const element of scrollEasing.keys()) stopScrollEase(element)
+  scrollEasing.clear()
+  scrollEaseLastAt = 0
 }
 
 /**
@@ -131,6 +132,7 @@ function writeScrollEase(element: Element, ease: ScrollEase, value: number) {
  */
 function stepScrollEase(now: number) {
   scrollEaseFrameQueued = false
+  if (scrollEasing.size === 0) return
   const interval = scrollEaseLastAt === 0
     ? SCROLL_EASE_NOMINAL_FRAME_MS
     : Math.min(SCROLL_EASE_MAX_FRAME_MS, Math.max(0, now - scrollEaseLastAt))

@@ -1,9 +1,9 @@
 import { BAND_ANIMATION, basicChecks, check } from './_shared.mjs'
 import { bound } from '../../bounds.mjs'
 import { handoverCounts, handoverJumps } from './chat-handover.mjs'
-import surfaceTable from '../../data/surface.json' with { type: 'json' }
+import { surfaceEntry } from '../../surface.mjs'
 
-const CROSS_LANE = surfaceTable.surface.find((entry) => entry.id === 'chat-wait.lane-cross')
+const CROSS_LANE = surfaceEntry('chat-wait.lane-cross')
 if (CROSS_LANE?.selector === undefined) throw new Error('chat-wait: the cross lane surface is incomplete')
 const CROSS_NAME = CROSS_LANE.selector.split('.').pop()
 

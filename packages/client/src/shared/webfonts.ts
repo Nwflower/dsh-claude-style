@@ -1,5 +1,6 @@
+import { WEBFONTS_PATH } from '@dsh-claude-style/contracts/routes'
 import { OPTIONAL_WEBFONTS } from '@dsh-claude-style/contracts/webfonts'
-import { WEBFONTS_PLUGIN_CSS, WEBFONTS_ROUTE, WEBFONTS_STYLE_ID } from '../constants'
+import { WEBFONTS_PLUGIN_CSS, WEBFONTS_STYLE_ID } from '../constants'
 import { createHostResource } from '@dsh-claude-style/engine/resource'
 import type { WebfontsAnswer } from '@dsh-claude-style/contracts/webfonts'
 import { mountStylesheet } from '../core/stylesheet'
@@ -9,7 +10,7 @@ import { unavailableWebfonts, webfontRules } from './webfont-rules'
 /** Register only optional faces reported by the host half (D75). */
 
 /** The host half's answer, asked once per page; the faces it names are the ones the drop point holds. */
-const fontsInPlace = createHostResource(WEBFONTS_ROUTE, (data) => {
+const fontsInPlace = createHostResource(WEBFONTS_PATH, (data) => {
   const answer = data as Partial<WebfontsAnswer> | null
   return Array.isArray(answer?.faces) ? answer.faces.filter((name): name is string => typeof name === 'string') : undefined
 })

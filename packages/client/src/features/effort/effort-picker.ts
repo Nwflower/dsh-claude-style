@@ -1,5 +1,5 @@
 import { AUTO_POPOVER_ALL } from '../../constants'
-import { MODEL_EFFORT_DEFAULT } from '../model/model-labels'
+import { MODEL_EFFORT_DEFAULT } from '../../shared/model-labels'
 import { readPrefs } from '../../core/prefs'
 import { createEffortControl } from './slider'
 import type { EffortTrackBox } from './slider'

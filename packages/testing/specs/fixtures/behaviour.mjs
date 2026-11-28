@@ -5,38 +5,21 @@
  * host contract by id, the skin's surface by id, or what the reader sees.
  */
 import parser from 'postcss-selector-parser'
-import registry from '../../data/surface.json' with { type: 'json' }
+import { surfaceAttribute, surfaceProperty, surfaceSelector } from '../../surface.mjs'
 import { loadModule } from '../../../../scripts/shared/ts-module.mjs'
 
 const { HOST_DOM } = loadModule('packages/contracts/src/table.ts')
 
-/** The skin's surface entry for an id, or a refusal naming the table. */
-function surfaceEntry(id) {
-  const entry = registry.surface.find((candidate) => candidate.id === id)
-  if (entry === undefined) throw new Error(`surface: no entry "${id}" in packages/testing/data/surface.json`)
-  return entry
-}
-
 /** The selector of an element the skin draws. */
 function surface(id) {
-  const { selector } = surfaceEntry(id)
-  if (selector === undefined) throw new Error(`surface: "${id}" names an attribute, not an element`)
-  return selector
+  return surfaceSelector(id)
 }
 
 /** An attribute the skin writes. */
-surface.attribute = (id) => {
-  const { attribute } = surfaceEntry(id)
-  if (attribute === undefined) throw new Error(`surface: "${id}" names an element, not an attribute`)
-  return attribute
-}
+surface.attribute = surfaceAttribute
 
 /** A CSS custom property the skin writes, by its surface id. */
-surface.property = (id) => {
-  const { property } = surfaceEntry(id)
-  if (property === undefined) throw new Error(`surface: "${id}" names no custom property`)
-  return property
-}
+surface.property = surfaceProperty
 
 /** The literal the host writes, by its contract id. */
 function host(id) {

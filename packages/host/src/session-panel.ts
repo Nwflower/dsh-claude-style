@@ -20,6 +20,7 @@
  * poll pays for the events that arrived since the last one, not for the whole log.
  */
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
+import { releaseObservation } from '@dsh-claude-style/engine/node/session-events'
 import { homedir } from 'node:os'
 import { resolve } from 'node:path'
 import type { PanelContextProjections, SessionPanelValue } from '@dsh-claude-style/contracts/session-panel'
@@ -84,16 +85,6 @@ export interface SessionPanelService {
 
 function text(value: unknown): string | null {
   return typeof value === 'string' && value !== '' ? value : null
-}
-
-/** Release an observation's lease through whichever disposal it offers. */
-function release(observation: SessionObservation) {
-  if (typeof observation.dispose === 'function') {
-    observation.dispose()
-    return
-  }
-  const symbol = observation[Symbol.dispose]
-  if (typeof symbol === 'function') symbol.call(observation)
 }
 
 /**
@@ -173,7 +164,7 @@ export function createSessionPanel(ctx: DshContext): SessionPanelService {
       entry.touchedAt = Date.now()
       return value
     } finally {
-      release(observation)
+      releaseObservation(observation)
     }
   }
 
@@ -209,7 +200,7 @@ export function createSessionPanel(ctx: DshContext): SessionPanelService {
 
   function ensure() {
     if (stopEvents !== null || typeof ctx.on !== 'function') return
-    stopEvents = ctx.on('session/event', (session: { id?: unknown } | null) => {
+    const off = ctx.on('session/event', (session: { id?: unknown } | null) => {
       if (disposed) return
       const id = text(session?.id)
       if (id === null) return
@@ -217,7 +208,8 @@ export function createSessionPanel(ctx: DshContext): SessionPanelService {
       // The next ask folds the events that moved; the kept answer is reused
       // until then.
       if (entry !== undefined) entry.at = 0
-    }) as (() => void) | null
+    })
+    stopEvents = typeof off === 'function' ? (off as () => void) : null
   }
 
   return {

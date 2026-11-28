@@ -19,8 +19,10 @@ export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The two triggers, and the card once it is stamped. */
   const TRIGGER_SELECTOR = '[data-dsh-claude-part~="hero-workspace-row"] [aria-haspopup="menu"]'
 
-/** The composer card's workspace trigger, cached while it stays first (D9). */
-const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="card-workspace-trigger"] [aria-expanded="true"]')
+  /** The hero workspace row, cached while it stays first (D9). */
+  const findHeroWorkspaceRow = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="hero-workspace-row"]')
+  /** The composer card's workspace trigger, cached while it stays first (D9). */
+  const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="card-workspace-trigger"] [aria-expanded="true"]')
   const CARD_SELECTOR = `[${HERO_MENU_ATTR}]`
   /** The open card, marked with the picker it belongs to, and the trigger it was stamped for. */
   const cardStamp = createStamp<HTMLElement>(HERO_MENU_ATTR)
@@ -180,7 +182,9 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
 
   /** The hero row's open pickers: the workspace chip and the preset seat. */
   function rowTriggers() {
-    const nodes = document.querySelectorAll<HTMLElement>('[data-dsh-claude-part~="hero-workspace-row"] [aria-haspopup="menu"][aria-expanded="true"]')
+    const row = findHeroWorkspaceRow()
+    if (row === null) return []
+    const nodes = row.querySelectorAll<HTMLElement>('[aria-haspopup="menu"][aria-expanded="true"]')
     const found: HTMLElement[] = []
     for (let i = 0; i < nodes.length; i++) found.push(nodes[i])
     return found

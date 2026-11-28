@@ -11,6 +11,7 @@
  * asks for a permission `{}` the way the board's own read-only sources do; the
  * board grants it once per widget version.
  */
+import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
 import { createUsage } from './usage.js'
 import type { UsageSummary } from './usage-summary.js'
@@ -19,7 +20,7 @@ import type { UsageSummary } from './usage-summary.js'
 export const WIDGET_USAGE_CAPABILITY = 'usage'
 
 /** How the board names this capability's provider. */
-export const WIDGET_USAGE_PROVIDER = 'dsh-claude-style'
+export const WIDGET_USAGE_PROVIDER = PACKAGE_NAME
 
 /** The board service version this capability registers against. */
 const WIDGET_BOARD_API_VERSION = 3
@@ -250,7 +251,7 @@ export function registerWidgetUsage(ctx: DshContext, sharedUsage?: ReturnType<ty
         usage.dispose()
       })
     }
-    board.registerCapability({
+    const unregister = board.registerCapability({
       apiVersion: WIDGET_BOARD_API_VERSION,
       provider: WIDGET_USAGE_PROVIDER,
       id: WIDGET_USAGE_CAPABILITY,
@@ -269,6 +270,9 @@ export function registerWidgetUsage(ctx: DshContext, sharedUsage?: ReturnType<ty
         return widgetUsageAnswer(snapshot.value)
       },
     } satisfies WidgetUsageCapability)
+    // Release the capability registration with this generation so hot reload
+    // never leaves a stale closure behind (D12).
+    if (typeof unregister === 'function') (scope.effect ?? ctx.effect)?.(() => unregister)
   }
   if (typeof ctx.inject === 'function') ctx.inject([WIDGET_BOARD_SERVICE], register)
   else register(ctx)

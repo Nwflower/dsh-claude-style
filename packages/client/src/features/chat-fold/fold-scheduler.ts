@@ -1,7 +1,7 @@
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { composerComposing } from '../../shared/composer-caret'
-import { isChatFoldToggle, pressChatFoldToggle, subscribeFoldReaderEvents } from './fold-toggle'
-import type { FoldPressReading } from './fold-toggle'
+import { isChatFoldToggle, pressChatFoldToggle, subscribeFoldReaderEvents } from '../../shared/fold-toggle'
+import type { FoldPressReading } from '../../shared/fold-toggle'
 
 export interface FoldPress {
   control: HTMLElement

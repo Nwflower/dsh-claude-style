@@ -59,23 +59,25 @@ export function createHostSearchTakeover(options: {
   }
 
   function onFocusIn(target: HTMLElement) {
-    if (target.tagName !== 'INPUT' || target.closest(HOST_SEARCH) === null) return
+    if (target.tagName !== 'INPUT') return
+    const hostSearch = target.closest<HTMLElement>(HOST_SEARCH)
+    if (hostSearch === null) return
     target.blur()
     if (options.isOpen()) options.focusField()
     else options.open()
-    foldHostSearch(3)
+    foldHostSearch(hostSearch, 3)
   }
 
-  function foldHostSearch(tries: number) {
+  function foldHostSearch(hostSearch: HTMLElement, tries: number) {
     requestFrame({
       write() {
-        if (options.isDisposed()) return
-        const clear = document.querySelector<HTMLElement>(`${HOST_SEARCH} [data-dsh-claude-part~="clear-button"]`)
+        if (options.isDisposed() || !hostSearch.isConnected) return
+        const clear = hostSearch.querySelector<HTMLElement>('[data-dsh-claude-part~="clear-button"]')
         if (clear !== null) {
           clear.click()
           return
         }
-        if (tries > 1) foldHostSearch(tries - 1)
+        if (tries > 1) foldHostSearch(hostSearch, tries - 1)
       },
     })
   }

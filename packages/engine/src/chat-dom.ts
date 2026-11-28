@@ -1,17 +1,13 @@
-import { CHAT_FLOW_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_KIND_ATTRIBUTE, MESSAGE_BUBBLE_SELECTOR, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
+import { CHAT_FLOW_SELECTOR, FLOW_KIND_ATTRIBUTE, MESSAGE_BUBBLE_SELECTOR, SUBMISSION_ECHO_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import { resolveColour } from './colour'
+import { findConversationScroller } from './host-seats'
 
 /** Chat DOM helpers over host-owned literals (D3); skin-owned marks remain with their features. */
 /** The keys that scroll the viewport; the same set the host reads. */
 export const SCROLL_KEYS = new Set(['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '])
 
-/** Cache the host scroller to avoid per-frame queries and forced style passes; detach on session replacement (D9). */
-let scroller: HTMLElement | null = null
-
-export function conversationScroller() {
-  if (scroller === null || !scroller.isConnected) scroller = document.querySelector<HTMLElement>(CONVERSATION_SCROLL_SELECTOR)
-  return scroller
-}
+/** The host scroller, shared with `host-seats.ts` so every caller reads one cache (D9, D40). */
+export const conversationScroller = findConversationScroller
 
 /** Cache the column for stream frames; session replacement invalidates it through `isConnected`. */
 let column: HTMLElement | null = null
@@ -43,8 +39,9 @@ export function findFollowTailButton() {
 }
 
 /** Settled and optimistic echo rows carry marks at different depths and need separate selectors. */
-export const CHAT_USER_ROW_SELECTOR = `${CHAT_FLOW_SELECTOR} [${FLOW_KIND_ATTRIBUTE}="${USER_ROW_KIND}"]`
-export const SUBMISSION_ROW_SELECTOR = `[${FLOW_KIND_ATTRIBUTE}="${USER_ROW_KIND}"], ${SUBMISSION_ECHO_SELECTOR}`
+export const USER_ROW_SELECTOR = `[${FLOW_KIND_ATTRIBUTE}="${USER_ROW_KIND}"]`
+export const CHAT_USER_ROW_SELECTOR = `${CHAT_FLOW_SELECTOR} ${USER_ROW_SELECTOR}`
+export const SUBMISSION_ROW_SELECTOR = `${USER_ROW_SELECTOR}, ${SUBMISSION_ECHO_SELECTOR}`
 /** Both faces inside the chat column, asked in one query. */
 export const CHAT_ROW_SELECTOR = `${CHAT_USER_ROW_SELECTOR}, ${SUBMISSION_ECHO_SELECTOR}`
 

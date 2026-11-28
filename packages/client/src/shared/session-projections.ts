@@ -47,3 +47,14 @@ export interface SessionFigures {
   /** The currency the cost was priced in, or null while billing is off. */
   currency: Currency | null
 }
+
+/** The shown session's cost in micro units, in the currency billing follows. */
+export interface SessionCostReading {
+  /** The host session the figure belongs to. */
+  sessionId: string
+  cost: number | null
+  currency: Currency
+  pending: boolean
+  /** Whether the route bills at the platform's own list (the official models only). */
+  official: boolean
+}

@@ -11,7 +11,7 @@
  * table imports this module.
  */
 
-import { appearancePair, normalizeRecords, parseRecordObject } from './records'
+import { appearancePair, findRecordById, HEX_COLOR_RE, normalizeRecords, parseRecordObject, RECORD_ID_RE } from './records'
 
 /** The most records kept: the reader's schemes and the presets' override records together. */
 export const PALETTE_SCHEME_LIMIT = 16
@@ -58,11 +58,8 @@ export interface PaletteScheme {
   edges?: PaletteEdges
 }
 
-const COLOUR = /^#[0-9a-f]{6}$/i
-const ID = /^[a-z0-9][a-z0-9-]*$/
-
 function colour(value: unknown, what: string) {
-  if (typeof value !== 'string' || !COLOUR.test(value)) throw new Error(`${what} is not a #rrggbb colour`)
+  if (typeof value !== 'string' || !HEX_COLOR_RE.test(value)) throw new Error(`${what} is not a #rrggbb colour`)
   return value.toLowerCase()
 }
 
@@ -78,7 +75,7 @@ function pair(value: unknown, what: string): ColourPair | undefined {
 export function parsePaletteScheme(text: string, presets: readonly string[]): PaletteScheme {
   const record = parseRecordObject(text)
   const id = record.id
-  if (typeof id !== 'string' || id.length > PALETTE_SCHEME_ID_MAX || !ID.test(id)) throw new Error('the id is not 1–24 lowercase letters, digits or hyphens')
+  if (typeof id !== 'string' || id.length > PALETTE_SCHEME_ID_MAX || !RECORD_ID_RE.test(id)) throw new Error('the id is not 1–24 lowercase letters, digits or hyphens')
   if (id === PALETTE_SCHEME_FOLLOW) throw new Error(`the id "${PALETTE_SCHEME_FOLLOW}" is the follow-the-brand choice`)
   const overrides = presets.includes(id)
   const base = record.base === undefined && overrides ? id : record.base
@@ -130,11 +127,7 @@ export function normalizePaletteSchemes(list: readonly string[], presets: readon
 
 /** The record with this id, or undefined. */
 export function findPaletteScheme(entries: readonly string[], id: string, presets: readonly string[]) {
-  for (const text of entries) {
-    const scheme = parsePaletteScheme(text, presets)
-    if (scheme.id === id) return scheme
-  }
-  return undefined
+  return findRecordById(entries, id, text => parsePaletteScheme(text, presets))
 }
 
 /** The warm inline-code ink the earlier `classic` choice drew, per appearance. */

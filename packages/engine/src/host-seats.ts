@@ -48,44 +48,73 @@ function stillFirstMatch(element: Element, selector: string) {
 
 /** The batch count the one shared body watch has seen: an absent seat is retried once per batch. */
 let matchEpoch = 0
+/** Generation counter bumped on closeHostSeats so cached seats drop prior-generation nodes and re-arm on next read. */
+let seatGeneration = 0
 /** Whether the shared body watch is open. One is enough for every seat. */
 let matchEpochWatched = false
 /** Stops the shared body watch; the entry's teardown drops it with the generation that opened it. */
 let stopMatchEpochWatch: (() => void) | null = null
 
-/** Open the one body watch the cached seats read: the first cacheFirstMatch call does it. */
+/** Open the one body watch the cached seats read: the first seat lookup opens it lazily. */
 function openMatchEpochWatch() {
   if (matchEpochWatched) return
   matchEpochWatched = true
   // The bump runs inside the batch's own callback, so a `beforePaint` reader
-  // (D40) sees the batch's nodes rather than the previous batch's answer.
-  stopMatchEpochWatch = subscribeMutations(document.body, { subtree: true, childList: true, beforePaint: true }, () => {
+  // (D40) sees the batch's nodes and phase/session attribute transitions rather
+  // than the previous batch's answer.
+  stopMatchEpochWatch = subscribeMutations(document.body, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: [PHASE_ATTRIBUTE, CONVERSATION_SESSION_ATTRIBUTE],
+    beforePaint: true,
+  }, () => {
     matchEpoch += 1
   })
 }
 
+/** Shared listeners for the page's active session id (D91). */
+const sessionListeners = new Set<(sessionId: string | null) => void>()
+let sessionLast: string | null = null
+let stopSessionWatch: (() => void) | null = null
+
+function closeSessionWatch() {
+  if (stopSessionWatch !== null) stopSessionWatch()
+  stopSessionWatch = null
+  sessionListeners.clear()
+}
+
 /**
- * Drop the shared seat watch: the entry's teardown calls it, so a page that
- * gives the skin back keeps no body subscription behind. A later generation
- * opens its own on its first seat read.
+ * Drop the shared seat and session watches: the entry's teardown calls it, so a
+ * page that gives the skin back keeps no body subscription behind. A later
+ * generation invalidates kept seats and opens its own watch on its first read.
  */
 export function closeHostSeats() {
   if (stopMatchEpochWatch !== null) stopMatchEpochWatch()
   stopMatchEpochWatch = null
   matchEpochWatched = false
+  seatGeneration += 1
+  matchEpoch += 1
+  closeSessionWatch()
 }
 
 /**
  * The first match of `selector`, resolved once and kept while it stays the first match (D40): repeated batches reuse it, and the document is queried again only when the host replaced the element or mounted one before it. An answer of "nothing matched" is kept for the rest of the batch and retried after a later one; one body watch serves every cached seat, and closeHostSeats drops it with the generation. Exported for the seats one feature alone reads.
  */
 export function cacheFirstMatch<T extends Element>(selector: string | (() => string)) {
-  openMatchEpochWatch()
   let kept: T | null = null
   let answered = false
-  let seenEpoch = matchEpoch
+  let seenEpoch = -1
+  let seenGeneration = -1
   return () => {
+    openMatchEpochWatch()
     const query = typeof selector === 'function' ? selector() : selector
-    if (seenEpoch !== matchEpoch) {
+    if (seenGeneration !== seatGeneration) {
+      kept = null
+      answered = false
+      seenGeneration = seatGeneration
+      seenEpoch = matchEpoch
+    } else if (seenEpoch !== matchEpoch) {
       if (kept === null) answered = false
       seenEpoch = matchEpoch
     }
@@ -97,33 +126,33 @@ export function cacheFirstMatch<T extends Element>(selector: string | (() => str
   }
 }
 
+/** Compute one host lookup at most once per mutation batch, invalidated across generations (D40). */
+function cachePerBatch<T>(read: () => T) {
+  let kept: T | undefined
+  let seenEpoch = -1
+  let seenGeneration = -1
+  return (): T => {
+    openMatchEpochWatch()
+    if (seenGeneration !== seatGeneration || seenEpoch !== matchEpoch) {
+      kept = read()
+      seenGeneration = seatGeneration
+      seenEpoch = matchEpoch
+    }
+    return kept as T
+  }
+}
+
 /** The host's access-mode trigger: the button its permission slot renders. Every slot render site carries a `[data-slot="<key>"]` wrapper (D3), and the skin's own buttons sit inside it, so those are skipped. */
 export const findAccessTrigger = cacheFirstMatch<HTMLButtonElement>(PERMISSION_TRIGGER_SELECTOR)
 
-/** The answer findHeroRoot keeps, and the batch it was taken in. */
-let heroRoot: HTMLElement | null = null
-let heroRootEpoch = -1
-let heroRootAnswered = false
-
 /** The host's hero-phase conversation root: the page before a session is chosen. A sub-agent's docked conversation renders the same composer, so it is not the start screen and the home features (the ripple and the mascot among them) must not mount against it. Kept per mutation batch, as the other seats are (D9, D40). */
-export function findHeroRoot() {
-  openMatchEpochWatch()
-  if (heroRootEpoch !== matchEpoch) {
-    heroRoot = null
-    heroRootAnswered = false
-    heroRootEpoch = matchEpoch
-  }
-  if (heroRootAnswered) return heroRoot
-  heroRootAnswered = true
+export const findHeroRoot = cachePerBatch<HTMLElement | null>(() => {
   const roots = document.querySelectorAll<HTMLElement>(`[${PHASE_ATTRIBUTE}="hero"]`)
   for (let i = 0; i < roots.length; i += 1) {
-    if (roots[i].closest(SIDEBAR_CHAT_SELECTOR) === null) {
-      heroRoot = roots[i]
-      break
-    }
+    if (roots[i].closest(SIDEBAR_CHAT_SELECTOR) === null) return roots[i]
   }
-  return heroRoot
-}
+  return null
+})
 
 /** The sidebar footer, where the account row and the plugin footer entries live. */
 export const findFootArea = cacheFirstMatch<HTMLElement>(FOOT_AREA_SELECTOR)
@@ -189,70 +218,45 @@ export function findForeground(): HTMLElement | null {
   return null
 }
 
-/** The host's composer card — the element the skin's composer rules hang on — and the placeholder its editor draws; the card's variant is the skin's own marking (D9). */
-const COMPOSER_CARD = COMPOSER_CARD_SELECTOR
-const COMPOSER_PLACEHOLDER = COMPOSER_PLACEHOLDER_SELECTOR
-
 /** The composer cards, kept current by the bus instead of queried every pass (D40). */
 export function observeComposerCards(onChange?: () => void) {
-  return observeMatches<HTMLElement>(COMPOSER_CARD, onChange)
+  return observeMatches<HTMLElement>(COMPOSER_CARD_SELECTOR, onChange)
 }
 
 /** The composer placeholders, kept current by the bus (D40); the skin's synthetic one is a match too. */
 export function observeComposerPlaceholders() {
-  return observeMatches<HTMLElement>(COMPOSER_PLACEHOLDER)
+  return observeMatches<HTMLElement>(COMPOSER_PLACEHOLDER_SELECTOR)
 }
 
-export const findComposerCard = cacheFirstMatch<HTMLElement>(COMPOSER_CARD)
-
-/** The host's model slot in the composer row: React's, so the skin only appends its own nodes beside the host's root (features/model/seat-box.ts, features/context-stats/meter-ring.ts). */
-const MODEL_SLOT = MODEL_SLOT_SELECTOR
+export const findComposerCard = cacheFirstMatch<HTMLElement>(COMPOSER_CARD_SELECTOR)
 
 /** The model slot inside `scope`: the row a card's own composer render draws. */
 export function findModelSlotIn(scope: ParentNode) {
-  return scope.querySelector<HTMLElement>(MODEL_SLOT)
+  return scope.querySelector<HTMLElement>(MODEL_SLOT_SELECTOR)
 }
-
-/** The answer findPrimaryModelSlot keeps, and the batch it was taken in. */
-let primaryModelSlot: HTMLElement | null = null
-let primaryModelSlotEpoch = -1
-let primaryModelSlotAnswered = false
 
 /**
  * The model slot of the page's MAIN composer: the first card that is not a sub-agent's docked conversation, which draws the same composer with its own slot. Kept per mutation batch, as the other seats are (D40): cards mount and unmount with the sidebar, and the kept slot is dropped in the batch that changed them.
  */
-export function findPrimaryModelSlot() {
-  openMatchEpochWatch()
-  if (primaryModelSlotEpoch !== matchEpoch) {
-    primaryModelSlot = null
-    primaryModelSlotAnswered = false
-    primaryModelSlotEpoch = matchEpoch
-  }
-  if (primaryModelSlotAnswered) return primaryModelSlot
-  primaryModelSlotAnswered = true
-  primaryModelSlot = mainModelSlot()
-  return primaryModelSlot
-}
-
-function mainModelSlot() {
-  const cards = document.querySelectorAll<HTMLElement>(COMPOSER_CARD)
+export const findPrimaryModelSlot = cachePerBatch<HTMLElement | null>(() => {
+  const cards = document.querySelectorAll<HTMLElement>(COMPOSER_CARD_SELECTOR)
   for (let i = 0; i < cards.length; i += 1) {
     const card = cards[i]
     if (card.closest(SIDEBAR_CHAT_SELECTOR) !== null) continue
-    const slot = card.querySelector<HTMLElement>(MODEL_SLOT)
+    const slot = card.querySelector<HTMLElement>(MODEL_SLOT_SELECTOR)
     if (slot !== null) return slot
   }
-  return document.querySelector<HTMLElement>(MODEL_SLOT)
-}
+  return document.querySelector<HTMLElement>(MODEL_SLOT_SELECTOR)
+})
 
 /** The composer card `node` sits in, or null; `variant` narrows it to one variant. */
 export function closestComposerCard(node: EventTarget | null | undefined, variant?: string) {
-  if (variant === undefined) return closestFrom(node, COMPOSER_CARD)
-  return closestFrom(node, `${COMPOSER_CARD}[${COMPOSER_VARIANT_ATTRIBUTE}="${variant}"]`)
+  if (variant === undefined) return closestFrom(node, COMPOSER_CARD_SELECTOR)
+  return closestFrom(node, `${COMPOSER_CARD_SELECTOR}[${COMPOSER_VARIANT_ATTRIBUTE}="${variant}"]`)
 }
 
 export function findComposerPlaceholder(card: Element) {
-  return card.querySelector<HTMLElement>(COMPOSER_PLACEHOLDER)
+  return card.querySelector<HTMLElement>(COMPOSER_PLACEHOLDER_SELECTOR)
 }
 
 /** The first marked figure in the composer stack, kept while it stays the document's first match (D40). */
@@ -326,8 +330,7 @@ export function conversationHeaderMore(utilities: ParentNode | null) {
 }
 
 /** The shown conversation: the element carrying its session id, and the id itself. */
-const CONVERSATION_SESSION_ATTR = CONVERSATION_SESSION_ATTRIBUTE
-const CONVERSATION_SESSION = `[${CONVERSATION_SESSION_ATTR}]`
+const CONVERSATION_SESSION = `[${CONVERSATION_SESSION_ATTRIBUTE}]`
 
 /** The shown conversation, kept while it stays the document's first match: a session switch mounts the next one, and an earlier match invalidates the kept element. */
 export const findConversationSession = cacheFirstMatch<HTMLElement>(CONVERSATION_SESSION_SELECTOR)
@@ -344,7 +347,7 @@ export function inCurrentConversation(node: Element) {
 
 export function conversationSessionId(host: Element | null | undefined) {
   if (host === null || host === undefined) return null
-  const id = host.getAttribute(CONVERSATION_SESSION_ATTR)
+  const id = host.getAttribute(CONVERSATION_SESSION_ATTRIBUTE)
   return typeof id === 'string' ? id : null
 }
 
@@ -357,27 +360,43 @@ export function conversationSession(): string | null {
 export const COMPOSER_STACK = COMPOSER_STACK_SELECTOR
 
 /**
- * Hear each session the page switches to, once per change (D91). The host names
- * the shown session on the conversation column; that id changing is the one
- * signal every per-session state can be released by. Reads ride the bus (D40),
- * so no second observer is made for it.
+ * Hear each session the page switches to, once per change (D91). One shared
+ * bus subscription serves every listener so per-session states broadcast from a
+ * single read per batch (D40).
  *
  * @returns unsubscribe.
  */
 export function observeSession(onChange: (sessionId: string | null) => void): () => void {
-  let last = conversationSession()
-  return subscribeMutations(document.body, {
-    beforePaint: true,
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: [PHASE_ATTRIBUTE, CONVERSATION_SESSION_ATTRIBUTE],
-  }, () => {
-    const next = conversationSession()
-    if (next === last) return
-    last = next
-    onChange(next)
-  })
+  sessionListeners.add(onChange)
+  if (stopSessionWatch === null) {
+    sessionLast = conversationSession()
+    stopSessionWatch = subscribeMutations(document.body, {
+      beforePaint: true,
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: [PHASE_ATTRIBUTE, CONVERSATION_SESSION_ATTRIBUTE],
+    }, () => {
+      matchEpoch += 1
+      const next = conversationSession()
+      if (next === sessionLast) return
+      sessionLast = next
+      for (const listener of [...sessionListeners]) {
+        try {
+          listener(next)
+        } catch (error) {
+          reportError(error)
+        }
+      }
+    })
+  }
+  return () => {
+    sessionListeners.delete(onChange)
+    if (sessionListeners.size === 0 && stopSessionWatch !== null) {
+      stopSessionWatch()
+      stopSessionWatch = null
+    }
+  }
 }
 
 /**

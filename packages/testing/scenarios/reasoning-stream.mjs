@@ -16,24 +16,7 @@
 import path from 'node:path'
 import { settlePage, recordUntil } from '../lane.mjs'
 import { bound } from '../bounds.mjs'
-import surfaceTable from '../data/surface.json' with { type: 'json' }
-
-const SURFACE = surfaceTable.surface
-const selector = (id) => {
-  const entry = SURFACE.find((candidate) => candidate.id === id)
-  if (entry?.selector === undefined) throw new Error(`reasoning-stream: ${id} names no element`)
-  return entry.selector
-}
-const attribute = (id) => {
-  const entry = SURFACE.find((candidate) => candidate.id === id)
-  if (entry?.attribute === undefined) throw new Error(`reasoning-stream: ${id} names no attribute`)
-  return entry.attribute
-}
-const property = (id) => {
-  const entry = SURFACE.find((candidate) => candidate.id === id)
-  if (entry?.property === undefined) throw new Error(`reasoning-stream: ${id} names no property`)
-  return entry.property
-}
+import { surfaceAttribute as attribute, surfaceProperty as property, surfaceSelector as selector } from '../surface.mjs'
 
 /** The least wait between two steps of the window; the value and its reason are in packages/testing/data/bounds.json. */
 const STEP_MIN_GAP_MS = bound('reasonStepMinGapMs')

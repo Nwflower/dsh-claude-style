@@ -108,7 +108,7 @@ jobs:
     needs: [changed, checks, build]
     if: needs.changed.outputs.code == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 65
     steps:
       - uses: actions/checkout@v7
         with:

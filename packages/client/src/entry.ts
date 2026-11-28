@@ -1,23 +1,25 @@
 import { ACCOUNT_MENU_ATTR, HANDOFF_ATTR, HERO_MENU_ATTR, HOLDS_ATTR, PACKAGE_NAME, PART_ATTR, QUIET_ATTR, READER_HOLD_ATTR, SKIN_CLASS_PREFIX, SKIN_PART_MARKS, STYLE_STAMP_ATTR } from './constants'
-import { closeHostSeats } from '@dsh-claude-style/engine/host'
+import { resetBodyProperties } from '@dsh-claude-style/engine/body-properties'
+import { closeHostSeats, closeHostServices } from '@dsh-claude-style/engine/host'
 import { installParts } from '@dsh-claude-style/engine/parts'
 import { installPageScale } from './shared/page-scale'
+import { resetAppearanceOverlay } from './shared/appearance-overlays'
 import { adoptSkin } from '@dsh-claude-style/engine/skin'
 import { motionReduced } from './core/prefs'
 import { setHostContext } from './core/host-context'
 import { loadUsername } from './shared/identity'
 import { installWebfonts } from './shared/webfonts'
-import type { HostContext } from '@dsh-claude-style/engine/host'
-import { loadModelCopy } from './features/model/model-copy'
+import type { HostContext, HostFiber } from '@dsh-claude-style/engine/host'
+import { loadModelCopy } from './shared/model-copy'
 import { installExternalControls } from './core/external-controls'
-import { mountModelPicker } from './features/model/external'
+import { mountModelPicker } from './external-model-picker'
 import { adoptPrefs, adoptSettingsForm, clearPrefsAttributes, disposePrefsBinding, prefs, readPrefs, retireComposerRestyle, retireFooterTakeover, subscribePrefs } from './core/prefs'
 import { reportFeatureFailure } from '@dsh-claude-style/engine/scheduler'
 import { installScheduler } from './core/scheduler'
 import type { HandleName, Ui } from './core/scheduler'
 import { installPageVisibility } from './core/page-visibility'
 import { installSelectionPaint } from './core/selection-paint'
-import { adoptPartVocabulary, mountStylesheet, parkForeignSheets } from './core/stylesheet'
+import { adoptPartVocabulary, mountStylesheet, parkForeignSheets, resetPartVocabulary } from './core/stylesheet'
 import { peerPresent, subscribePeerPresence } from './shared/peer-plugin'
 import { pageOwner, subscribePageOwner } from './shared/visual-owner'
 import type { PageOwner } from './shared/visual-owner'
@@ -97,6 +99,8 @@ export function apply(ctx: HostContext) {
   let offPeerWatch: (() => void) | null = null
   /** Watches the page owners' marks; D74. */
   let offOwnerWatch: (() => void) | null = null
+  /** Late `configForms` injection scope, disposed on teardown (D12). */
+  let stopConfigForms: HostFiber | null = null
   /** Unmounts this generation's stylesheet; set once the sheet is mounted. */
   let stopStylesheet: (() => void) | null = null
   /** Unmounts the sheet registering the optional webfonts in place; set with that sheet. */
@@ -218,9 +222,20 @@ export function apply(ctx: HostContext) {
       stopExternalControls()
       stopExternalControls = null
     }
-    // The seats' shared body watch belongs to this generation: a page handed
-    // back keeps no subscription, and a later generation opens its own.
+    if (stopConfigForms !== null) {
+      stopConfigForms.dispose()
+      stopConfigForms = null
+    }
+    const standIn = window as unknown as { __dshClaudePass?: () => void }
+    if (standIn.__dshClaudePass === wake) delete standIn.__dshClaudePass
+    // The seats' shared body watch and service subscriptions belong to this
+    // generation: a page handed back keeps no subscription, and a later
+    // generation opens its own.
     closeHostSeats()
+    closeHostServices()
+    resetBodyProperties()
+    resetPartVocabulary()
+    resetAppearanceOverlay()
     setHostContext(null)
     disposePrefsBinding()
   }
@@ -228,7 +243,7 @@ export function apply(ctx: HostContext) {
   // Registered before anything is installed: registered last, a feature that
   // threw half-way through left the stylesheet and every listener installed
   // so far on the page with no teardown the host could ever run.
-  ctx.effect(() => teardown, 'dsh-claude-style: Claude Code desktop theme')
+  ctx.effect(() => teardown, `${PACKAGE_NAME}: Claude Code desktop theme`)
 
   /**
    * Switch one feature off for the rest of this generation: run its own
@@ -467,7 +482,7 @@ export function apply(ctx: HostContext) {
   adoptSettingsForm(ctx)
   // The service can mount after this plugin: wait for it declaratively and
   // bind then, so the first settings change never meets an unbound store.
-  if (typeof ctx.inject === 'function') ctx.inject(['configForms'], () => { adoptSettingsForm(ctx) })
+  if (typeof ctx.inject === 'function') stopConfigForms = ctx.inject(['configForms'], () => { adoptSettingsForm(ctx) })
   loadModelCopy()
   loadUsername()
   // Preferences are read asynchronously from the host settings namespace;

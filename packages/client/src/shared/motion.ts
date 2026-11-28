@@ -97,3 +97,11 @@ export function motionEaseAt(token: string, progress: number): number {
   parseCurve(value, token)
   return easeValueAt(value, progress)
 }
+
+/** Force layout before restoring transitions so the start state paints without animating. */
+export function withoutTransition(elements: readonly HTMLElement[], write: () => void) {
+  for (const element of elements) element.style.transition = 'none'
+  write()
+  for (const element of elements) void element.offsetWidth
+  for (const element of elements) element.style.transition = ''
+}

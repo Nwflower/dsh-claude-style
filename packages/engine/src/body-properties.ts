@@ -71,3 +71,8 @@ export function writeBodyProperty(name: string, value: string | null) {
   }
   watch()
 }
+
+/** Restore any held inline body properties that outlived their caller and stop watching (D12). */
+export function resetBodyProperties() {
+  for (const name of [...held.keys()]) writeBodyProperty(name, null)
+}

@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { SESSION_PANEL_PATH } from '@dsh-claude-style/contracts/routes'
+import { readHostJson } from '@dsh-claude-style/engine/resource'
 import type { SessionPanelAnswer } from '@dsh-claude-style/contracts/session-panel'
 import { sessionProjectionFaces } from '../../shared/session-projections'
 import { createPanelPoller } from './panel-poller'
@@ -115,9 +116,7 @@ function openSource(sessionId: string): ReadingSource {
       return `${SESSION_PANEL_PATH}?id=${encodeURIComponent(sessionId)}${live}`
     },
     async fetch(url, signal) {
-      const response = await fetch(url, { credentials: 'same-origin', headers: { accept: 'application/json' }, signal })
-      if (!response.ok) throw new Error(`HTTP ${response.status}`)
-      return await response.json() as SessionPanelAnswer
+      return await readHostJson(url, { signal }) as unknown as SessionPanelAnswer
     },
     hidden: () => document.hidden,
     setTimeout: (run, ms) => window.setTimeout(run, ms),

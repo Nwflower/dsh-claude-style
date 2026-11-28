@@ -27,7 +27,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { runsPath } from '../../scripts/shared/debug-paths.mjs'
 import { newContextOn, openBrowser } from './browser.mjs'
-import { argOf } from './cli-args.mjs'
+import { argOf } from '../../scripts/shared/args.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
 /** The scratch host's home: build output, so it lives with the other debug artifacts. */

@@ -1,4 +1,4 @@
-import { COMPOSER_CARD_SELECTOR, PERMISSION_TRIGGER_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { PERMISSION_TRIGGER_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { PERMISSIONS_ATTR } from '../../constants'
 import { closestConversationSession, conversationSessionId, currentPreset, currentSession, sessionById } from '@dsh-claude-style/engine/host'
 import { buildElement, closestFrom, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
@@ -204,9 +204,14 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     return held
   }
 
-  /** The cold start screen's mode strip, inside the single-line composer card. */
-  function findModesStrip() {
-    return document.querySelector<HTMLElement>(COMPOSER_CARD_SELECTOR + '[data-dsh-claude-part~="card-workspace-trigger"] [data-dsh-claude-part~="modes"]')
+  /** The cold start screen's mode strip, inside whichever composer card acts as the workspace picker. */
+  function findModesStrip(cards: readonly HTMLElement[]) {
+    for (let i = 0; i < cards.length; i++) {
+      if (!cards[i].matches('[data-dsh-claude-part~="card-workspace-trigger"]')) continue
+      const strip = cards[i].querySelector<HTMLElement>('[data-dsh-claude-part~="modes"]')
+      if (strip !== null) return strip
+    }
+    return null
   }
 
   /** Keep the card's trigger in the slot the host renders, adopting a reload's orphans. */
@@ -331,7 +336,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       // return to the cold start screen reads it again.
       if (coldStart && !coldStartShown && catalog.hasCatalog()) catalog.probe()
       coldStartShown = coldStart
-      heroHost = coldStart ? findModesStrip() : heroTrigger?.parentElement ?? null
+      heroHost = coldStart ? findModesStrip(composerCards) : heroTrigger?.parentElement ?? null
       if (heroHost !== null) syncHeroSegments(heroHost, coldStart, heroCard, strays)
     } else {
       coldStartShown = false
@@ -343,7 +348,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
       // disabled tier card the classic skin draws in its mode strip, now per
       // card, instead of dropping the control with the segments.
       if (coldStart) {
-        const modesHost = findModesStrip()
+        const modesHost = findModesStrip(composerCards)
         if (modesHost !== null) heroHost = syncInertSlot(modesHost, strays)
       }
     }

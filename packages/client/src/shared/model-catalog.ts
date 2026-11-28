@@ -3,7 +3,7 @@ import { currentSessionId, hostModelDirectories } from '@dsh-claude-style/engine
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostModelCatalogSnapshot, HostModelDirectory, HostModelEntry, HostModelGroup, HostModelReasoning } from '@dsh-claude-style/contracts/services'
 import { notifyAll } from '@dsh-claude-style/engine/notify'
-import { dropHostRejection } from '../../shared/host-rejection'
+import { dropHostRejection } from './host-rejection'
 
 /** One provider the catalog lists, with how many models it carries. */
 export interface CatalogProvider {

@@ -7,8 +7,9 @@ import type { BrandingAppearance, BrandingPreset, BrandingSlot } from '@dsh-clau
 import { BRANDING_ASSET_PATH, BRANDING_STATUS_PATH } from '@dsh-claude-style/contracts/routes'
 import { readFileSync, realpathSync, rmSync, statSync } from 'node:fs'
 import { join, resolve, sep } from 'node:path'
-import { IMAGE_HEADERS, imageBytesValid, readImageUpload, routeFailure, writeAtomicFile } from './brand-image-shared.js'
-import { fenceRefused, methodRefused, readRequestBody, sendJson } from '@dsh-claude-style/engine/node/http'
+import { IMAGE_HEADERS, imageBytesValid, readImageUpload } from './brand-image-shared.js'
+import { writeAtomicFile } from '@dsh-claude-style/engine/node/cache-file'
+import { fenceRefused, methodRefused, readJsonBody, routeFailure, sendJson } from '@dsh-claude-style/engine/node/http'
 import { pluginPath } from './paths.js'
 import type { DshContext, DshPeerScope, DshRequest, DshResponse, DshRoute } from '@dsh-claude-style/engine/node/dsh'
 
@@ -94,13 +95,10 @@ function createBrandingStore(ctx: DshContext) {
 }
 
 async function readStatus(store: ReturnType<typeof createBrandingStore>, req: DshRequest, res: DshResponse) {
-  const body = await readRequestBody(req, STATUS_BODY_MAX)
-  if (body === null) {
-    sendJson(res, 413, { ok: false, error: 'request body too large' })
-    return
-  }
+  const body = await readJsonBody(req, res, STATUS_BODY_MAX)
+  if (!body.ok) return
   try {
-    const raw = JSON.parse(body.toString('utf8')) as { appearance?: unknown }
+    const raw = body.value as { appearance?: unknown }
     const preset = parseBrandingPreset(JSON.stringify(raw))
     if (raw.appearance !== 'light' && raw.appearance !== 'dark') {
       sendJson(res, 400, { ok: false, error: 'unknown appearance' })
@@ -123,10 +121,7 @@ export function brandingPresetRoutes(ctx: DshContext): { label: string, route: D
         handler: (req: DshRequest, res: DshResponse, peer?: DshPeerScope) => {
           if (methodRefused(req, res, ['POST'])) return
           if (fenceRefused(ctx, req, res, peer)) return
-          void readStatus(store, req, res).catch((error: unknown) => {
-            if (res.headersSent) res.destroy()
-            else sendJson(res, 500, { ok: false, error: error instanceof Error ? error.message : String(error) })
-          })
+          void readStatus(store, req, res).catch((error: unknown) => { routeFailure(res, error) })
         },
       },
     },

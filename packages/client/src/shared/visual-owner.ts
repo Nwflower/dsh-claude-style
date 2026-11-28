@@ -1,5 +1,4 @@
-import { DS_BOT_SURFACE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
-import { SKIN_STAMP_ATTR } from '../constants'
+import { DS_BOT_SURFACE_ATTRIBUTE, SKIN_CENTER_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 
 /**
@@ -41,7 +40,7 @@ export function dsBotSurfaceActive() {
 
 /** The page's owner right now; null while the theme has it. */
 export function pageOwner(): PageOwner | null {
-  if (document.documentElement.hasAttribute(SKIN_STAMP_ATTR)) return 'skin'
+  if (document.documentElement.hasAttribute(SKIN_CENTER_ATTRIBUTE)) return 'skin'
   if (dsBotSurfaceActive()) return 'ds-bot'
   return null
 }
@@ -63,7 +62,7 @@ export function subscribePageOwner(listener: (owner: PageOwner | null) => void) 
     last = next
     listener(next)
   }
-  const offSkin = subscribeMutations(document.documentElement, { attributeFilter: [SKIN_STAMP_ATTR] }, check)
+  const offSkin = subscribeMutations(document.documentElement, { attributeFilter: [SKIN_CENTER_ATTRIBUTE] }, check)
   const offBot = subscribeMutations(document.body, { attributeFilter: [DS_BOT_SURFACE_ATTRIBUTE] }, check)
   return () => {
     offSkin()

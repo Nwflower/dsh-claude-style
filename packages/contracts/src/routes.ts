@@ -1,7 +1,8 @@
 /** Private route names registered by the host and addressed by the browser (D73). */
+import { PACKAGE_NAME } from './package'
 
 /** The origin root the host registers this plugin's routes under. */
-export const ROUTE_ROOT = '/dsh-claude-style'
+export const ROUTE_ROOT = `/${PACKAGE_NAME}`
 
 /**
  * The document's own directory, which the served page resolves URLs against. The

@@ -5,6 +5,8 @@
     "moduleResolution": "bundler",
     "lib": ["ESNext"],
     "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "noEmit": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
@@ -15,5 +17,5 @@
       "@dsh-claude-style/engine/node/*": ["../engine/node/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "../engine/node"]
 }

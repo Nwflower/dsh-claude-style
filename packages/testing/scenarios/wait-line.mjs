@@ -26,9 +26,9 @@
 import { bound } from '../bounds.mjs'
 import fs from 'node:fs'
 import path from 'node:path'
-import surfaceTable from '../data/surface.json' with { type: 'json' }
+import { surfaceEntry } from '../surface.mjs'
 
-const CROSS_LANE = surfaceTable.surface.find((entry) => entry.id === 'chat-wait.lane-cross')
+const CROSS_LANE = surfaceEntry('chat-wait.lane-cross')
 if (CROSS_LANE?.selector === undefined) throw new Error('wait-line: the cross lane surface is incomplete')
 
 /** The clauses the model writes, which the line says back word for word. */

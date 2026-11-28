@@ -2,6 +2,7 @@
  * Custom rates overlay the table by model; blank buckets inherit its rates.
  * Stored as `model|input|cacheRead|output` text to preserve entered digits, and shared by both halves (D73).
  */
+import { bareModelId } from './prices'
 import type { PriceTier } from './prices'
 
 /** Parsed custom price row. */
@@ -50,11 +51,7 @@ export function parseBillingTable(entries: readonly string[]): BillingRow[] {
 }
 
 /** A model id's lowercase bare form: the shape the price tables match on. */
-export function billingModelKey(modelId: string) {
-  const raw = modelId.trim().toLowerCase()
-  if (raw === '') return null
-  return raw.includes('/') ? raw.slice(raw.lastIndexOf('/') + 1) : raw
-}
+export const billingModelKey = bareModelId
 
 /** The row one model answers with, or null. */
 export function billingRowFor(rows: readonly BillingRow[], modelId: string): BillingRow | null {

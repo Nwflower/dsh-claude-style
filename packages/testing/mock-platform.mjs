@@ -18,7 +18,7 @@
 import fs from 'node:fs'
 import http from 'node:http'
 import path from 'node:path'
-import { argOf } from './cli-args.mjs'
+import { argOf } from '../../scripts/shared/args.mjs'
 
 /** The token the stored grant carries; the platform answers any request bearing it. */
 const LANE_TOKEN = 'dsh-claude-style-lane'

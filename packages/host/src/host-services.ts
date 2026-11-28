@@ -8,6 +8,8 @@
  * The type says what a present member answers, not that a host must mount it.
  */
 
+import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
+
 /** One session the host holds open, as the deletion route and the rewind recorder read it. */
 export interface HostLiveSession<Event = unknown> {
   id: string
@@ -75,4 +77,11 @@ export interface HostWorkspaceRegistry {
   archiveSession?(sessionId: string, options?: { stopActivity?: boolean }): Promise<void>
   unarchiveSession?(sessionId: string): Promise<void>
   pinSession?(sessionId: string): Promise<void>
+}
+
+/** One open live session by id from the host's `sessions` service, or null when absent. */
+export function liveSessionOf<Event = unknown>(ctx: DshContext, sessionId: string): HostLiveSession<Event> | null {
+  const sessions = ctx.get('sessions') as HostSessionsService<HostLiveSession<Event>> | null | undefined
+  const live = sessions?.get?.(sessionId) as HostLiveSession<Event> | null | undefined
+  return live !== undefined && live !== null && typeof live === 'object' ? live : null
 }

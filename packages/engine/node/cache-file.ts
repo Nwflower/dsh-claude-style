@@ -6,7 +6,7 @@
  * Windows they are not an ACL boundary (the per-user profile directory is), so the
  * same bits are carried there without effect.
  */
-import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname, join, sep } from 'node:path'
 import type { DshContext } from './dsh'
 import { harnessPath } from './harness-home'
@@ -66,4 +66,23 @@ export function createCacheFiles(packageName: string) {
       }
     },
   }
+}
+
+/** Replace one file atomically with tight 0700/0600 permissions, cleaning up stale temp files on error. */
+export function writeAtomicFile(target: string, bytes: Buffer, older: readonly string[] = []) {
+  const dir = dirname(target)
+  mkdirSync(dir, { recursive: true, mode: 0o700 })
+  chmodSync(dir, 0o700)
+  const temporary = `${target}.${process.pid}.tmp`
+  try {
+    writeFileSync(temporary, bytes, { mode: 0o600 })
+    chmodSync(temporary, 0o600)
+    renameSync(temporary, target)
+  } catch (error) {
+    try {
+      rmSync(temporary, { force: true })
+    } catch { /* keep the primary write or rename failure */ }
+    throw error
+  }
+  for (const path of older) rmSync(path, { force: true })
 }

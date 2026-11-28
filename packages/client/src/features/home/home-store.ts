@@ -1,4 +1,5 @@
-import { HOME_SESSION_SCOPE_ALL, HOME_SESSION_SCOPE_WORKSPACE, USAGE_ROUTE } from '../../constants'
+import { USAGE_PATH } from '@dsh-claude-style/contracts/routes'
+import { HOME_SESSION_SCOPE_ALL, HOME_SESSION_SCOPE_WORKSPACE } from '../../constants'
 import { readPrefs } from '../../core/prefs'
 import { pad2 } from '../../shared/format'
 import { notifyAll } from '@dsh-claude-style/engine/notify'
@@ -180,7 +181,7 @@ export function createHomeUsage(ctx: HostContext) {
     const params = new URLSearchParams({ scope: usage.scope })
     if (targetWorkspace !== '') params.set('workspace', targetWorkspace)
     // A transport failure is the panel's unavailable state (D12).
-    void request.load(USAGE_ROUTE + '?' + params.toString(), {}, () => {
+    void request.load(USAGE_PATH + '?' + params.toString(), {}, () => {
       usage.loading = false
       usage.answeredAt = Date.now()
       usage.error = 'unavailable'

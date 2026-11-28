@@ -5,6 +5,7 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import { argOf } from '../shared/args.mjs'
 import { runsPath } from '../shared/debug-paths.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
@@ -14,9 +15,8 @@ const MESSAGE_MAX = 300
 
 const args = process.argv.slice(2)
 const reportAt = (() => {
-  const at = args.indexOf('--report')
-  if (at === -1) return runsPath(ROOT, 'behaviour', 'report.json')
-  const value = args[at + 1]
+  if (!args.includes('--report')) return runsPath(ROOT, 'behaviour', 'report.json')
+  const value = argOf('report', args)
   if (value === undefined) throw new Error('observe-summary: --report needs a path')
   return path.resolve(value)
 })()

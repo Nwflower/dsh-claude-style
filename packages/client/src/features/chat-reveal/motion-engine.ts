@@ -1,4 +1,4 @@
-import { motionReduced, subscribePrefs } from '../core/prefs'
+import { motionReduced, subscribePrefs } from '../../core/prefs'
 
 /**
  * Run one motion engine while the page may animate, and only then (D40).

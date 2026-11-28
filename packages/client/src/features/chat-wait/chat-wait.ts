@@ -8,7 +8,7 @@ import { buildElement, writeTextInPlace } from '@dsh-claude-style/engine/dom'
 import { formatHostDuration } from '../../shared/format'
 import { motionMs } from '../../shared/motion'
 import { releaseSwappingText, setSwappingText } from '../../shared/swapping-text'
-import { activityWords, waitingWord, THINKING_KEY } from '../../shared/turn-activity'
+import { activityWords, waitingWord, THINKING_KEY } from './turn-activity'
 import { sessionProjectionFaces } from '../../shared/session-projections'
 import { buildWaitLoader, startWaitLoader, releaseWaitLoader, resyncWaitLoader, setWaitLoaderOutputting } from './wait-loader'
 import { CHAT_FLOW_SELECTOR, CHAT_RUNNING_SELECTOR, CHAT_RUNNING_HOLDING_ATTRIBUTE, CHAT_RUNNING_TEXT_SELECTOR, SHIMMER_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
@@ -102,9 +102,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
    * second, and a row arriving or leaving moves the column's own count, which
    * is part of the shape.
    */
-  // Per row: both leave with the row (release, and the teardown's sweep).
-  const tailVerdicts = new Map<HTMLElement, { shape: number, tail: boolean, at: number }>()
-  const foreignVerdicts = new Map<HTMLElement, { shape: number, foreign: boolean, at: number }>()
+  // Per row: WeakMaps release automatically as soon as the host detaches a row.
+  const tailVerdicts = new WeakMap<HTMLElement, { shape: number, tail: boolean, at: number }>()
+  const foreignVerdicts = new WeakMap<HTMLElement, { shape: number, foreign: boolean, at: number }>()
   /** How long a reading stands when the structure around its row did not move. */
   const REREAD_MS = 1000
   let stopped = false
@@ -490,14 +490,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     for (const row of [...lines.keys()]) {
       if (!running.has(row)) release(row)
     }
-    // A row the host took away holds no reading: the entry is a strong key, and
-    // the row would outlive the page it stood on.
-    for (const row of [...tailVerdicts.keys()]) {
-      if (!running.has(row)) tailVerdicts.delete(row)
-    }
-    for (const row of [...foreignVerdicts.keys()]) {
-      if (!running.has(row)) foreignVerdicts.delete(row)
-    }
     for (const [row, stop] of [...ownershipWatches]) {
       if (running.has(row)) continue
       stop()
@@ -567,8 +559,6 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     }
     waits.clear()
     wording.clear()
-    tailVerdicts.clear()
-    foreignVerdicts.clear()
     // A follow whose row left the page without a pass: release() stops the ones
     // still standing.
     for (const followed of [...follows.values()]) followed.stop()

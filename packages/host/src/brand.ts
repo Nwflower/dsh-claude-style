@@ -8,16 +8,17 @@
  * directory is read per request, so a file dropped in by hand shows up on the
  * next status read.
  */
-import { BRAND_IMAGE_KINDS, BRAND_IMAGE_MAX_BYTES, BRAND_IMAGE_TYPES } from '@dsh-claude-style/contracts/brand'
+import { BRAND_IMAGE_KINDS, BRAND_IMAGE_TYPES } from '@dsh-claude-style/contracts/brand'
 import type { BrandAnswer, BrandImageKind, BrandImageState } from '@dsh-claude-style/contracts/brand'
 import { BRAND_MARK_PATH, BRAND_PATH, BRAND_WORDMARK_PATH } from '@dsh-claude-style/contracts/routes'
 import { readFileSync, rmSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import type { DshContext, DshPeerScope, DshRequest, DshResponse, DshRoute } from '@dsh-claude-style/engine/node/dsh'
 import { pluginPath } from './paths.js'
-import { IMAGE_HEADERS, readImageUpload, writeAtomicFile } from './brand-image-shared.js'
+import { IMAGE_HEADERS, readImageUpload } from './brand-image-shared.js'
 import { brandingPresetRoutes } from './branding-presets.js'
-import { fenceRefused, methodRefused, readRequestBody, sendJson } from '@dsh-claude-style/engine/node/http'
+import { writeAtomicFile } from '@dsh-claude-style/engine/node/cache-file'
+import { fenceRefused, methodRefused, routeFailure, sendJson } from '@dsh-claude-style/engine/node/http'
 
 /** Each image's route. */
 const IMAGE_PATHS: Record<BrandImageKind, string> = { mark: BRAND_MARK_PATH, wordmark: BRAND_WORDMARK_PATH }
@@ -112,10 +113,7 @@ export function brandRoutes(ctx: DshContext): { label: string, route: DshRoute }
               store.remove(kind)
               sendJson(res, 200, store.answer())
             })
-          void done.catch((error: unknown) => {
-            if (res.headersSent) res.destroy()
-            else sendJson(res, 500, { ok: false, error: String((error as { message?: string } | null)?.message ?? String(error)) })
-          })
+          void done.catch((error: unknown) => { routeFailure(res, error) })
           return
         }
         const found = store.find(kind)

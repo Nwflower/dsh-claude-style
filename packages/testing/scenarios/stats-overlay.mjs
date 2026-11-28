@@ -19,21 +19,9 @@
  * The skin's own marks, read off the surface table rather than spelled here
  * (D92): the table is what a lane names a skin mark through.
  */
-import surfaceTable from '../data/surface.json' with { type: 'json' }
+import { surfaceAttribute as mark, surfaceSelector as selector } from '../surface.mjs'
 import { COMPOSER_CARD_SELECTOR, COMPOSER_SELECTOR, CONVERSATION_SCROLL_SELECTOR, CONVERSATION_SESSION_ATTRIBUTE, CONVERSATION_SESSION_SELECTOR, SESSION_ROW_KEY_ATTRIBUTE, SIDEBAR_NEW_SESSION_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { sendPrompt, waitForTurn } from '../prompt.mjs'
-
-const SURFACE = surfaceTable.surface
-const mark = (id) => {
-  const entry = SURFACE.find((candidate) => candidate.id === id)
-  if (entry === undefined || entry.attribute === undefined) throw new Error(`stats-overlay: surface "${id}" names no attribute`)
-  return entry.attribute
-}
-const selector = (id) => {
-  const entry = SURFACE.find((candidate) => candidate.id === id)
-  if (entry === undefined || entry.selector === undefined) throw new Error(`stats-overlay: surface "${id}" names no element`)
-  return entry.selector
-}
 const PAGE_ZOOM = mark('skin.page-zoom')
 const COMPOSER_GAP = mark('composer.bottom-gap')
 const CONTEXT_METER = mark('stats.context-meter')

@@ -1,5 +1,5 @@
 import { reportFeatureFailure } from '@dsh-claude-style/engine/scheduler'
-import type { AttentionChange } from '../sound-cues/attention'
+import type { AttentionChange } from '../../shared/attention'
 import { copy } from './copy'
 
 export function notificationPermission(browser: { Notification?: typeof Notification } = window): NotificationPermission | 'unsupported' {

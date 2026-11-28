@@ -1,7 +1,7 @@
 import { SESSION_ROW_KEY_ATTRIBUTE, SESSION_ROW_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { observeMatches } from '@dsh-claude-style/engine/bus'
 import { buildElement } from '@dsh-claude-style/engine/dom'
-import { QUIET_ATTR } from '../../constants'
+import { DATE_VIEW_TOGGLE_EVENT, QUIET_ATTR } from '../../constants'
 import { moveElementsIntoOrder, sessionSeatSegments } from '../../shared/element-order'
 import { watchSidebar } from '../../shared/sidebar-watch'
 import { hostSessions, hostWorkspaces, hostWorkspaceView } from '@dsh-claude-style/engine/host'
@@ -51,8 +51,6 @@ const WEEKDAY_LIMIT = 7
  * 切换视图的事件名：铃铛按下时派发，本特性接住它，在「宿主的按工作区」与
  * 「我们的按日期」之间来回切。日期视图默认关着，而且这次选择不跨刷新保留。
  */
-export const DATE_VIEW_TOGGLE_EVENT = 'dsh-claude-toggle-date-view'
-
 /** 一天所属段落的标题键（顺序与 Date#getDay 一致）。 */
 const WEEKDAY_KEYS: CopyKey[] = ['weekday0', 'weekday1', 'weekday2', 'weekday3', 'weekday4', 'weekday5', 'weekday6']
 

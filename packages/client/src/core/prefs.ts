@@ -6,6 +6,7 @@ import { pageZoomOf, pageZoomText, projectPageZoomFactor } from '../shared/page-
 import { clearCustomTypefaces, projectCustomTypefaces } from '../shared/typeface'
 import type { PrefKey, Prefs } from '../constants'
 import type { HostContext } from '@dsh-claude-style/engine/host'
+import { APPEARANCE_OVERLAY_KEYS, APPEARANCE_RECORD_KEYS } from '@dsh-claude-style/contracts/appearance-overlays'
 import { clampPrefs, migrationWriteBack, PALETTE_PRESETS } from '@dsh-claude-style/contracts/prefs'
 import { parsePaletteScheme } from '@dsh-claude-style/contracts/palette-schemes'
 import { parseBrandingPreset } from '@dsh-claude-style/contracts/branding-presets'
@@ -17,7 +18,7 @@ import { paletteCardOf } from '../shared/palette-scheme'
 import { clearDocumentMarks, installDocumentMarks, mirrorDocumentMarks } from './root-mirror'
 
 /** Record fields whose UI edits always use the overlay, independent of their storage layer. */
-const RECORD_FIELDS = new Set<PrefKey>(['paletteSchemes', 'paletteColors', 'brandingPresets', 'brandingPreset'])
+const RECORD_FIELDS = new Set<PrefKey>(APPEARANCE_RECORD_KEYS)
 
 /** Defaults hold until the host form answers; the shared table clamps stored values (D73, D75). */
 export let prefs = clampPrefs({})
@@ -35,14 +36,27 @@ const binding = createSettingsBinding({
   },
 })
 
+/** Unsubscribes the overlay reload listener owned by the active generation. */
+let offOverlayLoaded: (() => void) | null = null
+
 /** Bind the official settings form (engine/src/settings-binding.ts); true once a form is bound. */
 export function adoptSettingsForm(ctx: HostContext) {
+  if (offOverlayLoaded === null) offOverlayLoaded = onAppearanceOverlayLoaded(() => { loadPrefs() })
   return binding.adopt(ctx)
 }
 
-/** Release the form and directory subscriptions the binding opened. */
+/** Release the form and overlay subscriptions and reset per-generation state (D12). */
 export function disposePrefsBinding() {
   binding.dispose()
+  if (offOverlayLoaded !== null) {
+    offOverlayLoaded()
+    offOverlayLoaded = null
+  }
+  prefs = clampPrefs({})
+  readFromForm = false
+  footerTakeoverRetired = false
+  composerRestyleRetired = false
+  migrationWritten = false
 }
 
 /** Read the preferences from the form, once it carries values. */
@@ -311,7 +325,7 @@ export function preferenceWritePatch(patch: Partial<Prefs>, locked: ReadonlySet<
   return out
 }
 
-const OVERLAY_FIELDS = new Set<PrefKey>(['paletteSchemeOverrides', 'paletteSchemeDeleted', 'paletteColorsOverride', 'brandingPresetOverrides', 'brandingPresetDeleted', 'brandingPresetOverride'])
+const OVERLAY_FIELDS = new Set<PrefKey>(APPEARANCE_OVERLAY_KEYS)
 
 export function savePrefs(patch: Partial<Prefs>): Promise<Prefs | null> {
   const write = preferenceWritePatch(patch)
@@ -328,5 +342,3 @@ export function savePrefs(patch: Partial<Prefs>): Promise<Prefs | null> {
     return accepted === null || accepted === false ? null : prefs
   })
 }
-
-onAppearanceOverlayLoaded(() => { loadPrefs() })

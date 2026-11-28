@@ -501,7 +501,13 @@ function registryFor(selector: string): MatchRegistry {
     if (changed) {
       registry.ordered = null
       // A listener that leaves or joins here changes the set for the next batch only.
-      for (const listener of [...registry.listeners]) listener()
+      for (const listener of [...registry.listeners]) {
+        try {
+          listener()
+        } catch (error) {
+          reportError(error)
+        }
+      }
     }
   })
   matchRegistries.set(selector, registry)

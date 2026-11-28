@@ -1,4 +1,4 @@
-import { withoutTransition } from './transition'
+import { withoutTransition } from './motion'
 
 export const POINTER_HINT_CLASS = 'dsh-claude-pointer-hint'
 export const POINTER_HINT_SHOWN_ATTRIBUTE = 'data-shown'

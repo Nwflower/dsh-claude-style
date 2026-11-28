@@ -1,4 +1,4 @@
-import { DATE_VIEW_TOGGLE_EVENT } from '../date-groups/date-groups'
+import { DATE_VIEW_TOGGLE_EVENT } from '../../constants'
 import { hostTooltip } from '../../shared/host-tooltip'
 import { observeMatches } from '@dsh-claude-style/engine/bus'
 import { buildElement } from '@dsh-claude-style/engine/dom'

@@ -46,7 +46,7 @@ export function removeDebugDirectory(root, base, target) {
   fs.rmSync(target, { recursive: true })
 }
 
-function processAlive(pid) {
+export function processAlive(pid) {
   try {
     process.kill(pid, 0)
     return true

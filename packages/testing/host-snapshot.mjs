@@ -26,7 +26,7 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
-import { argOf } from './cli-args.mjs'
+import { argOf } from '../../scripts/shared/args.mjs'
 import { start, openPage, waitForSkin, dismissOverlays } from './dsh-web.mjs'
 import { installedHostVersion } from './host-version.mjs'
 import { startMockLlm } from './mock-llm.mjs'

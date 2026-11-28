@@ -6,6 +6,7 @@
 
 import { CONVERSATION_VIEW_STORAGE_PREFIX } from '@dsh-claude-style/contracts/dom'
 import type { HostAssistantStep, HostChatSnapshot, HostOutlineTurn, HostRunningCall, HostSession, HostTurn } from '@dsh-claude-style/contracts/services'
+import { hostSessions } from './host-services'
 import type { HostContext } from './host-types'
 
 /** The saved view last parsed, with the raw string it was parsed from: the composer's pass reads it every frame and the store moves only on a view switch. */
@@ -63,8 +64,9 @@ export function currentPreset(session: HostSession): string | null {
 
 /** One session's whole-log turn outline (the host's `turnOutline` projection), or undefined where the assembly does not mount it; `seq` is the turn's `turn/start` event, which the host's own jump pages history through. */
 export function sessionOutline(ctx: HostContext, sessionId: string): HostOutlineTurn[] | undefined {
-  const face = ctx.get('sessions')?.binding(sessionId)?.session?.projections?.faceOf('turnOutline')
-  return typeof face?.getSnapshot === 'function' ? face.getSnapshot() : undefined
+  const face = hostSessions(ctx)?.binding(sessionId)?.session?.projections?.faceOf('turnOutline')
+  const snapshot = typeof face?.getSnapshot === 'function' ? face.getSnapshot() : undefined
+  return Array.isArray(snapshot) ? snapshot as HostOutlineTurn[] : undefined
 }
 
 /** The turn holding one event seq: the latest outline entry at or before it; an outline that does not reach that far answers null, and the caller leaves the reading position where it is. */

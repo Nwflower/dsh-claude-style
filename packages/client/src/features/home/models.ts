@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { observeSize } from '@dsh-claude-style/engine/bus'
 import { HOME_MODEL_ROWS, formatHomeCount, homeShortDate, homeShortDateFormat } from './data'
 import type { HomeModel, HomePanel } from './data'
 import { formatCompactTokens } from '../../shared/format'
@@ -160,13 +161,12 @@ export function createHomeModels() {
           && held.widths.every((one, at) => one === widths[at]) ? held : { key: labelsKey, width, widths })
       }
       sync()
-      const watcher = new ResizeObserver(sync)
-      watcher.observe(plot)
+      const stopResize = observeSize(plot, sync)
       // A web font landing after the first paint changes every label's width.
       void document.fonts.ready.then(sync)
       return () => {
         stopped = true
-        watcher.disconnect()
+        stopResize()
       }
     }, [labelsKey])
     let peak = 0

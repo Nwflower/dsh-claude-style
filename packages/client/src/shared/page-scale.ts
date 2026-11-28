@@ -1,4 +1,5 @@
 import { writeBodyProperty } from '@dsh-claude-style/engine/body-properties'
+import { hasSkinClass } from '@dsh-claude-style/engine/dom'
 import { installScaledLayer } from '@dsh-claude-style/engine/scaled-layer'
 import { installFrameColumns } from './page-scale-columns'
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
@@ -8,7 +9,7 @@ import { pageViewport, pageZoomFactor, projectPageZoomFactor } from './page-zoom
 
 /** Skin-positioned host nodes carry our attributes too and must stay out of the host floating-layer conversion. */
 function isSkinNode(node: Element) {
-  if (/(^| )dsh-claude-/.test(typeof node.className === 'string' ? node.className : '')) return true
+  if (hasSkinClass(node)) return true
   return Array.from(node.attributes).some(attribute => attribute.name.startsWith('data-dsh-claude-'))
 }
 
@@ -67,15 +68,14 @@ export function installPageScale() {
     layer?.settle()
     columns?.settle()
   }
-  // The teardown asks a re-run for the readings of the page it hands back: it has
-  // taken its own properties off by then, and the body outlives this run. The
-  // observer that hears a card appear leaves the body's children alone, so the
-  // readings are written here rather than from inside the listener.
+  // The observer that hears a card appear leaves the body's children alone, so
+  // the readings are written here rather than from inside the listener. Teardown
+  // releases the carried layer before stripping width marks and properties so
+  // nothing re-stamps <body> after release (D12, D81).
   layer = installScaledLayer({
     isOwn: isSkinNode,
     scale: () => pageZoomFactor(),
     onChange: measure,
-    onRelease: () => settle(),
   })
   columns = installFrameColumns({ scale: () => pageZoomFactor() })
   const offPrefs = subscribePrefs(settle)
@@ -92,11 +92,11 @@ export function installPageScale() {
   return () => {
     window.removeEventListener('resize', settle)
     stopScaleWatch()
-    for (const mark of WIDTH_MARKS) body.removeAttribute(mark.attr)
     offPrefs()
-    writeBodyProperty(PAGE_HEIGHT, null)
-    writeBodyProperty(PAGE_WIDTH, null)
     if (columns !== null) columns.stop()
     layer.stop()
+    for (const mark of WIDTH_MARKS) body.removeAttribute(mark.attr)
+    writeBodyProperty(PAGE_HEIGHT, null)
+    writeBodyProperty(PAGE_WIDTH, null)
   }
 }

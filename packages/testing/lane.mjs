@@ -4,11 +4,11 @@
  * the shape of one assertion (D92).
  */
 
-import surfaceTable from './data/surface.json' with { type: 'json' }
+import { surfaceEntry } from './surface.mjs'
 
-const STATS_LINE = surfaceTable.surface.find((entry) => entry.id === 'stats.inline-line')
-const STATS_FOOTER_LINE = surfaceTable.surface.find((entry) => entry.id === 'stats.footer-line')
-const VIEW_TABS_STRIP = surfaceTable.surface.find((entry) => entry.id === 'view-tabs.strip')
+const STATS_LINE = surfaceEntry('stats.inline-line')
+const STATS_FOOTER_LINE = surfaceEntry('stats.footer-line')
+const VIEW_TABS_STRIP = surfaceEntry('view-tabs.strip')
 if (STATS_LINE?.selector === undefined || STATS_FOOTER_LINE?.attribute === undefined || VIEW_TABS_STRIP?.attribute === undefined) throw new Error('lane: the statistics, view-tab and details surfaces are incomplete')
 
 /**

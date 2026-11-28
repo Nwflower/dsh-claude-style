@@ -18,12 +18,12 @@
  * rail stands past the edge strip here; the desktop's hidden column puts it
  * inside, and that case is specs/mechanism/sidebar-peek/edge-claim.spec.ts.
  */
-import surfaceTable from '../data/surface.json' with { type: 'json' }
+import { surfaceAttribute } from '../surface.mjs'
 import { sendPrompt, waitForTurn } from '../prompt.mjs'
 import { collapseRail } from './sidebar-rail.mjs'
 
 /** The skin's part mark, read off the surface table rather than spelled here (D92). */
-const PART = surfaceTable.surface.find((entry) => entry.id === 'skin.part').attribute
+const PART = surfaceAttribute('skin.part')
 const part = (name) => `[${PART}~="${name}"]`
 
 const PEEK = {

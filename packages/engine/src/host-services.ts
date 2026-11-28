@@ -25,8 +25,8 @@ export function currentSession(ctx: HostContext): HostSession | null {
 
 /** The session the host binds to one id, or null while it binds none. */
 export function sessionById(ctx: HostContext, sessionId: string): HostSession | null {
-  const sessions = ctx.get('sessions') as HostSessionsService | undefined
-  if (sessions === undefined || sessions === null) return null
+  const sessions = hostSessions(ctx)
+  if (sessions === null) return null
   const binding = sessions.binding(sessionId)
   if (binding === undefined || binding === null) return null
   return binding.session === undefined ? null : binding.session
@@ -37,7 +37,7 @@ export function sessionById(ctx: HostContext, sessionId: string): HostSession | 
  */
 export function findChatTarget(ctx: HostContext, sessionId: string): HostChatTarget | null {
   const conversation = ctx.get('uiConversation') as HostUiConversationService | undefined
-  const sessions = ctx.get('sessions') as HostSessionsService | undefined
+  const sessions = hostSessions(ctx)
   if (!conversation || !sessions?.binding(sessionId)) return null
   return conversation.binding(sessionId).target('chat') ?? null
 }
@@ -177,6 +177,16 @@ const WORKSPACE_VIEW_SLOT = 'sidebar.workspaces'
  * registry object, so an entry goes with the registry it was read from.
  */
 const workspaceViews = new WeakMap<HostSlotsService, HostWorkspaceViewStore | null>()
+/** Active slot subscriptions invalidating `workspaceViews`, released when the generation ends. */
+const workspaceViewStops = new Set<() => void>()
+
+/** Drop every slot subscription opened by `hostWorkspaceView` when the generation tears down (D12). */
+export function closeHostServices() {
+  for (const stop of [...workspaceViewStops]) {
+    workspaceViewStops.delete(stop)
+    try { stop() } catch (error) { reportError(error) }
+  }
+}
 
 /** Walk the browser's registration for its store; null when that shape is absent. */
 function findWorkspaceView(slots: HostSlotsService): HostWorkspaceViewStore | null {
@@ -206,10 +216,13 @@ export function hostWorkspaceView(lookup: HostContext | null | undefined): HostW
   const view = findWorkspaceView(slots)
   if (typeof slots.subscribe === 'function') {
     workspaceViews.set(slots, view)
-    const stop = slots.subscribe(WORKSPACE_VIEW_SLOT, () => {
+    const release = () => {
       workspaceViews.delete(slots)
+      workspaceViewStops.delete(release)
       stop()
-    })
+    }
+    const stop = slots.subscribe(WORKSPACE_VIEW_SLOT, release)
+    workspaceViewStops.add(release)
   }
   return view
 }

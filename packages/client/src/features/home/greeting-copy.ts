@@ -1,3 +1,4 @@
+import { findHeroRoot } from '@dsh-claude-style/engine/host'
 import { HOME_LAYOUT_STUDIO } from '../../constants'
 import { getUsername } from '../../shared/identity'
 import { readPrefs } from '../../core/prefs'
@@ -27,7 +28,8 @@ export function createGreetingCopy() {
       for (const span of replaced.keys()) if (!span.isConnected) replaced.delete(span)
       // The host renders one title group per hero variant; the first span of
       // each is the greeting (a preview badge may sit before it).
-      const groups = document.querySelectorAll('[data-dsh-claude-part~="hero-title-group"]')
+      const heroRoot = findHeroRoot()
+      const groups = heroRoot === null ? [] : heroRoot.querySelectorAll('[data-dsh-claude-part~="hero-title-group"]')
       for (let i = 0; i < groups.length; i++) {
         const spans = groups[i].children
         for (let j = 0; j < spans.length; j++) {

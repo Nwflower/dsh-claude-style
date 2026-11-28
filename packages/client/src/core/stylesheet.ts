@@ -66,3 +66,8 @@ export function mountStylesheet(id = STYLE_ID, sheet: SheetTemplate | string = S
     stopClasses = null
   }
 }
+
+/** Allow a subsequent generation to hand its part vocabulary over fresh (D101). */
+export function resetPartVocabulary() {
+  if (templates.size === 0) handedOver = false
+}

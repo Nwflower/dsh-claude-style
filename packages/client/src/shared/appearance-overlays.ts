@@ -1,26 +1,16 @@
-import { APPEARANCE_OVERLAY_ROUTE } from '../constants'
+import { APPEARANCE_OVERLAY_DEFAULT } from '@dsh-claude-style/contracts/appearance-overlays'
+import type { AppearanceOverlay } from '@dsh-claude-style/contracts/appearance-overlays'
+import { APPEARANCE_OVERLAY_PATH } from '@dsh-claude-style/contracts/routes'
 import { createHostResource, readHostJson } from '@dsh-claude-style/engine/resource'
 
-const DEFAULT: AppearanceOverlay = Object.freeze({
-  paletteSchemeOverrides: [], paletteSchemeDeleted: [], paletteColorsOverride: '',
-  brandingPresetOverrides: [], brandingPresetDeleted: [], brandingPresetOverride: '',
-})
-
-interface AppearanceOverlay {
-  paletteSchemeOverrides: string[]
-  paletteSchemeDeleted: string[]
-  paletteColorsOverride: string
-  brandingPresetOverrides: string[]
-  brandingPresetDeleted: string[]
-  brandingPresetOverride: string
-}
-let current: AppearanceOverlay = DEFAULT
+let current: AppearanceOverlay = APPEARANCE_OVERLAY_DEFAULT
 let saved = false
 let writes: Promise<unknown> = Promise.resolve()
+let generation = 0
 
-const resource = createHostResource(APPEARANCE_OVERLAY_ROUTE, data => {
+const resource = createHostResource(APPEARANCE_OVERLAY_PATH, data => {
   if (data?.ok !== true || data.value === null || typeof data.value !== 'object') throw new Error('appearance overlays did not answer successfully')
-  if (!saved) current = { ...DEFAULT, ...data.value as AppearanceOverlay }
+  if (!saved) current = { ...APPEARANCE_OVERLAY_DEFAULT, ...data.value as AppearanceOverlay }
   return current
 })
 
@@ -36,20 +26,31 @@ export function onAppearanceOverlayLoaded(listener: () => void) {
   return resource.onLoaded(listener)
 }
 
-async function persist(patch: Record<string, unknown>) {
-  const response = await readHostJson(APPEARANCE_OVERLAY_ROUTE, {
+/** Reset cached overlay state and invalidate pending reads/writes when a generation ends (D12). */
+export function resetAppearanceOverlay() {
+  generation += 1
+  resource.reset()
+  current = APPEARANCE_OVERLAY_DEFAULT
+  saved = false
+  writes = Promise.resolve()
+}
+
+async function persist(patch: Record<string, unknown>, started: number) {
+  const response = await readHostJson(APPEARANCE_OVERLAY_PATH, {
     method: 'PUT',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(patch),
   })
   if (response?.ok !== true || response.value === null || typeof response.value !== 'object') throw new Error('appearance overlays could not be saved')
+  if (started !== generation) return current
   saved = true
-  current = { ...DEFAULT, ...response.value as AppearanceOverlay }
+  current = { ...APPEARANCE_OVERLAY_DEFAULT, ...response.value as AppearanceOverlay }
   return current
 }
 
 export function writeAppearanceOverlay(patch: Record<string, unknown>) {
-  const result = writes.then(() => persist(patch))
+  const started = generation
+  const result = writes.then(() => persist(patch, started))
   // Each caller receives its own failure; subsequent edits still reach the host (D12).
   writes = result.catch(() => undefined)
   return result

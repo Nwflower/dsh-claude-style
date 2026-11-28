@@ -1,7 +1,7 @@
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { inCurrentConversation, observeSession } from '@dsh-claude-style/engine/host'
-import { isChatFoldToggle } from '../chat-fold/fold-toggle'
+import { isChatFoldToggle } from '../../shared/fold-toggle'
 import { DARK_THEME_ATTRIBUTE, STREAMING_ATTRIBUTE, STREAMING_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { CHAT_REVEAL_RUN_ATTR } from '../../constants'
 import { createRevealScanner } from './reveal-diff'

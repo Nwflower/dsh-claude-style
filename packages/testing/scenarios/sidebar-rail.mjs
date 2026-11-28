@@ -26,15 +26,15 @@
  * leaves nothing to guard.
  */
 import { bound } from '../bounds.mjs'
-import surfaceTable from '../data/surface.json' with { type: 'json' }
+import { surfaceAttribute } from '../surface.mjs'
 
 /** The skin's part mark, read off the surface table rather than spelled here (D92). */
-const PART = surfaceTable.surface.find((entry) => entry.id === 'skin.part').attribute
+const PART = surfaceAttribute('skin.part')
 const part = (name) => `[${PART}~="${name}"]`
 
 /** The host's own classes this scenario reads, the seat the skin keeps out of the row, and the skin's own control, which the rail has no heading to lay over. */
 const RAIL = {
-  layoutAttribute: surfaceTable.surface.find((entry) => entry.id === 'skin.sidebar-layout').attribute,
+  layoutAttribute: surfaceAttribute('skin.sidebar-layout'),
   frame: '[data-dsh-claude-part~="layout-frame"]',
   column: '[data-dsh-claude-part~="sidebar-column"]',
   toggle: 'button[data-dsh-claude-part~="sidebar-toggle"]',

@@ -1,4 +1,4 @@
-import type { AttentionChange } from '../sound-cues/attention'
+import type { AttentionChange } from '../../shared/attention'
 
 export function notificationsInBackground(hidden: boolean, focused: boolean) {
   return hidden || !focused

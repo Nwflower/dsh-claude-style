@@ -25,6 +25,7 @@ import type { HomeSessionScope } from '@dsh-claude-style/contracts/prefs'
 import { join, resolve } from 'node:path'
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
 import { harnessPath } from '@dsh-claude-style/engine/node/harness-home'
+import { liveSessionOf } from './host-services.js'
 import { readRecord, writeRecord } from './usage-record.js'
 import type { RecordSession } from './usage-record.js'
 import { readEvents } from '@dsh-claude-style/engine/node/session-events'
@@ -128,17 +129,6 @@ interface WorkspaceRegistry {
  * @returns the service: `snapshot()` reads the current state, `refresh()`
  *   recomputes in the background.
  */
-interface LiveUsageSession {
-  seq?: unknown
-  snapshotEvents?(fromSeq: number): readonly UsageEvent[]
-}
-
-function liveSessionOf(ctx: DshContext, sessionId: string): LiveUsageSession | null {
-  const sessions = ctx.get('sessions') as { get?(id: string): LiveUsageSession | undefined } | null | undefined
-  const live = sessions?.get?.(sessionId)
-  return live !== undefined && live !== null && typeof live === 'object' ? live : null
-}
-
 function yieldTurn(): Promise<void> {
   return new Promise((resolve) => setImmediate(resolve))
 }
@@ -184,7 +174,7 @@ export function createUsage(ctx: DshContext) {
       }
       // A live session already folded in this process advances from its in-memory
       // tail instead of re-decompressing the entire multi-frame zstd log on disk.
-      const live = liveSessionOf(ctx, log.id)
+      const live = liveSessionOf<UsageEvent>(ctx, log.id)
       const liveSeq = typeof live?.seq === 'number' && Number.isFinite(live.seq) ? live.seq : null
       const cached = liveCursors.get(log.id)
       if (live !== null && liveSeq !== null && cached !== undefined && cached.storedName === log.storedName
@@ -376,6 +366,7 @@ export function createUsage(ctx: DshContext) {
     dispose() {
       disposed = true
       liveCursors.clear()
+      slots.clear()
     },
   }
 }

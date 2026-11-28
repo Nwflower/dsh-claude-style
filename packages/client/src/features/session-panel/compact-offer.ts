@@ -6,6 +6,7 @@
  * here, apart from the section that draws it, so a spec can pin the distance.
  */
 import { SESSION_COMPACT_PATH } from '@dsh-claude-style/contracts/routes'
+import { readHostJson } from '@dsh-claude-style/engine/resource'
 import type { PanelCompactAnswer } from '@dsh-claude-style/contracts/compaction'
 import type { PanelContext } from '@dsh-claude-style/contracts/session-panel'
 import type { ContextOverview } from './context-rows'
@@ -47,11 +48,5 @@ export function compactOffer(context: PanelContext | null, overview: ContextOver
  * @returns the host's answer: what the summary replaced, or the class of failure.
  */
 export async function requestCompaction(sessionId: string): Promise<PanelCompactAnswer> {
-  const response = await fetch(`${SESSION_COMPACT_PATH}?id=${encodeURIComponent(sessionId)}`, {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: { accept: 'application/json' },
-  })
-  if (!response.ok) throw new Error(`compact route answered ${response.status}`)
-  return await response.json() as PanelCompactAnswer
+  return await readHostJson(`${SESSION_COMPACT_PATH}?id=${encodeURIComponent(sessionId)}`, { method: 'POST' }) as unknown as PanelCompactAnswer
 }

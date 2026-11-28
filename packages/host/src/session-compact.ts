@@ -17,11 +17,6 @@ import type { CompactionPolicy, PanelCompactAnswer } from '@dsh-claude-style/con
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
 import type { PanelContextState } from './session-panel-context.js'
 
-/** The backend members a host that publishes its policy exposes. */
-interface CompactionSeam {
-  config?: unknown
-}
-
 /** The registry that answers a session's live agent. */
 interface AgentLookup {
   get?(id: string): unknown

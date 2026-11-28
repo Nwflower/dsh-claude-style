@@ -21,6 +21,22 @@ export function treeFiles(root) {
   return files.map((file) => path.relative(root, file).replace(/\\/g, '/')).sort()
 }
 
+/** Hash one directory tree deterministically by relative path and content; null when absent. */
+export function hashDirectory(dir, skipped = new Set()) {
+  if (!fs.existsSync(dir)) return null
+  const files = filesUnder(dir, [''], skipped)
+    .map((file) => path.relative(dir, file).replace(/\\/g, '/'))
+    .sort()
+  if (files.length === 0) return null
+  const digest = crypto.createHash('sha256')
+  for (const file of files) {
+    digest.update(file)
+    digest.update('\0')
+    digest.update(crypto.createHash('sha256').update(fs.readFileSync(path.join(dir, file))).digest())
+  }
+  return digest.digest('hex')
+}
+
 /** The hash of the tree: each file's own path and content hash. */
 export function treeHash(root) {
   const files = treeFiles(root)

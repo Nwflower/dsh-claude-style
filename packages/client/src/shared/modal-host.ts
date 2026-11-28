@@ -8,7 +8,7 @@ import { Glyph } from './settings-glyphs'
  * Shared modal host and dialog frame mounted on `<body>` above the settings
  * dialog: registers with the popover stack, delegates nested focus trapping and
  * focus restoration to the host's `useModalLayer` (D43), and plays the panel's
- * exit animation before unmounting (features/settings/palette-schemes.css).
+ * exit animation before unmounting (shared/modal-host.css).
  */
 
 export const MODAL_BACKDROP_CLASS = 'dsh-claude-scheme-modal'

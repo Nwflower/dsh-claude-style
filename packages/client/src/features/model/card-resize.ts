@@ -1,6 +1,6 @@
 import { requestFrame } from '@dsh-claude-style/engine/frame'
-import { motionEase, motionMs } from './motion'
-import { motionReduced } from '../core/prefs'
+import { motionEase, motionMs } from '../../shared/motion'
+import { motionReduced } from '../../core/prefs'
 
 /** Card resize: take a card from the height it had to the height its content
  * gives it (transitions.dev's "Card resize", MIT). The caller reads `from`

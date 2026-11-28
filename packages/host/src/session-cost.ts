@@ -20,6 +20,7 @@ import type { BillingRow } from '@dsh-claude-style/contracts/billing-table'
 import type { PriceDocument, PriceUsage, SessionCostAnswer } from '@dsh-claude-style/contracts/prices'
 import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
 import { readEvents } from '@dsh-claude-style/engine/node/session-events'
+import { liveSessionOf } from './host-services.js'
 import { modelOf, usageOf } from './usage-fold.js'
 import type { UsageEvent } from './usage-fold.js'
 import type { PriceStore } from './prices.js'
@@ -177,17 +178,6 @@ const STALE_MS = 10_000
 /** Closed sessions cannot mutate without reopening live or emitting session/event. */
 const CLOSED_STALE_MS = 5 * 60_000
 
-interface LiveCostSession {
-  seq?: unknown
-  snapshotEvents?(fromSeq: number): readonly UsageEvent[]
-}
-
-function liveSessionOf(ctx: DshContext, sessionId: string): LiveCostSession | null {
-  const sessions = ctx.get('sessions') as { get?(id: string): LiveCostSession | undefined } | null | undefined
-  const live = sessions?.get?.(sessionId)
-  return live !== undefined && live !== null && typeof live === 'object' ? live : null
-}
-
 function nextSeqOf(events: readonly UsageEvent[]): number | null {
   if (events.length === 0) return 0
   const last = events[events.length - 1]?.seq
@@ -268,7 +258,7 @@ export function createSessionCost(ctx: DshContext, prices: PriceStore): SessionC
     const document = prices.document()
     const held = states.get(sessionId)
     const touched = touchedAt.get(sessionId)
-    const live = liveSessionOf(ctx, sessionId)
+    const live = liveSessionOf<UsageEvent>(ctx, sessionId)
     if (held !== undefined) {
       const liveSeq = typeof live?.seq === 'number' && Number.isFinite(live.seq) ? live.seq : null
       const expected = nextSeqs.get(sessionId) ?? null

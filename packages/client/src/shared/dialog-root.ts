@@ -22,6 +22,7 @@ export interface DialogRoot {
 export function createDialogRoot(): DialogRoot {
   let host: HTMLElement | null = null
   let root: reactDom.Root | null = null
+  const pendingClose = new Set<{ closing: reactDom.Root, node: HTMLElement | null }>()
 
   /** Hand the seat out and forget it, so a close and a reopen never share a root. */
   function release() {
@@ -48,13 +49,20 @@ export function createDialogRoot(): DialogRoot {
     close() {
       const released = release()
       if (released === null) return
+      pendingClose.add(released)
       // Unmounting synchronously during a React commit warns; defer a microtask.
       queueMicrotask(() => {
+        if (!pendingClose.delete(released)) return
         released.closing.unmount()
         released.node?.remove()
       })
     },
     dispose() {
+      for (const released of [...pendingClose]) {
+        pendingClose.delete(released)
+        released.closing.unmount()
+        released.node?.remove()
+      }
       const released = release()
       if (released === null) return
       released.closing.unmount()

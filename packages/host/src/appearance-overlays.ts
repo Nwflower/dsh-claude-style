@@ -1,57 +1,27 @@
 /** UI-owned appearance overlays, stored beside the plugin rather than inside file-owned config. */
 
-import { normalizePaletteSchemes } from '@dsh-claude-style/contracts/palette-schemes'
+import { emptyAppearanceOverlay, normalizeAppearanceOverlay } from '@dsh-claude-style/contracts/appearance-overlays'
 import { PALETTE_PRESETS } from '@dsh-claude-style/contracts/prefs'
-import { normalizeBrandingPresets } from '@dsh-claude-style/contracts/branding-presets'
 import { APPEARANCE_OVERLAY_PATH } from '@dsh-claude-style/contracts/routes'
 import { readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { routeFailure, writeAtomicFile } from './brand-image-shared.js'
-import { fenceRefused, methodRefused, readRequestBody, sendJson } from '@dsh-claude-style/engine/node/http'
+import { writeAtomicFile } from '@dsh-claude-style/engine/node/cache-file'
+import { fenceRefused, methodRefused, readJsonBody, routeFailure, sendJson } from '@dsh-claude-style/engine/node/http'
 import { pluginPath } from './paths.js'
 import type { DshContext, DshPeerScope, DshRequest, DshResponse, DshRoute } from '@dsh-claude-style/engine/node/dsh'
 
 const BODY_MAX = 64 * 1024
-const DEFAULT: Overlay = Object.freeze({
-  paletteSchemeOverrides: [], paletteSchemeDeleted: [], paletteColorsOverride: '',
-  brandingPresetOverrides: [], brandingPresetDeleted: [], brandingPresetOverride: '',
-})
-
-interface Overlay {
-  paletteSchemeOverrides: string[]
-  paletteSchemeDeleted: string[]
-  paletteColorsOverride: string
-  brandingPresetOverrides: string[]
-  brandingPresetDeleted: string[]
-  brandingPresetOverride: string
-}
-
-function normalize(value: unknown): Overlay {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) throw new Error('the overlay is not an object')
-  const record = value as Record<string, unknown>
-  const palette = normalizePaletteSchemes(Array.isArray(record.paletteSchemeOverrides) ? record.paletteSchemeOverrides.filter(entry => typeof entry === 'string') : [], PALETTE_PRESETS)
-  const branding = normalizeBrandingPresets(Array.isArray(record.brandingPresetOverrides) ? record.brandingPresetOverrides.filter(entry => typeof entry === 'string') : [])
-  const ids = (input: unknown, max: number): string[] => Array.isArray(input) ? input.filter(entry => typeof entry === 'string' && entry.length > 0 && entry.length <= max) : []
-  return {
-    paletteSchemeOverrides: palette.entries,
-    paletteSchemeDeleted: ids(record.paletteSchemeDeleted, 24),
-    paletteColorsOverride: typeof record.paletteColorsOverride === 'string' ? record.paletteColorsOverride.slice(0, 24) : '',
-    brandingPresetOverrides: branding.entries,
-    brandingPresetDeleted: ids(record.brandingPresetDeleted, 40),
-    brandingPresetOverride: typeof record.brandingPresetOverride === 'string' ? record.brandingPresetOverride.slice(0, 40) : '',
-  }
-}
 
 function createOverlayStore(ctx: DshContext) {
   const file = () => join(pluginPath(ctx), 'appearance-overlays.json')
   const read = () => {
-    if (statSync(file(), { throwIfNoEntry: false })?.isFile() !== true) return { ...DEFAULT }
-    return normalize(JSON.parse(readFileSync(file(), 'utf8')))
+    if (statSync(file(), { throwIfNoEntry: false })?.isFile() !== true) return emptyAppearanceOverlay()
+    return normalizeAppearanceOverlay(JSON.parse(readFileSync(file(), 'utf8')), PALETTE_PRESETS)
   }
   const write = (value: unknown) => {
     if (value === null || typeof value !== 'object' || Array.isArray(value)) throw new Error('the overlay is not an object')
     // The synchronous read, merge and atomic replace form one host operation (D75).
-    const normalized = normalize({ ...read(), ...value })
+    const normalized = normalizeAppearanceOverlay({ ...read(), ...value }, PALETTE_PRESETS)
     const target = file()
     writeAtomicFile(target, Buffer.from(JSON.stringify(normalized, null, 2) + '\n'), [])
     return normalized
@@ -69,22 +39,29 @@ export function appearanceOverlayRoutes(ctx: DshContext): { label: string, route
         if (methodRefused(req, res, ['GET', 'PUT'])) return
         if (fenceRefused(ctx, req, res, peer)) return
         if (req.method === 'GET') {
-          sendJson(res, 200, { ok: true, value: store.read() })
+          try {
+            sendJson(res, 200, { ok: true, value: store.read() })
+          } catch (error) {
+            routeFailure(res, error)
+          }
           return
         }
         void (async () => {
-          const body = await readRequestBody(req, BODY_MAX)
-          if (body === null) {
-            res.once('finish', () => req.destroy())
-            sendJson(res, 413, { ok: false, error: 'request body too large' })
+          const body = await readJsonBody(req, res, BODY_MAX)
+          if (!body.ok) return
+          let normalized
+          try {
+            if (body.value === null || typeof body.value !== 'object' || Array.isArray(body.value)) {
+              throw new Error('the overlay is not an object')
+            }
+            normalized = store.write(body.value)
+          } catch (error) {
+            const code = (error as { code?: string } | null)?.code
+            if (typeof code === 'string') { routeFailure(res, error); return }
+            sendJson(res, 400, { ok: false, error: error instanceof Error ? error.message : String(error) })
             return
           }
-          try {
-            const value = store.write(JSON.parse(body.toString('utf8')))
-            sendJson(res, 200, { ok: true, value })
-          } catch (error) {
-            sendJson(res, 400, { ok: false, error: error instanceof Error ? error.message : String(error) })
-          }
+          sendJson(res, 200, { ok: true, value: normalized })
         })().catch((error: unknown) => { routeFailure(res, error) })
       },
     },

@@ -1,10 +1,12 @@
 import { SUBMISSION_ECHO_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { CHAT_ROW_SELECTOR, CHAT_USER_ROW_SELECTOR } from '@dsh-claude-style/engine/chat-dom'
+import { CHAT_ROW_SELECTOR, USER_ROW_SELECTOR, conversationColumn } from '@dsh-claude-style/engine/chat-dom'
 
 /** Mark every fresh echo handled so only the newest is used and none repeats in a later frame. */
 export function takeFreshEcho(handled: WeakSet<Element>) {
+  const column = conversationColumn()
+  if (column === null) return null
   const fresh: Element[] = []
-  for (const echo of document.querySelectorAll(SUBMISSION_ECHO_SELECTOR)) {
+  for (const echo of column.querySelectorAll(SUBMISSION_ECHO_SELECTOR)) {
     if (!handled.has(echo)) fresh.push(echo)
   }
   if (fresh.length === 0) return null
@@ -15,14 +17,18 @@ export function takeFreshEcho(handled: WeakSet<Element>) {
 
 /** The row to take right now: the echo while it is there, and the real row once it has been swapped in. */
 export function currentRow(previous: HTMLElement | null) {
-  const echo = document.querySelector(SUBMISSION_ECHO_SELECTOR)
+  const column = conversationColumn()
+  if (column === null) return null
+  const echo = column.querySelector(SUBMISSION_ECHO_SELECTOR)
   if (echo instanceof HTMLElement && echo !== previous) return echo
   const row = lastUserRow()
   return row === previous ? null : row
 }
 
 export function lastUserRow() {
-  const rows = document.querySelectorAll(CHAT_USER_ROW_SELECTOR)
+  const column = conversationColumn()
+  if (column === null) return null
+  const rows = column.querySelectorAll(USER_ROW_SELECTOR)
   const last = rows.item(rows.length - 1)
   return last instanceof HTMLElement ? last : null
 }

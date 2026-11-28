@@ -118,7 +118,13 @@ export function announceClasses() {
   if (!arrived) return
   arrived = false
   resolved.clear()
-  for (const listener of [...listeners]) listener()
+  for (const listener of [...listeners]) {
+    try {
+      listener()
+    } catch (error) {
+      reportError(error)
+    }
+  }
 }
 
 /** Hear when class names arrived. @returns the function that stops listening. */

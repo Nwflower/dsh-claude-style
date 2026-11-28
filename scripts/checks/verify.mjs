@@ -16,15 +16,14 @@ import fs from 'node:fs'
 import { createRequire } from 'node:module'
 import { availableParallelism } from 'node:os'
 import path from 'node:path'
-import { filesUnder } from '../shared/file-walk.mjs'
 import { changedPaths } from '../shared/changed-paths.mjs'
-import { SKIPPED, TREES, treeHash } from '../shared/tree-hash.mjs'
+import { SKIPPED, TREES, hashDirectory, treeHash } from '../shared/tree-hash.mjs'
 import { HELD, LOCK, takeLock } from '../shared/verify-lock.mjs'
 import { cachePath, runsPath } from '../shared/debug-paths.mjs'
 import { featureCoverage } from '../shared/feature-coverage.mjs'
+import { UNJUDGED_EXIT } from '../../packages/testing/host-version.mjs'
 
 const require = createRequire(import.meta.url)
-const { UNJUDGED_EXIT } = require('../../packages/testing/host-version.mjs')
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const CACHE = cachePath(ROOT, 'verify')
 /** Resolve the installed Vitest entry so nested and hoisted installs behave alike. */
@@ -85,17 +84,7 @@ function unitGate(iteration) {
  * the page it drove is still the page its build produced.
  */
 function libHash() {
-  const digest = crypto.createHash('sha256')
-  const lib = path.join(ROOT, 'lib')
-  // An empty extension matches every name, which is what hashing the output wants.
-  const files = filesUnder(lib, [''], SKIPPED).map((file) => path.relative(lib, file).replace(/\\/g, '/')).sort()
-  if (files.length === 0) return null
-  for (const file of files) {
-    digest.update(file)
-    digest.update('\0')
-    digest.update(crypto.createHash('sha256').update(fs.readFileSync(path.join(lib, file))).digest())
-  }
-  return digest.digest('hex')
+  return hashDirectory(path.join(ROOT, 'lib'), SKIPPED)
 }
 
 /** The usage text, read off this file's own header from the `Usage:` line on. */

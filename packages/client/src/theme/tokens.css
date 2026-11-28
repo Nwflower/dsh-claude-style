@@ -7,34 +7,30 @@ body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-
   background-color: var(--dsh-claude-canvas);
 }
 
-/* The document element sits above the body and cannot read its attributes or
-   its tokens, so each colour card states its canvas here. It stays painted
-   under a wallpaper: the layer sits above this canvas and below the shell.
-   core/root-mirror.ts copies the palette marks and the host's light/dark
-   answer onto <html>, because asking through `html:has(body[…])` made every
-   mutation under the body a candidate for invalidating the document's style. */
-html[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="claude"]:not([data-dsh-claude-dark]) {
-  background-color: #ffffff;
+/* Semantic reading tones and pie plate: ungated on palette so they stay legible
+   under "follow the host" too (features/context-stats/stats-ramp.ts,
+   context-meter-pie.ts). Light `html` canvases are generated from tokens.json
+   by scripts/build/theme-tokens.mjs. */
+body[data-dsh-claude-style] {
+  --dsh-claude-tone-red: #d5746a;
+  --dsh-claude-tone-red-orange: #d38469;
+  --dsh-claude-tone-orange: #cb936c;
+  --dsh-claude-tone-yellow: #c09f66;
+  --dsh-claude-tone-lime: #b0c988;
+  --dsh-claude-tone-green-light: #a2dda4;
+  --dsh-claude-tone-green: #6faf73;
+  --dsh-claude-pie-rest: rgba(250, 249, 245, 0.18);
 }
 
-html[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="deepseek"]:not([data-dsh-claude-dark]) {
-  background-color: #ffffff;
-}
-
-html[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="parchment"]:not([data-dsh-claude-dark]) {
-  background-color: #f7f1e3;
-}
-
-html[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="forest"]:not([data-dsh-claude-dark]) {
-  background-color: #f7fbf7;
-}
-
-html[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="dusk"]:not([data-dsh-claude-dark]) {
-  background-color: #faf8ff;
-}
-
-html[data-dsh-claude-style][data-dsh-claude-palette="claude"][data-dsh-claude-palette-card="rose"]:not([data-dsh-claude-dark]) {
-  background-color: #fdf1f2;
+body[data-dsh-claude-style]:not([data-ds-dark-theme]) {
+  --dsh-claude-tone-red: #af514d;
+  --dsh-claude-tone-red-orange: #af6045;
+  --dsh-claude-tone-orange: #af784e;
+  --dsh-claude-tone-yellow: #8b6d42;
+  --dsh-claude-tone-lime: #779756;
+  --dsh-claude-tone-green-light: #6da173;
+  --dsh-claude-tone-green: #46784e;
+  --dsh-claude-pie-rest: rgba(20, 20, 19, 0.14);
 }
 body[data-dsh-claude-style][data-dsh-claude-palette="claude"]:not([data-ds-dark-theme]):not([data-we-wallpaper]) #root {
   background-color: var(--dsh-claude-canvas);
