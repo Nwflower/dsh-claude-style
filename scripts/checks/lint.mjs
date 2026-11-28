@@ -221,14 +221,12 @@ for (const file of clientModules) {
       }
     }
   } else if (rel.startsWith('packages/client/src/core/') || rel.startsWith('packages/client/src/shared/')) {
-    for (const line of text.split('\n')) {
-      if (/^\s*(?:import\s+type\b|export\s+type\b|\/\/|\*|\/\*)/.test(line)) continue
-      for (const specifier of importSpecifiers(line)) {
-        if (!specifier.startsWith('.')) continue
-        const targetRel = relative(path.resolve(path.dirname(file), specifier))
-        if (targetRel.startsWith('packages/client/src/features/')) {
-          problems.push(`${rel}: core/shared runtime-imports feature module ${specifier}; keep dependency direction downward from features to shared/core`)
-        }
+    const runtimeText = text.replace(/^\s*(?:import|export)\s+type\b[\s\S]*?from\s+['"][^'"]+['"]/gm, '')
+    for (const specifier of importSpecifiers(runtimeText)) {
+      if (!specifier.startsWith('.')) continue
+      const targetRel = relative(path.resolve(path.dirname(file), specifier))
+      if (targetRel.startsWith('packages/client/src/features/')) {
+        problems.push(`${rel}: core/shared runtime-imports feature module ${specifier}; keep dependency direction downward from features to shared/core`)
       }
     }
   }

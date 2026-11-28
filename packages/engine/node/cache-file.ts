@@ -72,14 +72,16 @@ export function createCacheFiles(packageName: string) {
 export function writeAtomicFile(target: string, bytes: Buffer, older: readonly string[] = []) {
   const dir = dirname(target)
   mkdirSync(dir, { recursive: true, mode: 0o700 })
-  try { chmodSync(dir, 0o700) } catch { /* Windows ACLs own directory isolation */ }
+  chmodSync(dir, 0o700)
   const temporary = `${target}.${process.pid}.tmp`
   try {
     writeFileSync(temporary, bytes, { mode: 0o600 })
-    try { chmodSync(temporary, 0o600) } catch { /* Windows ignores POSIX mode bits */ }
+    chmodSync(temporary, 0o600)
     renameSync(temporary, target)
   } catch (error) {
-    rmSync(temporary, { force: true })
+    try {
+      rmSync(temporary, { force: true })
+    } catch { /* keep the primary write or rename failure */ }
     throw error
   }
   for (const path of older) rmSync(path, { force: true })

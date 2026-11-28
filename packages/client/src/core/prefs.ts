@@ -52,6 +52,7 @@ export function disposePrefsBinding() {
     offOverlayLoaded()
     offOverlayLoaded = null
   }
+  prefs = clampPrefs({})
   readFromForm = false
   footerTakeoverRetired = false
   composerRestyleRetired = false

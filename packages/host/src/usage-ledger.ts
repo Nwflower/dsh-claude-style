@@ -30,7 +30,6 @@ const LEDGER_VERSION = 1
  * compares day keys as strings, and one sorting past every real day would hide
  * the days the fold itself contributed.
  */
-const isDayKey = isIsoDate
 
 /** Buckets are disjoint; reasoning tokens ride inside output. */
 export const BUCKET_KEYS: (keyof Buckets)[] = ['input', 'output', 'cacheRead', 'cacheWrite']
@@ -97,7 +96,7 @@ export function readLedger(home: string, logger?: { warn?(message: string): void
   if (rawDays === null || typeof rawDays !== 'object' || Array.isArray(rawDays)) return null
   const days = new Map<string, DayBuckets>()
   for (const [day, value] of Object.entries(rawDays as Record<string, unknown>)) {
-    if (!isDayKey(day)) continue
+    if (!isIsoDate(day)) continue
     if (value === null || typeof value !== 'object') continue
     const bucket = value as Partial<Buckets> & { sessions?: unknown, byProviderModel?: unknown }
     const clean: DayBuckets = emptyBuckets()

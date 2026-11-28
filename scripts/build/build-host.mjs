@@ -119,7 +119,8 @@ export async function buildHostHalf({ outDir = path.join(ROOT, 'lib') } = {}) {
       logLevel: 'silent',
       plugins: [externalButShared],
     })
-    const entryMeta = Object.values(metafile.inputs).find((input) => input.imports !== undefined)
+    const entryKey = Object.values(metafile.outputs).find((output) => output.entryPoint !== undefined)?.entryPoint
+    const entryMeta = entryKey === undefined ? undefined : metafile.inputs[entryKey]
     const values = []
     for (const item of entryMeta?.imports ?? []) {
       if (!item.external) continue

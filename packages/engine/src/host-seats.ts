@@ -60,8 +60,15 @@ function openMatchEpochWatch() {
   if (matchEpochWatched) return
   matchEpochWatched = true
   // The bump runs inside the batch's own callback, so a `beforePaint` reader
-  // (D40) sees the batch's nodes rather than the previous batch's answer.
-  stopMatchEpochWatch = subscribeMutations(document.body, { subtree: true, childList: true, beforePaint: true }, () => {
+  // (D40) sees the batch's nodes and phase/session attribute transitions rather
+  // than the previous batch's answer.
+  stopMatchEpochWatch = subscribeMutations(document.body, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: [PHASE_ATTRIBUTE, CONVERSATION_SESSION_ATTRIBUTE],
+    beforePaint: true,
+  }, () => {
     matchEpoch += 1
   })
 }
@@ -370,6 +377,7 @@ export function observeSession(onChange: (sessionId: string | null) => void): ()
       attributes: true,
       attributeFilter: [PHASE_ATTRIBUTE, CONVERSATION_SESSION_ATTRIBUTE],
     }, () => {
+      matchEpoch += 1
       const next = conversationSession()
       if (next === sessionLast) return
       sessionLast = next

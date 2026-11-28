@@ -297,8 +297,6 @@ export function registerRoutes(ctx: DshContext, scope: DshScope, config?: HostCo
       })
     }
 
-    const fail = routeFailure
-
     /**
      * The session id one read route serves, after the two checks every read of
      * the user's own session runs — the method, then the host's peer fence
@@ -388,7 +386,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope, config?: HostCo
         sendJson(res, 200, soundCapability())
         return
       }
-      void playSoundRequest(req, res).catch((error: unknown) => fail(res, error))
+      void playSoundRequest(req, res).catch((error: unknown) => routeFailure(res, error))
     })
 
     register('session delete', {
@@ -399,7 +397,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope, config?: HostCo
         // reach the filesystem.
         if (methodRefused(req, res, ['POST'])) return
         // A fault anywhere in the deletion answers 500 with its message.
-        void deleteSession(ctx, req, res, peer).catch((error: unknown) => fail(res, error))
+        void deleteSession(ctx, req, res, peer).catch((error: unknown) => routeFailure(res, error))
       },
     })
 
@@ -500,7 +498,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope, config?: HostCo
         // and answer 500 with their message.
         void compactSession(ctx, sessionId).then(
           answer => sendJson(res, 200, answer),
-          (error: unknown) => fail(res, error),
+          (error: unknown) => routeFailure(res, error),
         )
       },
     })

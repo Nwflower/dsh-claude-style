@@ -26,7 +26,6 @@ import type { HostContextPressureProjection, HostSessionStatsProjection, HostSna
 import type { StatsReading } from './stats-count'
 import type { PieRest } from './context-meter-pie'
 import type { SessionCostReading, SessionFigures } from '../../shared/session-projections'
-export type { SessionCostReading }
 
 /** The ring the composer row carries, as the statistics read it (meter-ring.ts). */
 export interface MeterRingFace {

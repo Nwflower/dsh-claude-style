@@ -25,8 +25,6 @@ import {
   writeOrder,
 } from './work/store.mjs'
 
-export { checkWorkOrders }
-
 function flagsOf(args) {
   const flags = {}
   const positional = []

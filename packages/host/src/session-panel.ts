@@ -87,9 +87,6 @@ function text(value: unknown): string | null {
   return typeof value === 'string' && value !== '' ? value : null
 }
 
-/** Release an observation's lease through the shared helper. */
-const release = releaseObservation
-
 /**
  * Build the panel service over one host context.
  * @param ctx - host plugin context.
@@ -167,7 +164,7 @@ export function createSessionPanel(ctx: DshContext): SessionPanelService {
       entry.touchedAt = Date.now()
       return value
     } finally {
-      release(observation)
+      releaseObservation(observation)
     }
   }
 

@@ -73,28 +73,44 @@ export function fenceRefused(ctx: DshContext, req: DshRequest, res: DshResponse,
   return true
 }
 
-/**
- * Return null for oversized/unreadable bodies. Drain oversized input without cutting
- * the socket so the caller can send 400/413 before ending it.
- */
-export function readRequestBody(req: DshRequest, limit: number): Promise<Buffer | null> {
-  return new Promise<Buffer | null>((settle) => {
+type BodyRead = { ok: true, body: Buffer } | { ok: false, reason: 'overflow' | 'error' }
+
+/** Read a bounded body while distinguishing byte overflow from stream transport errors. */
+function readBoundedBody(req: DshRequest, limit: number): Promise<BodyRead> {
+  return new Promise<BodyRead>((settle) => {
     const chunks: Buffer[] = []
     let size = 0
-    let over = false
+    let done = false
     req.on('data', (chunk: Buffer | string) => {
-      if (over) return
+      if (done) return
       size += chunk.length
       if (size > limit) {
-        over = true
-        settle(null)
+        done = true
+        settle({ ok: false, reason: 'overflow' })
         return
       }
       chunks.push(Buffer.from(chunk))
     })
-    req.on('end', () => { if (!over) settle(Buffer.concat(chunks)) })
-    req.on('error', () => { if (!over) settle(null) })
+    req.on('end', () => {
+      if (done) return
+      done = true
+      settle({ ok: true, body: Buffer.concat(chunks) })
+    })
+    req.on('error', () => {
+      if (done) return
+      done = true
+      settle({ ok: false, reason: 'error' })
+    })
   })
+}
+
+/**
+ * Return null for oversized/unreadable bodies. Drain oversized input without cutting
+ * the socket so the caller can send 400/413 before ending it.
+ */
+export async function readRequestBody(req: DshRequest, limit: number): Promise<Buffer | null> {
+  const read = await readBoundedBody(req, limit)
+  return read.ok ? read.body : null
 }
 
 /** Read and parse a bounded JSON request body, answering 413 or 400 on refusal. */
@@ -103,16 +119,20 @@ export async function readJsonBody(
   res: DshResponse,
   limit: number,
 ): Promise<{ ok: true, value: unknown } | { ok: false }> {
-  const raw = await readRequestBody(req, limit)
-  if (raw === null) {
-    // An oversized body leaves its remainder unread: end the socket once the
-    // 413 response finishes flushing, never before it.
-    res.once('finish', () => req.destroy())
-    sendJson(res, 413, { ok: false, error: 'request body too large' })
+  const read = await readBoundedBody(req, limit)
+  if (!read.ok) {
+    if (read.reason === 'overflow') {
+      // An oversized body leaves its remainder unread: end the socket once the
+      // 413 response finishes flushing, never before it.
+      res.once('finish', () => req.destroy())
+      sendJson(res, 413, { ok: false, error: 'request body too large' })
+    } else if (!res.headersSent) {
+      sendJson(res, 400, { ok: false, error: 'request body unreadable' })
+    }
     return { ok: false }
   }
   try {
-    return { ok: true, value: JSON.parse(raw.toString('utf8')) }
+    return { ok: true, value: JSON.parse(read.body.toString('utf8')) }
   } catch {
     sendJson(res, 400, { ok: false, error: 'request body is not JSON' })
     return { ok: false }

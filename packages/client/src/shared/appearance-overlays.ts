@@ -6,6 +6,7 @@ import { createHostResource, readHostJson } from '@dsh-claude-style/engine/resou
 let current: AppearanceOverlay = APPEARANCE_OVERLAY_DEFAULT
 let saved = false
 let writes: Promise<unknown> = Promise.resolve()
+let generation = 0
 
 const resource = createHostResource(APPEARANCE_OVERLAY_PATH, data => {
   if (data?.ok !== true || data.value === null || typeof data.value !== 'object') throw new Error('appearance overlays did not answer successfully')
@@ -25,28 +26,31 @@ export function onAppearanceOverlayLoaded(listener: () => void) {
   return resource.onLoaded(listener)
 }
 
-/** Reset cached overlay state and abort any pending read when a generation ends (D12). */
+/** Reset cached overlay state and invalidate pending reads/writes when a generation ends (D12). */
 export function resetAppearanceOverlay() {
+  generation += 1
   resource.reset()
   current = APPEARANCE_OVERLAY_DEFAULT
   saved = false
   writes = Promise.resolve()
 }
 
-async function persist(patch: Record<string, unknown>) {
+async function persist(patch: Record<string, unknown>, started: number) {
   const response = await readHostJson(APPEARANCE_OVERLAY_PATH, {
     method: 'PUT',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(patch),
   })
   if (response?.ok !== true || response.value === null || typeof response.value !== 'object') throw new Error('appearance overlays could not be saved')
+  if (started !== generation) return current
   saved = true
   current = { ...APPEARANCE_OVERLAY_DEFAULT, ...response.value as AppearanceOverlay }
   return current
 }
 
 export function writeAppearanceOverlay(patch: Record<string, unknown>) {
-  const result = writes.then(() => persist(patch))
+  const started = generation
+  const result = writes.then(() => persist(patch, started))
   // Each caller receives its own failure; subsequent edits still reach the host (D12).
   writes = result.catch(() => undefined)
   return result

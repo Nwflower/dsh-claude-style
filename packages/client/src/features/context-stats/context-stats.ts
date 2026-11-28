@@ -1,7 +1,6 @@
 import { SESSION_STATS_ATTR } from '../../constants'
 import { createSessionStats } from './session-stats'
-import type { SessionCostReading } from './session-stats'
-import type { SessionFigures } from '../../shared/session-projections'
+import type { SessionCostReading, SessionFigures } from '../../shared/session-projections'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { CloseReason, FeatureHandle } from '@dsh-claude-style/engine/scheduler'
 import type { FeatureUi } from '../../core/feature'
