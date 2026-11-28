@@ -30,10 +30,13 @@ function reportUnreadable(ctx: DshContext, packageName: string, error: unknown, 
 }
 
 /** Support host leases exposing either named `dispose` or `Symbol.dispose`. */
-function releaseObservation(observation: DshSessionObservation) {
-  const named = (observation as { dispose?: () => void }).dispose
-  if (typeof named === 'function') named.call(observation)
-  else if (Symbol.dispose in observation) (observation as unknown as { [Symbol.dispose](): void })[Symbol.dispose]()
+export function releaseObservation(observation: { dispose?: () => void, [Symbol.dispose]?: () => void }) {
+  if (typeof observation.dispose === 'function') {
+    observation.dispose()
+    return
+  }
+  const symbol = observation[Symbol.dispose]
+  if (typeof symbol === 'function') symbol.call(observation)
 }
 
 export async function readEvents<T>(ctx: DshContext, packageName: string, sessionId: string, label: string): Promise<T[] | null> {

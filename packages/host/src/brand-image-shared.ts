@@ -1,8 +1,6 @@
 /** Security headers and byte checks shared by legacy and named brand images. */
 
 import { BRAND_IMAGE_MAX_BYTES } from '@dsh-claude-style/contracts/brand'
-import { mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs'
-import { dirname } from 'node:path'
 import { readRequestBody, sendJson } from '@dsh-claude-style/engine/node/http'
 import type { DshRequest, DshResponse } from '@dsh-claude-style/engine/node/dsh'
 
@@ -27,12 +25,6 @@ export function imageBytesValid(type: string, bytes: Buffer) {
   return bytes.length > 0 && bytes.length <= BRAND_IMAGE_MAX_BYTES && matchesSignature(type, bytes)
 }
 
-/** Answer a route failure without writing past the response headers. */
-export function routeFailure(res: DshResponse, error: unknown) {
-  if (res.headersSent) res.destroy()
-  else sendJson(res, 500, { ok: false, error: error instanceof Error ? error.message : String(error) })
-}
-
 /** Read and validate one upload, answering a refusal before any storage write. */
 export async function readImageUpload(req: DshRequest, res: DshResponse) {
   const type = (req.headers['content-type'] ?? '').split(';')[0].trim().toLowerCase()
@@ -51,13 +43,4 @@ export async function readImageUpload(req: DshRequest, res: DshResponse) {
     return null
   }
   return { type, bytes }
-}
-
-/** Replace one file atomically, then remove any older variants by name. */
-export function writeAtomicFile(target: string, bytes: Buffer, older: readonly string[]) {
-  mkdirSync(dirname(target), { recursive: true })
-  const temporary = target + '.' + process.pid + '.tmp'
-  writeFileSync(temporary, bytes)
-  renameSync(temporary, target)
-  for (const path of older) rmSync(path, { force: true })
 }

@@ -5,8 +5,8 @@ import { PALETTE_PRESETS } from '@dsh-claude-style/contracts/prefs'
 import { APPEARANCE_OVERLAY_PATH } from '@dsh-claude-style/contracts/routes'
 import { readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
-import { routeFailure, writeAtomicFile } from './brand-image-shared.js'
-import { fenceRefused, methodRefused, readRequestBody, sendJson } from '@dsh-claude-style/engine/node/http'
+import { writeAtomicFile } from '@dsh-claude-style/engine/node/cache-file'
+import { fenceRefused, methodRefused, readJsonBody, routeFailure, sendJson } from '@dsh-claude-style/engine/node/http'
 import { pluginPath } from './paths.js'
 import type { DshContext, DshPeerScope, DshRequest, DshResponse, DshRoute } from '@dsh-claude-style/engine/node/dsh'
 
@@ -39,22 +39,29 @@ export function appearanceOverlayRoutes(ctx: DshContext): { label: string, route
         if (methodRefused(req, res, ['GET', 'PUT'])) return
         if (fenceRefused(ctx, req, res, peer)) return
         if (req.method === 'GET') {
-          sendJson(res, 200, { ok: true, value: store.read() })
+          try {
+            sendJson(res, 200, { ok: true, value: store.read() })
+          } catch (error) {
+            routeFailure(res, error)
+          }
           return
         }
         void (async () => {
-          const body = await readRequestBody(req, BODY_MAX)
-          if (body === null) {
-            res.once('finish', () => req.destroy())
-            sendJson(res, 413, { ok: false, error: 'request body too large' })
+          const body = await readJsonBody(req, res, BODY_MAX)
+          if (!body.ok) return
+          let normalized
+          try {
+            if (body.value === null || typeof body.value !== 'object' || Array.isArray(body.value)) {
+              throw new Error('the overlay is not an object')
+            }
+            normalized = store.write(body.value)
+          } catch (error) {
+            const code = (error as { code?: string } | null)?.code
+            if (typeof code === 'string') { routeFailure(res, error); return }
+            sendJson(res, 400, { ok: false, error: error instanceof Error ? error.message : String(error) })
             return
           }
-          try {
-            const value = store.write(JSON.parse(body.toString('utf8')))
-            sendJson(res, 200, { ok: true, value })
-          } catch (error) {
-            sendJson(res, 400, { ok: false, error: error instanceof Error ? error.message : String(error) })
-          }
+          sendJson(res, 200, { ok: true, value: normalized })
         })().catch((error: unknown) => { routeFailure(res, error) })
       },
     },

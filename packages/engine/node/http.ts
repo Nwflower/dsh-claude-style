@@ -40,15 +40,21 @@ function isLoopbackPeer(address: string | undefined) {
   return plain === '::1' || /^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(plain)
 }
 
-/** Send one JSON response. */
-export function sendJson(res: DshResponse, status: number, payload: unknown) {
+/** Send one JSON response; `method === 'HEAD'` writes headers with no body. */
+export function sendJson(res: DshResponse, status: number, payload: unknown, method?: string) {
   const body = Buffer.from(JSON.stringify(payload))
   res.writeHead(status, {
     'content-type': 'application/json; charset=utf-8',
     'content-length': String(body.byteLength),
     'cache-control': 'no-store',
   })
-  res.end(body)
+  res.end(method === 'HEAD' ? undefined : body)
+}
+
+/** Answer a route failure without writing past already-sent response headers (D12). */
+export function routeFailure(res: DshResponse, error: unknown) {
+  if (res.headersSent) res.destroy()
+  else sendJson(res, 500, { ok: false, error: error instanceof Error ? error.message : String(error) })
 }
 
 /** Send 405 with `Allow` for unsupported methods and report whether the request was refused. */
@@ -89,4 +95,26 @@ export function readRequestBody(req: DshRequest, limit: number): Promise<Buffer 
     req.on('end', () => { if (!over) settle(Buffer.concat(chunks)) })
     req.on('error', () => { if (!over) settle(null) })
   })
+}
+
+/** Read and parse a bounded JSON request body, answering 413 or 400 on refusal. */
+export async function readJsonBody(
+  req: DshRequest,
+  res: DshResponse,
+  limit: number,
+): Promise<{ ok: true, value: unknown } | { ok: false }> {
+  const raw = await readRequestBody(req, limit)
+  if (raw === null) {
+    // An oversized body leaves its remainder unread: end the socket once the
+    // 413 response finishes flushing, never before it.
+    res.once('finish', () => req.destroy())
+    sendJson(res, 413, { ok: false, error: 'request body too large' })
+    return { ok: false }
+  }
+  try {
+    return { ok: true, value: JSON.parse(raw.toString('utf8')) }
+  } catch {
+    sendJson(res, 400, { ok: false, error: 'request body is not JSON' })
+    return { ok: false }
+  }
 }

@@ -239,7 +239,12 @@ function pruneCacheFiles(ctx: DshContext): void {
 export function createSessionSearch(ctx: DshContext) {
   // A session deleted since the last run leaves a cache file nothing reads;
   // trimming before the first fold keeps the directory in step with the store.
-  pruneCacheFiles(ctx)
+  // A cache-directory fault is reported and never aborts route registration (D12).
+  try {
+    pruneCacheFiles(ctx)
+  } catch (error) {
+    ctx.logger?.warn?.(`${PACKAGE_NAME}: search cache prune skipped (${error instanceof Error ? error.message : String(error)})`)
+  }
   /** Session id → its corpus. */
   const cache = new Map<string, CachedSession>()
   const sizes = new Map<string, number>()
@@ -382,7 +387,14 @@ export function createSessionSearch(ctx: DshContext) {
     if (disposed) return
     releaseCorpus(sessionId)
     writtenAt.delete(sessionId)
-    writeJsonDocument(ctx, cacheFile(sessionId), 'session search cache', null)
+    writtenState.delete(sessionId)
+    try {
+      unlinkSync(cacheFile(sessionId))
+    } catch (error) {
+      if ((error as { code?: string } | null)?.code !== 'ENOENT') {
+        ctx.logger?.warn?.(`${PACKAGE_NAME}: session search cache not removed (${error instanceof Error ? error.message : String(error)})`)
+      }
+    }
   }
 
   /** Fold one session's complete log into a corpus. */
@@ -522,6 +534,7 @@ export function createSessionSearch(ctx: DshContext) {
     lower.clear()
     lowerChars = 0
     writtenAt.clear()
+    writtenState.clear()
     stored = null
     warming = null
   }

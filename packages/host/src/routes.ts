@@ -22,7 +22,7 @@ import { appearanceOverlayRoutes } from './appearance-overlays.js'
 import type { DshContext, DshPeerScope, DshRequest, DshResponse, DshRoute, DshScope } from '@dsh-claude-style/engine/node/dsh'
 import { harnessPath } from '@dsh-claude-style/engine/node/harness-home'
 import { packageRoot, pluginPath } from './paths.js'
-import { fenceRefused, methodRefused, readRequestBody, refusalOf, sendJson } from '@dsh-claude-style/engine/node/http'
+import { fenceRefused, methodRefused, readJsonBody, routeFailure, sendJson } from '@dsh-claude-style/engine/node/http'
 import { clampSoundVolume, isSoundName, playSystemSound, soundCapability } from './sound.js'
 import { createStaticFiles } from '@dsh-claude-style/engine/node/static-files'
 import { createPeakRate } from './peakrate.js'
@@ -59,20 +59,9 @@ function readBillingRows(query: URLSearchParams) {
  * reads as "use your own synthesis" (D89).
  */
 async function playSoundRequest(req: DshRequest, res: DshResponse) {
-  const body = await readRequestBody(req, SOUND_BODY_MAX)
-  if (body === null) {
-    sendJson(res, 413, { ok: false, error: 'request body too large' })
-    return
-  }
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(body.toString('utf8'))
-  } catch {
-    // A body this route cannot read is the request's own error, answered 400;
-    // nothing on the host needs the parse to succeed.
-    sendJson(res, 400, { ok: false, error: 'request body is not JSON' })
-    return
-  }
+  const body = await readJsonBody(req, res, SOUND_BODY_MAX)
+  if (!body.ok) return
+  const parsed = body.value
   const request = parsed !== null && typeof parsed === 'object' ? parsed as { name?: unknown, volume?: unknown } : null
   if (request === null || !isSoundName(request.name)) {
     sendJson(res, 400, { ok: false, error: 'unknown sound' })
@@ -164,25 +153,11 @@ async function unarchiveSession(ctx: DshContext, sessionId: string) {
  * next reload.
  */
 async function deleteSession(ctx: DshContext, req: DshRequest, res: DshResponse, peer?: DshPeerScope) {
-  const refused = refusalOf(ctx, req, peer)
-  if (refused !== undefined) {
-    sendJson(res, refused, { ok: false, error: refused === 401 ? 'unauthorized' : 'forbidden' })
-    return
-  }
-  const raw = await readRequestBody(req, DELETE_BODY_MAX)
-  if (raw === null) {
-    // An oversized body leaves its remainder unread: the socket is ended once
-    // this request's answer is out, never before it.
-    res.once('finish', () => req.destroy())
-  }
-  let request = null
-  try {
-    request = raw === null ? null : JSON.parse(raw.toString('utf8'))
-  } catch {
-    // A body that is not JSON is the client's error: the id check below answers 400.
-    request = null
-  }
-  const sessionId = request !== null && typeof request.sessionId === 'string' ? request.sessionId : ''
+  if (fenceRefused(ctx, req, res, peer)) return
+  const body = await readJsonBody(req, res, DELETE_BODY_MAX)
+  if (!body.ok) return
+  const request = body.value !== null && typeof body.value === 'object' ? body.value as { sessionId?: unknown } : null
+  const sessionId = typeof request?.sessionId === 'string' ? request.sessionId : ''
   if (!SESSION_ID_RE.test(sessionId)) {
     sendJson(res, 400, { ok: false, error: 'invalid session id' })
     return
@@ -318,18 +293,11 @@ export function registerRoutes(ctx: DshContext, scope: DshScope, config?: HostCo
       void answer.then((value: object) => {
         sendJson(res, 200, { ok: true, ...value })
       }, (error: unknown) => {
-        sendJson(res, 500, { ok: false, error: String((error as { message?: string } | null)?.message ?? String(error)) })
+        routeFailure(res, error)
       })
     }
 
-    /**
-     * Answer a route's rejected promise: a 500 carrying its message, or a
-     * closed socket when the headers already went out.
-     */
-    const fail = (res: DshResponse, error: unknown) => {
-      if (res.headersSent) res.destroy()
-      else sendJson(res, 500, { ok: false, error: String((error as { message?: string } | null)?.message ?? String(error)) })
-    }
+    const fail = routeFailure
 
     /**
      * The session id one read route serves, after the two checks every read of
@@ -456,7 +424,7 @@ export function registerRoutes(ctx: DshContext, scope: DshScope, config?: HostCo
         value: snapshot.value,
         computing: snapshot.computing === true,
         ...(snapshot.error === undefined ? {} : { error: snapshot.error }),
-      })
+      }, req.method)
     })
 
     // Read-only, behind the same fence as the usage route: the answer quotes
@@ -543,15 +511,24 @@ export function registerRoutes(ctx: DshContext, scope: DshScope, config?: HostCo
     register(appearanceOverlays.label, appearanceOverlays.route)
 
     return () => {
-      if (ownsUsage) usage.dispose()
-      peakrate.dispose()
-      prices.dispose()
-      sessionCost.dispose()
-      sessionSearch.dispose()
-      sessionPanel.dispose()
-      sessionRewind.dispose()
-      // One route's disposer failing must not keep the others registered
-      // (D12); the failure is reported.
+      const services: [string, () => void][] = [
+        ...(ownsUsage ? [['usage', () => usage.dispose()] as [string, () => void]] : []),
+        ['peakrate', () => peakrate.dispose()],
+        ['prices', () => prices.dispose()],
+        ['session cost', () => sessionCost.dispose()],
+        ['session search', () => sessionSearch.dispose()],
+        ['session panel', () => sessionPanel.dispose()],
+        ['session rewind', () => sessionRewind.dispose()],
+      ]
+      // Isolate every service and route disposer so one failure never leaves
+      // remaining services or HTTP routes registered (D12).
+      for (const [label, dispose] of services) {
+        try {
+          dispose()
+        } catch (error) {
+          report(`${label} disposal failed`, error)
+        }
+      }
       for (const dispose of disposers) {
         try {
           dispose()
