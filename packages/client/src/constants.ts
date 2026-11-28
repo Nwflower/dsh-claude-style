@@ -282,3 +282,5 @@ export const WORKSPACE_RUNNING_ATTR = 'data-dsh-claude-workspace-running'
 export const SESSION_PANEL_FOLDABLE_ATTR = 'data-dsh-claude-section-foldable'
 export const SESSION_PANEL_FOLDED_ATTR = 'data-dsh-claude-section-folded'
 export const SESSION_PANEL_FOLD_HEAD_ATTR = 'data-dsh-claude-fold-head'
+/** Custom document event dispatched by the active-shelf toggle and heard by date-groups. */
+export const DATE_VIEW_TOGGLE_EVENT = 'dsh-claude-toggle-date-view'

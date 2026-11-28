@@ -25,18 +25,8 @@ import type { HostContext, HostText } from '@dsh-claude-style/engine/host'
 import type { HostContextPressureProjection, HostSessionStatsProjection, HostSnapshotSource, HostTokenUsageProjection } from '@dsh-claude-style/contracts/services'
 import type { StatsReading } from './stats-count'
 import type { PieRest } from './context-meter-pie'
-import type { SessionFigures } from '../../shared/session-projections'
-
-/** The shown session's cost in micro units, in the currency billing follows. */
-export interface SessionCostReading {
-  /** The host session the figure belongs to. */
-  sessionId: string
-  cost: number | null
-  currency: Currency
-  pending: boolean
-  /** Whether the route bills at the platform's own list (the official models only). */
-  official: boolean
-}
+import type { SessionCostReading, SessionFigures } from '../../shared/session-projections'
+export type { SessionCostReading }
 
 /** The ring the composer row carries, as the statistics read it (meter-ring.ts). */
 export interface MeterRingFace {

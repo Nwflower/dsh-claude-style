@@ -1,6 +1,6 @@
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import { observeSize } from '@dsh-claude-style/engine/bus'
-import { MODEL_EFFORT_DEFAULT, MODEL_EFFORT_NONE } from '../model/model-labels'
+import { MODEL_EFFORT_DEFAULT, MODEL_EFFORT_NONE } from '../../shared/model-labels'
 import { effortSteps } from './ladder'
 import type { EffortStep } from './ladder'
 import { createEffortMatrix } from './matrix'
@@ -8,7 +8,7 @@ import { buildElement, setAttributeIfChanged } from '@dsh-claude-style/engine/do
 import { inPagePixels } from '../../shared/page-zoom'
 import { withoutTransition } from '../../shared/transition'
 import { createNameSwap } from './name-swap'
-import type { ModelCatalog } from '../model/catalog'
+import type { ModelCatalog } from '../../shared/model-catalog'
 import { copy } from './copy'
 
 /** The words around the slider. */

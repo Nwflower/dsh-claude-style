@@ -1,5 +1,5 @@
 import { subscribeMutations } from '@dsh-claude-style/engine/bus'
-import type { FoldPressReading } from './fold-toggle'
+import type { FoldPressReading } from '../../shared/fold-toggle'
 import { collectFoldRows, createFoldScheduler } from './fold-scheduler'
 import { foldControlAt, foldControlAtBottom, foldExpandedBody } from './fold-glide-parts'
 import { inPagePixels } from '../../shared/page-zoom'

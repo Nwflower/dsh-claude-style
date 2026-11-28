@@ -1,5 +1,5 @@
-import { MODEL_ACCOUNT_GROUP, MODEL_OFFICIAL_GROUP } from '../model/model-labels'
-import { modelGroupName } from '../model/provider-name'
+import { MODEL_ACCOUNT_GROUP, MODEL_OFFICIAL_GROUP } from '../../shared/model-labels'
+import { modelGroupName } from '../../shared/provider-name'
 import { readPrefs } from '../../core/prefs'
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { POPOVER_CHECK_SVG, buildPopoverItem, closeOtherPopovers, positionAnchoredPopover, registerPopover, setMenuPopoverOpen, unregisterPopover } from '../../shared/popover'
@@ -7,7 +7,7 @@ import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { CloseReason, FeatureHandle } from '@dsh-claude-style/engine/scheduler'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './quick-providers.manifest'
-import type { CatalogProvider } from '../model/catalog'
+import type { CatalogProvider } from '../../shared/model-catalog'
 import { copy } from './copy'
 
 /** Writes the chosen provider ids back to the preferences. */

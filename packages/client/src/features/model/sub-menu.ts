@@ -1,6 +1,6 @@
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { copy } from './copy'
-import { modelGroupName } from './provider-name'
+import { modelGroupName } from '../../shared/provider-name'
 import { modelComparator } from './rows'
 import { motionEaseAt, motionMs, motionValue } from '../../shared/motion'
 import { releaseCardHeight, travelCardHeight } from '../../shared/card-resize'

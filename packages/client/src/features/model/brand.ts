@@ -1,4 +1,4 @@
-import { modelCopy, resolveModelBrand } from './model-copy'
+import { modelCopy, resolveModelBrand } from '../../shared/model-copy'
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { COMBINE_SVGS, COMBINE_WORDS } from 'virtual:dsh-claude-style/generated'
 

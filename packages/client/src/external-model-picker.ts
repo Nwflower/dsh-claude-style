@@ -1,12 +1,12 @@
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { HostModelDirectory } from '@dsh-claude-style/contracts/services'
-import type { FeatureUi } from '../../core/feature'
-import { install as installModel } from './model-picker'
-import type modelManifest from './model-picker.manifest'
-import { install as installEffort } from '../effort/effort-picker'
-import type effortManifest from '../effort/effort-picker.manifest'
+import type { FeatureUi } from './core/feature'
+import { install as installModel } from './features/model/model-picker'
+import type modelManifest from './features/model/model-picker.manifest'
+import { install as installEffort } from './features/effort/effort-picker'
+import type effortManifest from './features/effort/effort-picker.manifest'
 
-declare module '../../core/external-controls' {
+declare module './core/external-controls' {
   interface ClaudeControlMountMap {
     'model-picker': { slot: HTMLElement, directory: HostModelDirectory, disabled?: boolean }
   }

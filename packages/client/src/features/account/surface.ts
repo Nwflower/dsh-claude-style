@@ -15,7 +15,7 @@ export type AccountSurfaceMode = 'host' | 'synthetic'
  * host renders that menu's list itself and unmounts it on close, so this
  * surface re-identifies the list every pass and injects our container at its
  * head: the first child INSIDE the list, never a sibling of the host's rows.
- * The list is content-matched (account/host-menu.ts), so the permission
+ * The list is content-matched (shared/host-account-menu.ts), so the permission
  * control's menu and the model picker's submenu are never touched.
  *
  * A host without one (Web) gets a self-built trigger and popover

@@ -3,7 +3,6 @@
   "triggerLabel": { "zh": "选择模型，当前 {model}", "en": "Select model, currently {model}" },
   "loading": { "zh": "正在加载模型…", "en": "Loading models…" },
   "empty": { "zh": "没有可用的模型。", "en": "No models available." },
-  "accountLabel": { "zh": "DeepSeek 账号", "en": "DeepSeek Account" },
   "moreLabel": { "zh": "更多模型", "en": "More models" },
   "searchPlaceholder": { "zh": "搜索模型", "en": "Search models" },
   "searchClear": { "zh": "清除搜索", "en": "Clear search" },

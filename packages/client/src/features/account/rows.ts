@@ -1,6 +1,6 @@
 import { resolveAvatarUrl, resolveDisplayName } from '../../shared/identity'
 import { buildElement } from '@dsh-claude-style/engine/dom'
-import type { HostAccountMenu } from './host-menu'
+import type { HostAccountMenu } from '../../shared/host-account-menu'
 import { copy } from './copy'
 
 /**
@@ -10,7 +10,7 @@ import { copy } from './copy'
  * The footer (account-footer.ts) builds the containers and decides which
  * mount point is active (account/surface.ts); this factory builds and syncs
  * the rows that go into them. `options.hostMenu` is the host's account menu
- * (account/host-menu.ts), `options.openBan()` what a press on the header
+ * (shared/host-account-menu.ts), `options.openBan()` what a press on the header
  * does and `options.banAvailable()` whether there is an easter egg to open;
  * the nickname and the picture come from the identity chain
  * (shared/identity.ts).

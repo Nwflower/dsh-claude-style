@@ -209,6 +209,28 @@ for (const file of clientModules) {
   if (rel.startsWith('packages/client/src/features/')) {
     if (/\bFeatureUi\b/.test(text)) featureUiChecked += 1
     if (/^import type \{[^}]*\bUi\b[^}]*\} from '[./]+core\/scheduler'/m.test(text)) problems.push(`${rel}: imports the whole ui registry type; type ui as FeatureUi<typeof manifest> and list the handles it reads in the manifest (D76)`)
+    const ownFeature = rel.split('/')[4]
+    for (const specifier of importSpecifiers(text)) {
+      if (!specifier.startsWith('.')) continue
+      const targetRel = relative(path.resolve(path.dirname(file), specifier))
+      if (targetRel.startsWith('packages/client/src/features/')) {
+        const targetFeature = targetRel.split('/')[4]
+        if (targetFeature !== ownFeature) {
+          problems.push(`${rel}: imports sibling feature "${targetFeature}" (${specifier}); move shared mechanisms to packages/client/src/shared/ or read through FeatureUi handles (D76)`)
+        }
+      }
+    }
+  } else if (rel.startsWith('packages/client/src/core/') || rel.startsWith('packages/client/src/shared/')) {
+    for (const line of text.split('\n')) {
+      if (/^\s*(?:import\s+type\b|export\s+type\b|\/\/|\*|\/\*)/.test(line)) continue
+      for (const specifier of importSpecifiers(line)) {
+        if (!specifier.startsWith('.')) continue
+        const targetRel = relative(path.resolve(path.dirname(file), specifier))
+        if (targetRel.startsWith('packages/client/src/features/')) {
+          problems.push(`${rel}: core/shared runtime-imports feature module ${specifier}; keep dependency direction downward from features to shared/core`)
+        }
+      }
+    }
   }
   text.split('\n').forEach((line, at) => {
     if (/^\s*(\*|\/\/|\/\*)/.test(line)) return

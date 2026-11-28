@@ -4,7 +4,7 @@ import { platformBilledProvider, readAccountBalance } from '../../shared/account
 import { copy } from './copy'
 import type { Currency } from '@dsh-claude-style/contracts/prices'
 import type { AccountBalance } from '../../shared/account-balance'
-import type { SessionCostReading } from '../context-stats/session-stats'
+import type { SessionCostReading } from '../../shared/session-projections'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { FeatureUi } from '../../core/feature'
 import type manifest from './mascot.manifest'

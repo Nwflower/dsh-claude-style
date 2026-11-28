@@ -35,7 +35,7 @@ export { install as installActiveFirst } from './features/active-first/active-fi
 export { default as ACTIVE_FIRST_SHEET } from './features/active-first/active-first.css?raw'
 export { orderDateSeats } from './features/date-groups/date-groups'
 export { install as installRowSkip, WIDTH_SETTLE_MS } from './features/row-skip/row-skip'
-export { createAttentionFeed } from './features/sound-cues/attention-feed'
+export { createAttentionFeed } from './shared/attention-feed'
 export { createNotificationDisplay } from './features/attention-notifications/display'
 export { RightSessionStatus } from './features/sidebar-status/row-status'
 export { WorkspaceRunningMark } from './features/sidebar-status/group-mark'

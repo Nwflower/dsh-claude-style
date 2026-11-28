@@ -1,7 +1,7 @@
 import { installScheduler as installEngineScheduler } from '@dsh-claude-style/engine/scheduler'
 import type { FeatureHandle, SchedulerCalls } from '@dsh-claude-style/engine/scheduler'
 import { onUsernameLoaded } from '../shared/identity'
-import { onModelCopyLoaded } from '../features/model/model-copy'
+import { onModelCopyLoaded } from '../shared/model-copy'
 import { loadPrefs, refreshMotionAttribute, subscribePrefs } from './prefs'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { FooterHandle } from '../features/account/account-footer'

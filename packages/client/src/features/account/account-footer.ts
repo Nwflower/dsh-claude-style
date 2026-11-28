@@ -2,7 +2,7 @@ import { ACCOUNT_ARMED_ATTR, ACCOUNT_HOST_ROW_ATTR, AUTO_POPOVER_OFF } from '../
 import { findFootArea, findHostModal } from '@dsh-claude-style/engine/host'
 import { readPrefs } from '../../core/prefs'
 import { createFooterMirror } from './footer-mirror'
-import { createHostAccountMenu } from './host-menu'
+import { createHostAccountMenu } from '../../shared/host-account-menu'
 import { createHostMenuPlacement } from './menu-placement'
 import { createAccountProfile } from './profile'
 import { createAccountRows } from './rows'
