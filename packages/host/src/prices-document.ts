@@ -7,6 +7,7 @@
  * reader refuses is dropped whole, because a half-read table would price some
  * settlements at one rate and the rest at another.
  */
+import { isIsoDate } from '@dsh-claude-style/contracts/peakrate'
 import { CURRENCIES, PRICE_SCHEMA_VERSION, clockAt } from '@dsh-claude-style/contracts/prices'
 import type { Currency, ModelPrice, PriceDocument, PriceSchedule, PriceTier, PriceWindow } from '@dsh-claude-style/contracts/prices'
 import { asRecord } from './json-document.js'
@@ -20,10 +21,7 @@ function asRate(value: unknown): number | undefined {
 }
 
 function asDate(value: unknown): string | undefined {
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return undefined
-  const [year, month, day] = value.split('-').map(Number)
-  const at = new Date(Date.UTC(year, month - 1, day))
-  return at.getUTCFullYear() === year && at.getUTCMonth() === month - 1 && at.getUTCDate() === day ? value : undefined
+  return typeof value === 'string' && isIsoDate(value) ? value : undefined
 }
 
 function asClock(value: unknown): string | undefined {

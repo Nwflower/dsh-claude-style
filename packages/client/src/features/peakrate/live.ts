@@ -1,4 +1,4 @@
-import { PEAKRATE_ROUTE } from '../../constants'
+import { PEAKRATE_PATH } from '@dsh-claude-style/contracts/routes'
 import { forgetRates } from './schedule'
 import type { HostAnswer } from '@dsh-claude-style/engine/resource'
 import { createHostRequest } from '@dsh-claude-style/engine/resource'
@@ -69,7 +69,7 @@ function adopt(answer: HostAnswer): boolean {
 function call(refresh: boolean): Promise<boolean> {
   attemptedAt = Date.now()
   // A transport failure keeps the current catalog until the next timed attempt (D12).
-  return request.load(PEAKRATE_ROUTE, {
+  return request.load(PEAKRATE_PATH, {
     method: refresh ? 'POST' : 'GET',
   }, () => {}).then(answer => answer !== undefined && answer !== null && answer.ok === true)
 }

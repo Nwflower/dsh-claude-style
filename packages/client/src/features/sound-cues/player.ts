@@ -1,4 +1,4 @@
-import { SOUND_ROUTE } from '../../constants'
+import { SOUND_PATH } from '@dsh-claude-style/contracts/routes'
 import { createSynth } from './synth'
 import type { HostSoundCapability, SoundName } from '@dsh-claude-style/contracts/sound'
 
@@ -27,7 +27,7 @@ export function createSoundPlayer() {
     if (mode !== null) return mode
     if (!loopbackPage()) return (mode = 'browser')
     try {
-      const response = await fetch(SOUND_ROUTE, { credentials: 'same-origin', headers: { accept: 'application/json' } })
+      const response = await fetch(SOUND_PATH, { credentials: 'same-origin', headers: { accept: 'application/json' } })
       if (!response.ok) throw new Error(`capability read answered ${response.status}`)
       const answer = await response.json() as HostSoundCapability
       mode = answer?.playback === 'system' && Array.isArray(answer.sounds) && answer.sounds.length > 0 ? 'system' : 'browser'
@@ -42,7 +42,7 @@ export function createSoundPlayer() {
   async function play(name: SoundName, gain: number) {
     if (await resolveMode() === 'system') {
       try {
-        const response = await fetch(SOUND_ROUTE, {
+        const response = await fetch(SOUND_PATH, {
           method: 'POST',
           credentials: 'same-origin',
           headers: { 'content-type': 'application/json' },

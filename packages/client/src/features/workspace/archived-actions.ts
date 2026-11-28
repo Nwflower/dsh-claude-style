@@ -1,6 +1,6 @@
 import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
-import { SESSION_DELETE_ROUTE } from '../../constants'
+import { SESSION_DELETE_PATH } from '@dsh-claude-style/contracts/routes'
 import type { HostAnswer } from '@dsh-claude-style/engine/resource'
 import type { HostSessionsService } from '@dsh-claude-style/contracts/services'
 import type { createHostToast } from '../../shared/host-toast'
@@ -37,7 +37,7 @@ export function createArchivedActions(options: {
    * and every other refusal shows the route's message.
    */
   function removeArchived(id: string) {
-    fetch(SESSION_DELETE_ROUTE, {
+    fetch(SESSION_DELETE_PATH, {
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'content-type': 'application/json' },

@@ -132,7 +132,30 @@ export function checkContracts(manifests) {
   const unclaimed = table.filter((entry) => entry.owner !== 'core' && !claimed.has(entry.id)).map((entry) => entry.id)
   if (unclaimed.length > 0) throw new Error(`build: packages/contracts/src/table.ts entries no feature manifest claims: ${unclaimed.join(', ')}`)
   checkTiming()
+  checkFontStackParity()
   return table
+}
+
+/** Keep FONT_PRESET_BASE in contracts/typeface.ts identical to theme/tokens.json (D9). */
+function checkFontStackParity() {
+  const { FONT_PRESET_BASE, FONT_ROLE_CODE, FONT_ROLE_PROSE, FONT_ROLE_UI } = loadModule('packages/contracts/src/typeface.ts')
+  const tokens = JSON.parse(fs.readFileSync(path.join(SRC, 'theme', 'tokens.json'), 'utf8'))
+  const byToken = new Map(tokens.typeface.map((entry) => [entry.token, entry]))
+  const expected = [
+    ['claude', FONT_ROLE_PROSE, '--dsh-claude-font-prose'],
+    ['claude', FONT_ROLE_UI, '--dsw-font-family'],
+    ['claude', FONT_ROLE_CODE, '--dsh-claude-font-code'],
+    ['system', FONT_ROLE_PROSE, '--dsh-claude-font-prose'],
+    ['system', FONT_ROLE_UI, '--dsw-font-family'],
+    ['system', FONT_ROLE_CODE, '--dsh-claude-font-code'],
+  ]
+  for (const [preset, role, token] of expected) {
+    const tokenValue = byToken.get(token)?.[preset]
+    const contractValue = FONT_PRESET_BASE?.[preset]?.[role]
+    if (tokenValue !== contractValue) {
+      throw new Error(`build: FONT_PRESET_BASE.${preset}.${role} in packages/contracts/src/typeface.ts disagrees with ${token}.${preset} in packages/client/src/theme/tokens.json (D9)`)
+    }
+  }
 }
 
 

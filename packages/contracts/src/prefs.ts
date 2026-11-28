@@ -2,6 +2,9 @@
  * Shared preference declarations (D73): values, defaults, limits and legacy shapes.
  * Browser types and host Config derive from this table; settings rows follow it too (D76).
  */
+import { STRUCTURED_RECORD_LIST_KEYS } from './appearance-overlays'
+import { PACKAGE_NAME } from './package'
+import { HEX_COLOR_RE, mergeRecordOverlay } from './records'
 import { OFFICIAL_MODEL_GROUP } from './services'
 import { PALETTE_SCHEME_CUSTOM, PALETTE_SCHEME_ENTRY_MAX, PALETTE_SCHEME_FOLLOW, PALETTE_SCHEME_ID_MAX, PALETTE_SCHEME_LIMIT, carryClassicInlineCode, carryCustomPalette, findPaletteScheme, normalizePaletteSchemes, parsePaletteScheme } from './palette-schemes'
 import { CURRENCIES, CURRENCY_CNY } from './prices'
@@ -465,9 +468,6 @@ export const PREF_DEFAULTS = Object.freeze(Object.fromEntries(
   Object.entries(PREFS).map(([key, spec]) => [key, spec.default]),
 )) as unknown as Prefs
 
-/** A `#rrggbb` colour, which is all the custom accent accepts. */
-const COLOR_RE = /^#[0-9a-f]{6}$/i
-
 /** Only declared string/boolean legacy values map; own-key checks exclude `toString` inheritance traps. */
 function legacyValue(spec: PrefSpec, raw: unknown): unknown {
   if (spec.legacy === undefined || (typeof raw !== 'string' && typeof raw !== 'boolean')) return undefined
@@ -483,9 +483,9 @@ function clampPref(spec: PrefSpec, raw: unknown): unknown {
     case 'choice': return typeof raw === 'string' && spec.values.includes(raw) ? raw : spec.default
     // The second trim keeps a cut that lands after a run of spaces from leaving them at the end.
     case 'text': return typeof raw === 'string' ? raw.trim().slice(0, spec.max).trim() : spec.default
-    case 'color': return typeof raw === 'string' && COLOR_RE.test(raw) ? raw.toLowerCase() : spec.default
+    case 'color': return typeof raw === 'string' && HEX_COLOR_RE.test(raw) ? raw.toLowerCase() : spec.default
     case 'list': {
-      if (!Array.isArray(raw)) return spec.default
+      if (!Array.isArray(raw)) return [...spec.default]
       const out: string[] = []
       for (let i = 0; i < raw.length && out.length < spec.max; i++) {
         const entry = raw[i]
@@ -503,7 +503,7 @@ export function clampPrefs(value: unknown): Prefs {
   const section: Record<string, unknown> = value !== null && typeof value === 'object' ? { ...value as Record<string, unknown> } : {}
   // Structured YAML records enter the same canonical store as UI writes. One
   // unserializable entry is isolated here and dropped by the list clamp.
-  for (const key of ['paletteSchemes', 'paletteSchemeOverrides', 'brandingPresets', 'brandingPresetOverrides'] as const) {
+  for (const key of STRUCTURED_RECORD_LIST_KEYS) {
     const list = section[key]
     if (!Array.isArray(list)) continue
     section[key] = list.map(entry => {
@@ -514,7 +514,10 @@ export function clampPrefs(value: unknown): Prefs {
     })
   }
   const out: Record<string, unknown> = {}
-  for (const [key, spec] of Object.entries(PREFS) as [PrefKey, PrefSpec][]) out[key] = clampPref(spec, section[key])
+  for (const [key, spec] of Object.entries(PREFS) as [PrefKey, PrefSpec][]) {
+    if (key === 'fontProse' || key === 'fontUi' || key === 'fontCode') continue
+    out[key] = clampPref(spec, section[key])
+  }
   out.fontProse = clampFontStack(section.fontProse)
   out.fontUi = clampFontStack(section.fontUi)
   out.fontCode = clampFontStack(section.fontCode)
@@ -550,10 +553,7 @@ export function migrationWriteBack(value: unknown): Partial<Prefs> | null {
   const clamped = clampPrefs(section)
   const patch: Record<string, unknown> = {}
   for (const [key, spec] of Object.entries(PREFS) as [PrefKey, PrefSpec][]) {
-    const raw = section[key]
-    if (spec.legacy !== undefined && (typeof raw === 'string' || typeof raw === 'boolean') && Object.hasOwn(spec.legacy, String(raw))) {
-      patch[key] = clamped[key]
-    }
+    if (legacyValue(spec, section[key]) !== undefined) patch[key] = clamped[key]
   }
   if (section.contextDisplay === CONTEXT_DISPLAY_RING_BAND_LEGACY && section.contextRampMode === undefined) {
     patch.contextRampMode = clamped.contextRampMode
@@ -593,13 +593,9 @@ function carryPaletteSchemes(out: Record<string, unknown>) {
     records = carryClassicInlineCode(records, 'claude', presets)
     out.inlineCodeColor = INLINE_CODE_COLOR_PALETTE
   }
-  const overridden = normalizePaletteSchemes(out.paletteSchemeOverrides as string[], presets).entries
-  const overriddenIds = new Set(overridden.map(text => parsePaletteScheme(text, presets).id))
-  const deleted = new Set(out.paletteSchemeDeleted as string[])
-  records = [...overridden, ...records.filter(text => {
-    const id = parsePaletteScheme(text, presets).id
-    return !overriddenIds.has(id) && !deleted.has(id)
-  })]
+  const overridden = normalizePaletteSchemes(out.paletteSchemeOverrides as string[], presets)
+  problems.push(...overridden.problems)
+  records = mergeRecordOverlay(records, overridden.entries, out.paletteSchemeDeleted as string[], text => parsePaletteScheme(text, presets).id)
   out.paletteSchemes = records.slice(0, PALETTE_SCHEME_LIMIT)
   const selected = (out.paletteColorsOverride || out.paletteColors) as string
   out.paletteColors = selected
@@ -607,19 +603,15 @@ function carryPaletteSchemes(out: Record<string, unknown>) {
     problems.push(`the selected palette scheme "${selected}" is not among the records; following the brand`)
     out.paletteColors = PALETTE_COLORING_BRAND
   }
-  for (const problem of problems) console.error(`dsh-claude-style: ${problem}`)
+  for (const problem of problems) console.error(`${PACKAGE_NAME}: ${problem}`)
 }
 
 /** Named logo records and their independent selection; invalid entries do not remove valid ones. */
 function carryBrandingPresets(out: Record<string, unknown>) {
   const { entries, problems } = normalizeBrandingPresets(out.brandingPresets as string[])
-  const overridden = normalizeBrandingPresets(out.brandingPresetOverrides as string[]).entries
-  const overriddenIds = new Set(overridden.map(text => parseBrandingPreset(text).id))
-  const deleted = new Set(out.brandingPresetDeleted as string[])
-  const merged = [...overridden, ...entries.filter(text => {
-    const id = parseBrandingPreset(text).id
-    return !overriddenIds.has(id) && !deleted.has(id)
-  })]
+  const overridden = normalizeBrandingPresets(out.brandingPresetOverrides as string[])
+  problems.push(...overridden.problems)
+  const merged = mergeRecordOverlay(entries, overridden.entries, out.brandingPresetDeleted as string[], text => parseBrandingPreset(text).id)
   out.brandingPresets = merged.slice(0, BRANDING_PRESET_LIMIT)
   const selected = (out.brandingPresetOverride || out.brandingPreset) as string
   out.brandingPreset = selected
@@ -627,5 +619,5 @@ function carryBrandingPresets(out: Record<string, unknown>) {
     problems.push(`the selected branding preset "${selected}" is neither a record nor a built-in preset; following the theme style`)
     out.brandingPreset = ''
   }
-  for (const problem of problems) console.error(`dsh-claude-style: ${problem}`)
+  for (const problem of problems) console.error(`${PACKAGE_NAME}: ${problem}`)
 }

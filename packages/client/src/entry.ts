@@ -243,7 +243,7 @@ export function apply(ctx: HostContext) {
   // Registered before anything is installed: registered last, a feature that
   // threw half-way through left the stylesheet and every listener installed
   // so far on the page with no teardown the host could ever run.
-  ctx.effect(() => teardown, 'dsh-claude-style: Claude Code desktop theme')
+  ctx.effect(() => teardown, `${PACKAGE_NAME}: Claude Code desktop theme`)
 
   /**
    * Switch one feature off for the rest of this generation: run its own

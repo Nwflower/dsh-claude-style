@@ -1,8 +1,7 @@
 /** UI-owned appearance overlays, stored beside the plugin rather than inside file-owned config. */
 
-import { normalizePaletteSchemes } from '@dsh-claude-style/contracts/palette-schemes'
+import { emptyAppearanceOverlay, normalizeAppearanceOverlay } from '@dsh-claude-style/contracts/appearance-overlays'
 import { PALETTE_PRESETS } from '@dsh-claude-style/contracts/prefs'
-import { normalizeBrandingPresets } from '@dsh-claude-style/contracts/branding-presets'
 import { APPEARANCE_OVERLAY_PATH } from '@dsh-claude-style/contracts/routes'
 import { readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
@@ -12,46 +11,17 @@ import { pluginPath } from './paths.js'
 import type { DshContext, DshPeerScope, DshRequest, DshResponse, DshRoute } from '@dsh-claude-style/engine/node/dsh'
 
 const BODY_MAX = 64 * 1024
-const DEFAULT: Overlay = Object.freeze({
-  paletteSchemeOverrides: [], paletteSchemeDeleted: [], paletteColorsOverride: '',
-  brandingPresetOverrides: [], brandingPresetDeleted: [], brandingPresetOverride: '',
-})
-
-interface Overlay {
-  paletteSchemeOverrides: string[]
-  paletteSchemeDeleted: string[]
-  paletteColorsOverride: string
-  brandingPresetOverrides: string[]
-  brandingPresetDeleted: string[]
-  brandingPresetOverride: string
-}
-
-function normalize(value: unknown): Overlay {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) throw new Error('the overlay is not an object')
-  const record = value as Record<string, unknown>
-  const palette = normalizePaletteSchemes(Array.isArray(record.paletteSchemeOverrides) ? record.paletteSchemeOverrides.filter(entry => typeof entry === 'string') : [], PALETTE_PRESETS)
-  const branding = normalizeBrandingPresets(Array.isArray(record.brandingPresetOverrides) ? record.brandingPresetOverrides.filter(entry => typeof entry === 'string') : [])
-  const ids = (input: unknown, max: number): string[] => Array.isArray(input) ? input.filter(entry => typeof entry === 'string' && entry.length > 0 && entry.length <= max) : []
-  return {
-    paletteSchemeOverrides: palette.entries,
-    paletteSchemeDeleted: ids(record.paletteSchemeDeleted, 24),
-    paletteColorsOverride: typeof record.paletteColorsOverride === 'string' ? record.paletteColorsOverride.slice(0, 24) : '',
-    brandingPresetOverrides: branding.entries,
-    brandingPresetDeleted: ids(record.brandingPresetDeleted, 40),
-    brandingPresetOverride: typeof record.brandingPresetOverride === 'string' ? record.brandingPresetOverride.slice(0, 40) : '',
-  }
-}
 
 function createOverlayStore(ctx: DshContext) {
   const file = () => join(pluginPath(ctx), 'appearance-overlays.json')
   const read = () => {
-    if (statSync(file(), { throwIfNoEntry: false })?.isFile() !== true) return { ...DEFAULT }
-    return normalize(JSON.parse(readFileSync(file(), 'utf8')))
+    if (statSync(file(), { throwIfNoEntry: false })?.isFile() !== true) return emptyAppearanceOverlay()
+    return normalizeAppearanceOverlay(JSON.parse(readFileSync(file(), 'utf8')), PALETTE_PRESETS)
   }
   const write = (value: unknown) => {
     if (value === null || typeof value !== 'object' || Array.isArray(value)) throw new Error('the overlay is not an object')
     // The synchronous read, merge and atomic replace form one host operation (D75).
-    const normalized = normalize({ ...read(), ...value })
+    const normalized = normalizeAppearanceOverlay({ ...read(), ...value }, PALETTE_PRESETS)
     const target = file()
     writeAtomicFile(target, Buffer.from(JSON.stringify(normalized, null, 2) + '\n'), [])
     return normalized

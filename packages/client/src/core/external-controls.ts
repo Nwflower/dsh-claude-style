@@ -1,3 +1,5 @@
+import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
+
 /** Controls add their mount option shapes here through declaration merging. */
 export interface ClaudeControlMountMap {}
 
@@ -18,7 +20,7 @@ export function installExternalControls(controls: ClaudeControlMounters): () => 
   const api: ClaudeControlsApi = {
     has,
     mount(id, options) {
-      if (!has(id)) throw new Error(`dsh-claude-style: unknown external control "${id}"`)
+      if (!has(id)) throw new Error(`${PACKAGE_NAME}: unknown external control "${id}"`)
       const mount = controls[id] as (options: ClaudeControlMountMap[ClaudeControlId]) => () => void
       const stop = mount(options)
       let disposed = false

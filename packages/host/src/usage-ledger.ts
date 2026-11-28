@@ -16,6 +16,7 @@
  * speak; none of those documents ships types.
  */
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
+import { isIsoDate } from '@dsh-claude-style/contracts/peakrate'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { sessionDirectoryName } from './session-name.js'
@@ -29,13 +30,7 @@ const LEDGER_VERSION = 1
  * compares day keys as strings, and one sorting past every real day would hide
  * the days the fold itself contributed.
  */
-function isDayKey(value: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
-  const [year, month, day] = value.split('-').map(Number)
-  if (month < 1 || month > 12 || day < 1 || day > 31) return false
-  const date = new Date(Date.UTC(year, month - 1, day))
-  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
-}
+const isDayKey = isIsoDate
 
 /** Buckets are disjoint; reasoning tokens ride inside output. */
 export const BUCKET_KEYS: (keyof Buckets)[] = ['input', 'output', 'cacheRead', 'cacheWrite']

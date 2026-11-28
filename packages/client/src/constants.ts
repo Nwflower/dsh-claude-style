@@ -261,8 +261,6 @@ export const STYLE_STAMP_ATTR = 'data-dsh-claude-style'
 /** The handoff marker: stamped on `body` while this build is live AND able to give the page back (D74). Its presence is a capability another package can read without running anything.
  * A skin that lists this theme as one of its looks has to know the page can come back, and a build from before D74 does not stamp it. */
 export const HANDOFF_ATTR = 'data-dsh-claude-style-handoff'
-/** The document attribute the skin center stamps while a skin is painting (D74). It is read at boot and watched afterwards: the value is the skin id, and the presence means the page belongs to a skin. */
-export const SKIN_STAMP_ATTR = 'data-dsh-skin'
 /** On the host's scroller around the settings page while the page is mounted (features/settings/settings.ts): the stylesheet keeps the scrollbar's room there, so switching tabs never shifts the layout. */
 export const SETTINGS_SCROLLER_ATTR = 'data-dsh-claude-settings-scroller'
 /** Which home layout is in force. The stylesheet branches on it, and the two layouts differ only in arrangement — the hero's own markup is the host's either way.
@@ -274,23 +272,6 @@ export const HOME_HERO_ATTR = 'data-dsh-claude-home-hero'
 /** The heat grid's ramp: how much of the heat ink each level mixes into the empty cell's tone, in percent, faintest first. Its length is the number of levels a day's tokens are bucketed into (features/home/data.ts); the build writes one rule per level from it (scripts/build/feature-sheets.mjs).
  * The first share is large enough that the faintest level reads as blue beside an empty day in both themes; the rest step evenly up to the full ink. */
 export const HOME_HEAT_RAMP = [24, 44, 64, 82, 100] as const
-/** The host half's private routes, under this half's own names; the paths are the shared contract (packages/contracts/src/routes.ts, D73), declared once for both halves. */
-export {
-  BRAND_MARK_PATH as BRAND_MARK_ROUTE,
-  BRAND_PATH as BRAND_ROUTE,
-  BRAND_WORDMARK_PATH as BRAND_WORDMARK_ROUTE,
-  BRANDING_ASSET_PATH as BRANDING_ASSET_ROUTE,
-  BRANDING_STATUS_PATH as BRANDING_STATUS_ROUTE,
-  APPEARANCE_OVERLAY_PATH as APPEARANCE_OVERLAY_ROUTE,
-  FONT_FILES_PATH as FONT_FILES_ROUTE,
-  PEAKRATE_PATH as PEAKRATE_ROUTE,
-  SESSION_DELETE_PATH as SESSION_DELETE_ROUTE,
-  SESSION_SEARCH_PATH as SESSION_SEARCH_ROUTE,
-  SOUND_PATH as SOUND_ROUTE,
-  USAGE_PATH as USAGE_ROUTE,
-  USERNAME_PATH as USERNAME_ROUTE,
-  WEBFONTS_PATH as WEBFONTS_ROUTE,
-} from '@dsh-claude-style/contracts/routes'
 
 /** Placement state for the sidebar's native status cell; the host remains its state owner. */
 export const SIDEBAR_STATUS_ATTR = 'data-dsh-claude-row-status'

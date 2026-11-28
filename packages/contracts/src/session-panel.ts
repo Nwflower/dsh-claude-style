@@ -6,6 +6,8 @@
  * figures are the host's own projections, which the page reads without this route.
  */
 
+import type { HostContextPressureProjection } from './services'
+
 /** The context window's occupancy and its composition. */
 export interface PanelContext {
   /** Tokens the next request is expected to take. */
@@ -50,7 +52,7 @@ export interface PanelContextPart {
 
 /** The host token meter's aggregate projections: the occupancy the parts divide. */
 export interface PanelContextProjections {
-  contextPressure?: { projectedTokens?: number, pressureTokens?: number, contextWindow?: number }
+  contextPressure?: HostContextPressureProjection
 }
 
 /** One file the session produced or presented. */

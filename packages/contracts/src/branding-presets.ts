@@ -1,5 +1,5 @@
 import type { BrandImageKind } from './brand'
-import { appearancePair, normalizeRecords, parseRecordObject } from './records'
+import { appearancePair, findRecordById, normalizeRecords, parseRecordObject, RECORD_ID_RE } from './records'
 
 /** Named logo images kept independently of the selected colour scheme. */
 export const BRANDING_PRESET_LIMIT = 16
@@ -33,7 +33,7 @@ export interface BrandingPreset {
   ink?: BrandInk
 }
 
-const ID = /^[a-z0-9][a-z0-9-]*$/
+const ID = RECORD_ID_RE
 
 /**
  * The vendor lockups the skin carries (packages/assets/src/icons/combine/)
@@ -129,9 +129,5 @@ export function normalizeBrandingPresets(list: readonly string[]) {
 }
 
 export function findBrandingPreset(entries: readonly string[], id: string) {
-  for (const text of entries) {
-    const preset = parseBrandingPreset(text)
-    if (preset.id === id) return preset
-  }
-  return undefined
+  return findRecordById(entries, id, parseBrandingPreset)
 }

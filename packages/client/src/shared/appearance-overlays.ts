@@ -1,26 +1,15 @@
-import { APPEARANCE_OVERLAY_ROUTE } from '../constants'
+import { APPEARANCE_OVERLAY_DEFAULT } from '@dsh-claude-style/contracts/appearance-overlays'
+import type { AppearanceOverlay } from '@dsh-claude-style/contracts/appearance-overlays'
+import { APPEARANCE_OVERLAY_PATH } from '@dsh-claude-style/contracts/routes'
 import { createHostResource, readHostJson } from '@dsh-claude-style/engine/resource'
 
-const DEFAULT: AppearanceOverlay = Object.freeze({
-  paletteSchemeOverrides: [], paletteSchemeDeleted: [], paletteColorsOverride: '',
-  brandingPresetOverrides: [], brandingPresetDeleted: [], brandingPresetOverride: '',
-})
-
-interface AppearanceOverlay {
-  paletteSchemeOverrides: string[]
-  paletteSchemeDeleted: string[]
-  paletteColorsOverride: string
-  brandingPresetOverrides: string[]
-  brandingPresetDeleted: string[]
-  brandingPresetOverride: string
-}
-let current: AppearanceOverlay = DEFAULT
+let current: AppearanceOverlay = APPEARANCE_OVERLAY_DEFAULT
 let saved = false
 let writes: Promise<unknown> = Promise.resolve()
 
-const resource = createHostResource(APPEARANCE_OVERLAY_ROUTE, data => {
+const resource = createHostResource(APPEARANCE_OVERLAY_PATH, data => {
   if (data?.ok !== true || data.value === null || typeof data.value !== 'object') throw new Error('appearance overlays did not answer successfully')
-  if (!saved) current = { ...DEFAULT, ...data.value as AppearanceOverlay }
+  if (!saved) current = { ...APPEARANCE_OVERLAY_DEFAULT, ...data.value as AppearanceOverlay }
   return current
 })
 
@@ -39,20 +28,20 @@ export function onAppearanceOverlayLoaded(listener: () => void) {
 /** Reset cached overlay state and abort any pending read when a generation ends (D12). */
 export function resetAppearanceOverlay() {
   resource.reset()
-  current = DEFAULT
+  current = APPEARANCE_OVERLAY_DEFAULT
   saved = false
   writes = Promise.resolve()
 }
 
 async function persist(patch: Record<string, unknown>) {
-  const response = await readHostJson(APPEARANCE_OVERLAY_ROUTE, {
+  const response = await readHostJson(APPEARANCE_OVERLAY_PATH, {
     method: 'PUT',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(patch),
   })
   if (response?.ok !== true || response.value === null || typeof response.value !== 'object') throw new Error('appearance overlays could not be saved')
   saved = true
-  current = { ...DEFAULT, ...response.value as AppearanceOverlay }
+  current = { ...APPEARANCE_OVERLAY_DEFAULT, ...response.value as AppearanceOverlay }
   return current
 }
 

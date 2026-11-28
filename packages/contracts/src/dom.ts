@@ -1,3 +1,5 @@
+import { REWIND_PEER_PACKAGE } from './session-rewind'
+
 /**
  * Host-owned DOM contract (D3); hashed class names and localized text are excluded.
  * Every literal needs a packages/contracts/src/table.ts entry, enforced by the build.
@@ -456,7 +458,7 @@ export const PLUGIN_SHEET_OWNER_ATTRIBUTE = 'data-plugin'
 export const PLUGIN_SHEET_PATH_ATTRIBUTE = 'data-plugin-css'
 export const PLUGIN_STYLE_PATH_ATTRIBUTE = 'data-path'
 /** The sheet dsh-rewind's browser half tags with its package name while it runs, read to hand the rewind write actions over (D111). */
-export const REWIND_PEER_SHEET_SELECTOR = 'style[data-plugin="dsh-rewind-plugin"]'
+export const REWIND_PEER_SHEET_SELECTOR = `style[data-plugin="${REWIND_PEER_PACKAGE}"]`
 
 /* ---------- a plugin's footer control ---------- */
 /** Plugin-owned footer naming lets the skin find update controls without hashed class names. */
@@ -508,7 +510,6 @@ export const WORKSPACE_ROW_SELECTOR = `[${SESSION_ROW_KEY_ATTRIBUTE}^="workspace
 /** Whether a workspace row's workspace stands open; the host writes it beside the row's role. */
 export const WORKSPACE_ROW_EXPANDED_ATTRIBUTE = 'aria-expanded'
 
-/* ---------- the sidebar's session rows ---------- */
 /** Idle rows render this optional third-party leading decoration outlet. */
 export const SESSION_STATUS_OUTLET_SELECTOR = '[data-slot="sidebar.session.row.leading"]'
 

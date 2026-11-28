@@ -1,4 +1,5 @@
-import { USERNAME_MAX, USERNAME_ROUTE } from '../constants'
+import { USERNAME_PATH } from '@dsh-claude-style/contracts/routes'
+import { USERNAME_MAX } from '../constants'
 import { readPrefs } from '../core/prefs'
 import { createHostResource } from '@dsh-claude-style/engine/resource'
 
@@ -32,7 +33,7 @@ function storeProbeUsername(value: string) {
 }
 
 /** The host half's OS user; an answer the contract does not carry is not adopted. */
-const usernameResource = createHostResource(USERNAME_ROUTE, (data) => {
+const usernameResource = createHostResource(USERNAME_PATH, (data) => {
   if (!data || data.ok !== true || typeof data.username !== 'string') return undefined
   usernameFromHost = data.username.trim().slice(0, USERNAME_MAX)
   if (usernameFromHost) {
