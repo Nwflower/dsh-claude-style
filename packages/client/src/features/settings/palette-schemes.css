@@ -66,97 +66,15 @@ body[data-dsh-claude-style] .dsh-claude-palette-manage {
   line-height: 20px;
 }
 
-/* ---------- the managers' frame (scheme-modal.ts) ---------- */
-
-/* The scrim and the panel arrive and leave together: the scrim fades, the
-   panel grows out of the centre and returns to it (docs/STYLE.md, Open). The
-   leaving mark is written by the frame's close, which takes the manager off
-   the page when the panel's exit ends. */
-body[data-dsh-claude-style] .dsh-claude-scheme-modal {
-  container-type: inline-size;
-  position: fixed;
-  inset: 0;
-  z-index: var(--dsh-claude-layer-takeover);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: clamp(16px, calc(var(--dsh-claude-page-height, 100vh) * 0.05), 48px) 24px;
-  background: rgba(20, 20, 19, 0.28);
-  font-family: var(--dsw-font-family);
-  color: var(--dsw-alias-label-primary);
-  animation: dsh-claude-fade-in var(--dsh-claude-timing-surface) both;
-}
-
-body[data-dsh-claude-style][data-ds-dark-theme] .dsh-claude-scheme-modal {
-  background: rgba(0, 0, 0, 0.5);
-}
-
-body[data-dsh-claude-style] .dsh-claude-scheme-host[data-leaving] {
-  pointer-events: none;
-}
-
-body[data-dsh-claude-style] .dsh-claude-scheme-host[data-leaving] .dsh-claude-scheme-modal {
-  animation: dsh-claude-fade-out var(--dsh-claude-duration-exit) var(--dsh-claude-ease-standard) forwards;
-}
-
-/* Two columns under one outline: the list of schemes, then the editor of the
-   one in hand. The height is fixed so the panel keeps its box as the editor
-   changes between a preset and a reader's scheme. */
-body[data-dsh-claude-style] .dsh-claude-scheme-panel {
-  --dsh-claude-scheme-label: 88px;
-  position: relative;
-  display: grid;
-  grid-template-columns: 216px minmax(0, 1fr);
-  width: 840px;
-  max-width: 100%;
-  height: 600px;
-  max-height: 100%;
-  box-sizing: border-box;
-  border: 1px solid var(--dsw-alias-border-l1);
-  border-radius: 16px;
-  background: var(--dsw-alias-bg-overlay);
-  box-shadow: 0 24px 64px rgba(20, 20, 19, 0.2), 0 4px 12px rgba(20, 20, 19, 0.1);
-  overflow: hidden;
-  outline: none;
-  animation: dsh-claude-dialog-in var(--dsh-claude-duration-open) var(--dsh-claude-ease-settle) both;
-}
-
-body[data-dsh-claude-style] .dsh-claude-scheme-host[data-leaving] .dsh-claude-scheme-panel {
-  animation: dsh-claude-dialog-out var(--dsh-claude-duration-exit) var(--dsh-claude-ease-settle) forwards;
-}
+/* ---------- the managers' marks (shared modal frame and icon buttons live in shared/modal-host.css) ---------- */
 
 body[data-dsh-claude-style] .dsh-claude-scheme-glyph {
   flex: none;
 }
 
-/* The manager's two bare marks, plates only under the pointer: the close mark
-   over the editor's corner, and the editor's mark that hands a colour back. */
-body[data-dsh-claude-style] :is(.dsh-claude-scheme-close, .dsh-claude-scheme-reset) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color var(--dsh-claude-timing-feedback), color var(--dsh-claude-timing-feedback);
-  cursor: pointer;
-  color: var(--dsw-alias-label-tertiary);
-  background: transparent;
-  border: 0;
-  padding: 0;
-}
-
-/* The plate a mark takes under the pointer is the one the list's line in hand wears. */
-body[data-dsh-claude-style] :is(.dsh-claude-scheme-close, .dsh-claude-scheme-reset):hover,
 body[data-dsh-claude-style] .dsh-claude-scheme-item[data-active] {
   color: var(--dsw-alias-label-primary);
   background: var(--dsw-alias-interactive-bg-hover);
-}
-
-body[data-dsh-claude-style] .dsh-claude-scheme-close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
 }
 
 /* ---------- the list ---------- */

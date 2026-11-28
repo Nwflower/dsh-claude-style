@@ -1,6 +1,6 @@
 /* ---------- the custom price table ---------- */
 /* Settings row trigger and single-column table layout inside the shared modal
- * frame (`shared/modal-host.ts` + `features/settings/palette-schemes.css`).
+ * frame (`shared/modal-host.ts` + `shared/modal-host.css`).
  * Backdrop, 16px panel surface, entrance/exit motion, corner close button,
  * inputs and action buttons come from the shared settings and modal sheets.
  */

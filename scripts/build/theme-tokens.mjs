@@ -283,6 +283,12 @@ export function tokenSheet(doc, gates, images) {
       ]))
     }
   }
+  // The document element sits above <body> and cannot read its tokens, so each
+  // card's light canvas is generated here directly from tokens.json (D9, D97).
+  const rootCanvases = doc.palette.cards.map((card) => tokenBlock(
+    `html[data-dsh-claude-style]${gate(gates.palette, gates.palette.claude)}${gate(gates.paletteCard, card.id)}:not([data-dsh-claude-dark])`,
+    [['background-color', card.canvas.light]],
+  ))
   return [
     `/* Generated from packages/client/src/${TOKEN_SHEET} by scripts/build/theme-tokens.mjs; edit the JSON. */\n`,
     tokenBlock(SCOPE, Object.entries(images).map(([name, url]) => [`--dsh-claude-image-${name}`, `url("${url}")`])),
@@ -293,6 +299,7 @@ export function tokenSheet(doc, gates, images) {
     tokenBlock(`${typeface(gates.typeface.host)}`, doc.typeface.flatMap((item) => (item.host === undefined ? [] : [[item.token, item.host]]))),
     tokenBlock(`${SCOPE}${dark}`, doc.apex.map((item) => [item.token, item.dark])),
     tokenBlock(`${SCOPE}${light}`, doc.apex.map((item) => [item.token, item.light])),
+    ...rootCanvases,
     ...blocks,
     ...customPaletteBlocks(doc, gates),
     tokenBlock(`${SCOPE}${gate(gates.palette, gates.palette.host)}`, doc.palette.tokens.flatMap((spec) => (spec.host === undefined ? [] : spec.token === '--dsh-claude-logo-ink' ? [[spec.token, spec.host], ['--dsh-claude-logo-ink-own', spec.host]] : [[spec.token, spec.host]]))),
