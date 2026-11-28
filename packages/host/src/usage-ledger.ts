@@ -57,15 +57,6 @@ export interface DayBuckets extends Buckets {
   models?: Map<string, Buckets>
 }
 
-/** The ledger document the cost meter writes. */
-interface LedgerDocument {
-  version?: number
-  days?: Record<string, Buckets>
-  models?: Record<string, Buckets>
-  computedAt?: number
-  source?: string
-}
-
 export function emptyBuckets(): Buckets {
   return { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, calls: 0 }
 }

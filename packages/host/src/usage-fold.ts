@@ -17,7 +17,6 @@
 import { existsSync } from 'node:fs'
 import { readdir, stat } from 'node:fs/promises'
 import { join } from 'node:path'
-import type { DshContext } from '@dsh-claude-style/engine/node/dsh'
 import { sessionIdFromDirectoryName } from './session-name.js'
 import { BUCKET_KEYS, addBuckets, emptyBuckets } from './usage-ledger.js'
 import type { Buckets, DayBuckets } from './usage-ledger.js'

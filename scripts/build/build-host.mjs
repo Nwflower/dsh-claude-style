@@ -42,6 +42,38 @@ function checkTypes() {
   return fs.readdirSync(SOURCE).filter((name) => name.endsWith('.ts')).length
 }
 
+/** Enforce zero runtime dependencies, zero cycles, and full reachability from index.ts (D36, D73). */
+function checkHostGraph(modules, valueEdges, allEdges) {
+  const state = new Map()
+  const stack = []
+  const walkCycles = (file) => {
+    state.set(file, 'open')
+    stack.push(file)
+    for (const next of valueEdges.get(file) ?? []) {
+      if (state.get(next) === 'open') {
+        const cycle = [...stack.slice(stack.indexOf(next)), next].map((item) => `packages/host/src/${item}`).join(' → ')
+        throw new Error(`build: host import cycle ${cycle}`)
+      }
+      if (!state.has(next)) walkCycles(next)
+    }
+    stack.pop()
+    state.set(file, 'done')
+  }
+  for (const rel of modules) if (!state.has(rel)) walkCycles(rel)
+
+  const reached = new Set()
+  const queue = ['index.ts']
+  while (queue.length > 0) {
+    const next = queue.pop()
+    if (reached.has(next)) continue
+    reached.add(next)
+    for (const dep of allEdges.get(next) ?? []) queue.push(dep)
+  }
+  for (const rel of modules) {
+    if (!reached.has(rel)) throw new Error(`build: packages/host/src/${rel} is imported by no module reachable from index.ts`)
+  }
+}
+
 /** Await esbuild's plugin-capable API; enumerate modules before writing so invalid files fail early. */
 export async function buildHostHalf({ outDir = path.join(ROOT, 'lib') } = {}) {
   checkTypes()
@@ -58,19 +90,56 @@ export async function buildHostHalf({ outDir = path.join(ROOT, 'lib') } = {}) {
     }
   }
   walk('')
-  let files = 0
-  let bytes = 0
+  const known = new Set(modules)
+  const allowedBare = (specifier) => specifier.startsWith('node:')
+    || specifier.startsWith('@deepseek-ai/')
+    || INLINED.some(({ prefix }) => specifier.startsWith(prefix))
+  const valueEdges = new Map()
+  const allEdges = new Map()
+  const outputs = []
   for (const rel of modules) {
-    const { outputFiles } = await esbuild.build({
-      entryPoints: [path.join(SOURCE, rel)],
+    const full = path.join(SOURCE, rel)
+    const text = fs.readFileSync(full, 'utf8')
+    const all = []
+    for (const match of text.matchAll(/\bfrom\s*['"]([^'"]+)['"]|\bimport\s*\(\s*['"]([^'"]+)['"]|\bimport\s+['"]([^'"]+)['"]/g)) {
+      const specifier = match[1] ?? match[2] ?? match[3]
+      if (specifier.startsWith('.')) {
+        const target = path.posix.normalize(path.posix.join(path.posix.dirname(rel), specifier)).replace(/\.js$/, '.ts')
+        if (!known.has(target)) throw new Error(`build: packages/host/src/${rel} imports ${specifier}, which is outside packages/host/src/`)
+        all.push(target)
+      } else if (!allowedBare(specifier)) {
+        throw new Error(`build: packages/host/src/${rel} imports ${specifier}; host modules have zero runtime dependencies outside node: and host peer packages (D36)`)
+      }
+    }
+    allEdges.set(rel, all)
+    const { outputFiles, metafile } = await esbuild.build({
+      entryPoints: [full],
       bundle: true,
       write: false,
+      metafile: true,
       format: 'esm',
       target: 'es2023',
       logLevel: 'silent',
       plugins: [externalButShared],
     })
-    const code = outputFiles[0]?.text ?? ''
+    const entryMeta = Object.values(metafile.inputs).find((input) => input.imports !== undefined)
+    const values = []
+    for (const item of entryMeta?.imports ?? []) {
+      if (!item.external) continue
+      if (item.path.startsWith('.')) {
+        const target = path.posix.normalize(path.posix.join(path.posix.dirname(rel), item.path)).replace(/\.js$/, '.ts')
+        if (known.has(target)) values.push(target)
+      } else if (!allowedBare(item.path)) {
+        throw new Error(`build: packages/host/src/${rel} imports ${item.path}; host modules have zero runtime dependencies outside node: and host peer packages (D36)`)
+      }
+    }
+    valueEdges.set(rel, values)
+    outputs.push({ rel, code: outputFiles[0]?.text ?? '' })
+  }
+  checkHostGraph(modules, valueEdges, allEdges)
+  let files = 0
+  let bytes = 0
+  for (const { rel, code } of outputs) {
     // A module that carries types only (the context contract) has nothing to ship.
     if (code.trim() === '' || code.trim() === 'export {};') continue
     const target = path.join(to, rel.replace(/\.ts$/, '.js'))

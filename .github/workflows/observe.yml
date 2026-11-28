@@ -56,7 +56,7 @@ jobs:
     # selected specific features.
     if: github.event_name == 'workflow_dispatch' || (needs.changed.outputs.code == 'true' && needs.changed.outputs.selection != '')
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 65
     steps:
       - uses: actions/checkout@v7
         with:

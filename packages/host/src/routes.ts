@@ -16,7 +16,7 @@ import { PEAKRATE_PATH, PRICES_PATH, ROUTE_PREFIX, SESSION_COMPACT_PATH, SESSION
 import { OPTIONAL_WEBFONTS } from '@dsh-claude-style/contracts/webfonts'
 import { existsSync, readdirSync, realpathSync, rmSync, statSync } from 'node:fs'
 import { userInfo } from 'node:os'
-import { dirname, join, resolve, sep } from 'node:path'
+import { join, resolve, sep } from 'node:path'
 import { brandRoutes } from './brand.js'
 import { appearanceOverlayRoutes } from './appearance-overlays.js'
 import type { DshContext, DshPeerScope, DshRequest, DshResponse, DshRoute, DshScope } from '@dsh-claude-style/engine/node/dsh'
@@ -106,18 +106,6 @@ const FONT_FILES = {
 }
 /** The webfonts status route as the prefix handler sees it: its path without the registered prefix. */
 const WEBFONTS_SUB = WEBFONTS_PATH.slice(ROUTE_PREFIX.length)
-/**
- * The assets the build routed rather than inlined, served under
- * `${ROUTE_PREFIX}/assets/` from the build output in `lib/assets/`.
- *
- * The request name is the whole contract: it must be a key of the build's
- * manifest, which is `<content hash>.<ext>`, so nothing outside that directory is
- * reachable and a name the build did not produce is a 404. The name carries the
- * content hash, so the answer may be cached for good. A text asset is stored
- * brotli-compressed beside its name: a client that takes brotli receives it as it
- * lies, and one that does not gets it decompressed.
- */
-const ASSETS_PATH = `${ROUTE_PREFIX}/assets/`
 /** Largest deletion request body read; a real one carries one id. */
 const DELETE_BODY_MAX = 4096
 /** Largest play request body read; a real one carries a cue name and a gain. */

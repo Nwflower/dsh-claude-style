@@ -2,12 +2,12 @@
 /** lint.mjs — check source limits, repository references, dependency direction and spec contracts (D76, D92). */
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
-import { createRequire } from 'node:module'
 import path from 'node:path'
 import { filesUnder } from '../shared/file-walk.mjs'
 import { checkWorkOrders } from '../dev/work.mjs'
 import { createTemporaryFiles } from '../shared/temporary-files.mjs'
 import { DEBUG_HOMES, debugPath } from '../shared/debug-paths.mjs'
+import { AREAS, specFiles, readHeader } from '../shared/spec-header.mjs'
 import { checkElementCollections } from '../../packages/testing/element-collections.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
@@ -53,7 +53,7 @@ function decisionNumbers() {
 // (D92). Declaration files are generated and stand aside.
 const sources = [
   ...filesUnder(path.join(ROOT, 'packages'), ['.ts', '.css', '.mjs', '.js'], SKIPPED_DIRS),
-  ...filesUnder(path.join(ROOT, 'scripts'), ['.mjs', '.mjs', '.js'], SKIPPED_DIRS),
+  ...filesUnder(path.join(ROOT, 'scripts'), ['.mjs', '.js'], SKIPPED_DIRS),
 ].filter((file) => !/\.d\.ts$/.test(file))
 for (const file of sources) {
   const lines = fs.readFileSync(file, 'utf8').split('\n').length
@@ -65,19 +65,36 @@ for (const file of sources) {
   }
 }
 
-// The engine's dependency direction (D73): it serves the skin and talks to the host, so it
-// may read the shared contract and the host's own packages, and nothing of the skin it serves.
-const ENGINE = path.join(ROOT, 'packages', 'engine', 'src')
-for (const file of sources.filter((candidate) => /^packages\/engine\/(?:src|node)\//.test(relative(candidate)))) {
-  const text = fs.readFileSync(file, 'utf8')
-  for (const match of text.matchAll(/from '([^']+)'/g)) {
-    const specifier = match[1]
+/** Every module specifier a source imports, re-exports or requires. */
+const importSpecifiers = (text) => [...text.matchAll(/\bfrom\s*['"]([^'"]+)['"]|\brequire\s*\(\s*['"]([^'"]+)['"]|\bimport\s*\(\s*['"]([^'"]+)['"]|\bimport\s+['"]([^'"]+)['"]/g)]
+  .map((match) => match[1] ?? match[2] ?? match[3] ?? match[4])
+
+// Layer dependency direction (D73): contracts sit at the bottom; browser and node engine
+// halves stay separate from each other and from the skin; the host half never reaches
+// browser code.
+for (const file of sources) {
+  const rel = relative(file)
+  if (!rel.endsWith('.ts')) continue
+  const isContracts = rel.startsWith('packages/contracts/src/')
+  const isEngineSrc = rel.startsWith('packages/engine/src/')
+  const isEngineNode = rel.startsWith('packages/engine/node/')
+  const isHost = rel.startsWith('packages/host/src/')
+  if (!isContracts && !isEngineSrc && !isEngineNode && !isHost) continue
+  for (const specifier of importSpecifiers(fs.readFileSync(file, 'utf8'))) {
     const intoSkin = specifier.startsWith('@dsh-claude-style/client')
       || specifier.startsWith('@dsh-claude-style/host')
       || specifier.startsWith('virtual:dsh-claude-style/')
       || specifier.includes('../client/')
       || specifier.includes('../host/')
-    if (intoSkin) problems.push(`${relative(file)}: the engine imports ${specifier}; the skin hands what the engine needs over the seam (packages/engine/src/skin.ts, D73)`)
+    if (isContracts && (intoSkin || specifier.startsWith('@dsh-claude-style/engine') || specifier.includes('../engine/'))) {
+      problems.push(`${rel}: contracts import ${specifier}; contracts sit below engine, client and host (D73)`)
+    } else if (isEngineSrc && (intoSkin || specifier.startsWith('@dsh-claude-style/engine/node') || specifier.includes('../node/') || specifier.startsWith('node:'))) {
+      problems.push(`${rel}: browser engine imports ${specifier}; keep it independent of skin and node runtime (D73)`)
+    } else if (isEngineNode && (intoSkin || specifier.startsWith('@dsh-claude-style/engine/') && !specifier.startsWith('@dsh-claude-style/engine/node/') || specifier.includes('../src/'))) {
+      problems.push(`${rel}: node engine imports ${specifier}; keep it independent of skin and browser engine (D73)`)
+    } else if (isHost && (specifier.startsWith('@dsh-claude-style/client') || specifier.startsWith('virtual:dsh-claude-style/') || specifier.includes('../client/') || (specifier.startsWith('@dsh-claude-style/engine/') && !specifier.startsWith('@dsh-claude-style/engine/node/')))) {
+      problems.push(`${rel}: host half imports ${specifier}; host modules must not reach browser code (D73)`)
+    }
   }
 }
 
@@ -182,18 +199,22 @@ for (const file of prose) {
 
 // 6. A feature sees `ui` as FeatureUi of its own manifest: its handle and the handles the
 // manifest `reads` (D76). A feature module importing the whole registry type would read any
-// handle with nothing declared.
-const featureModules = filesUnder(path.join(ROOT, 'packages', 'client', 'src', 'features'), ['.ts'], SKIPPED_DIRS).filter((file) => !/\.(test|manifest)\.ts$/.test(file))
+// handle with nothing declared. Every client module reads host services through the engine's
+// host.ts accessors rather than calling `.get(...)` on a host context directly (D3, D73).
+const clientModules = filesUnder(path.join(ROOT, 'packages', 'client', 'src'), ['.ts'], SKIPPED_DIRS).filter((file) => !/\.(test|manifest|d)\.ts$/.test(file))
 let featureUiChecked = 0
-for (const file of featureModules) {
+for (const file of clientModules) {
+  const rel = relative(file)
   const text = fs.readFileSync(file, 'utf8')
-  if (/\bFeatureUi\b/.test(text)) featureUiChecked += 1
-  if (/^import type \{[^}]*\bUi\b[^}]*\} from '[./]+core\/scheduler'/m.test(text)) problems.push(`${relative(file)}: imports the whole ui registry type; type ui as FeatureUi<typeof manifest> and list the handles it reads in the manifest (D76)`)
-  // A host service is read through an accessor in the engine's host.ts, which owns its name,
-  // its shape and the answer where the host carries none (D3, D73).
+  if (rel.startsWith('packages/client/src/features/')) {
+    if (/\bFeatureUi\b/.test(text)) featureUiChecked += 1
+    if (/^import type \{[^}]*\bUi\b[^}]*\} from '[./]+core\/scheduler'/m.test(text)) problems.push(`${rel}: imports the whole ui registry type; type ui as FeatureUi<typeof manifest> and list the handles it reads in the manifest (D76)`)
+  }
   text.split('\n').forEach((line, at) => {
     if (/^\s*(\*|\/\/|\/\*)/.test(line)) return
-    if (/\b(?:ctx|scope|lookup)\??\.get\(/.test(line)) problems.push(`${relative(file)}:${at + 1}: reads a host service by name; add an accessor to packages/engine/src/host.ts and call it (D73)`)
+    if (/(?:\b(?:ctx|hostCtx|scope|lookup)|\b(?:ctx|hostCtx|scope|lookup)\b[^;\n]*\))\??\.get\(/.test(line)) {
+      problems.push(`${rel}:${at + 1}: reads a host service by name; add an accessor to packages/engine/src/host.ts and call it (D73)`)
+    }
   })
 }
 
@@ -302,8 +323,6 @@ if (boundReads === 0) problems.push('lint: no bound was read — the bounds patt
 // page — and it names the skin's and the host's own marks through the surface table and the
 // host contract, never by spelling them. Each opens with the header the runners and the fault
 // corpus read (scripts/shared/spec-header.mjs).
-const require = createRequire(import.meta.url)
-const { AREAS, specFiles, readHeader } = require('../shared/spec-header.mjs')
 const featureDirs = new Set(fs.readdirSync(path.join(ROOT, 'packages', 'client', 'src', 'features'), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name))
 /** What a spec may import or require by name; a relative path must stay inside packages/testing/specs/. */
 const SPEC_IMPORTS = [/^vitest$/, /^vitest\/browser$/, /^fast-check$/, /^@dsh-claude-style\/client\/(?:pure|mechanisms)$/, /^@dsh-claude-style\/contracts\/[\w-]+$/, /^@dsh-claude-style\/engine\/[\w-]+$/]
@@ -326,8 +345,6 @@ const SPEC_SPELLED = [
 const CONCATENATED_CLASS = /['"`]_?[A-Za-z]+_['"`]\s*\+/
 const specs = specFiles()
 const spellingSpec = (file) => /\.spec\.(ts|mjs)$/.test(file)
-/** Stand-in pages may draw host-only markup that has no contract-table entry. */
-const standInPage = (file) => file.startsWith('packages/testing/smoke/')
 /** Where a spec stands: `<layer>/<capability>/<name>.spec.(ts|mjs)`, and nowhere else. */
 const SPEC_PLACE = /^packages\/testing\/specs\/(logic|mechanism|behaviour)\/[^/]+\/[^/]+\.spec\.(ts|mjs)$/
 for (const file of specs) {
@@ -344,8 +361,7 @@ for (const file of specs) {
   const lines = text.split('\n')
   // Every way a module reaches the file by name: a static import, an export-from, a require
   // and a dynamic import, each quoted with either mark.
-  const specifiers = [...text.matchAll(/\bfrom\s*['"]([^'"]+)['"]|\brequire\s*\(\s*['"]([^'"]+)['"]|\bimport\s*\(\s*['"]([^'"]+)['"]|\bimport\s+['"]([^'"]+)['"]/g)]
-    .map((match) => match[1] ?? match[2] ?? match[3] ?? match[4])
+  const specifiers = importSpecifiers(text)
   for (const specifier of specifiers) {
     if (specifier.startsWith('.')) {
       const resolved = path.resolve(path.dirname(path.join(ROOT, file)), specifier)
@@ -395,6 +411,27 @@ for (const entry of surfaceTable) {
 }
 for (const match of specText.matchAll(/surface(?:Attribute|Class|Selector|\.attribute)?\('([\w.-]+)'\)/g)) {
   if (!surfaceIds.has(match[1])) problems.push(`a spec reads the surface entry "${match[1]}", which packages/testing/data/surface.json does not hold`)
+}
+
+// Every symbol exported by pure.ts and mechanisms.ts must be imported by at least one spec
+// or spec fixture so the declared test surface does not accumulate dead exports (D92).
+const specTreeText = filesUnder(path.join(ROOT, 'packages', 'testing', 'specs'), ['.ts', '.mjs'], SKIPPED_DIRS)
+  .map((file) => fs.readFileSync(file, 'utf8')).join('\n')
+let surfaceExports = 0
+for (const surfaceRel of ['packages/client/src/pure.ts', 'packages/client/src/mechanisms.ts']) {
+  const text = fs.readFileSync(path.join(ROOT, surfaceRel), 'utf8')
+  for (const match of text.matchAll(/^export\s+(?:type\s+)?\{([\s\S]*?)\}\s*from\s*['"][^'"]+['"]/gm)) {
+    for (const raw of match[1].split(',')) {
+      const cleaned = raw.trim().replace(/^type\s+/, '')
+      if (cleaned === '') continue
+      const parts = cleaned.split(/\s+as\s+/)
+      const name = (parts[1] ?? parts[0]).trim()
+      surfaceExports += 1
+      if (!new RegExp(`\\b${name}\\b`).test(specTreeText)) {
+        problems.push(`${surfaceRel}: exports "${name}", which no spec under packages/testing/specs/ uses — take it out (D92)`)
+      }
+    }
+  }
 }
 
 // Element-keyed collections: a collection keyed by a page node is only
@@ -461,6 +498,7 @@ for (const file of Object.keys(recordedMarks)) {
 
 // A rule whose pattern stopped matching anything would pass forever: each rule has to have looked at something.
 if (specs.length === 0) problems.push('lint: no spec was examined — the spec rule matches nothing')
+if (surfaceExports === 0) problems.push('lint: no spec-surface export was examined — the surface export rule matches nothing')
 if (breakpoints === 0) problems.push('lint: no viewport breakpoint was read — the matrix rule matches nothing')
 if (featureUiChecked === 0) problems.push('lint: no feature module types ui as FeatureUi — the feature rule matches nothing')
 if (links === 0) problems.push('lint: no Markdown link was examined — the link pattern matches nothing')

@@ -1,4 +1,5 @@
 import { hostCtx } from './host-context'
+import { hostLocale } from '@dsh-claude-style/engine/host'
 import type { HostContext, HostText } from '@dsh-claude-style/engine/host'
 
 /** Values for a copy string's `{name}` slots. */
@@ -15,7 +16,7 @@ export const COPY_FALLBACK_LOCALE = 'en'
 
 /** Missing host locale services or snapshots use the bundled fallback (D12). */
 export function activeLocale(ctx?: HostContext | null): string {
-  const locale = (ctx || hostCtx)?.get('locale')
+  const locale = hostLocale(ctx || hostCtx)
   const snapshot = typeof locale?.getSnapshot === 'function' ? locale.getSnapshot() : undefined
   const active = snapshot?.active
   if (typeof active === 'string' && active) return active
@@ -23,7 +24,7 @@ export function activeLocale(ctx?: HostContext | null): string {
 }
 
 export function hostChatSeat(ctx?: HostContext | null): HostText | null {
-  const locale = (ctx || hostCtx)?.get('locale')
+  const locale = hostLocale(ctx || hostCtx)
   return typeof locale?.bind === 'function' ? locale.bind('chat') : null
 }
 

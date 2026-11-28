@@ -12,7 +12,6 @@ import { chmod, mkdir, rename, writeFile } from 'node:fs/promises'
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import type {
-  ConversationRevision,
   LogicalConversation,
   RewindAction,
   RewindCommitRequest,
