@@ -237,6 +237,12 @@ for (const file of clientModules) {
     if (/(?:\b(?:ctx|hostCtx|scope|lookup)|\b(?:ctx|hostCtx|scope|lookup)\b[^;\n]*\))\??\.get\(/.test(line)) {
       problems.push(`${rel}:${at + 1}: reads a host service by name; add an accessor to packages/engine/src/host.ts and call it (D73)`)
     }
+    if (/\bnew\s+MutationObserver\b/.test(line)) {
+      problems.push(`${rel}:${at + 1}: creates a raw MutationObserver; subscribe through @dsh-claude-style/engine/bus (D40)`)
+    }
+    if (/\bnew\s+ResizeObserver\b/.test(line)) {
+      problems.push(`${rel}:${at + 1}: creates a raw ResizeObserver; observe through observeSize in @dsh-claude-style/engine/bus (D40)`)
+    }
   })
 }
 

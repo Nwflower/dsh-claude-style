@@ -1,6 +1,6 @@
 import { currentSessionId, hostSessions, hostUiWorkspace, hostWorkspaces, hostWorkspaceView } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
-import { observeMatches, subscribeMutations } from '@dsh-claude-style/engine/bus'
+import { observeMatches, observeSize, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import type { MatchList } from '@dsh-claude-style/engine/bus'
 import { createStamp } from '@dsh-claude-style/engine/dom'
 import { markPartsWithin } from '@dsh-claude-style/engine/parts'
@@ -53,8 +53,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   function schedulePass() {
     if (!disposed && typeof ui.schedule === 'function') ui.schedule()
   }
-  /** Re-measure when quiet header controls or font swaps change the header's box without a bus mutation. */
-  const headerResize = typeof ResizeObserver === 'function' ? new ResizeObserver(schedulePass) : null
+  /** Re-measure when quiet header controls or font swaps change the header's box without a bus mutation (D40). */
+  let stopHeaderResize: (() => void) | null = null
   /** The section labels on the page, taken from the bus and released with the section. */
   let labelWatch: MatchList<HTMLElement> | null = null
   /** The list's additions, marked before the frame paints; see watchAdditions. */
@@ -172,7 +172,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     viewMenu.release()
     labelStamp.release()
     viewStamp.release()
-    headerResize?.disconnect()
+    stopHeaderResize?.()
+    stopHeaderResize = null
     dressedHeader?.style.removeProperty(MENU_LEFT_VAR)
     dressedHeader?.style.removeProperty(MENU_TOP_VAR)
     dressedHeader = null
@@ -202,11 +203,11 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     const view = follower.view()
     viewMenu.sync(header, view)
     if (dressedHeader !== header) {
-      headerResize?.disconnect()
+      stopHeaderResize?.()
       dressedHeader?.style.removeProperty(MENU_LEFT_VAR)
       dressedHeader?.style.removeProperty(MENU_TOP_VAR)
       dressedHeader = header
-      headerResize?.observe(header)
+      stopHeaderResize = observeSize(header, schedulePass)
     }
     // The host's header padding carries the label in from the header's edge;
     // the trigger's words stand on the label's own offset, not the header's.
@@ -263,7 +264,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   return () => {
     disposed = true
     document.fonts?.removeEventListener('loadingdone', schedulePass)
-    headerResize?.disconnect()
+    stopHeaderResize?.()
+    stopHeaderResize = null
     toast.dispose()
     follower.dispose()
     list.dispose()

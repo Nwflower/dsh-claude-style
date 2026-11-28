@@ -3,7 +3,7 @@ import { readPrefs } from '../../core/prefs'
 import { closestFrom } from '@dsh-claude-style/engine/dom'
 import { POPOVER_MARGIN, POPOVER_OPEN_DELAY, closeOtherPopovers, createHoverIntent, createPointerWatch, positionAnchoredPopover, registerPopover, removeStrayNodes, setMenuPopoverOpen, unregisterPopover } from '../../shared/popover'
 import { pageViewport } from '../../shared/page-zoom'
-import { releaseCardHeight } from '../../shared/card-resize'
+import { releaseCardHeight } from './card-resize'
 import { createModelSubMenu } from './sub-menu'
 
 /**

@@ -1,6 +1,6 @@
 import { CHAT_REVEAL_ATTR, REVEAL_PLUGIN_CSS, REVEAL_STYLE_ID } from '../../constants'
 import { mountStylesheet } from '../../core/stylesheet'
-import { keepMotionEngine } from '../../shared/motion-engine'
+import { keepMotionEngine } from './motion-engine'
 import { createChatRevealEngine } from './reveal-engine'
 import { FEATURE_STYLESHEETS } from 'virtual:dsh-claude-style/generated'
 

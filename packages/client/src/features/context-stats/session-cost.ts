@@ -1,6 +1,6 @@
 import { PRICES_PATH, SESSION_COST_PATH } from '@dsh-claude-style/contracts/routes'
 import type { PriceDocument, SessionCostAnswer } from '@dsh-claude-style/contracts/prices'
-import { billingQuery } from '../../shared/billing'
+import { billingQuery } from './billing'
 import { createHostRequest } from '@dsh-claude-style/engine/resource'
 
 /**
@@ -19,7 +19,7 @@ const DAY_MS = 24 * 60 * 60 * 1000
 /** The shortest gap between two asks about one session. */
 const ASK_MS = 1500
 
-export { adoptBillingRows, entryOf, billingRows } from '../../shared/billing'
+export { adoptBillingRows, entryOf, billingRows } from './billing'
 
 let document: PriceDocument | null = null
 let fetchedAt = 0
