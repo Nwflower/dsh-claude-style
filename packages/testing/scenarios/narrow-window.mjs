@@ -30,10 +30,10 @@
  * shows up as a value that never stops moving, which is the flicker the issue
  * reported.
  */
-import surfaceTable from '../data/surface.json' with { type: 'json' }
+import { surfaceAttribute } from '../surface.mjs'
 
 /** The skin's part mark, read off the surface table rather than spelled here (D92). */
-const PART = surfaceTable.surface.find((entry) => entry.id === 'skin.part').attribute
+const PART = surfaceAttribute('skin.part')
 const part = (name) => `[${PART}~="${name}"]`
 
 /** The window both readings are taken in: under the 768px the host lays its own tracks into. */

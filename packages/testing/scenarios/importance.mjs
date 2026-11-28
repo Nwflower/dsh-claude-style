@@ -21,10 +21,9 @@ import path from 'node:path'
 import { createImportanceAudit, planImportance, dropImportance, ROOT } from './importance-audit.mjs'
 import { openSkinSettings } from './settings-route.mjs'
 import { readAppearance, compareAppearance, writeAppearance, HOST_DEPENDENT_STATES } from './appearance.mjs'
-import surfaceTable from '../data/surface.json' with { type: 'json' }
+import { surfaceAttribute } from '../surface.mjs'
 
 /** A mark the walk sets, read from the surface table rather than spelled here (D92). */
-const surfaceAttribute = (id) => surfaceTable.surface.find((entry) => entry.id === id).attribute
 /** The brand in force: the mark the page carries, set by the walk and read back around it. */
 const BRAND = 'data-dsh-claude-brand'
 

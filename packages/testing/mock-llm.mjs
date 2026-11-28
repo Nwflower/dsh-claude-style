@@ -26,7 +26,7 @@ import fs from 'node:fs'
 import http from 'node:http'
 import path from 'node:path'
 import { runsPath } from '../../scripts/shared/debug-paths.mjs'
-import { argOf } from './cli-args.mjs'
+import { argOf } from '../../scripts/shared/args.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const DEFAULT_LOG = runsPath(ROOT, 'e2e', 'mock')

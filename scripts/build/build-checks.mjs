@@ -6,6 +6,8 @@
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import { filesUnder } from '../shared/file-walk.mjs'
+import { specIdExists } from '../shared/spec-header.mjs'
 import { loadModule } from '../shared/ts-module.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
@@ -18,12 +20,9 @@ const PROBE_KINDS = new Set(['selector', 'attribute', 'property', 'computed', 'g
 /** Refuse unreachable source files; manifests, contracts and spec surfaces are intentional exceptions (D3, D92). */
 export function checkListed(bundled, sheets) {
   const listed = new Set(sheets.map((sheet) => sheet.file))
-  const walk = (dir) => fs.readdirSync(path.join(SRC, dir), { withFileTypes: true }).flatMap((entry) => {
-    const rel = dir === '' ? entry.name : `${dir}/${entry.name}`
-    if (entry.isDirectory()) return rel === 'assets' ? [] : walk(rel)
-    return [rel]
-  })
-  for (const file of walk('')) {
+  const SKIP = new Set(['assets', '.git', 'node_modules'])
+  for (const full of filesUnder(SRC, ['.css', '.ts'], SKIP)) {
+    const file = path.relative(SRC, full).replace(/\\/g, '/')
     if (file.endsWith('.css') && !listed.has(file)) throw new Error(`build: packages/client/src/${file} is in no list; add it to its feature's manifest or to THEME_SHEETS`)
     if (file.endsWith('.manifest.ts') || file === 'pure.ts' || file === 'mechanisms.ts' || file.endsWith('.d.ts')) continue
     if (file.endsWith('.ts') && !bundled.has(file)) throw new Error(`build: packages/client/src/${file} is imported by no module the bundle reaches`)
@@ -158,16 +157,6 @@ function checkFontStackParity() {
   }
 }
 
-
-function specIdExists(id) {
-  const [layer, capability, ...rest] = id.split('/')
-  const name = rest.join('/')
-  const dir = path.join(ROOT, 'packages', 'testing', 'specs', layer ?? '', capability ?? '')
-  if (name === '' || !fs.existsSync(dir)) return false
-  const quoted = [`'${name.replace(/'/g, "\\'")}'`, `"${name}"`]
-  return fs.readdirSync(dir).filter((file) => /\.spec\.(ts|mjs)$/.test(file))
-    .some((file) => quoted.some((literal) => fs.readFileSync(path.join(dir, file), 'utf8').includes(`test(${literal}`)))
-}
 
 /** Every timing assumption needs an existing scenario or stable spec id (D3, D92). */
 function checkTiming() {

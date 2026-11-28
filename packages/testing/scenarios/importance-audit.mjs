@@ -10,7 +10,7 @@ import postcss from 'postcss'
 import selectorParser from 'postcss-selector-parser'
 import { minifyCss } from '../../../scripts/shared/minify-css.mjs'
 import { ruleKey } from '../../../scripts/shared/rule-key.mjs'
-import surfaceTable from '../data/surface.json' with { type: 'json' }
+import { surfaceAttribute } from '../surface.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..', '..')
 /** The marker declaration carrying each rule's index into the page's CSSOM. */
@@ -24,11 +24,7 @@ const READABLE_PSEUDO = new Set(['::before', '::after', '::marker', '::placehold
  * the list below already spells stay as they are, and one added now is read
  * rather than written down a second time (D92).
  */
-function mark(id) {
-  const entry = surfaceTable.surface.find((candidate) => candidate.id === id)
-  if (entry === undefined) throw new Error(`importance: no surface entry "${id}" for the mark a rule waits on`)
-  return `[${entry.attribute}]`
-}
+const mark = (id) => `[${surfaceAttribute(id)}]`
 /**
  * Selectors whose rule only applies while a transient mark is on the page,
  * under a pointer state the walk cannot hold, or in a state the walk carries

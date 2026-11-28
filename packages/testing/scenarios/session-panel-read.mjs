@@ -8,21 +8,21 @@
  */
 import copy from '../../client/src/features/session-panel/session-panel.copy.json' with { type: 'json' }
 import { SESSION_PANEL_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import surfaceTable from '../data/surface.json' with { type: 'json' }
+import { surfaceAttribute } from '../surface.mjs'
 import { sanitizePage } from '../../../scripts/shared/privacy.mjs'
 
 /** The part mark the skin writes on a host element, read from the surface table rather than spelled here (D92). */
-const PART = surfaceTable.surface.find((entry) => entry.id === 'skin.part')?.attribute
+const PART = surfaceAttribute('skin.part')
 if (PART === undefined) throw new Error('session-panel: skin.part names no attribute')
 /** The resolved motion answer's mark, read from the same table (D40, D92). */
-const MOTION = surfaceTable.surface.find((entry) => entry.id === 'skin.motion')?.attribute
+const MOTION = surfaceAttribute('skin.motion')
 if (MOTION === undefined) throw new Error('session-panel: skin.motion names no attribute')
 /** The value the mark carries while the animation choice holds still (D40). */
 const MOTION_REDUCED = 'reduced'
 /** The skin's section-fold marks, read from the same table (D113, D92). */
-const FOLDED = surfaceTable.surface.find((entry) => entry.id === 'session-panel.folded')?.attribute
+const FOLDED = surfaceAttribute('session-panel.folded')
 if (FOLDED === undefined) throw new Error('session-panel: session-panel.folded names no attribute')
-const FOLD_HEAD = surfaceTable.surface.find((entry) => entry.id === 'session-panel.fold-head')?.attribute
+const FOLD_HEAD = surfaceAttribute('session-panel.fold-head')
 if (FOLD_HEAD === undefined) throw new Error('session-panel: session-panel.fold-head names no attribute')
 
 /** The host panel's own marks: a section by its id, its rows, its toggle and the hover card's details. */

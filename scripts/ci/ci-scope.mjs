@@ -7,6 +7,7 @@
 import { spawnSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
+import { argOf } from '../shared/args.mjs'
 import { changedPaths } from '../shared/changed-paths.mjs'
 import { treeHash } from '../shared/tree-hash.mjs'
 import { covered, featureCoverage } from '../shared/feature-coverage.mjs'
@@ -14,10 +15,6 @@ import { readHeader } from '../shared/spec-header.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const args = process.argv.slice(2)
-const argOf = (flag) => {
-  const at = args.indexOf(`--${flag}`)
-  return at === -1 ? undefined : args[at + 1]
-}
 
 /** Documentation-only changes still run checks but do not start built-page lanes. */
 const UNREAD = [/^docs\//, /^locale\//, /^\.github\//, /\.md$/, /^LICENSE$/, /^THIRD_PARTY_NOTICES\.txt$/]

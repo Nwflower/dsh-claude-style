@@ -9,28 +9,25 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import { filesUnder } from '../../scripts/shared/file-walk.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const RECORD = path.join(import.meta.dirname, 'data', 'element-collections.json')
 /** A map or set whose keys are page nodes: the shape whose lifetime has to be answered. */
 const PATTERN = /new\s+(?:Map|Set)<\s*(?:Element|HTMLElement)\b/g
 const DIRS = ['packages/client/src', 'packages/engine/src']
+const SKIPPED = new Set(['.git', 'node_modules'])
 
 /** Every TypeScript source in the two halves, and how many element-keyed collections it keeps. */
 function counted() {
   const files = {}
-  const walk = (dir) => {
-    for (const entry of fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true })) {
-      const next = `${dir}/${entry.name}`
-      if (entry.isDirectory()) walk(next)
-      else if (entry.name.endsWith('.ts')) {
-        const text = fs.readFileSync(path.join(ROOT, next), 'utf8')
-        const found = [...text.matchAll(PATTERN)].length
-        if (found > 0) files[next] = found
-      }
+  for (const dir of DIRS) {
+    for (const full of filesUnder(path.join(ROOT, dir), ['.ts'], SKIPPED)) {
+      const next = path.relative(ROOT, full).replace(/\\/g, '/')
+      const found = [...fs.readFileSync(full, 'utf8').matchAll(PATTERN)].length
+      if (found > 0) files[next] = found
     }
   }
-  for (const dir of DIRS) walk(dir)
   return files
 }
 

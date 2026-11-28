@@ -4,25 +4,31 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
+import { filesUnder } from './file-walk.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const SPECS = path.join(ROOT, 'packages', 'testing', 'specs')
 const LAYERS = ['logic', 'mechanism', 'behaviour']
 /** The areas a spec may name beside the feature directories. */
 const AREAS = ['engine', 'shared', 'core', 'contracts']
+const SKIPPED = new Set(['.git', 'node_modules'])
 
 /** Walk every depth so misplaced specs still reach lint's path and header checks. */
 function specFiles() {
-  const found = []
-  const walk = (dir) => {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const full = path.join(dir, entry.name)
-      if (entry.isDirectory()) walk(full)
-      else if (/\.spec\.(ts|mjs)$/.test(entry.name)) found.push(path.relative(ROOT, full).replace(/\\/g, '/'))
-    }
-  }
-  if (fs.existsSync(SPECS)) walk(SPECS)
-  return found.sort()
+  return filesUnder(SPECS, ['.spec.ts', '.spec.mjs'], SKIPPED)
+    .map((full) => path.relative(ROOT, full).replace(/\\/g, '/'))
+    .sort()
+}
+
+/** Whether a `<layer>/<capability>/<name>` spec id names a test in packages/testing/specs/. */
+function specIdExists(id) {
+  const [layer, capability, ...rest] = String(id).replace(/@[\w.]+$/g, '').split('/')
+  const name = rest.join('/')
+  const dir = path.join(SPECS, layer ?? '', capability ?? '')
+  if (name === '' || !fs.existsSync(dir)) return false
+  const quoted = [`'${name.replace(/'/g, "\\'")}'`, `"${name}"`]
+  return fs.readdirSync(dir).filter((file) => /\.spec\.(ts|mjs)$/.test(file))
+    .some((file) => quoted.some((literal) => fs.readFileSync(path.join(dir, file), 'utf8').includes(`test(${literal}`)))
 }
 
 /** A header tag continues over following lines until the next tag or the comment ends. */
@@ -58,4 +64,4 @@ function readHeader(file) {
 /** The stable id of one test of a spec. */
 const testId = (header, name) => `${header.layer}/${header.capability ?? header.directory}/${name}`
 
-export { ROOT, SPECS, LAYERS, AREAS, specFiles, readHeader, testId }
+export { ROOT, SPECS, LAYERS, AREAS, specFiles, specIdExists, readHeader, testId }

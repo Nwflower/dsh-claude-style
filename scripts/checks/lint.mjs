@@ -7,7 +7,7 @@ import { filesUnder } from '../shared/file-walk.mjs'
 import { checkWorkOrders } from '../dev/work.mjs'
 import { createTemporaryFiles } from '../shared/temporary-files.mjs'
 import { DEBUG_HOMES, debugPath } from '../shared/debug-paths.mjs'
-import { AREAS, specFiles, readHeader } from '../shared/spec-header.mjs'
+import { AREAS, specFiles, specIdExists, readHeader } from '../shared/spec-header.mjs'
 import { checkElementCollections } from '../../packages/testing/element-collections.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
@@ -477,11 +477,8 @@ for (const problem of collections.problems) problems.push(problem)
 // The quarantine (packages/testing/data/quarantine.json): each entry is a behaviour test
 // that exists, with the defect it fails over said in the reader's terms.
 for (const entry of JSON.parse(fs.readFileSync(path.join(ROOT, 'packages', 'testing', 'data', 'quarantine.json'), 'utf8')).tests) {
-  const [layer, capability, ...rest] = entry.id.replace(/@[\w.]+$/g, '').split('/')
-  const name = rest.join('/')
-  const owner = specs.filter((file) => file.startsWith(`packages/testing/specs/${layer}/${capability}/`))
-    .find((file) => fs.readFileSync(path.join(ROOT, file), 'utf8').includes(`test('${name.replace(/'/g, "\\'")}'`))
-  if (layer !== 'behaviour' || owner === undefined) problems.push(`packages/testing/data/quarantine.json: "${entry.id}" is no behaviour test`)
+  const [layer] = entry.id.replace(/@[\w.]+$/g, '').split('/')
+  if (layer !== 'behaviour' || !specIdExists(entry.id)) problems.push(`packages/testing/data/quarantine.json: "${entry.id}" is no behaviour test`)
   if (typeof entry.defect !== 'string' || entry.defect.trim() === '') problems.push(`packages/testing/data/quarantine.json: "${entry.id}" does not name the defect it fails over`)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(entry.since))) problems.push(`packages/testing/data/quarantine.json: "${entry.id}" carries no date it entered`)
 }

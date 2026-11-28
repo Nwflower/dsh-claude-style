@@ -5,6 +5,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { runsPath } from './debug-paths.mjs'
+import { processAlive } from './temporary-files.mjs'
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..')
 const LOCK = runsPath(ROOT, 'verify.lock')
@@ -21,16 +22,6 @@ const WAIT_SAY_MS = 30_000
 
 const say = (line) => process.stdout.write(`${line}\n`)
 
-/** `EPERM` still proves the process exists; `ESRCH` means it is gone. */
-function alive(pid) {
-  try {
-    process.kill(pid, 0)
-    return true
-  } catch (error) {
-    return error.code === 'EPERM'
-  }
-}
-
 
 function lockState() {
   const stat = fs.statSync(LOCK, { throwIfNoEntry: false })
@@ -44,7 +35,7 @@ function lockState() {
       owner = null
     }
     if (owner !== null && Number.isInteger(owner.pid)) {
-      if (!alive(owner.pid)) return { kind: 'stale', note: `pid ${owner.pid} is gone` }
+      if (!processAlive(owner.pid)) return { kind: 'stale', note: `pid ${owner.pid} is gone` }
       const held = Date.now() - Date.parse(owner.at ?? '')
       if (Number.isFinite(held) && held > MAX_HOLD_MS) {
         return { kind: 'stale', note: `pid ${owner.pid} states it took the lock ${Math.round(held / 60_000)} min ago` }

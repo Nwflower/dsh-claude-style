@@ -6,6 +6,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { execFileSync } from 'node:child_process'
 import esbuild from 'esbuild'
+import { filesUnder } from '../shared/file-walk.mjs'
 
 const PACKAGE = path.resolve(import.meta.dirname, '..', '..', 'packages', 'host')
 const ROOT = path.resolve(PACKAGE, '..', '..')
@@ -81,15 +82,11 @@ export async function buildHostHalf({ outDir = path.join(ROOT, 'lib') } = {}) {
   fs.rmSync(to, { recursive: true, force: true })
   fs.mkdirSync(to, { recursive: true })
   const modules = []
-  const walk = (dir) => {
-    for (const entry of fs.readdirSync(path.join(SOURCE, dir), { withFileTypes: true })) {
-      const rel = dir === '' ? entry.name : `${dir}/${entry.name}`
-      if (entry.isDirectory()) walk(rel)
-      else if (rel.endsWith('.ts')) modules.push(rel)
-      else throw new Error(`build: packages/host/src/${rel} is not TypeScript`)
-    }
+  for (const full of filesUnder(SOURCE, [''], new Set(['.git', 'node_modules']))) {
+    const rel = path.relative(SOURCE, full).replace(/\\/g, '/')
+    if (rel.endsWith('.ts')) modules.push(rel)
+    else throw new Error(`build: packages/host/src/${rel} is not TypeScript`)
   }
-  walk('')
   const known = new Set(modules)
   const allowedBare = (specifier) => specifier.startsWith('node:')
     || specifier.startsWith('@deepseek-ai/')

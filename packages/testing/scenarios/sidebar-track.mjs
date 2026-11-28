@@ -19,10 +19,10 @@
  * 768px auto-collapse, so this scenario collapses the sidebar with the host's own
  * toggle and the pair of rules above is the one that decides the track.
  */
-import surfaceTable from '../data/surface.json' with { type: 'json' }
+import { surfaceAttribute } from '../surface.mjs'
 
 /** The skin's part mark, read off the surface table rather than spelled here (D92). */
-const PART = surfaceTable.surface.find((entry) => entry.id === 'skin.part').attribute
+const PART = surfaceAttribute('skin.part')
 const part = (name) => `[${PART}~="${name}"]`
 
 /** The window these three readings are taken in: under 1000px, above 768px. */
