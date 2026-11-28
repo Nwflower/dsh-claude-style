@@ -1,4 +1,5 @@
 import { SESSION_SEARCH_PATH } from '@dsh-claude-style/contracts/routes'
+import { readHostJson } from '@dsh-claude-style/engine/resource'
 import { currentSessionId, hostConversation, hostLayout, hostLocale, hostPluginNavigation, hostRemoteSkills, profileBundles, hostSessions, hostShortcuts, hostSlots, hostUiWorkspace, hostWorkspaces } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { ContentHit, SearchAnswer } from '@dsh-claude-style/contracts/usage'
@@ -208,11 +209,10 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
    */
   function searchContent(query: string, signal: AbortSignal | undefined): Promise<ContentHit[]> {
     const url = query === '' ? SESSION_SEARCH_PATH : `${SESSION_SEARCH_PATH}?q=${encodeURIComponent(query)}`
-    return fetch(url, { credentials: 'same-origin', headers: { accept: 'application/json' }, signal }).then(response => {
-      return response.json().then((body: SearchAnswer) => {
-        if (!response.ok || !body.ok) throw new Error(`session search answered ${response.status}: ${body.error}`)
-        return body.sessions ?? []
-      })
+    return readHostJson(url, { signal }).then(answer => {
+      const body = answer as SearchAnswer | null
+      if (body?.ok !== true) throw new Error(`session search failed: ${body?.error ?? 'unknown error'}`)
+      return body.sessions ?? []
     })
   }
 

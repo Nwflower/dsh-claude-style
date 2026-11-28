@@ -3,6 +3,15 @@ import { notifyAll } from './notify'
 /** A JSON answer from one of the host half's routes: an object whose fields the adopter checks one by one. */
 export type HostAnswer = Record<string, unknown> | null
 
+/** Transport error carrying the HTTP status returned by a host route. */
+export class HostHttpError extends Error {
+  readonly status: number
+  constructor(status: number, message: string) {
+    super(message)
+    this.status = status
+  }
+}
+
 /** Same-origin JSON transport; HTTP and decoding failures belong to the request boundary (D12). */
 export async function readHostJson(route: string, init: RequestInit = {}): Promise<HostAnswer> {
   const headers = new Headers(init.headers)
@@ -12,8 +21,14 @@ export async function readHostJson(route: string, init: RequestInit = {}): Promi
     credentials: 'same-origin',
     headers,
   })
-  const body = await response.json()
-  if (!response.ok) throw new Error(typeof body?.error === 'string' ? body.error : `HTTP ${response.status}`)
+  let body: HostAnswer = null
+  try {
+    body = await response.json() as HostAnswer
+  } catch (error) {
+    if (!response.ok) throw new HostHttpError(response.status, `HTTP ${response.status}`)
+    throw error
+  }
+  if (!response.ok) throw new HostHttpError(response.status, typeof body?.error === 'string' ? body.error : `HTTP ${response.status}`)
   return body
 }
 

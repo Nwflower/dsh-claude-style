@@ -3,6 +3,7 @@ import { CHAT_FLYING_ATTR, MESSAGE_ENTER_ATTR, MESSAGE_ENTER_GROW } from '../../
 import { motionReduced, readPrefs } from '../../core/prefs'
 import { motionMs } from '../../shared/motion'
 import { currentRow, lastUserRow, takeFreshEcho, touchesUserRow } from './send-rows'
+import { conversationColumn } from '@dsh-claude-style/engine/chat-dom'
 import { SUBMISSION_ECHO_SELECTOR } from '@dsh-claude-style/contracts/dom'
 
 /* Mark only the row replacing a freshly observed echo; restored-session rows never animate.
@@ -10,7 +11,10 @@ import { SUBMISSION_ECHO_SELECTOR } from '@dsh-claude-style/contracts/dom'
 export function watchGrowEnter() {
   /** The echoes already dealt with; the ones lying on the page at install time are included (a restored session has them). */
   const handled = new WeakSet<Element>()
-  for (const echo of document.querySelectorAll(SUBMISSION_ECHO_SELECTOR)) handled.add(echo)
+  const column = conversationColumn()
+  if (column !== null) {
+    for (const echo of column.querySelectorAll(SUBMISSION_ECHO_SELECTOR)) handled.add(echo)
+  }
   /** The row hidden while its message waits to grow. */
   let hidden: HTMLElement | null = null
   /** The row growing into its place right now, or null. */

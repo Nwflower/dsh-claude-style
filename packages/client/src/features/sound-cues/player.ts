@@ -1,4 +1,5 @@
 import { SOUND_PATH } from '@dsh-claude-style/contracts/routes'
+import { readHostJson } from '@dsh-claude-style/engine/resource'
 import { createSynth } from './synth'
 import type { HostSoundCapability, SoundName } from '@dsh-claude-style/contracts/sound'
 
@@ -27,9 +28,7 @@ export function createSoundPlayer() {
     if (mode !== null) return mode
     if (!loopbackPage()) return (mode = 'browser')
     try {
-      const response = await fetch(SOUND_PATH, { credentials: 'same-origin', headers: { accept: 'application/json' } })
-      if (!response.ok) throw new Error(`capability read answered ${response.status}`)
-      const answer = await response.json() as HostSoundCapability
+      const answer = await readHostJson(SOUND_PATH) as HostSoundCapability | null
       mode = answer?.playback === 'system' && Array.isArray(answer.sounds) && answer.sounds.length > 0 ? 'system' : 'browser'
     } catch {
       // A host without the route, or a page the route cannot authenticate,
@@ -42,13 +41,11 @@ export function createSoundPlayer() {
   async function play(name: SoundName, gain: number) {
     if (await resolveMode() === 'system') {
       try {
-        const response = await fetch(SOUND_PATH, {
+        await readHostJson(SOUND_PATH, {
           method: 'POST',
-          credentials: 'same-origin',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ name, volume: gain }),
         })
-        if (!response.ok) throw new Error(`sound route answered ${response.status}`)
         return
       } catch (error) {
         // The cue is decorative: one failed play must not reach the status

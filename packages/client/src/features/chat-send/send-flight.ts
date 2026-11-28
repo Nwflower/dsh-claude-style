@@ -7,8 +7,9 @@ import { currentRow, lastUserRow, takeFreshEcho, touchesUserRow } from './send-r
 import { watchGrowEnter } from './send-grow'
 import { CHAT_FLIGHT_MS, CHAT_LANDING_MS } from './send-shape'
 import { snapshotComposer } from './send-snapshot'
-import { CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, COMPOSER_INPUT_SELECTOR, CONVERSATION_SCROLL_SELECTOR, SUBMISSION_ECHO_SELECTOR } from '@dsh-claude-style/contracts/dom'
-import { userBubble } from '@dsh-claude-style/engine/chat-dom'
+import { CHAT_FLOW_SELECTOR, COMPOSER_CARD_SELECTOR, CONVERSATION_SCROLL_SELECTOR, SUBMISSION_ECHO_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { conversationColumn, userBubble } from '@dsh-claude-style/engine/chat-dom'
+import { findComposerInput } from '@dsh-claude-style/engine/host'
 import { motionEase } from '../../shared/motion'
 import { inPageBox, pageViewport } from '../../shared/page-zoom'
 import type { HostContext } from '@dsh-claude-style/engine/host'
@@ -112,7 +113,10 @@ export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   /** The backstop timer. */
   let rescue = 0
 
-  for (const echo of document.querySelectorAll(CHAT_ECHO_SELECTOR)) handled.add(echo)
+  const column = conversationColumn()
+  if (column !== null) {
+    for (const echo of column.querySelectorAll(CHAT_ECHO_SELECTOR)) handled.add(echo)
+  }
 
   /** Handle row replacement before paint; touchesUserRow avoids walking unchanged subtrees. */
   const onRowRecords = (records: MutationRecord[]) => {
@@ -393,8 +397,8 @@ export function install(_ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     // Growing into place needs no origin: the echo alone says a message was
     // sent, and snapshotting the card would only cost a clone (send-grow.ts).
     if (readPrefs().messageEnter === MESSAGE_ENTER_GROW) return
-    const input = document.querySelector(COMPOSER_INPUT_SELECTOR)
-    if (!(input instanceof HTMLElement)) return
+    const input = findComposerInput()
+    if (input === null) return
     const card = input.closest(COMPOSER_CARD_SELECTOR)
     if (!(card instanceof HTMLElement)) return
     // An empty draft submits no message, and measuring it would only waste a clone.

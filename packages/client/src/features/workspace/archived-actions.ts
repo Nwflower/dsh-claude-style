@@ -1,7 +1,7 @@
 import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import { SESSION_DELETE_PATH } from '@dsh-claude-style/contracts/routes'
-import type { HostAnswer } from '@dsh-claude-style/engine/resource'
+import { HostHttpError, readHostJson } from '@dsh-claude-style/engine/resource'
 import type { HostSessionsService } from '@dsh-claude-style/contracts/services'
 import type { createHostToast } from '../../shared/host-toast'
 import { copy } from './copy'
@@ -37,24 +37,27 @@ export function createArchivedActions(options: {
    * and every other refusal shows the route's message.
    */
   function removeArchived(id: string) {
-    fetch(SESSION_DELETE_PATH, {
+    readHostJson(SESSION_DELETE_PATH, {
       method: 'POST',
-      credentials: 'same-origin',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ sessionId: id }),
-    }).then(response => response.json().then((result: HostAnswer) => ({ status: response.status, result }))).then(({ status, result }) => {
-      if (result?.ok === true || (status === 404 && result?.error === 'session not found')) {
+    }).then(result => {
+      if (result?.ok === true) {
         refreshSessions()
         return
       }
-      const refusal: Error & { status?: number } = new Error(String(result?.error || `HTTP ${status}`))
-      refusal.status = status
-      throw refusal
-    }).catch((reason: { status?: number, message?: string }) => {
+      throw new Error(String(result?.error || 'session delete failed'))
+    }).catch((reason: unknown) => {
+      if (reason instanceof HostHttpError && reason.status === 404 && reason.message === 'session not found') {
+        refreshSessions()
+        return
+      }
       console.warn('dsh-claude-style: session delete rejected:', reason)
-      notifyToast(reason?.status === 409
+      const status = reason instanceof HostHttpError ? reason.status : undefined
+      const detail = reason instanceof Error ? reason.message : String(reason)
+      notifyToast(status === 409
         ? copy('archiveDeleteOpen')
-        : copy('archiveDeleteFailed', { detail: reason?.message ?? String(reason) }))
+        : copy('archiveDeleteFailed', { detail }))
     })
   }
 

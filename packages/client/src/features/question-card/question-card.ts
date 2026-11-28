@@ -76,7 +76,7 @@ export function createQuestionCards() {
   }
   const cards = observeMatches<HTMLElement>(QUESTION_CARD_SELECTOR, () => queue(sync))
   const labels = new Map<HTMLElement, HTMLButtonElement>()
-  const customSelected = new Set<HTMLElement>()
+  let customSelected = new WeakSet<HTMLElement>()
   const placements = new Map<HTMLElement, Placement>()
   const composerFallbacks = new Map<HTMLElement, { fallback: HTMLElement, display: string, count: number }>()
 
@@ -258,7 +258,7 @@ export function createQuestionCards() {
         row.removeAttribute(CUSTOM_ACTIVE_ATTR)
       }
       labels.clear()
-      customSelected.clear()
+      customSelected = new WeakSet<HTMLElement>()
       composerFallbacks.clear()
       cards.release()
     },

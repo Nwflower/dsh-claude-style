@@ -1,11 +1,11 @@
 import { requestFrame } from '@dsh-claude-style/engine/frame'
 import * as React from 'react'
 import * as primitives from '@deepseek-ai/dsh-client-ui-primitives'
-import * as reactDom from 'react-dom/client'
 import { conversationSessionId, findConversationSession, sessionOutline, turnForSeq } from '@dsh-claude-style/engine/host'
 import { createSearchSources } from './sources'
 import type { ContentHit, SearchFilter, SearchRow } from './sources'
 import { buildElement, createStamp } from '@dsh-claude-style/engine/dom'
+import { createDialogRoot } from '../../shared/dialog-root'
 import { motionMs } from '../../shared/motion'
 import { closeOtherPopovers, registerPopover, unregisterPopover } from '../../shared/popover'
 import { createSlidingPill } from '../../shared/sliding-pill'
@@ -83,8 +83,8 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     enter: `${SVG_OPEN}<path d="M13 3.5v4a2 2 0 0 1-2 2H3.5M6 7 3.5 9.5 6 12"/></svg>`
   }
 
-  /** The React root the host's Modal renders from, and its container. */
-  let modalRoot: reactDom.Root | null = null
+  /** The body-mounted React dialog root, unmounted cleanly on every close. */
+  const dialog = createDialogRoot()
   /**
    * `isOpen` while the palette takes input; `closing` while it fades out,
    * still mounted. The row picked on the way out runs once the modal is
@@ -135,9 +135,12 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
   // ---------- the palette ----------
 
   function renderModal() {
-    if (modalRoot === null) modalRoot = reactDom.createRoot(document.createElement('div'))
-    modalRoot.render(React.createElement(primitives.Modal, {
-      open: isOpen || closing,
+    if (!isOpen && !closing) {
+      dialog.close()
+      return
+    }
+    dialog.render(React.createElement(primitives.Modal, {
+      open: true,
       onClose: closePalette,
       title: copy('searchPlaceholder'),
       headless: true,
@@ -626,10 +629,7 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
     sources.close()
     hostTurns.stop()
     filterPill.release()
-    if (modalRoot !== null) {
-      modalRoot.unmount()
-      modalRoot = null
-    }
+    dialog.dispose()
     triggerCtl.drop()
     takeover.detach()
     delete ui.search

@@ -281,16 +281,22 @@ let lookups = 0
 for (const file of sources) {
   if (!file.endsWith('.ts') || /\.test\.ts$/.test(file) || relative(file).includes('packages/testing/')) continue
   if (LOOKUP_OWNERS.has(relative(file))) continue
+  const rel = relative(file)
   const count = (fs.readFileSync(file, 'utf8').match(LOOKUP) ?? []).length
   lookups += count
-  const entry = recordedLookups[relative(file)]
-  if (count === 0) continue
-  if (entry === undefined) {
-    problems.push(`${relative(file)}: ${count} whole-document ${count === 1 ? 'lookup' : 'lookups'} with no entry in packages/testing/data/document-lookups.json — read the seat through the engine's host.ts accessors or bus.ts registry, or record it there with the reason it stays`)
+  const entry = recordedLookups[rel]
+  if (count === 0) {
+    if (entry !== undefined) {
+      problems.push(`packages/testing/data/document-lookups.json: ${rel} now has 0 whole-document lookups — take its entry out`)
+    }
     continue
   }
-  if (count > entry.count) {
-    problems.push(`packages/testing/data/document-lookups.json: ${relative(file)} has ${count} whole-document lookups, past its recorded ceiling of ${entry.count}`)
+  if (entry === undefined) {
+    problems.push(`${rel}: ${count} whole-document ${count === 1 ? 'lookup' : 'lookups'} with no entry in packages/testing/data/document-lookups.json — read the seat through the engine's host.ts accessors or bus.ts registry, or record it there with the reason it stays`)
+    continue
+  }
+  if (count !== entry.count) {
+    problems.push(`packages/testing/data/document-lookups.json: ${rel} has ${count} whole-document lookups, not its recorded ${entry.count} — update the entry so the ceiling stays tight`)
   }
 }
 for (const file of Object.keys(recordedLookups)) {
@@ -519,6 +525,7 @@ for (const file of sources) {
   spelledMarks += count
   const recorded = recordedMarks[rel] ?? 0
   if (count > recorded) problems.push(`${rel}: spells ${count} skin marks, past the ${recorded} packages/testing/data/skin-literals.json records — read new ones from packages/testing/data/surface.json`)
+  else if (count < recorded) problems.push(`packages/testing/data/skin-literals.json: ${rel} now spells ${count} skin marks, below its recorded ${recorded} — lower the entry so the ceiling stays tight`)
 }
 for (const file of Object.keys(recordedMarks)) {
   if (!fs.existsSync(path.join(ROOT, file))) problems.push(`packages/testing/data/skin-literals.json: ${file} is gone from the tree — take its entry out`)

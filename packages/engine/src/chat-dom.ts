@@ -39,8 +39,9 @@ export function findFollowTailButton() {
 }
 
 /** Settled and optimistic echo rows carry marks at different depths and need separate selectors. */
-export const CHAT_USER_ROW_SELECTOR = `${CHAT_FLOW_SELECTOR} [${FLOW_KIND_ATTRIBUTE}="${USER_ROW_KIND}"]`
-export const SUBMISSION_ROW_SELECTOR = `[${FLOW_KIND_ATTRIBUTE}="${USER_ROW_KIND}"], ${SUBMISSION_ECHO_SELECTOR}`
+export const USER_ROW_SELECTOR = `[${FLOW_KIND_ATTRIBUTE}="${USER_ROW_KIND}"]`
+export const CHAT_USER_ROW_SELECTOR = `${CHAT_FLOW_SELECTOR} ${USER_ROW_SELECTOR}`
+export const SUBMISSION_ROW_SELECTOR = `${USER_ROW_SELECTOR}, ${SUBMISSION_ECHO_SELECTOR}`
 /** Both faces inside the chat column, asked in one query. */
 export const CHAT_ROW_SELECTOR = `${CHAT_USER_ROW_SELECTOR}, ${SUBMISSION_ECHO_SELECTOR}`
 

@@ -1,5 +1,5 @@
 import { AUTO_POPOVER_ALL, HERO_MENU_ATTR } from '../../constants'
-import { cacheFirstMatch, findHostMenuOf } from '@dsh-claude-style/engine/host'
+import { cacheFirstMatch, findHeroRoot, findHostMenuOf } from '@dsh-claude-style/engine/host'
 import { readPrefs } from '../../core/prefs'
 import { closestFrom, createStamp } from '@dsh-claude-style/engine/dom'
 import { POPOVER_CLOSE_DELAY, POPOVER_MARGIN, POPOVER_OPEN_DELAY, anchorSpace, clampToViewport, closeOtherPopovers, createHoverIntent, createPointerWatch, isProgrammaticPress, pressKeepsPopoverOpen, programmaticPress, registerPopover, resolveAnchoredPosition, unregisterPopover } from '../../shared/popover'
@@ -180,7 +180,9 @@ const findCardTrigger = cacheFirstMatch<HTMLElement>('[data-dsh-claude-part~="ca
 
   /** The hero row's open pickers: the workspace chip and the preset seat. */
   function rowTriggers() {
-    const nodes = document.querySelectorAll<HTMLElement>('[data-dsh-claude-part~="hero-workspace-row"] [aria-haspopup="menu"][aria-expanded="true"]')
+    const hero = findHeroRoot()
+    if (hero === null) return []
+    const nodes = hero.querySelectorAll<HTMLElement>('[data-dsh-claude-part~="hero-workspace-row"] [aria-haspopup="menu"][aria-expanded="true"]')
     const found: HTMLElement[] = []
     for (let i = 0; i < nodes.length; i++) found.push(nodes[i])
     return found

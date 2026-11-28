@@ -1,17 +1,9 @@
 {
   "note": "Per-file ceiling of whole-document lookups outside the sanctioned cached accessors (packages/engine/src/host-seats.ts, bus.ts, stylesheet.ts, chat-dom.ts). Queries by id are uncounted; counts only shrink.",
   "files": {
-    "packages/client/src/features/hero-menu/hero-menu.ts": {
-      "count": 1,
-      "reason": "The hero row's open pickers, read in the refresh pass. Their openness is the host's `aria-expanded` on nodes that stay mounted, which a node-addition registry cannot track."
-    },
-    "packages/client/src/features/search/search-host-takeover.ts": {
-      "count": 1,
-      "reason": "The host search box's clear button, read when the search box takes focus."
-    },
     "packages/client/src/features/permissions/permissions.ts": {
-      "count": 2,
-      "reason": "The cold start screen finds its mode strip inside the composer card, and the teardown sweeps the segment groups and the tier card's nodes in one call."
+      "count": 1,
+      "reason": "The teardown sweeps the segment groups and the tier card's nodes in one call."
     },
     "packages/client/src/features/model/model-cards.ts": {
       "count": 2,
@@ -45,10 +37,6 @@
       "count": 4,
       "reason": "The process groups, read once at install and again when the shell language changes; the summary marks swept at teardown, both the named headers' and any span written this frame whose measuring pass never ran."
     },
-    "packages/client/src/features/chat-send/send-rows.ts": {
-      "count": 3,
-      "reason": "The submission echo row and the sent row, read once per batch of mutations around one send. The echo and row selectors carry attributes the host renders with the node, and the callers hold no registry lifetime for a bus list to be released against; moving them is a change to how send-flight and send-grow own their seats."
-    },
     "packages/client/src/features/context-stats/stats-panel.ts": {
       "count": 2,
       "reason": "The stray context block and panel marks swept once when the statistics are installed; composer cards come from the engine's card registry."
@@ -56,10 +44,6 @@
     "packages/client/src/features/context-stats/session-stats.ts": {
       "count": 2,
       "reason": "The context statistics' own block and panel marks, swept at teardown."
-    },
-    "packages/client/src/features/chat-send/send-flight.ts": {
-      "count": 2,
-      "reason": "The composer's input, read when a send begins and when the flight's seat is measured."
     },
     "packages/client/src/features/ban-screen/ban-screen.ts": {
       "count": 1,
@@ -81,10 +65,6 @@
       "count": 1,
       "reason": "The streaming containers, read once when the reveal engine is installed."
     },
-    "packages/client/src/features/chat-send/send-grow.ts": {
-      "count": 1,
-      "reason": "The echo rows lying on the page, noted once at install."
-    },
     "packages/client/src/features/chat-wait/chat-wait.ts": {
       "count": 1,
       "reason": "The waiting line's own marks, swept at teardown."
@@ -92,10 +72,6 @@
     "packages/client/src/features/effort/effort-picker.ts": {
       "count": 2,
       "reason": "The effort popover's instance-scoped node, swept when its card is built and when the control is switched off or torn down."
-    },
-    "packages/client/src/features/home/greeting-copy.ts": {
-      "count": 1,
-      "reason": "The hero's title groups, read in the pass that writes the greeting. The part mark is written onto the host's node after it mounts, which a registry of added nodes cannot see."
     },
     "packages/client/src/features/permissions/stray-nodes.ts": {
       "count": 3,

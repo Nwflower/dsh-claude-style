@@ -1,6 +1,6 @@
-import { COMPOSER_CARD_SELECTOR, PERMISSION_TRIGGER_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { PERMISSION_TRIGGER_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { PERMISSIONS_ATTR } from '../../constants'
-import { closestConversationSession, conversationSessionId, currentPreset, currentSession, sessionById } from '@dsh-claude-style/engine/host'
+import { closestConversationSession, conversationSessionId, currentPreset, currentSession, findComposerCard, sessionById } from '@dsh-claude-style/engine/host'
 import { buildElement, closestFrom, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
 import { SEGMENTS_CLASS, SEGMENT_CLASS } from '../../shared/segment-control'
 import { removeStrayNodes } from '../../shared/popover'
@@ -206,7 +206,9 @@ export function install(ctx: HostContext, ui: FeatureUi<typeof manifest>) {
 
   /** The cold start screen's mode strip, inside the single-line composer card. */
   function findModesStrip() {
-    return document.querySelector<HTMLElement>(COMPOSER_CARD_SELECTOR + '[data-dsh-claude-part~="card-workspace-trigger"] [data-dsh-claude-part~="modes"]')
+    const card = findComposerCard()
+    if (card === null || !card.matches('[data-dsh-claude-part~="card-workspace-trigger"]')) return null
+    return card.querySelector<HTMLElement>('[data-dsh-claude-part~="modes"]')
   }
 
   /** Keep the card's trigger in the slot the host renders, adopting a reload's orphans. */
