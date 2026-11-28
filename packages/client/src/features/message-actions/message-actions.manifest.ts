@@ -10,7 +10,7 @@ export default {
   id: 'messageActions',
   order: 231,
   load: 'deferred',
-  contracts: ['boot.rewind-entry', 'boot.rewind-sheet', 'chat.answer-row', 'chat.flow', 'chat.message-actions', 'chat.message-clock', 'chat.node-key', 'chat.phase', 'chat.turn-attribute', 'chat.turn-tail', 'chat.inherited-history', 'chat.user-kind', 'chat.user-row', 'conversation.session-attribute', 'session.row', 'session.row-key'],
+  contracts: ['boot.rewind-entry', 'boot.rewind-sheet', 'chat.action-ongoing', 'chat.answer-row', 'chat.flow', 'chat.message-actions', 'chat.message-clock', 'chat.node-key', 'chat.phase', 'chat.turn-attribute', 'chat.turn-tail', 'chat.inherited-history', 'chat.user-kind', 'chat.user-row', 'conversation.session-attribute', 'session.row', 'session.row-key'],
   pref: 'messageActions',
   stylesheets: [{ file: 'message-actions.css', rank: 155 }],
   settingsRows: [{

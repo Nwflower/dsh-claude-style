@@ -78,7 +78,8 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="composer-controls"] {
    only for that final control; an enhancer followed by a voice button keeps the
    plugin's own tightening. The class belongs to another plugin, so it stays out
    of the host contract table (D3). */
-body[data-dsh-claude-style] [data-slot="conversation.input.right"] > .dsh-enh-btn:last-child {
+body[data-dsh-claude-style] [data-slot="conversation.input.right"] > .dsh-enh-btn:last-child,
+body[data-dsh-claude-style] [data-slot="conversation.input.right"] > [data-slot-item]:last-child > .dsh-enh-btn:last-child {
   margin-right: 0;
 }
 

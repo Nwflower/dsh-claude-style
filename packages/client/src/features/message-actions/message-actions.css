@@ -11,6 +11,7 @@
   }
   body[data-dsh-claude-style] [data-chat-flow-kind="user"]:hover [data-clock],
   body[data-dsh-claude-style] [data-chat-flow-kind="user"]:focus-within [data-clock],
+  body[data-dsh-claude-style] [data-chat-flow-kind="user"][data-dsh-claude-holds~="message-action-ongoing"] [data-clock],
   body[data-dsh-claude-style] [data-dsh-claude-message-editing] [data-clock] {
     opacity: 1;
   }

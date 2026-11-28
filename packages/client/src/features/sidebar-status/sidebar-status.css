@@ -150,7 +150,8 @@ body[data-dsh-claude-style][data-dsh-claude-motion="reduced"] .dsh-claude-sideba
 /* Idle/read sessions have no decorative circle. Native screen-reader labels stay mounted. */
 body[data-dsh-claude-style] [data-dsh-claude-row-status="idle"] > [data-dsh-claude-part~="row-slot"] { visibility: hidden; }
 body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status] > [data-dsh-claude-part~="row-slot"]::after,
-body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status] > [data-dsh-claude-part~="row-slot"] > [data-slot]:empty::after { content: none; }
+body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status] > [data-dsh-claude-part~="row-slot"] > [data-slot]::after,
+body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"][data-dsh-claude-row-status] > [data-dsh-claude-part~="row-slot"] > [data-slot][data-dsh-claude-holds~="leading-slot-item"]::after { content: none; }
 /* The row's actions stand in the resting line's place on hover: the status seat
    steps aside with it, and the trailing room it reserved goes back to the inline
    buttons. The time label is inside the host's resting box, which the host hides

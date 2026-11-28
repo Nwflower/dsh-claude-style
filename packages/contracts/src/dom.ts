@@ -34,6 +34,20 @@ export const CHAT_CALL_SELECTOR = '[data-chat-call-id]'
 export const CHAT_CALL_TOOL_SELECTOR = '[data-tool]'
 /** The same contract as an attribute name: the tool a call row runs. */
 export const CHAT_CALL_TOOL_ATTRIBUTE = 'data-tool'
+/**
+ * A program-tool call's header wrapper (`run_code` / `cua_run_code`): while folded
+ * it stands in for the call's tool view and names the wire tool directly.
+ */
+export const PROGRAM_CALL_ATTRIBUTE = 'data-program-call'
+export const PROGRAM_CALL_SELECTOR = `[${PROGRAM_CALL_ATTRIBUTE}]`
+/**
+ * The inert single-row preview of the active sub-call under a collapsed, running
+ * program call: excluded from file-row merging and sized to the column card's row height.
+ */
+export const CURRENT_SUBCALL_SELECTOR = '[data-current-subcall]'
+/** On a message action button while its asynchronous action runs; keeps the hover action row visible. */
+export const ACTION_ONGOING_ATTRIBUTE = 'data-action-ongoing'
+export const ACTION_ONGOING_SELECTOR = `[${ACTION_ONGOING_ATTRIBUTE}]`
 /** One thinking row; its phase is its data-state attribute. */
 export const THINK_ROW_SELECTOR = '[data-variant="think"]'
 /**
@@ -351,6 +365,15 @@ export const SETTINGS_BUTTON_SELECTOR = '[data-dsh-claude-part~="settings-area"]
 export const FOOTER_ACTIONS_SELECTOR = '[data-dsh-claude-part~="footer-actions"]'
 /** A slot anchor; its children are the host's real entries. */
 export const SLOT_ANCHOR_SELECTOR = '[data-slot]'
+/**
+ * Per-registrant item root inside a list slot (`display: contents`): remains
+ * mounted even when a registrant returns null, so list-slot readers unwrap it
+ * and ignore empty wrappers.
+ */
+export const SLOT_ITEM_ATTRIBUTE = 'data-slot-item'
+export const SLOT_ITEM_SELECTOR = `[${SLOT_ITEM_ATTRIBUTE}]`
+/** Error boundary wrapper rendered when a slot registrant throws. */
+export const SLOT_ERROR_ATTRIBUTE = 'data-slot-error'
 /** `dsh-client-ui-subagent` embedded conversation column, including its composer. */
 export const SIDEBAR_CHAT_SELECTOR = '[data-sidebar-chat]'
 /** Slot anchors delimit part-walk regions, avoiding document-wide queries (D3). */

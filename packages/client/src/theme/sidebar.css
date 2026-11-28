@@ -553,11 +553,14 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="project-row"] [data-dsh-clau
 body[data-dsh-claude-style] [data-dsh-claude-part~="project-row"][aria-expanded="false"] [data-dsh-claude-part~="row-chevron"]::after {
   transform: rotate(-90deg);
 }
-/* Session status circle. The host renders the leading seat through a slot outlet
-   whose anchor (`div[data-slot]`, display:contents) is a child of the seat even
-   when nothing is registered, so an idle row's seat is never :empty and the circle
-   hangs on the empty anchor as well; a seat carrying dots or another plugin's
-   content keeps its own paint. */
+/* Session status circle. The host renders the leading seat through a list-slot
+   outlet whose anchor (`[data-slot="sidebar.session.row.leading"]`,
+   display:contents) stays mounted even when nothing is rendered, and list-slot
+   registrants that return null still leave an empty `[data-slot-item]` wrapper
+   inside it. `leading-slot-filled` (packages/engine/src/parts-table.ts) marks
+   the outlet only when a real element stands inside it, so an idle row still
+   receives the circle while a seat carrying dots or another plugin's content
+   keeps its own paint. */
 body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"] [data-dsh-claude-part~="row-slot"] {
   width: 14px;
   height: 16px;
@@ -566,7 +569,8 @@ body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"] [data-dsh-clau
   justify-content: center;
 }
 body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"] [data-dsh-claude-part~="row-slot"]:empty::after,
-body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"] [data-dsh-claude-part~="row-slot"] > [data-slot]:empty::after {
+body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"] [data-dsh-claude-part~="row-slot"] > [data-slot]:empty::after,
+body[data-dsh-claude-style] [data-dsh-claude-part~="session-row"] [data-dsh-claude-part~="row-slot"] > [data-slot="sidebar.session.row.leading"][data-dsh-claude-holds~="leading-slot-item"]:not([data-dsh-claude-holds~="leading-slot-filled"])::after {
   content: "";
   display: inline-block;
   width: 6px;

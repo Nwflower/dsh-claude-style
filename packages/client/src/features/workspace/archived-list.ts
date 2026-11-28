@@ -1,5 +1,6 @@
 import { buildElement } from '@dsh-claude-style/engine/dom'
 import { requestFrame } from '@dsh-claude-style/engine/frame'
+import { isNonPrimarySessionOrigin } from '@dsh-claude-style/contracts/services'
 import type { HostSessionSummary, HostSessionsService, HostWorkspacesService } from '@dsh-claude-style/contracts/services'
 import type { HostTooltip, HostTooltipOptions } from '../../shared/host-tooltip'
 import { createIdentityMemo } from '../../shared/identity-memo'
@@ -21,7 +22,7 @@ export function archivedOrder(archivedIds: readonly string[], byId: Record<strin
   for (let i = 0; i < archivedIds.length; i++) {
     const id = archivedIds[i]
     const summary = byId[id]
-    if (summary === undefined || summary.origin === 'subagent' || (summary.blank === true && id !== current)) continue
+    if (summary === undefined || isNonPrimarySessionOrigin(summary.origin) || (summary.blank === true && id !== current)) continue
     out.push(id)
   }
   out.sort((a, b) => (byId[b].updatedAt - byId[a].updatedAt) || (a < b ? -1 : a > b ? 1 : 0))

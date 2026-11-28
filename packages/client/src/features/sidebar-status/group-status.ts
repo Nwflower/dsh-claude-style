@@ -1,4 +1,5 @@
 import { SESSION_ROW_KEY_ATTRIBUTE, WORKSPACE_ROW_EXPANDED_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
+import { isNonPrimarySessionOrigin } from '@dsh-claude-style/contracts/services'
 import { hostSessionStatus, hostSessions, hostSnapshot, hostWorkspaceView, hostWorkspaces } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import { readPrefs } from '../../core/prefs'
@@ -80,7 +81,7 @@ export class WorkspaceGroupStatus {
       const running = new Set<string>()
       for (const id of sessions.ids) {
         const summary = sessions.byId?.[id]
-        if (summary === undefined || summary === null || summary.origin === 'subagent') continue
+        if (summary === undefined || summary === null || isNonPrimarySessionOrigin(summary.origin)) continue
         const live = typeof status?.get === 'function' ? status.get(id)?.running : undefined
         if ((live ?? summary.running) === true) running.add(id)
       }

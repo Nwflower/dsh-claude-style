@@ -5,7 +5,7 @@ export default {
   id: 'contextStats',
   order: 70,
   load: 'deferred',
-  contracts: ['chat.call', 'chat.call-tool', 'chat.call-tool-attribute', 'chat.streaming', 'composer.card', 'composer.dialog-trigger', 'composer.dock', 'composer.meter-fill', 'composer.stat', 'composer.trailing', 'shell.dark-theme'],
+  contracts: ['chat.call', 'chat.call-tool', 'chat.call-tool-attribute', 'chat.current-subcall', 'chat.program-call', 'chat.streaming', 'composer.card', 'composer.dialog-trigger', 'composer.dock', 'composer.meter-fill', 'composer.stat', 'composer.trailing', 'shell.dark-theme'],
   // The ring of the same directory draws the row's reading, and the panel this
   // feature owns hangs from it (features/context-stats/meter-ring.ts).
   reads: ['meterRing', 'model'],

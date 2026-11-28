@@ -361,7 +361,7 @@ body[data-dsh-claude-style] [data-conversation-scroll] {
 /* The header actions sit outside that seat, so their z-index is read against
    the page: 9 clears the message layer (pinned headers 7, back-to-bottom 8) and
    stays under ui-dockkit's dock layers (10, 40 fullscreen). */
-body[data-dsh-claude-style] [data-slot="conversation.session.header.actions"] > * {
+body[data-dsh-claude-style] :is([data-slot="conversation.session.header.actions"] > :not([data-slot-item]), [data-slot="conversation.session.header.actions"] > [data-slot-item] > *) {
   position: relative;
   z-index: 9;
 }

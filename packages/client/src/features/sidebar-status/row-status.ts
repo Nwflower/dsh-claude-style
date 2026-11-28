@@ -1,7 +1,31 @@
 import { SIDEBAR_RUNNING_TITLE_ATTR, SIDEBAR_STATUS_ATTR } from '../../constants'
 import { observeSize } from '@dsh-claude-style/engine/bus'
-import { SESSION_PHASE_ATTRIBUTE, SESSION_STATUS_OUTLET_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { SESSION_PHASE_ATTRIBUTE, SESSION_STATUS_OUTLET_SELECTOR, SLOT_ERROR_ATTRIBUTE, SLOT_ITEM_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
+
+/**
+ * Whether a list-slot outlet renders any visible content. List slots wrap each
+ * registrant in a `[data-slot-item]` element that remains mounted when the
+ * registrant returns null; empty wrappers, error boundaries and whitespace hold
+ * no leading decoration.
+ */
+function outletHasContent(outlet: Element): boolean {
+  for (const node of outlet.childNodes) {
+    if (node instanceof Text) {
+      if ((node.textContent ?? '').trim().length > 0) return true
+      continue
+    }
+    if (node instanceof Element) {
+      if (node.hasAttribute(SLOT_ERROR_ATTRIBUTE)) continue
+      if (node.hasAttribute(SLOT_ITEM_ATTRIBUTE)) {
+        if (outletHasContent(node)) return true
+        continue
+      }
+      return true
+    }
+  }
+  return false
+}
 
 /** Keep the host's primary status, screen-reader labels and event targets in place. */
 export class RightSessionStatus {
@@ -28,13 +52,13 @@ export class RightSessionStatus {
       const dot = slot.querySelector(`:scope > [${SESSION_PHASE_ATTRIBUTE}]`)
       running = dot?.getAttribute(SESSION_PHASE_ATTRIBUTE) === 'ongoing'
       const outlet = [...slot.children].find(child => child.matches(SESSION_STATUS_OUTLET_SELECTOR))
-      if (outlet && outlet.childNodes.length > 0) state = 'foreign'
+      if (outlet && outletHasContent(outlet)) state = 'foreign'
       else if (dot && dot.getAttribute(SESSION_PHASE_ATTRIBUTE) === 'idle') state = 'idle'
       else if (dot) state = 'active'
       else {
         // An empty native outlet occupies no content; another plugin's leading decoration stays leading.
         for (const node of slot.childNodes) {
-          if (node instanceof Element && node.matches(SESSION_STATUS_OUTLET_SELECTOR) && node.childNodes.length === 0) continue
+          if (node instanceof Element && node.matches(SESSION_STATUS_OUTLET_SELECTOR) && !outletHasContent(node)) continue
           if (node instanceof Text && node.textContent?.trim().length === 0) continue
           state = 'foreign'
           break

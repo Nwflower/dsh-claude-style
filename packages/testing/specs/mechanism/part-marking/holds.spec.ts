@@ -11,7 +11,7 @@
 import { expect, test } from 'vitest'
 import { installParts } from '@dsh-claude-style/engine/parts'
 import { holdRelations } from '@dsh-claude-style/engine/parts-table'
-import { COMPOSER_CARD_SELECTOR, CONVERSATION_HEADER_SLOT_SELECTOR, CONVERSATION_INPUT_RIGHT_SLOT_SELECTOR, CONVERSATION_SCROLL_SELECTOR, PHASE_ATTRIBUTE, ROOT_SLOT_SELECTOR, SIDEBAR_SLOT_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { ACTION_ONGOING_ATTRIBUTE, ACTION_ONGOING_SELECTOR, COMPOSER_CARD_SELECTOR, CONVERSATION_HEADER_SLOT_SELECTOR, CONVERSATION_INPUT_RIGHT_SLOT_SELECTOR, CONVERSATION_SCROLL_SELECTOR, FLOW_KIND_ATTRIBUTE, PHASE_ATTRIBUTE, ROOT_SLOT_SELECTOR, SESSION_STATUS_OUTLET_SELECTOR, SIDEBAR_SLOT_SELECTOR, SLOT_ITEM_SELECTOR, USER_ROW_KIND } from '@dsh-claude-style/contracts/dom'
 import { partRegion } from '../../fixtures/part-region'
 import { hostElement } from '../../fixtures/host-markup'
 import { pageCleanups } from '../../fixtures/page'
@@ -167,6 +167,62 @@ test('the composer right slot keeps every React child under its own parent', asy
   expect(inserted.parentElement).toBe(outlet)
   expect(first.parentElement).toBe(outlet)
   expect(reference.parentElement).toBe(outlet)
+})
+
+test('empty list-slot item wrappers do not fill composer right or sidebar leading holds until real content mounts', async () => {
+  const card = hostElement(COMPOSER_CARD_SELECTOR)
+  const rightOutlet = hostElement(CONVERSATION_INPUT_RIGHT_SLOT_SELECTOR)
+  const rightItem = hostElement(SLOT_ITEM_SELECTOR)
+  rightOutlet.append(rightItem)
+  card.append(rightOutlet)
+
+  const leadingOutlet = hostElement(SESSION_STATUS_OUTLET_SELECTOR)
+  const leadingItem = hostElement(SLOT_ITEM_SELECTOR)
+  leadingOutlet.append(leadingItem)
+
+  mount(card, leadingOutlet)
+  install()
+
+  expect(holds(card)).toBeNull()
+  expect(holds(leadingOutlet)).toBe(hold('leading-slot-item'))
+
+  const rightControl = document.createElement('button')
+  const leadingControl = document.createElement('span')
+  rightItem.append(rightControl)
+  leadingItem.append(leadingControl)
+  await settle()
+
+  expect(holds(card)).toBe(hold('composer-right-filled'))
+  expect(holds(leadingOutlet)).toBe(`${hold('leading-slot-filled')} ${hold('leading-slot-item')}`)
+
+  rightControl.remove()
+  leadingControl.remove()
+  await settle()
+
+  expect(holds(card)).toBeNull()
+  expect(holds(leadingOutlet)).toBe(hold('leading-slot-item'))
+})
+
+test('a user message row tracks ongoing action buttons for hover-row visibility', async () => {
+  const row = hostElement(`[${FLOW_KIND_ATTRIBUTE}="${USER_ROW_KIND}"]`)
+  const button = document.createElement('button')
+  row.append(button)
+  mount(row)
+  install()
+
+  expect(holds(row)).toBeNull()
+  button.setAttribute(ACTION_ONGOING_ATTRIBUTE, '')
+  await settle()
+  expect(holds(row)).toBe(hold('message-action-ongoing'))
+
+  button.removeAttribute(ACTION_ONGOING_ATTRIBUTE)
+  await settle()
+  expect(holds(row)).toBeNull()
+
+  const active = hostElement(ACTION_ONGOING_SELECTOR)
+  row.append(active)
+  await settle()
+  expect(holds(row)).toBe(hold('message-action-ongoing'))
 })
 
 test('the teardown takes every hold mark off with the parts', () => {

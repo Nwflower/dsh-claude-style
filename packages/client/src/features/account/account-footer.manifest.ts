@@ -4,7 +4,7 @@ export default {
   id: 'footer',
   order: 120,
   reads: ['ban'],
-  contracts: ['shell.account-trigger', 'shell.menu-trigger', 'shell.sign-out-glyph', 'shell.foot-area', 'shell.footer-actions', 'shell.menu', 'shell.menu-popup', 'shell.menu-anchor-name', 'shell.menu-position-anchor', 'shell.menu-material', 'shell.menu-list', 'shell.modal-dialog', 'shell.settings-button', 'footer.plugin-entry-part', 'footer.plugin-entry-owner', 'footer.plugin-entry-update'],
+  contracts: ['shell.account-trigger', 'shell.menu-trigger', 'shell.sign-out-glyph', 'shell.foot-area', 'shell.footer-actions', 'shell.menu', 'shell.menu-popup', 'shell.menu-anchor-name', 'shell.menu-position-anchor', 'shell.menu-material', 'shell.menu-list', 'shell.modal-dialog', 'shell.settings-button', 'shell.slot-item', 'shell.slot-error', 'footer.plugin-entry-part', 'footer.plugin-entry-owner', 'footer.plugin-entry-update'],
   pref: 'collapseFooter',
   stylesheets: [
     { file: 'account-footer.css', rank: 240 },

@@ -1,5 +1,6 @@
 import { findChatTarget, hostSessionStatus, hostSessions, hostSnapshot, readTurnActivity } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
+import { isNonPrimarySessionOrigin } from '@dsh-claude-style/contracts/services'
 import type { HostChatSnapshot, HostChatTarget, HostFeedEntry, HostSessionEvent, HostSessionListSnapshot, HostSessionStatusSnapshot, HostSnapshotSource, HostSubagentEntry } from '@dsh-claude-style/contracts/services'
 
 /** A state the mascot shows: its name, the animation that plays it, and how much it outranks. */
@@ -44,7 +45,7 @@ function busySessions(status: HostSessionStatusSnapshot | null, list: HostSessio
   let busy = 0
   for (let i = 0; i < list.ids.length; i++) {
     const id = list.ids[i]
-    if (list.byId[id]?.origin !== 'subagent' && isRunning(id, status, list)) busy++
+    if (!isNonPrimarySessionOrigin(list.byId[id]?.origin) && isRunning(id, status, list)) busy++
   }
   return busy
 }

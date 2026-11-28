@@ -36,15 +36,16 @@ function harness(options: { withStatus?: boolean, phase?: string, broken?: boole
   const status = source(() => ({ get: (id: string) => ({ running: running.has(id) }) }))
   const sessions = source(() => ({
     phase: 'ready',
-    ids: ['s1', 'sub'],
+    ids: ['s1', 'sub', 'side'],
     byId: {
       s1: { running: options.withStatus === false, origin: 'session' },
       sub: { running: true, origin: 'subagent' },
+      side: { running: true, origin: 'side' },
     },
   }))
   const workspaces = source(() => ({
     phase: options.phase ?? 'ready',
-    items: [{ workspaceId: 'app', path: 'C:/work/app', sessionIds: ['s1'] }],
+    items: [{ workspaceId: 'app', path: 'C:/work/app', sessionIds: ['s1', 'side'] }],
     archivedSessionIds: [],
   }))
   if (options.broken) {
@@ -120,9 +121,10 @@ test('a status change asks for a pass and the next sync follows it', () => {
   expect(h.workspaces.listeners.size).toBe(0)
 })
 
-test('a running subagent session marks nothing', () => {
+test('a running subagent or side session marks nothing', () => {
   const h = harness()
   h.running.add('sub')
+  h.running.add('side')
   const view = mount(h)
   expect(marked(view)).toBe(false)
   view.groups.dispose()

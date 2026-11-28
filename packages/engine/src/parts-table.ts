@@ -359,13 +359,40 @@ export function holdRelations(vocabulary: PartsTableVocabulary): HoldRelation[] 
   },
   // features/composer/responsive.css: an occupied right slot keeps its control's
   // content width and gives the conversation row its min-content wrapping floor.
+  // List slots wrap each registrant in a display:contents `[data-slot-item]` root
+  // that stays mounted when a registrant returns null; only real elements inside
+  // the slot (or directly under it on older hosts) mark the slot filled.
   // This relation writes only the holder's attribute. React-owned slot children
   // stay under their slot so a later insertBefore keeps its reference sibling.
   {
     name: 'composer-right-filled',
     holder: '[data-composer-card]',
-    held: '[data-slot="conversation.input.right"] > *',
-    attributes: [],
+    held: '[data-slot="conversation.input.right"] > :not([data-slot-item]):not([data-slot-error]), [data-slot="conversation.input.right"] > [data-slot-item] > :not([data-slot-error])',
+    attributes: ['data-slot', 'data-slot-item', 'data-slot-error'],
+  },
+  // theme/sidebar.css: list slots keep an empty `[data-slot-item]` mounted when a
+  // registrant returns null, so `[data-slot]:empty` no longer marks an idle row.
+  // Track list-slot item wrappers and real elements separately so dynamic mounts
+  // and removals inside an item wrapper update the empty-outlet styling cleanly.
+  {
+    name: 'leading-slot-item',
+    holder: '[data-slot="sidebar.session.row.leading"]',
+    held: '[data-slot="sidebar.session.row.leading"] > [data-slot-item]',
+    attributes: ['data-slot', 'data-slot-item'],
+  },
+  {
+    name: 'leading-slot-filled',
+    holder: '[data-slot="sidebar.session.row.leading"]',
+    held: '[data-slot="sidebar.session.row.leading"] > :not([data-slot-item]):not([data-slot-error]), [data-slot="sidebar.session.row.leading"] > [data-slot-item] > :not([data-slot-error])',
+    attributes: ['data-slot', 'data-slot-item', 'data-slot-error'],
+  },
+  // features/message-actions/message-actions.css: keep the user message's action
+  // row visible while an action button reports an ongoing operation.
+  {
+    name: 'message-action-ongoing',
+    holder: '[data-chat-flow-kind="user"]',
+    held: '[data-action-ongoing]',
+    attributes: ['data-chat-flow-kind', 'data-action-ongoing'],
   },
   // features/composer/inline-bar.css: the activity seat carries the stop button
   // while a turn runs, and its flex item is out of the flow while it is empty —

@@ -2,6 +2,7 @@ import { SESSION_SEARCH_ROUTE } from '../../constants'
 import { currentSessionId, hostConversation, hostLayout, hostLocale, hostPluginNavigation, hostRemoteSkills, profileBundles, hostSessions, hostShortcuts, hostSlots, hostUiWorkspace, hostWorkspaces } from '@dsh-claude-style/engine/host'
 import type { HostContext } from '@dsh-claude-style/engine/host'
 import type { ContentHit, SearchAnswer } from '@dsh-claude-style/contracts/usage'
+import { isNonPrimarySessionOrigin } from '@dsh-claude-style/contracts/services'
 import type { HostPluginBundle, HostSessionBinding, HostSessionSummary, HostShortcutRow, HostSkill, HostSkillListAnswer, HostSlotStore, HostWorkspaceListSnapshot } from '@dsh-claude-style/contracts/services'
 import { createIdentityMemo } from '../../shared/identity-memo'
 import { copy } from './copy'
@@ -133,7 +134,7 @@ export function createSearchSources(ctx: HostContext, reveal: (sessionId: string
       const rows: { summary: HostSessionSummary, workspace: string }[] = []
       for (let i = 0; i < list.ids.length; i++) {
         const summary = list.byId[list.ids[i]]
-        if (summary === undefined || summary.blank || summary.origin === 'subagent' || archived.has(summary.id)) continue
+        if (summary === undefined || summary.blank || isNonPrimarySessionOrigin(summary.origin) || archived.has(summary.id)) continue
         rows.push({ summary, workspace: titles[summary.id] || '' })
       }
       rows.sort((a, b) => b.summary.updatedAt - a.summary.updatedAt)

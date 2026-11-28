@@ -34,11 +34,11 @@ function reading(fields: Partial<MascotReading> & { statuses?: Record<string, St
 }
 
 test('the home page reads the whole workspace: a question anywhere, else the crowd at work', () => {
-  const sessions = list([{ id: 'a', running: true }, { id: 'b', running: true }, { id: 'c', running: true }, { id: 's', running: true, origin: 'subagent' }])
+  const sessions = list([{ id: 'a', running: true }, { id: 'b', running: true }, { id: 'c', running: true }, { id: 's', running: true, origin: 'subagent' }, { id: 'side', running: true, origin: 'side' }])
   expect(mascotLevel(reading({ list: sessions })).animation).toBe('building')
-  expect(mascotLevel(reading({ list: list([{ id: 'a', running: true }, { id: 'b', running: true }]) })).animation).toBe('music')
-  expect(mascotLevel(reading({ list: list([{ id: 'a', running: true }]) })).animation).toBe('typing')
-  expect(mascotLevel(reading({ list: list([{ id: 'a' }]) })).state).toBe('idle')
+  expect(mascotLevel(reading({ list: list([{ id: 'a', running: true }, { id: 'b', running: true }, { id: 'side', running: true, origin: 'side' }]) })).animation).toBe('music')
+  expect(mascotLevel(reading({ list: list([{ id: 'a', running: true }, { id: 'side', running: true, origin: 'side' }]) })).animation).toBe('typing')
+  expect(mascotLevel(reading({ list: list([{ id: 'a' }, { id: 'side', running: true, origin: 'side' }]) })).state).toBe('idle')
   expect(mascotLevel(reading({ list: sessions, statuses: { c: { pendingInteraction: {} } } })).state).toBe('notification')
 })
 

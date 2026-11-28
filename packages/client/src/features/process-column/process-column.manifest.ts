@@ -4,7 +4,7 @@ import type { FeatureManifest } from '../../core/feature'
 export default {
   id: 'processColumn',
   order: 202,
-  contracts: ['chat.generic-tool-row', 'chat.group-part', 'chat.group-part-reasoning', 'chat.group-part-response', 'chat.think-preview', 'chat.think-row', 'chat.user-row', 'fold.disclosure', 'fold.disclosure-header', 'fold.expandable', 'fold.expanded', 'fold.shimmer-decoration', 'fold.toggle', 'process.body', 'process.content', 'process.group'],
+  contracts: ['chat.current-subcall', 'chat.generic-tool-row', 'chat.group-part', 'chat.group-part-reasoning', 'chat.group-part-response', 'chat.think-preview', 'chat.think-row', 'chat.user-row', 'fold.disclosure', 'fold.disclosure-header', 'fold.expandable', 'fold.expanded', 'fold.shimmer-decoration', 'fold.toggle', 'process.body', 'process.content', 'process.group'],
   pref: 'processRows',
   // The flat layout is the host's own and needs nothing installed.
   prefValues: [PROCESS_ROWS_COLUMN],

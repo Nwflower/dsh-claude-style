@@ -54,7 +54,7 @@ body[data-dsh-claude-style] .dsh-claude-home-seat {
   display: contents;
 }
 
-body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] :is([data-slot="conversation.input.dock"] > *, .dsh-claude-home-seat > *, .dsh-claude-home-panel) {
+body[data-dsh-claude-style][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] :is([data-slot="conversation.input.dock"] > :not([data-slot-item]), [data-slot="conversation.input.dock"] > [data-slot-item] > *, .dsh-claude-home-seat > *, .dsh-claude-home-panel) {
   order: 1;
   /* A window too short for the whole panel shrinks the panel instead of the
      page: the greeting stays on the top edge, the context row and the card on
@@ -138,7 +138,7 @@ body[data-dsh-claude-style] [data-dsh-claude-home-hero] [data-dsh-claude-part~="
 
 /* On a narrow page the dashboard centres in the available column; the desktop
    rule above keeps its left edge beside the composer. */
-body[data-dsh-claude-style][data-dsh-claude-page-under-768][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] :is([data-slot="conversation.input.dock"] > *, .dsh-claude-home-seat > *, .dsh-claude-home-panel) {
+body[data-dsh-claude-style][data-dsh-claude-page-under-768][data-dsh-claude-home-layout="studio"] [data-dsh-claude-part~="composer-hero"] :is([data-slot="conversation.input.dock"] > :not([data-slot-item]), [data-slot="conversation.input.dock"] > [data-slot-item] > *, .dsh-claude-home-seat > *, .dsh-claude-home-panel) {
   max-width: calc(100% - var(--dsh-composer-side-clearance, 0px) - var(--dsh-composer-side-clearance, 0px));
   margin-inline: auto;
 }

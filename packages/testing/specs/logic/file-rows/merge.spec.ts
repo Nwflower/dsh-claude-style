@@ -11,7 +11,7 @@
 import { expect, test } from 'vitest'
 import { byDocumentOrder, createFileMerge, mergeViews, rowCarrier } from '@dsh-claude-style/client/pure'
 import type { FileHunk, FileMergeRow, FileReadCard, FileToolOperation, FileRowState } from '@dsh-claude-style/client/pure'
-import { CHAT_CALL_SELECTOR, FLOW_BLOCK_SELECTOR, PROCESS_CONTENT_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CHAT_CALL_SELECTOR, CURRENT_SUBCALL_SELECTOR, FLOW_BLOCK_SELECTOR, PROCESS_CONTENT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { hostElement } from '../../fixtures/host-markup'
 
 /** One change of the shape the row model derives: the path, what it replaced and what it wrote. */
@@ -246,4 +246,21 @@ test('a row put twice leaves the registry once, on the latest registration', () 
   merge.put({ ...first, hunks: [hunk('app.js', 4, 0)] })
   drop()
   expect(merge.viewFor(first.element)?.hunks).toEqual([hunk('app.js', 4, 0)])
+})
+
+test('a file row inside a collapsed program call\'s inert sub-call preview stays out of file merging', () => {
+  const layer = content()
+  const outer = row(layer, 'app.js', [hunk('app.js', 2, 0)])
+  const program = hostElement(CHAT_CALL_SELECTOR, 'program-1')
+  const preview = hostElement(CURRENT_SUBCALL_SELECTOR, 'sub-1')
+  const previewRow = document.createElement('div')
+  preview.append(previewRow)
+  program.append(preview)
+  layer.append(program)
+  const views = mergeViews([
+    outer,
+    { element: previewRow, callId: 'sub-1', path: 'app.js', operation: 'edit', hunks: [hunk('app.js', 5, 0)], state: 'running', read: null },
+  ])
+  expect(views.has(previewRow)).toBe(false)
+  expect(views.get(outer.element)).toEqual({ head: true, count: 1, hunks: outer.hunks, running: false, operation: 'edit', read: null })
 })

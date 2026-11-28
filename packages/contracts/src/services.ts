@@ -39,12 +39,17 @@ export interface HostSessionSummary {
   id: string
   /** Whether it runs right now (the mascot's crowd count). */
   running?: boolean
-  /** `subagent` for a child session, which the palette leaves out. */
+  /** `subagent` or `side` for child/side conversations hidden from the main sidebar and search lists. */
   origin?: string
   /** A placeholder the host never prompted. */
   blank?: boolean
   displayTitle: string
   updatedAt: number
+}
+
+/** Whether a session origin belongs to a child or side conversation hidden from the main sidebar and search lists. */
+export function isNonPrimarySessionOrigin(origin: string | undefined): boolean {
+  return origin === 'subagent' || origin === 'side'
 }
 
 /** The workspace list (`workspaces.list`): the workspace rows, and which sessions are archived. */

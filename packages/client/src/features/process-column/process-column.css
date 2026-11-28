@@ -59,6 +59,12 @@ body[data-dsh-claude-style][data-dsh-claude-process-column] [data-step-process-c
   height: calc(36px + var(--dsh-content-font-delta, 0px));
 }
 
+/* The inert sub-call preview under a collapsed running program call clips to
+   the host's 24px row height; match the column card's 36px disclosure height. */
+body[data-dsh-claude-style][data-dsh-claude-process-column] [data-step-process-content] [data-current-subcall] {
+  height: calc(36px + var(--dsh-content-font-delta, 0px));
+}
+
 /* An opened row's details close inside the row, above the next separator. */
 body[data-dsh-claude-style][data-dsh-claude-process-column] [data-step-process-content] :is([data-disclosure-header], [data-disclosure-row]) + * {
   padding-bottom: 10px;

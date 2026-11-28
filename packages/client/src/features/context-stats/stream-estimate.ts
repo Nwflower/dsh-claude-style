@@ -1,4 +1,4 @@
-import { CHAT_CALL_SELECTOR, CHAT_CALL_TOOL_ATTRIBUTE, CHAT_CALL_TOOL_SELECTOR, CONVERSATION_SCROLL_SELECTOR, STREAMING_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { CHAT_CALL_SELECTOR, CHAT_CALL_TOOL_ATTRIBUTE, CHAT_CALL_TOOL_SELECTOR, CONVERSATION_SCROLL_SELECTOR, CURRENT_SUBCALL_SELECTOR, PROGRAM_CALL_ATTRIBUTE, PROGRAM_CALL_SELECTOR, STREAMING_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { textTokens } from '@dsh-claude-style/contracts/tokens'
 import { batchAdditions, subscribeMutations } from '@dsh-claude-style/engine/bus'
 import { findConversationScroller } from '@dsh-claude-style/engine/host'
@@ -190,11 +190,21 @@ export function createStreamEstimate(onChange: () => void) {
 
   /**
    * The tool a call row runs, or null while the page has not named it: a row met
-   * before the host's tool view is mounted is priced as an unknown call.
+   * before the host's tool view is mounted is priced as an unknown call. A folded
+   * program call (`run_code` / `cua_run_code`) names itself on `[data-program-call]`
+   * while its nested source view is unmounted, and any `[data-current-subcall]`
+   * preview beside it belongs to a child call rather than this row.
    */
   function toolOf(row: Element) {
-    const view = row.querySelector(CHAT_CALL_TOOL_SELECTOR)
-    return view === null ? null : view.getAttribute(CHAT_CALL_TOOL_ATTRIBUTE)
+    const program = row.querySelector(PROGRAM_CALL_SELECTOR)
+    if (program !== null && program.closest(CHAT_CALL_SELECTOR) === row) {
+      return program.getAttribute(PROGRAM_CALL_ATTRIBUTE)
+    }
+    for (const view of row.querySelectorAll(CHAT_CALL_TOOL_SELECTOR)) {
+      if (view.closest(CURRENT_SUBCALL_SELECTOR) !== null) continue
+      if (view.closest(CHAT_CALL_SELECTOR) === row) return view.getAttribute(CHAT_CALL_TOOL_ATTRIBUTE)
+    }
+    return null
   }
 
   /**

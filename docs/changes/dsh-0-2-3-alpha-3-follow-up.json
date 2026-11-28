@@ -1,0 +1,8 @@
+{
+  "at": "2026-11-28",
+  "group": "improvements",
+  "order": 0,
+  "external": true,
+  "zh": "适配宿主最新版本中的 React 19 运行时、列表插槽项包装层、折叠程序工具调用与侧边对话过滤，并同步外观卡片选中色与进行中消息操作的可见状态",
+  "en": "Adapted to the latest host runtime with React 19 peer support, list-slot item wrappers, collapsed program call previews, side-conversation filtering, appearance card selection tokens and ongoing message-action visibility"
+}

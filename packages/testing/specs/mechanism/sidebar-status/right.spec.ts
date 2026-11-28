@@ -5,7 +5,8 @@
  */
 import { expect, test } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { SESSION_PHASE_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
+import { SESSION_PHASE_ATTRIBUTE, SLOT_ITEM_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { hostElement } from '../../fixtures/host-markup'
 import { mount, nativeDot, PART } from './fixture'
 import { surfaceAttribute } from '../../fixtures/surface'
 
@@ -189,4 +190,25 @@ test('a populated third-party outlet keeps a mixed native seat leading', () => {
   nativeNodes.forEach((node, index) => expect(view.seat.childNodes[index]).toBe(node))
   expect(extension.parentElement).toBe(view.outlet)
   expect(getComputedStyle(view.seat).position).toBe('static')
+})
+
+test('empty list-slot item wrappers in the leading outlet keep native idle and active ownership', () => {
+  const idle = mount(null)
+  idle.outlet.append(hostElement(SLOT_ITEM_SELECTOR))
+  idle.sync()
+  expect(idle.row.getAttribute(STATUS)).toBe('idle')
+
+  const active = mount('ongoing')
+  active.outlet.append(hostElement(SLOT_ITEM_SELECTOR))
+  active.sync()
+  expect(active.row.getAttribute(STATUS)).toBe('active')
+
+  const populated = mount('ongoing')
+  const item = hostElement(SLOT_ITEM_SELECTOR)
+  const badge = document.createElement('span')
+  badge.textContent = 'P'
+  item.append(badge)
+  populated.outlet.append(item)
+  populated.sync()
+  expect(populated.row.getAttribute(STATUS)).toBe('foreign')
 })

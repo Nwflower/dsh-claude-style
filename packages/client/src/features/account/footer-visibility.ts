@@ -1,4 +1,4 @@
-import { FOOTER_ACTIONS_SELECTOR, MENU_TRIGGER_SELECTOR, SIGN_OUT_GLYPH_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { FOOTER_ACTIONS_SELECTOR, MENU_TRIGGER_SELECTOR, SIGN_OUT_GLYPH_SELECTOR, SLOT_ERROR_ATTRIBUTE, SLOT_ITEM_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 import { hasSkinClass, setAttributeIfChanged } from '@dsh-claude-style/engine/dom'
 import { FOOTER_BLOCK_ATTR, FOOTER_MENU_ATTR, FOOTER_SEAT_ATTR, FOOTER_SEATS } from '../../constants'
 
@@ -39,23 +39,31 @@ export function footerEntriesIn(footArea: Element) {
 }
 
 /**
- * Mirrorable footer units. Every slot outlet renders inside a
- * `div[data-slot]` anchor with `display:contents`, so a list slot's
- * entries are the ANCHOR's children, not footerActions' — reading
- * `footerActions.children` directly collapses every registrant into a
- * single mirrorable unit and drops all but the first from the popover.
- * Dead cells (`data-slot-error`) never mirror.
+ * Mirrorable footer units. Every slot outlet renders inside a `div[data-slot]`
+ * anchor with `display:contents`, and list slots wrap each registrant in a
+ * `div[data-slot-item]` root that remains mounted even when the registrant
+ * returns null — unwrap both wrapper layers so each rendered control mirrors
+ * individually while empty wrappers and dead cells (`data-slot-error`) stay out.
  */
 function footerEntriesOf(footerActions: Element) {
   const entries: Element[] = []
   const kids = footerActions.children
   for (let i = 0; i < kids.length; i++) {
     const kid = kids[i]
-    if (kid.hasAttribute('data-slot-error')) continue
+    if (kid.hasAttribute(SLOT_ERROR_ATTRIBUTE)) continue
     if (kid.hasAttribute('data-slot')) {
       const slotKids = kid.children
       for (let j = 0; j < slotKids.length; j++) {
-        if (!slotKids[j].hasAttribute('data-slot-error')) entries.push(slotKids[j])
+        const item = slotKids[j]
+        if (item.hasAttribute(SLOT_ERROR_ATTRIBUTE)) continue
+        if (item.hasAttribute(SLOT_ITEM_ATTRIBUTE)) {
+          const itemKids = item.children
+          for (let k = 0; k < itemKids.length; k++) {
+            if (!itemKids[k].hasAttribute(SLOT_ERROR_ATTRIBUTE)) entries.push(itemKids[k])
+          }
+        } else {
+          entries.push(item)
+        }
       }
     } else {
       entries.push(kid)

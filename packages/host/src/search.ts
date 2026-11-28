@@ -14,6 +14,7 @@
  */
 
 import { PACKAGE_NAME } from '@dsh-claude-style/contracts/package'
+import { isNonPrimarySessionOrigin } from '@dsh-claude-style/contracts/services'
 import { Buffer } from 'node:buffer'
 import { createHash } from 'node:crypto'
 import { readdirSync, statSync, unlinkSync } from 'node:fs'
@@ -436,7 +437,7 @@ export function createSessionSearch(ctx: DshContext) {
       const snapshots = await persistence.list()
       if (disposed) return
       for (const snapshot of snapshots) {
-        if (snapshot.header.origin === 'subagent') continue
+        if (isNonPrimarySessionOrigin(snapshot.header.origin)) continue
         listing.set(snapshot.header.id, String(snapshot.revision))
       }
       stored = listing
@@ -445,7 +446,7 @@ export function createSessionSearch(ctx: DshContext) {
     if (stored === null) return
     const live = new Map<string, LiveSession>()
     for (const session of sessions.list()) {
-      if (session.header?.origin !== 'subagent') live.set(session.id, session)
+      if (!isNonPrimarySessionOrigin(session.header?.origin)) live.set(session.id, session)
     }
     const wanted = new Map<string, SessionTarget>()
     for (const [id, revision] of stored) {

@@ -35,7 +35,8 @@ body[data-dsh-claude-style][data-dsh-claude-composer-active] [data-phase="active
 }
 /* The independent control keeps the width its own content asks for. The model
    label is the shrinking item, so no quota or badge paints over a neighbour. */
-body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-holds~="composer-right-filled"] [data-slot="conversation.input.right"] > :is(button, span, div, a) {
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-holds~="composer-right-filled"] [data-slot="conversation.input.right"] > :is(button, span, div, a):not([data-slot-item]),
+body[data-dsh-claude-style] [data-composer-card][data-composer-variant][data-dsh-claude-holds~="composer-right-filled"] [data-slot="conversation.input.right"] > [data-slot-item] > :is(button, span, div, a) {
   flex-shrink: 0;
 }
 /* The right slot renders before the model slot, so a foreign control there

@@ -30,10 +30,11 @@ test('the archive follows host visibility and newest-first ordering', () => {
     newest: summary('newest', 3),
     same: summary('same', 2),
     child: summary('child', 9, { origin: 'subagent' }),
+    side: summary('side', 10, { origin: 'side' }),
     blank: summary('blank', 8, { blank: true }),
     current: summary('current', 7, { blank: true }),
   }
-  expect(archivedOrder(['old', 'child', 'blank', 'same', 'newest', 'current', 'missing'], byId, 'current'))
+  expect(archivedOrder(['old', 'child', 'side', 'blank', 'same', 'newest', 'current', 'missing'], byId, 'current'))
     .toEqual(['current', 'newest', 'same', 'old'])
   expect(archivedOrder(['current'], byId, 'other')).toEqual([])
 })

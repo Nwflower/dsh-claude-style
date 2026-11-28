@@ -7,6 +7,8 @@
  * @risk The takeover gathers the block into the account menu, so a plugin whose only sidebar entry is that block loses its entry point.
  */
 import { afterEach, expect, test } from 'vitest'
+import { SLOT_ITEM_SELECTOR } from '@dsh-claude-style/contracts/dom'
+import { hostElement } from '../../fixtures/host-markup'
 import { surfaceAttribute, surfaceSelector } from '../../fixtures/surface'
 import { footerMirrorHarness } from '../../fixtures/footer-mirror'
 
@@ -39,4 +41,33 @@ test('a section laid out in the footer keeps its place while the menu carries a 
 
   mirror.clear(footArea)
   expect(block.hasAttribute(FOOTER_BLOCK)).toBe(false)
+})
+
+test('list-slot item wrappers unwrap rendered entries and ignore null-returning empty wrappers', () => {
+  const { footArea, slot, popover, mirror } = footerMirrorHarness()
+  const emptyItem = hostElement(SLOT_ITEM_SELECTOR)
+  const blockItem = hostElement(SLOT_ITEM_SELECTOR)
+  const block = document.createElement('section')
+  const blockBtn = document.createElement('button')
+  blockBtn.textContent = 'Workspace tools'
+  block.append(blockBtn)
+  blockItem.append(block)
+
+  const actionItem = hostElement(SLOT_ITEM_SELECTOR)
+  const action = document.createElement('button')
+  action.textContent = 'Check status'
+  actionItem.append(action)
+
+  slot.append(emptyItem, blockItem, actionItem)
+
+  mirror.measure(footArea)
+  mirror.sync(footArea)
+
+  expect(emptyItem.hasAttribute(FOOTER_ENTRY)).toBe(false)
+  expect(emptyItem.hasAttribute(FOOTER_HIDDEN)).toBe(false)
+  expect(block.hasAttribute(FOOTER_BLOCK)).toBe(true)
+  expect(action.hasAttribute(FOOTER_ENTRY)).toBe(true)
+  expect(action.hasAttribute(FOOTER_HIDDEN)).toBe(true)
+  expect(popover.querySelector(`${EMBED} > section`)?.textContent).toContain('Workspace tools')
+  expect(popover.textContent).toContain('Check status')
 })
