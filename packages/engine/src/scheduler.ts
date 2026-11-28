@@ -1,3 +1,4 @@
+import { COMPOSER_INPUT_SELECTOR } from '@dsh-claude-style/contracts/dom'
 import { closestComposerCard, findComposerCard, findConversationScroller, hostLocale } from './host'
 import type { HostContext } from './host'
 import { observeSize, subscribeMutations } from './bus'
@@ -203,9 +204,9 @@ export function installScheduler<Name extends string>(ctx: HostContext, ui: Sche
   }
 
   function onComposerInput(e: Event) {
-    // The [data-composer-input] filter stays in this event pipe; a feature is
+    // The composer-input filter stays in this event pipe; a feature is
     // only told that a composer-input event happened.
-    const input = closestFrom(e.target, '[data-composer-input]')
+    const input = closestFrom(e.target, COMPOSER_INPUT_SELECTOR)
     if (input !== null) dispatch('onInput', e.target)
   }
 
@@ -299,46 +300,35 @@ export function installScheduler<Name extends string>(ctx: HostContext, ui: Sche
   const measureFailures: Record<string, number> = {}
 
   /**
-   * Run one feature's sync in isolation: a throw is retried on the next pass,
-   * and after FAILURE_LIMIT failures in a row the feature is reported once and
-   * retired while the rest of the pass carries on (D12).
+   * Run one feature's phase (`sync` or `measure`) in isolation: a throw is
+   * retried on the next pass, and after FAILURE_LIMIT failures in a row the
+   * feature is reported once and retired while the rest of the pass carries on
+   * (D12). Read and write phases keep separate failure counters so a succeeding
+   * write does not zero a failing read.
    */
-  function runSync(name: Name) {
+  function runPhase(name: Name, hook: 'sync' | 'measure', counters: Record<string, number>) {
     const feature = handleOf(name)
-    if (!feature || typeof feature.sync !== 'function') return
-    const failures = syncFailures[name] || 0
+    const call = feature?.[hook]
+    if (!feature || typeof call !== 'function') return
+    const failures = counters[name] || 0
     if (failures >= FAILURE_LIMIT) return
     try {
-      feature.sync()
-      syncFailures[name] = 0
+      call.call(feature)
+      counters[name] = 0
     } catch (error) {
-      syncFailures[name] = failures + 1
+      counters[name] = failures + 1
       if (failures + 1 < FAILURE_LIMIT) return
       reportFeatureFailure(name, error)
       ui.retire(name)
     }
   }
 
-  /**
-   * Run one feature's measurement, in the pass's read phase, counted apart from
-   * its sync (D12): the two halves fail independently, so a pass whose read
-   * throws every frame still retires the feature after FAILURE_LIMIT failures in
-   * a row — a sync succeeding in the same pass does not zero this count.
-   */
+  function runSync(name: Name) {
+    runPhase(name, 'sync', syncFailures)
+  }
+
   function runMeasure(name: Name) {
-    const feature = handleOf(name)
-    if (!feature || typeof feature.measure !== 'function') return
-    const failures = measureFailures[name] || 0
-    if (failures >= FAILURE_LIMIT) return
-    try {
-      feature.measure()
-      measureFailures[name] = 0
-    } catch (error) {
-      measureFailures[name] = failures + 1
-      if (failures + 1 < FAILURE_LIMIT) return
-      reportFeatureFailure(name, error)
-      ui.retire(name)
-    }
+    runPhase(name, 'measure', measureFailures)
   }
 
   /**

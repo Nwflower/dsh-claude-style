@@ -36,6 +36,14 @@ export function onAppearanceOverlayLoaded(listener: () => void) {
   return resource.onLoaded(listener)
 }
 
+/** Reset cached overlay state and abort any pending read when a generation ends (D12). */
+export function resetAppearanceOverlay() {
+  resource.reset()
+  current = DEFAULT
+  saved = false
+  writes = Promise.resolve()
+}
+
 async function persist(patch: Record<string, unknown>) {
   const response = await readHostJson(APPEARANCE_OVERLAY_ROUTE, {
     method: 'PUT',

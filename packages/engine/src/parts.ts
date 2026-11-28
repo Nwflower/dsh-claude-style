@@ -478,6 +478,7 @@ export function installParts(next: PartsVocabulary, onMarked?: () => void) {
   SKIP_SELECTOR = partRegions(next).flatMap((region) => region.skip === undefined ? [] : [region.skip]).join(', ')
   HOLD_STATES = holdRelations(next).map((spec) => ({ spec, held: new Map() }))
   HELD_IN.clear()
+  HOLD_COUNTS.clear()
   HELD_SELECTOR = holdRelations(next).map((relation) => relation.held).join(', ')
   NOTABLE_SELECTOR = [ANCHOR_SELECTOR, SKIP_SELECTOR, HELD_SELECTOR].filter((selector) => selector !== '').join(', ')
   HOLD_ATTRIBUTES = new Set(holdRelations(next).flatMap((relation) => relation.attributes))

@@ -1,4 +1,4 @@
-import { FRAME_TOP_CLEARANCE_PROPERTY, FULLSCREEN_ATTRIBUTE, WINDOWS_TITLEBAR_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
+import { FRAME_TOP_CLEARANCE_PROPERTY, FULLSCREEN_ATTRIBUTE, PLATFORM_ATTRIBUTE, WINDOWS_TITLEBAR_ATTRIBUTE } from '@dsh-claude-style/contracts/dom'
 
 /** Resolve native caption geometry once per platform; computed style resolves Windows' aliased height token. */
 
@@ -48,7 +48,7 @@ export function desktopBand() {
       controls: { side: 'right', size: WIN_CAPTION_CONTROLS },
     }
   }
-  if (root.dataset.platform === 'darwin') {
+  if (root.getAttribute(PLATFORM_ATTRIBUTE) === 'darwin') {
     if (root.hasAttribute(FULLSCREEN_ATTRIBUTE)) return null
     return {
       platform: 'darwin',

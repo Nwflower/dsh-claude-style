@@ -35,14 +35,26 @@ const binding = createSettingsBinding({
   },
 })
 
+/** Unsubscribes the overlay reload listener owned by the active generation. */
+let offOverlayLoaded: (() => void) | null = null
+
 /** Bind the official settings form (engine/src/settings-binding.ts); true once a form is bound. */
 export function adoptSettingsForm(ctx: HostContext) {
+  if (offOverlayLoaded === null) offOverlayLoaded = onAppearanceOverlayLoaded(() => { loadPrefs() })
   return binding.adopt(ctx)
 }
 
-/** Release the form and directory subscriptions the binding opened. */
+/** Release the form and overlay subscriptions and reset per-generation state (D12). */
 export function disposePrefsBinding() {
   binding.dispose()
+  if (offOverlayLoaded !== null) {
+    offOverlayLoaded()
+    offOverlayLoaded = null
+  }
+  readFromForm = false
+  footerTakeoverRetired = false
+  composerRestyleRetired = false
+  migrationWritten = false
 }
 
 /** Read the preferences from the form, once it carries values. */
@@ -328,5 +340,3 @@ export function savePrefs(patch: Partial<Prefs>): Promise<Prefs | null> {
     return accepted === null || accepted === false ? null : prefs
   })
 }
-
-onAppearanceOverlayLoaded(() => { loadPrefs() })
